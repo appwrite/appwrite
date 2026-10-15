@@ -26,6 +26,20 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_${ns}Absent"
+          },
+          "expect": false
+        },
+        {
           "op": "database.delete",
           "args": {
             "database": "${ns}"
@@ -33,8 +47,22 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": false
+        },
+        {
           "op": "database.create",
           "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
           "expect": true
         },
         {

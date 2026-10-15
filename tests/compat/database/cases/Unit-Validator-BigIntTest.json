@@ -1,0 +1,1184 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/BigIntTest.php"
+  ],
+  "cases": [
+    {
+      "name": "BigIntTest::testTypeIsTheBigIntegerColumnType",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\BigInt",
+            "args": {
+              "signed": true
+            },
+            "as": "o442"
+          },
+          "bind": "s698",
+          "expect": {
+            "$value": "Validator\\BigInt",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o442"
+            },
+            "method": "getType",
+            "args": {}
+          },
+          "expect": "biginteger"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\BigInt",
+            "args": {
+              "signed": false
+            },
+            "as": "o443"
+          },
+          "bind": "s700",
+          "expect": {
+            "$value": "Validator\\BigInt",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o443"
+            },
+            "method": "getType",
+            "args": {}
+          },
+          "expect": "biginteger"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNegatingZeroGivesTheIntegerZero",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "negate",
+            "args": {
+              "value": 0
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "negate",
+            "args": {
+              "value": "0"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "negate",
+            "args": {
+              "value": "-0"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": 5,
+              "b": 0
+            }
+          },
+          "expect": 5
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testDivisionSignsTheQuotient",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "divide",
+            "args": {
+              "a": -10,
+              "b": 3
+            }
+          },
+          "expect": -3
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "divide",
+            "args": {
+              "a": 10,
+              "b": -3
+            }
+          },
+          "expect": -3
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "divide",
+            "args": {
+              "a": -10,
+              "b": -3
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "divide",
+            "args": {
+              "a": -1,
+              "b": 3
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testDivisionByZeroIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "divide",
+            "args": {
+              "a": 1,
+              "b": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Division by zero is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testModuloByZeroIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "modulo",
+            "args": {
+              "a": 5,
+              "b": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Modulo by zero is not allowed."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingAcceptsWholeFloatsAndIntegerStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": 5.0
+            }
+          },
+          "expect": "5"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": -5.0
+            }
+          },
+          "expect": "-5"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": "007"
+            }
+          },
+          "expect": "7"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": "-0"
+            }
+          },
+          "expect": "0"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": "18446744073709551615"
+            }
+          },
+          "expect": "18446744073709551615"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a fractional float",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": 1.5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": {
+                "$float": "INF"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": {
+                "$float": "NAN"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a float above the integer range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": 1e+20
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a float below the integer range",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": -1e+20
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a boolean",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#null",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": "abc"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNormalizingRejectsAValueThatIsNotAnInteger#a decimal string",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": "1.5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Value must be an integer."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testPowerRefusesANegativeExponent",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 5,
+              "exponent": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Integer power exponent must not be negative."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testPowerOfZeroExponentAndUnitBases",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 2,
+              "exponent": 0
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 0,
+              "exponent": 0
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 0,
+              "exponent": 99
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 1,
+              "exponent": 99
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": -1,
+              "exponent": 3
+            }
+          },
+          "expect": -1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": -1,
+              "exponent": 4
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": -1,
+              "exponent": "99999999999999999999999"
+            }
+          },
+          "expect": -1
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testPowerAboveSixtyFourIsAnOverflowSentinel",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 2,
+              "exponent": 65
+            }
+          },
+          "expect": "184467440737095516150"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": -2,
+              "exponent": 65
+            }
+          },
+          "expect": "-184467440737095516150"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": -2,
+              "exponent": 66
+            }
+          },
+          "expect": "184467440737095516150"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "power",
+            "args": {
+              "base": 2,
+              "exponent": "99999999999999999999"
+            }
+          },
+          "expect": "184467440737095516150"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNativeIntegerArithmeticAtTheSignedLimits",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": 9223372036854775806,
+              "b": 1
+            }
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": -9223372036854775807,
+              "b": -1
+            }
+          },
+          "expect": -9223372036854775808
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": 9223372036854775806,
+              "b": -1
+            }
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "5",
+              "b": "7"
+            }
+          },
+          "expect": 12
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": 9223372036854775807,
+              "b": 1
+            }
+          },
+          "expect": "9223372036854775808"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": -9223372036854775808,
+              "b": -1
+            }
+          },
+          "expect": "-9223372036854775809"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": -9223372036854775807,
+              "b": 1
+            }
+          },
+          "expect": -9223372036854775808
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": -9223372036854775808,
+              "b": 1
+            }
+          },
+          "expect": "-9223372036854775809"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "negate",
+            "args": {
+              "value": -9223372036854775808
+            }
+          },
+          "expect": "9223372036854775808"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "negate",
+            "args": {
+              "value": 9223372036854775807
+            }
+          },
+          "expect": -9223372036854775807
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": 5,
+              "b": -5
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testStringArithmeticCarriesAndBorrowsAcrossLongNumbers",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "999999999999999999999999999999999999",
+              "b": 1
+            }
+          },
+          "expect": "1000000000000000000000000000000000000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "9999999999999999999999999999999999999999",
+              "b": "9999999999999999999999999999999999999999"
+            }
+          },
+          "expect": "19999999999999999999999999999999999999998"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "123456789012345678901234567890",
+              "b": "987654321098765432109876543210"
+            }
+          },
+          "expect": "1111111110111111111011111111100"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": "1000000000000000000000000000000000000",
+              "b": 1
+            }
+          },
+          "expect": "999999999999999999999999999999999999"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": "10000000000000000000000000000000000000000",
+              "b": "9999999999999999999999999999999999999999"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "1000000000000000000000000000000000000",
+              "b": "-999999999999999999999999999999999999"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "-1000000000000000000000000000000000000",
+              "b": 1
+            }
+          },
+          "expect": "-999999999999999999999999999999999999"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": "-999999999999999999999999999999999999",
+              "b": 1
+            }
+          },
+          "expect": "-1000000000000000000000000000000000000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "99999999999999999999999999999999999999",
+              "b": "99999999999999900000000000000000000000000000000000001"
+            }
+          },
+          "expect": "100000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": {
+                "$repeat": "9",
+                "times": 1000000
+              },
+              "b": 1
+            }
+          },
+          "expect": "<long:1000001:533c567ab64a808e9f2c0b79ba50418d02ee6d5fb18992d2426aa4d48433bf9e>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": {
+                "$repeat": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "times": 9901
+              },
+              "b": 1
+            }
+          },
+          "expect": "<long:1000001:b4ab7a8a5c395507b6eed2fb910e27047fade6cd535f20e93f20444dd5dd9f87>"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testComparingNativeAndStringIntegersAgrees",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "compare",
+            "args": {
+              "a": -2,
+              "b": 1
+            }
+          },
+          "expect": -1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "compare",
+            "args": {
+              "a": 7,
+              "b": "7"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "compare",
+            "args": {
+              "a": 9223372036854775807,
+              "b": -9223372036854775808
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "compare",
+            "args": {
+              "a": 9223372036854775807,
+              "b": "18446744073709551615"
+            }
+          },
+          "expect": -1
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testNativeIntegersNormalizeToTheirDigits",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": -42
+            }
+          },
+          "expect": "-42"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "normalizeInteger",
+            "args": {
+              "value": 0
+            }
+          },
+          "expect": "0"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "toNative",
+            "args": {
+              "value": -9223372036854775808
+            }
+          },
+          "expect": -9223372036854775808
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "toNative",
+            "args": {
+              "value": 12
+            }
+          },
+          "expect": 12
+        }
+      ]
+    }
+  ]
+}

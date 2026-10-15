@@ -1,0 +1,2153 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/BigIntegerTest.php"
+  ],
+  "cases": [
+    {
+      "name": "BigIntegerTest::testUnsignedBoundsAndArithmeticStayExact",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total",
+              "signed": false
+            },
+            "as": "o1782"
+          },
+          "bind": "s4888",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1782"
+            },
+            "method": "bounds",
+            "args": {},
+            "as": "o1783"
+          },
+          "expect": {
+            "$value": "NumericBounds",
+            "fields": {
+              "min": 0,
+              "max": "18446744073709551615"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": 9223372036854775807,
+              "b": 1
+            }
+          },
+          "expect": "9223372036854775808"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": "9223372036854775808",
+              "b": 1
+            }
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "18446744073709551614",
+              "b": 1
+            }
+          },
+          "expect": "18446744073709551615"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "add",
+            "args": {
+              "a": "18446744073709551615",
+              "b": 1
+            }
+          },
+          "expect": "18446744073709551616"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "subtract",
+            "args": {
+              "a": "18446744073709551615",
+              "b": 1
+            }
+          },
+          "expect": "18446744073709551614"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "multiply",
+            "args": {
+              "a": "9223372036854775807",
+              "b": 2
+            }
+          },
+          "expect": "18446744073709551614"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "modulo",
+            "args": {
+              "a": "18446744073709551615",
+              "b": 2
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testSqlColumnTypesMapBigIntegerAndLegacyMetadata",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MariaDB",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1784"
+          },
+          "bind": "s4897",
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Postgres",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o1785"
+          },
+          "bind": "s4898",
+          "expect": {
+            "$adapter": "Postgres"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "total",
+                "key": "total",
+                "type": "bigint",
+                "size": 9999
+              }
+            },
+            "as": "o1786"
+          },
+          "bind": "s4899",
+          "expect": {
+            "$document": {
+              "$id": "total",
+              "key": "total",
+              "type": "bigint",
+              "size": 9999
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o1786"
+              }
+            },
+            "as": "o1787"
+          },
+          "bind": "s4900",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total"
+            },
+            "as": "o1788"
+          },
+          "bind": "s4901",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1784"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o1788"
+              }
+            }
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1784"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o1787"
+              }
+            }
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total",
+              "signed": false
+            },
+            "as": "o1789"
+          },
+          "bind": "s4904",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1784"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o1789"
+              }
+            }
+          },
+          "expect": "BIGINT UNSIGNED"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "total"
+            },
+            "as": "o1790"
+          },
+          "bind": "s4906",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "total",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1785"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o1790"
+              }
+            }
+          },
+          "expect": "BIGINT"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1785"
+            },
+            "method": "getColumnType",
+            "args": {
+              "attribute": {
+                "$obj": "o1787"
+              }
+            }
+          },
+          "expect": "BIGINT"
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testSQLiteCreatesAndReadsBigIntegerColumn",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1794"
+          },
+          "bind": "s4915",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1794"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1795"
+          },
+          "bind": "s4917",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1795"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1794"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1795"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "value",
+                "type": "biginteger",
+                "array": false
+              }
+            },
+            "as": "o1796"
+          },
+          "bind": "s4920",
+          "expect": {
+            "$document": {
+              "$id": "value",
+              "type": "biginteger",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "bigints",
+                "attributes": [
+                  {
+                    "$obj": "o1796"
+                  }
+                ]
+              }
+            },
+            "as": "o1797"
+          },
+          "bind": "s4921",
+          "expect": {
+            "$document": {
+              "$id": "bigints",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "type": "biginteger",
+                    "array": false
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "value"
+            },
+            "as": "o1798"
+          },
+          "bind": "s4922",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1794"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "bigints",
+              "attributes": [
+                {
+                  "$obj": "o1798"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "maximum",
+                "$permissions": [],
+                "value": 9223372036854775807
+              }
+            },
+            "as": "o1799"
+          },
+          "bind": "s4924",
+          "expect": {
+            "$document": {
+              "$id": "maximum",
+              "$permissions": [],
+              "value": 9223372036854775807
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1794"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1797"
+              },
+              "document": {
+                "$obj": "o1799"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "maximum",
+              "$permissions": [],
+              "value": 9223372036854775807,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1794"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1797"
+              },
+              "id": "maximum"
+            },
+            "as": "o1800"
+          },
+          "bind": "s4926",
+          "expect": {
+            "$document": {
+              "value": 9223372036854775807,
+              "$id": "maximum",
+              "$sequence": 1,
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1800"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 9223372036854775807
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryOperatorPreservesUnsignedIntegerStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1
+            },
+            "as": "o1801"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1
+            },
+            "as": "o1802"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 1
+            },
+            "as": "o1803"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryAndRedisOperatorsLeaveValuesUnchangedWhenBoundsAreCrossed",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 100,
+              "max": 50
+            },
+            "as": "o1804"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                100,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 10,
+              "min": 0
+            },
+            "as": "o1805"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                10,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": 10,
+              "max": 75
+            },
+            "as": "o1806"
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                10,
+                75
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": -4,
+              "min": -10
+            },
+            "as": "o1807"
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                -4,
+                -10
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": -2,
+              "min": -50
+            },
+            "as": "o1808"
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                -2,
+                -50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": 0.5,
+              "max": 50
+            },
+            "as": "o1809"
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                0.5,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": -5,
+              "max": 50
+            },
+            "as": "o1810"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                -5,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 5,
+              "max": 15
+            },
+            "as": "o1811"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                5,
+                15
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 5,
+              "min": 5
+            },
+            "as": "o1812"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                5,
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": -2,
+              "max": 50
+            },
+            "as": "o1813"
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                -2,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 3,
+              "max": 100
+            },
+            "as": "o1814"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                3,
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 0.5,
+              "max": 50
+            },
+            "as": "o1815"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                0.5,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 2,
+              "max": 20
+            },
+            "as": "o1816"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2,
+                20
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 3,
+              "max": 100
+            },
+            "as": "o1817"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                3,
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": -1,
+              "max": 100
+            },
+            "as": "o1818"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -1,
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 0.5,
+              "max": 100
+            },
+            "as": "o1819"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                0.5,
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 2,
+              "max": 9223372036854775807
+            },
+            "as": "o1820"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                2,
+                9223372036854775807
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": "18446744073709551615"
+            },
+            "as": "o1821"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                "18446744073709551615"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryAndRedisRejectUnboundedInvalidPowers",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": -1
+            },
+            "as": "o1822"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": -1
+            },
+            "as": "o1823"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testSqlBuilderPreservesUnsignedIntegerBindings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": "18446744073709551615"
+            },
+            "as": "o1824"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                "18446744073709551615"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryAndRedisHonourAFloatBoundOnTheExactBigIntegerPath",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 10,
+              "max": 9e+18
+            },
+            "as": "o1827"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                10,
+                9e+18
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": 100.0
+            },
+            "as": "o1828"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                100.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": 9.223372036854776e+18
+            },
+            "as": "o1829"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                9.223372036854776e+18
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": 1e+19
+            },
+            "as": "o1830"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                1e+19
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": "9223372036854775808.0"
+            },
+            "as": "o1831"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                "9223372036854775808.0"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 1,
+              "min": -9e+18
+            },
+            "as": "o1832"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                1,
+                -9e+18
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 1,
+              "min": -1e+19
+            },
+            "as": "o1833"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                1,
+                -1e+19
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": 2,
+              "max": 1.5e+19
+            },
+            "as": "o1834"
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                2,
+                1.5e+19
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1
+            },
+            "as": "o1835"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryAndRedisRefuseAFractionalBoundOnTheExactBigIntegerPath",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": 102.4
+            },
+            "as": "o1836"
+          },
+          "bind": "s4964",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                102.4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1,
+              "max": "9223372036854775808.5"
+            },
+            "as": "o1837"
+          },
+          "bind": "s4965",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1,
+                "9223372036854775808.5"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 1,
+              "min": -0.5
+            },
+            "as": "o1838"
+          },
+          "bind": "s4966",
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                1,
+                -0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1836"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1837"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1838"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Decrement"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1836"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1837"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1838"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Decrement"
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testRedisOperatorPreservesUnsignedIntegerStrings",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1
+            },
+            "as": "o1839"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 1
+            },
+            "as": "o1840"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 1
+            },
+            "as": "o1841"
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testRedisKeepsTheStoredValueWhereAnOperatorCannotApply",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 400,
+              "max": 1000
+            },
+            "as": "o1842"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                400,
+                1000
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Divide"
+              },
+              "attribute": "value",
+              "values": [
+                0
+              ]
+            },
+            "as": "o1843"
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "value",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Modulo"
+              },
+              "attribute": "value",
+              "values": [
+                0
+              ]
+            },
+            "as": "o1844"
+          },
+          "expect": {
+            "$operator": {
+              "method": "modulo",
+              "attribute": "value",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 400
+            },
+            "as": "o1845"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                400
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryKeepsTheStoredValueWhenABoundedPowerOverflows",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 400,
+              "max": 1000
+            },
+            "as": "o1846"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                400,
+                1000
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 400
+            },
+            "as": "o1847"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                400
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testMemoryOperatorsCoerceOperandsAndKeepUnparsableDates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": "2"
+            },
+            "as": "o1848"
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": "2.5"
+            },
+            "as": "o1849"
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                "2.5"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "stringConcat",
+            "args": {
+              "value": [
+                "x"
+              ]
+            },
+            "as": "o1850"
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                [
+                  "x"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "stringConcat",
+            "args": {
+              "value": "y"
+            },
+            "as": "o1851"
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                "y"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "dateAddDays",
+            "args": {
+              "days": 1
+            },
+            "as": "o1852"
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateAddDays",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "dateSubDays",
+            "args": {
+              "days": 1
+            },
+            "as": "o1853"
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateSubDays",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BigIntegerTest::testRedisKeepsAnUnparsableDate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "dateAddDays",
+            "args": {
+              "days": 1
+            },
+            "as": "o1854"
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateAddDays",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "dateSubDays",
+            "args": {
+              "days": 1
+            },
+            "as": "o1855"
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateSubDays",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

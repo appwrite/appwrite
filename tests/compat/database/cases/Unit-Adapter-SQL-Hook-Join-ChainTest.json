@@ -1,0 +1,590 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Join/ChainTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ChainTest::testJoinsAreKeyedTheWayTheBuilderHandsThemToJoinFilters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o1209"
+          },
+          "bind": "s2462",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "authorId"
+            },
+            "as": "o1210"
+          },
+          "bind": "s2463",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "authorId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "books",
+              "alias": "book",
+              "on": [
+                {
+                  "$obj": "o1210"
+                }
+              ]
+            },
+            "as": "o1211"
+          },
+          "bind": "s2464",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "books",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "authorId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "book"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "extras",
+              "alias": "extra"
+            },
+            "as": "o1212"
+          },
+          "bind": "s2465",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "extras",
+              "values": [],
+              "alias": "extra"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "authorId"
+            },
+            "as": "o1213"
+          },
+          "bind": "s2466",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "authorId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "rightJoin",
+            "args": {
+              "collection": "reviews",
+              "alias": "review",
+              "on": [
+                {
+                  "$obj": "o1213"
+                }
+              ]
+            },
+            "as": "o1214"
+          },
+          "bind": "s2467",
+          "expect": {
+            "$query": {
+              "method": "rightJoin",
+              "attribute": "reviews",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "authorId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "review"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "authorId"
+            },
+            "as": "o1215"
+          },
+          "bind": "s2468",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "authorId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "notes",
+              "alias": "note",
+              "on": [
+                {
+                  "$obj": "o1215"
+                }
+              ]
+            },
+            "as": "o1216"
+          },
+          "bind": "s2469",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "notes",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "authorId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "note"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "method": "fromQueries",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1209"
+                },
+                {
+                  "$obj": "o1211"
+                },
+                {
+                  "$obj": "o1212"
+                },
+                {
+                  "$obj": "o1214"
+                },
+                {
+                  "$obj": "o1216"
+                }
+              ]
+            },
+            "as": "o1217"
+          },
+          "bind": "s2470",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1217"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "note"
+            }
+          },
+          "expect": [
+            "extra",
+            "review"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1217"
+            },
+            "method": "has",
+            "args": {
+              "type": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1217"
+            },
+            "method": "has",
+            "args": {
+              "type": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ChainTest::testOnlyTablesWhoseConditionsSitInWherePrecedeALaterJoin",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "inner": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                },
+                "left": {
+                  "$enum": "Query\\Builder\\JoinType::Left"
+                },
+                "right": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "full": {
+                  "$enum": "Query\\Builder\\JoinType::FullOuter"
+                },
+                "cross": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "last": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1218"
+          },
+          "bind": "s2474",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1218"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "last"
+            }
+          },
+          "expect": [
+            "right",
+            "full",
+            "cross"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1218"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "full"
+            }
+          },
+          "expect": [
+            "right"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1218"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "right"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1218"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "inner"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ChainTest::testAnAliasOutsideTheChainHasNoPrecedingTables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "right": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "last": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1219"
+          },
+          "bind": "s2479",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1219"
+            },
+            "method": "preceding",
+            "args": {
+              "alias": "unknown"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ChainTest::testOnlyRightAndFullOuterJoinsCanLeaveATableMissing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {},
+            "as": "o1220"
+          },
+          "bind": "s2481",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "hasPreservingOuterJoin",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "a": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                },
+                "b": {
+                  "$enum": "Query\\Builder\\JoinType::Left"
+                },
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                }
+              }
+            },
+            "as": "o1221"
+          },
+          "bind": "s2483",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1221"
+            },
+            "method": "hasPreservingOuterJoin",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "a": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                },
+                "b": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1222"
+          },
+          "bind": "s2485",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1222"
+            },
+            "method": "hasPreservingOuterJoin",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "a": {
+                  "$enum": "Query\\Builder\\JoinType::FullOuter"
+                }
+              }
+            },
+            "as": "o1223"
+          },
+          "bind": "s2487",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1223"
+            },
+            "method": "hasPreservingOuterJoin",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

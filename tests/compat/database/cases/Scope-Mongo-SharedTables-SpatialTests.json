@@ -23,50 +23,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -92,10 +83,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -120,50 +121,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -189,10 +181,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -217,50 +219,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -286,18 +279,128 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialRequiredDropAcceptsNull",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -322,50 +425,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -391,10 +485,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -419,50 +523,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -488,18 +583,30 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -524,50 +631,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -593,18 +691,30 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -629,50 +739,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -698,18 +799,128 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testDistanceLessThanMatchesTheExactDistance",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -734,50 +945,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -803,10 +1005,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -831,50 +1043,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -900,10 +1103,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -928,50 +1141,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -997,10 +1201,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1025,50 +1239,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1094,10 +1299,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1122,50 +1337,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1191,10 +1397,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1219,50 +1435,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1288,10 +1495,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1316,50 +1533,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1385,10 +1593,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1413,50 +1631,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1482,10 +1691,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1510,50 +1729,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1579,10 +1789,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1607,50 +1827,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1676,10 +1887,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1704,50 +1925,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1773,107 +1985,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "SpatialTests::testSpatialDistanceInMeterError",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1898,50 +2023,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1967,10 +2083,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1995,50 +2121,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2064,10 +2181,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -2092,50 +2219,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2161,10 +2279,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -2189,50 +2317,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2258,10 +2377,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -2286,50 +2415,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2355,107 +2475,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "SpatialTests::testInvalidCoordinateDocuments",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -2480,50 +2513,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2549,10 +2573,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -2577,50 +2611,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2646,10 +2671,412 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDistanceInMeterError",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testBatchSpatialAttributesMatchSingleCreation",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testRequiredSpatialAttributesOnPopulatedCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testCreateCollectionWithRequiredSpatialColumns",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }

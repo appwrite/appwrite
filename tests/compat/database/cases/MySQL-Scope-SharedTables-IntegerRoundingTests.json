@@ -1,0 +1,1377 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/IntegerRoundingTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "IntegerRoundingTests::testIntegerRoundingOfCounterAmounts",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "rounding_amounts_u000000000085",
+                                "name": "rounding_amounts_u000000000085",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "big",
+                                        "key": "big",
+                                        "type": "bigint",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "ratio",
+                                        "key": "ratio",
+                                        "type": "double",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": 100,
+                                "big": 0,
+                                "ratio": 1.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "count",
+                        "value": 1.5
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "count",
+                        "value": "2.5"
+                    }
+                },
+                {
+                    "op": "database.decrease_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "count",
+                        "value": 2.5
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "count",
+                        "value": 0.4
+                    }
+                },
+                {
+                    "op": "database.decrease_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "count",
+                        "value": "0.49"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "big",
+                        "value": "9007199254740993.5"
+                    }
+                },
+                {
+                    "op": "database.decrease_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "big",
+                        "value": "9007199254740993.5"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter",
+                        "attribute": "ratio",
+                        "value": 1.25
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "rounding_amounts_u000000000085"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "IntegerRoundingTests::testIntegerRoundingOfCounterBounds",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "rounding_bounds_u000000000086",
+                                "name": "rounding_bounds_u000000000086",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "big",
+                                        "key": "big",
+                                        "type": "bigint",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "ratio",
+                                        "key": "ratio",
+                                        "type": "double",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": 100,
+                                "big": 0,
+                                "ratio": 1.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "id": "counter",
+                        "attribute": "count",
+                        "max": 101.9
+                    }
+                },
+                {
+                    "op": "database.increase_document_attribute",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "id": "counter",
+                        "attribute": "count",
+                        "max": "101.9"
+                    }
+                },
+                {
+                    "op": "database.decrease_document_attribute",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "id": "counter",
+                        "attribute": "count",
+                        "min": 99.1
+                    }
+                },
+                {
+                    "op": "database.decrease_document_attribute",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "id": "counter",
+                        "attribute": "count",
+                        "min": "99.1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "rounding_bounds_u000000000086"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "IntegerRoundingTests::testIntegerRoundingOfOperatorsInUpdates",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Operators"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "rounding_operators_u000000000087",
+                                "name": "rounding_operators_u000000000087",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "big",
+                                        "key": "big",
+                                        "type": "bigint",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "ratio",
+                                        "key": "ratio",
+                                        "type": "double",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": 100,
+                                "big": 0,
+                                "ratio": 1.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            1.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "decrement",
+                                        "attribute": "",
+                                        "values": [
+                                            "2.5"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            -2.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            0.4
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            2,
+                                            98.7
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            1,
+                                            98.7
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "decrement",
+                                        "attribute": "",
+                                        "values": [
+                                            4,
+                                            "94.2"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "decrement",
+                                        "attribute": "",
+                                        "values": [
+                                            3,
+                                            "94.2"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "big": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            "9007199254740993.5"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "ratio": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            0.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "document": {
+                            "$document": {
+                                "$id": "second",
+                                "count": 10,
+                                "big": 0,
+                                "ratio": 0.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "updates": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            0.4
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "updates": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            2.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "second"
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "updates": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            7,
+                                            20.9
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087",
+                        "id": "second"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "rounding_operators_u000000000087"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "IntegerRoundingTests::testIntegerRoundingOfOperatorsInUpserts",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Operators"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "rounding_upserts_u000000000088",
+                                "name": "rounding_upserts_u000000000088",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "big",
+                                        "key": "big",
+                                        "type": "bigint",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "ratio",
+                                        "key": "ratio",
+                                        "type": "double",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": 100,
+                                "big": 0,
+                                "ratio": 1.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "document": {
+                            "$document": {
+                                "$id": "second",
+                                "count": 10,
+                                "big": 0,
+                                "ratio": 0.0
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.upsert_document",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": {
+                                    "$operator": {
+                                        "method": "increment",
+                                        "attribute": "",
+                                        "values": [
+                                            1.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.upsert_documents",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "counter",
+                                    "count": {
+                                        "$operator": {
+                                            "method": "decrement",
+                                            "attribute": "",
+                                            "values": [
+                                                2.5,
+                                                98.5
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "second",
+                                    "count": {
+                                        "$operator": {
+                                            "method": "increment",
+                                            "attribute": "",
+                                            "values": [
+                                                "1.5",
+                                                "12.7"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088",
+                        "id": "second"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "rounding_upserts_u000000000088"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "IntegerRoundingTests::testIntegerRoundingLeavesMultiplyOrDivideByAFractionRefused",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Operators"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "rounding_refused_u000000000089",
+                                "name": "rounding_refused_u000000000089",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "big",
+                                        "key": "big",
+                                        "type": "bigint",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    },
+                                    {
+                                        "$id": "ratio",
+                                        "key": "ratio",
+                                        "type": "double",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089",
+                        "document": {
+                            "$document": {
+                                "$id": "counter",
+                                "count": 100,
+                                "big": 0,
+                                "ratio": 1.5
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "multiply",
+                                        "attribute": "",
+                                        "values": [
+                                            1.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "count": {
+                                    "$operator": {
+                                        "method": "divide",
+                                        "attribute": "",
+                                        "values": [
+                                            2.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089",
+                        "id": "counter"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089",
+                        "id": "counter",
+                        "document": {
+                            "$document": {
+                                "ratio": {
+                                    "$operator": {
+                                        "method": "multiply",
+                                        "attribute": "",
+                                        "values": [
+                                            0.5
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "rounding_refused_u000000000089"
+                    }
+                }
+            ]
+        }
+    ]
+}

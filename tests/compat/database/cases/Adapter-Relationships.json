@@ -6,64 +6,118 @@
       "steps": [
         {
           "op": "adapter.open",
+          "args": {},
           "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.before",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "event": "*",
-            "name": "capture"
+            "method": "addTransform",
+            "args": {
+              "name": "capture",
+              "transform": {
+                "$hook": "Transform",
+                "table": "",
+                "event": "*",
+                "append": "",
+                "as": "transform_capture"
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "Postgres"
+          }
         },
         {
-          "op": "adapter.create",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_collection",
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 16,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a133"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "_metadata",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "size": 16,
-                  "required": false,
-                  "signed": true,
-                  "array": false
+            "method": "createCollection",
+            "args": {
+              "collection": "_metadata",
+              "attributes": [
+                {
+                  "$obj": "a133"
                 }
-              }
-            ]
+              ]
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "_metadata",
-            "document": {
-              "$document": {
-                "$id": "a",
-                "$permissions": []
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "_metadata"
+              },
+              "document": {
+                "$document": {
+                  "$id": "a",
+                  "$permissions": []
+                }
               }
             }
           },
@@ -76,16 +130,21 @@
           }
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "_metadata",
-            "document": {
-              "$document": {
-                "$id": "b",
-                "$permissions": []
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "_metadata"
+              },
+              "document": {
+                "$document": {
+                  "$id": "b",
+                  "$permissions": []
+                }
               }
             }
           },
@@ -98,124 +157,297 @@
           }
         },
         {
-          "op": "adapter.create_collection",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "a"
+            "method": "createCollection",
+            "args": {
+              "collection": "a"
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_collection",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "b"
+            "method": "createCollection",
+            "args": {
+              "collection": "b"
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_relationship",
+          "op": "object.call",
           "args": {
-            "adapter": {
-              "$ref": "a"
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b1",
+              "twoWayKey": "a1"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "id": "b1",
-            "two_way_key": "a1"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_relationship",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "two_way": true,
-            "id": "b2",
-            "two_way_key": "a2"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_relationship",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToMany",
-            "id": "bs",
-            "two_way_key": "a3"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_relationship",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToOne",
-            "id": "b4",
-            "two_way_key": "as"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_relationship",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToMany",
-            "id": "m",
-            "two_way_key": "n"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_relationship",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "other",
-            "id": "x"
+            "as": "rel134"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid relationship type"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b1",
+              "twoWayKey": "a1",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
         {
-          "op": "adapter.create_relationship",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "id": "b1"
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel134"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2"
+            },
+            "as": "rel135"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel135"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3"
+            },
+            "as": "rel136"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel136"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as"
+            },
+            "as": "rel137"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel137"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "m",
+              "twoWayKey": "n"
+            },
+            "as": "rel138"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": false,
+              "key": "m",
+              "twoWayKey": "n",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel138"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b1"
+            },
+            "as": "rel139"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b1",
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel139"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -225,17 +457,47 @@
           }
         },
         {
-          "op": "adapter.create_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "missing",
+              "twoWay": true,
+              "key": "b9",
+              "twoWayKey": "z"
+            },
+            "as": "rel140"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "missing",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "b9",
+              "twoWayKey": "z",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "missing",
-            "type": "oneToOne",
-            "two_way": true,
-            "id": "b9",
-            "two_way_key": "z"
+            "method": "createRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel140"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -245,179 +507,580 @@
           }
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+            }
           },
           "expect": [
             {
-              "table_name": "ns__metadata",
-              "column_name": "name",
-              "udt_name": "varchar",
-              "character_maximum_length": "16"
+              "$document": {
+                "table_name": "ns__metadata",
+                "column_name": "name",
+                "udt_name": "varchar",
+                "character_maximum_length": "16"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b1",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b1",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b2",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b2",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b4",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b4",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_b",
-              "column_name": "a2",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_b",
+                "column_name": "a2",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_b",
-              "column_name": "a3",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_b",
+                "column_name": "a3",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             }
           ]
         },
         {
-          "op": "adapter.create_collection",
+          "op": "object.call",
           "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "name": "_1_2",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "m",
-                  "type": "string",
-                  "size": 255,
-                  "required": false,
-                  "signed": true,
-                  "array": false
-                }
-              },
-              {
-                "$document": {
-                  "$id": "n",
-                  "type": "string",
-                  "size": 255,
-                  "required": false,
-                  "signed": true,
-                  "array": false
-                }
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "m",
+                "key": "m",
+                "type": "string",
+                "size": 255,
+                "signed": true,
+                "array": false,
+                "required": false
               }
-            ]
+            },
+            "as": "a141"
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "m",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "n",
+                "key": "n",
+                "type": "string",
+                "size": 255,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a142"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "n",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "key": "b1",
-            "two_way_key": "a1",
-            "side": "parent",
-            "new_key": "b1x"
+            "method": "createCollection",
+            "args": {
+              "collection": "_1_2",
+              "attributes": [
+                {
+                  "$obj": "a141"
+                },
+                {
+                  "$obj": "a142"
+                }
+              ]
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b1",
+              "twoWayKey": "a1"
+            },
+            "as": "rel143"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b1",
+              "twoWayKey": "a1",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "b1x"
+            },
+            "as": "u144"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "b1x",
+              "twoWayKey": null,
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "two_way": true,
-            "key": "b2",
-            "two_way_key": "a2",
-            "side": "parent",
-            "new_key": "b2",
-            "new_two_way_key": "a2x"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel143"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u144"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2"
+            },
+            "as": "rel145"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "b2",
+              "twoWayKey": "a2x"
+            },
+            "as": "u146"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "b2",
+              "twoWayKey": "a2x",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToMany",
-            "key": "bs",
-            "two_way_key": "a3",
-            "side": "parent",
-            "new_two_way_key": "a3x"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel145"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u146"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3"
+            },
+            "as": "rel147"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "twoWayKey": "a3x"
+            },
+            "as": "u148"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": null,
+              "twoWayKey": "a3x",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToMany",
-            "key": "bs",
-            "two_way_key": "a3",
-            "side": "child",
-            "new_key": "bs"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel147"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u148"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3"
+            },
+            "as": "rel149"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "bs"
+            },
+            "as": "u150"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "bs",
+              "twoWayKey": null,
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToOne",
-            "key": "b4",
-            "two_way_key": "as",
-            "side": "parent",
-            "new_key": "b4x"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel149"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              },
+              "update": {
+                "$obj": "u150"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as"
+            },
+            "as": "rel151"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "b4x"
+            },
+            "as": "u152"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "b4x",
+              "twoWayKey": null,
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToOne",
-            "key": "b4",
-            "two_way_key": "as",
-            "side": "child",
-            "new_two_way_key": "asx"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel151"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u152"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as"
+            },
+            "as": "rel153"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "b4",
+              "twoWayKey": "as",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "twoWayKey": "asx"
+            },
+            "as": "u154"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": null,
+              "twoWayKey": "asx",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel153"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              },
+              "update": {
+                "$obj": "u154"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -427,35 +1090,141 @@
           }
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": true,
+              "key": "m",
+              "twoWayKey": "n"
+            },
+            "as": "rel155"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "m",
+              "twoWayKey": "n",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "mx",
+              "twoWayKey": "nx"
+            },
+            "as": "u156"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "mx",
+              "twoWayKey": "nx",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToMany",
-            "two_way": true,
-            "key": "m",
-            "two_way_key": "n",
-            "side": "parent",
-            "new_key": "mx",
-            "new_two_way_key": "nx"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel155"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u156"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b1x",
+              "twoWayKey": "a1"
+            },
+            "as": "rel157"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b1x",
+              "twoWayKey": "a1",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {},
+            "as": "u158"
+          },
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": null,
+              "twoWayKey": null,
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "key": "b1x",
-            "two_way_key": "a1",
-            "side": "parent"
+            "method": "updateRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel157"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              },
+              "update": {
+                "$obj": "u158"
+              }
+            }
           },
           "mask": {
             "paths": [
@@ -463,180 +1232,376 @@
             ],
             "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
           },
-          "expect": {
-            "$error": {
-              "class": "PDOException",
-              "message": "<masked>"
-            }
-          }
+          "expect": true
         },
         {
-          "op": "adapter.update_relationship",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "nope",
-            "key": "k",
-            "two_way_key": "t",
-            "side": "parent"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid relationship type"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
             }
-          }
-        },
-        {
-          "op": "adapter.driver_query",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
           },
           "expect": [
             {
-              "table_name": "ns__1_2",
-              "column_name": "mx",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns__1_2",
+                "column_name": "mx",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns__1_2",
-              "column_name": "nx",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns__1_2",
+                "column_name": "nx",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns__metadata",
-              "column_name": "name",
-              "udt_name": "varchar",
-              "character_maximum_length": "16"
+              "$document": {
+                "table_name": "ns__metadata",
+                "column_name": "name",
+                "udt_name": "varchar",
+                "character_maximum_length": "16"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b1x",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b1x",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b2",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b2",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_a",
-              "column_name": "b4x",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_a",
+                "column_name": "b4x",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_b",
-              "column_name": "a2x",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_b",
+                "column_name": "a2x",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             },
             {
-              "table_name": "ns_b",
-              "column_name": "a3x",
-              "udt_name": "varchar",
-              "character_maximum_length": "255"
+              "$document": {
+                "table_name": "ns_b",
+                "column_name": "a3x",
+                "udt_name": "varchar",
+                "character_maximum_length": "255"
+              }
             }
           ]
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b1x",
+              "twoWayKey": "a1"
+            },
+            "as": "rel159"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b1x",
+              "twoWayKey": "a1",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "key": "b1x",
-            "two_way_key": "a1",
-            "side": "parent"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel159"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2x"
+            },
+            "as": "rel160"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "b2",
+              "twoWayKey": "a2x",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "two_way": true,
-            "key": "b2",
-            "two_way_key": "a2x",
-            "side": "child"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel160"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b2",
+              "twoWayKey": "a2x"
+            },
+            "as": "rel161"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "b2",
+              "twoWayKey": "a2x",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToOne",
-            "key": "b2",
-            "two_way_key": "a2x",
-            "side": "other"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel161"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42703]: Undefined column: 7 ERROR:  column \"a2x\" of relation \"ns_b\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3x"
+            },
+            "as": "rel162"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bs",
+              "twoWayKey": "a3x",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel162"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b4x",
+              "twoWayKey": "asx"
+            },
+            "as": "rel163"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "b4x",
+              "twoWayKey": "asx",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "oneToMany",
-            "key": "bs",
-            "two_way_key": "a3x",
-            "side": "parent"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel163"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
           "args": {
-            "adapter": {
-              "$ref": "a"
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "b4x",
+              "twoWayKey": "asx"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToOne",
-            "key": "b4x",
-            "two_way_key": "asx",
-            "side": "parent"
+            "as": "rel164"
           },
-          "expect": true
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "b4x",
+              "twoWayKey": "asx",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToOne",
-            "key": "b4x",
-            "two_way_key": "asx",
-            "side": "child"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel164"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -646,12 +1611,15 @@
           }
         },
         {
-          "op": "adapter.create_collection",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "_1_2_perms"
+            "method": "createCollection",
+            "args": {
+              "collection": "_1_2_perms"
+            }
           },
           "expect": {
             "$error": {
@@ -661,32 +1629,98 @@
           }
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "b",
+              "twoWay": false,
+              "key": "mx",
+              "twoWayKey": "nx"
+            },
+            "as": "rel165"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "b",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": false,
+              "key": "mx",
+              "twoWayKey": "nx",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "manyToMany",
-            "key": "mx",
-            "two_way_key": "nx",
-            "side": "parent"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "a",
+              "relationship": {
+                "$obj": "rel165"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "a",
+              "twoWay": false,
+              "key": "mx",
+              "twoWayKey": "nx"
+            },
+            "as": "rel166"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "a",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": false,
+              "key": "mx",
+              "twoWayKey": "nx",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "b",
-            "related_collection": "a",
-            "type": "manyToMany",
-            "key": "mx",
-            "two_way_key": "nx",
-            "side": "child"
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "b",
+              "relationship": {
+                "$obj": "rel166"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Child"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -696,242 +1730,258 @@
           }
         },
         {
-          "op": "adapter.delete_relationship",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "a",
-            "related_collection": "b",
-            "type": "nope",
-            "key": "k",
-            "two_way_key": "t",
-            "side": "parent"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid relationship type"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
             }
-          }
-        },
-        {
-          "op": "adapter.driver_query",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
           },
           "expect": [
             {
-              "table_name": "ns__metadata",
-              "column_name": "name",
-              "udt_name": "varchar",
-              "character_maximum_length": "16"
+              "$document": {
+                "table_name": "ns__metadata",
+                "column_name": "name",
+                "udt_name": "varchar",
+                "character_maximum_length": "16"
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+            }
           },
           "expect": [
             {
-              "table_name": "ns__metadata"
+              "$document": {
+                "table_name": "ns__metadata"
+              }
             },
             {
-              "table_name": "ns__metadata_perms"
+              "$document": {
+                "table_name": "ns__metadata_perms"
+              }
             },
             {
-              "table_name": "ns_a"
+              "$document": {
+                "table_name": "ns_a"
+              }
             },
             {
-              "table_name": "ns_a_perms"
+              "$document": {
+                "table_name": "ns_a_perms"
+              }
             },
             {
-              "table_name": "ns_b"
+              "$document": {
+                "table_name": "ns_b"
+              }
             },
             {
-              "table_name": "ns_b_perms"
+              "$document": {
+                "table_name": "ns_b_perms"
+              }
             }
           ]
         },
         {
-          "op": "adapter.captured",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
+          "op": "db.log",
+          "args": {},
           "expect": [
-            [
-              "*",
-              "CREATE SCHEMA \"${ns}\""
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__metadata\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"name\" VARCHAR(16), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__metadata_uid\" ON \"${ns}\".\"ns__metadata\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__metadata_created\" ON \"${ns}\".\"ns__metadata\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__metadata_updated\" ON \"${ns}\".\"ns__metadata\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__metadata_permissions\" ON \"${ns}\".\"ns__metadata\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__metadata_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__metadata_ukey\" \n                    ON \"${ns}\".\"ns__metadata_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__metadata_permission\" \n                    ON \"${ns}\".\"ns__metadata_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "\n\t\t\tINSERT INTO \"${ns}\".\"ns__metadata\" (\"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t"
-            ],
-            [
-              "*",
-              "\n\t\t\tINSERT INTO \"${ns}\".\"ns__metadata\" (\"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_a\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_a_uid\" ON \"${ns}\".\"ns_a\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_a_created\" ON \"${ns}\".\"ns_a\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_a_updated\" ON \"${ns}\".\"ns_a\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_a_permissions\" ON \"${ns}\".\"ns_a\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_a_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_a_ukey\" \n                    ON \"${ns}\".\"ns_a_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_a_permission\" \n                    ON \"${ns}\".\"ns_a_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_b\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_b_uid\" ON \"${ns}\".\"ns_b\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_b_created\" ON \"${ns}\".\"ns_b\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_b_updated\" ON \"${ns}\".\"ns_b\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_b_permissions\" ON \"${ns}\".\"ns_b\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_b_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_b_ukey\" \n                    ON \"${ns}\".\"ns_b_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_b_permission\" \n                    ON \"${ns}\".\"ns_b_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b2\" VARCHAR(255) DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a2\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a3\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b4\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b9\" VARCHAR(255) DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_missing\" ADD COLUMN \"z\" VARCHAR(255) DEFAULT NULL;"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__1_2\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"m\" VARCHAR(255),  \"n\" VARCHAR(255), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__1_2_uid\" ON \"${ns}\".\"ns__1_2\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__1_2_created\" ON \"${ns}\".\"ns__1_2\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__1_2_updated\" ON \"${ns}\".\"ns__1_2\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__1_2_permissions\" ON \"${ns}\".\"ns__1_2\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__1_2_ukey\" \n                    ON \"${ns}\".\"ns__1_2_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__1_2_permission\" \n                    ON \"${ns}\".\"ns__1_2_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1\" TO \"b1x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a2\" TO \"a2x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a3\" TO \"a3x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b4\" TO \"b4x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"as\" TO \"asx\";"
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"m\" TO \"mx\";ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"n\" TO \"nx\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1x\" TO \"\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b1x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a2x\";ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b2\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a3x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b4x\";"
-            ],
-            [
-              "*",
-              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"asx\";"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__1_2_perms_uid\" ON \"${ns}\".\"ns__1_2_perms\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__1_2_perms_created\" ON \"${ns}\".\"ns__1_2_perms\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__1_2_perms_updated\" ON \"${ns}\".\"ns__1_2_perms\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__1_2_perms_permissions\" ON \"${ns}\".\"ns__1_2_perms\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__1_2_perms_ukey\" \n                    ON \"${ns}\".\"ns__1_2_perms_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__1_2_perms_permission\" \n                    ON \"${ns}\".\"ns__1_2_perms_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
-            ]
+            {
+              "transform": "database_list",
+              "query": "SELECT \"schema_name\" FROM information_schema.schemata WHERE \"schema_name\" = ?"
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE SCHEMA \"${ns}\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"postgis\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"vector\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"pg_trgm\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE COLLATION IF NOT EXISTS \"utf8_ci_ai\" (provider = 'icu', locale = 'und-u-ks-level1', deterministic = false)"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns__metadata\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"name\" VARCHAR(16) NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns__metadata_uid\" ON \"${ns}\".\"ns__metadata\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns__metadata_created\" ON \"${ns}\".\"ns__metadata\" (\"_createdAt\"); CREATE INDEX \"ns__metadata_updated\" ON \"${ns}\".\"ns__metadata\" (\"_updatedAt\"); CREATE INDEX \"ns__metadata_permissions\" ON \"${ns}\".\"ns__metadata\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns__metadata_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns__metadata_ukey\" ON \"${ns}\".\"ns__metadata_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns__metadata_permission\" ON \"${ns}\".\"ns__metadata_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO \"${ns}\".\"ns__metadata\" (\"_uid\", \"_createdAt\", \"_updatedAt\", \"_permissions\") VALUES (?, ?, ?, ?)"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO \"${ns}\".\"ns__metadata\" (\"_uid\", \"_createdAt\", \"_updatedAt\", \"_permissions\") VALUES (?, ?, ?, ?)"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_a\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_a_uid\" ON \"${ns}\".\"ns_a\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns_a_created\" ON \"${ns}\".\"ns_a\" (\"_createdAt\"); CREATE INDEX \"ns_a_updated\" ON \"${ns}\".\"ns_a\" (\"_updatedAt\"); CREATE INDEX \"ns_a_permissions\" ON \"${ns}\".\"ns_a\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_a_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_a_ukey\" ON \"${ns}\".\"ns_a_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns_a_permission\" ON \"${ns}\".\"ns_a_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_b\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_b_uid\" ON \"${ns}\".\"ns_b\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns_b_created\" ON \"${ns}\".\"ns_b\" (\"_createdAt\"); CREATE INDEX \"ns_b_updated\" ON \"${ns}\".\"ns_b\" (\"_updatedAt\"); CREATE INDEX \"ns_b_permissions\" ON \"${ns}\".\"ns_b\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_b_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_b_ukey\" ON \"${ns}\".\"ns_b_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns_b_permission\" ON \"${ns}\".\"ns_b_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b2\" VARCHAR(255) NULL DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a2\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a3\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b4\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "attribute_create",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b9\" VARCHAR(255) NULL DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_missing\" ADD COLUMN \"z\" VARCHAR(255) NULL DEFAULT NULL;"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns__1_2\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"m\" VARCHAR(255) NULL, \"n\" VARCHAR(255) NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns__1_2_uid\" ON \"${ns}\".\"ns__1_2\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns__1_2_created\" ON \"${ns}\".\"ns__1_2\" (\"_createdAt\"); CREATE INDEX \"ns__1_2_updated\" ON \"${ns}\".\"ns__1_2\" (\"_updatedAt\"); CREATE INDEX \"ns__1_2_permissions\" ON \"${ns}\".\"ns__1_2\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns__1_2_ukey\" ON \"${ns}\".\"ns__1_2_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns__1_2_permission\" ON \"${ns}\".\"ns__1_2_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1\" TO \"b1x\";"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a2\" TO \"a2x\";"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a3\" TO \"a3x\";"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b4\" TO \"b4x\";"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"as\" TO \"asx\";"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "attribute_update",
+              "query": "ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"m\" TO \"mx\";ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"n\" TO \"nx\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b1x\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a2x\";ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b2\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a2x\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a3x\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b4x\";"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"asx\";"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns__1_2_perms_uid\" ON \"${ns}\".\"ns__1_2_perms\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns__1_2_perms_created\" ON \"${ns}\".\"ns__1_2_perms\" (\"_createdAt\"); CREATE INDEX \"ns__1_2_perms_updated\" ON \"${ns}\".\"ns__1_2_perms\" (\"_updatedAt\"); CREATE INDEX \"ns__1_2_perms_permissions\" ON \"${ns}\".\"ns__1_2_perms\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM \"${ns}\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+            },
+            {
+              "transform": "attribute_delete",
+              "query": "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
+            }
           ]
         },
         {
-          "op": "adapter.delete",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true

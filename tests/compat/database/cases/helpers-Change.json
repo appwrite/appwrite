@@ -3,69 +3,45 @@
   "cases": [
     {
       "name": "getOld and getNew",
-      "op": "change.new",
-      "args": {
-        "old": {
-          "$id": "a",
-          "v": 1
-        },
-        "new": {
-          "$id": "a",
-          "v": 2
-        }
-      },
-      "expect": {
-        "old": {
-          "$document": {
-            "$id": "a",
-            "v": 1
-          }
-        },
-        "new": {
-          "$document": {
-            "$id": "a",
-            "v": 2
-          }
-        }
-      }
-    },
-    {
-      "name": "setOld and setNew",
-      "op": "change.new",
-      "args": {
-        "old": {},
-        "new": {
-          "$id": "b"
-        },
-        "set_old": {
-          "$id": "b",
-          "v": 0
-        },
-        "set_new": {
-          "$id": "c",
-          "n": {
-            "$id": "nested"
-          }
-        }
-      },
-      "expect": {
-        "old": {
-          "$document": {
-            "$id": "b",
-            "v": 0
-          }
-        },
-        "new": {
-          "$document": {
-            "$id": "c",
-            "n": {
-              "$document": {
-                "$id": "nested"
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Change",
+            "args": {
+              "old": {
+                "$document": {
+                  "$id": "a",
+                  "v": 1
+                }
+              },
+              "new": {
+                "$document": {
+                  "$id": "a",
+                  "v": 2
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Change",
+            "fields": {
+              "old": {
+                "$document": {
+                  "$id": "a",
+                  "v": 1
+                }
+              },
+              "new": {
+                "$document": {
+                  "$id": "a",
+                  "v": 2
+                }
               }
             }
           }
         }
-      }
+      ]
     }
   ]
 }

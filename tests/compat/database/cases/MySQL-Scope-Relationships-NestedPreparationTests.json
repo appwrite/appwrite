@@ -1,0 +1,3800 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/Relationships/NestedPreparationTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "NestedPreparationTests::testNestedHookRewritesRelatedDocumentsOnCreate",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000242",
+                                "name": "u0000000000000000242",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000243",
+                                "name": "u0000000000000000243",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000244",
+                                "name": "u0000000000000000244",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000245",
+                                "name": "u0000000000000000245",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000246",
+                                "name": "u0000000000000000246",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000242",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000243",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000242",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000244",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "owner",
+                                "twoWayKey": "parents",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000242",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000245",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "profile",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000243",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000246",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "tags",
+                                "twoWayKey": "children",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.add_hook",
+                    "args": {
+                        "hook": {
+                            "$hook": "Nested",
+                            "marker": "marker",
+                            "as": "o2024"
+                        }
+                    },
+                    "bind": "s31910"
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000242",
+                        "document": {
+                            "$document": {
+                                "$id": "created",
+                                "name": "created",
+                                "children": [
+                                    {
+                                        "$id": "marker",
+                                        "name": "marked child",
+                                        "tags": [
+                                            {
+                                                "$id": "marker",
+                                                "name": "marked tag"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "empty child"
+                                    },
+                                    {
+                                        "$id": "explicit",
+                                        "name": "explicit child"
+                                    }
+                                ],
+                                "owner": {
+                                    "$id": "marker",
+                                    "name": "marked owner"
+                                },
+                                "profile": {
+                                    "$id": "marker",
+                                    "name": "marked profile"
+                                }
+                            }
+                        }
+                    },
+                    "bind": "s31911"
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.remove_hook",
+                    "args": {
+                        "hook": {
+                            "$obj": "o2024"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000242",
+                        "id": "created"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000243",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "marked child"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000246",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "marked tag"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000243",
+                        "id": {
+                            "$ref": "s31911",
+                            "path": "/$document/children/0/$document/$id"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000244",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "marked owner"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000245",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "marked profile"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000243",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000244",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000245",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000246",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedHookRewritesOnUpdateUpsertAndCreateDocuments",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000247",
+                                "name": "u0000000000000000247",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000248",
+                                "name": "u0000000000000000248",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000249",
+                                "name": "u0000000000000000249",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000250",
+                                "name": "u0000000000000000250",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000251",
+                                "name": "u0000000000000000251",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000248",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000249",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "owner",
+                                "twoWayKey": "parents",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000250",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "profile",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000248",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000251",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "tags",
+                                "twoWayKey": "children",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "document": {
+                            "$document": {
+                                "$id": "updated",
+                                "name": "updated"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+                        }
+                    }
+                },
+                {
+                    "op": "database.add_hook",
+                    "args": {
+                        "hook": {
+                            "$hook": "Nested",
+                            "marker": "marker",
+                            "as": "o2027"
+                        }
+                    },
+                    "bind": "s31941"
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "id": "updated",
+                        "document": {
+                            "$document": {
+                                "children": [
+                                    {
+                                        "$id": "marker",
+                                        "name": "updated child",
+                                        "tags": [
+                                            {
+                                                "$id": "marker",
+                                                "name": "updated tag"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "bind": "s31942"
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_documents",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "batched",
+                                    "name": "batched",
+                                    "owner": {
+                                        "$id": "marker",
+                                        "name": "batched owner"
+                                    },
+                                    "profile": {
+                                        "$id": "marker",
+                                        "name": "batched profile"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.upsert_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "document": {
+                            "$document": {
+                                "$id": "upserted",
+                                "name": "upserted",
+                                "children": [
+                                    {
+                                        "$id": "marker",
+                                        "name": "upserted child"
+                                    }
+                                ],
+                                "profile": {
+                                    "$id": "marker",
+                                    "name": "upserted profile"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.upsert_documents",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "upserted in bulk",
+                                    "name": "upserted in bulk",
+                                    "owner": {
+                                        "$id": "marker",
+                                        "name": "upserted owner"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.remove_hook",
+                    "args": {
+                        "hook": {
+                            "$obj": "o2027"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000248",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "updated child"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "id": "updated"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000251",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "updated tag"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000248",
+                        "id": {
+                            "$ref": "s31942",
+                            "path": "/$document/children/0/$document/$id"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "id": "batched"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000249",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "batched owner"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000250",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "batched profile"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "id": "upserted"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000248",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "upserted child"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000250",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "upserted profile"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000249",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "upserted owner"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000247",
+                        "id": "upserted in bulk"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000248",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000249",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000250",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000251",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedHookRewritesFromTheChildSide",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000252",
+                                "name": "u0000000000000000252",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000253",
+                                "name": "u0000000000000000253",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000254",
+                                "name": "u0000000000000000254",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000255",
+                                "name": "u0000000000000000255",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000256",
+                                "name": "u0000000000000000256",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000252",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000253",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000252",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000254",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "owner",
+                                "twoWayKey": "parents",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000252",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000255",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "profile",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000253",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000256",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "tags",
+                                "twoWayKey": "children",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.add_hook",
+                    "args": {
+                        "hook": {
+                            "$hook": "Nested",
+                            "marker": "marker",
+                            "as": "o2030"
+                        }
+                    },
+                    "bind": "s31979"
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000253",
+                        "document": {
+                            "$document": {
+                                "$id": "child side",
+                                "name": "child side",
+                                "parent": {
+                                    "$id": "marker",
+                                    "name": "parent of a child",
+                                    "owner": {
+                                        "$id": "marker",
+                                        "name": "owner of a parent"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "bind": "s31980"
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000254",
+                        "document": {
+                            "$document": {
+                                "$id": "owner side",
+                                "name": "owner side",
+                                "parents": [
+                                    {
+                                        "$id": "marker",
+                                        "name": "parent of an owner"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000255",
+                        "document": {
+                            "$document": {
+                                "$id": "profile side",
+                                "name": "profile side",
+                                "parent": {
+                                    "$id": "marker",
+                                    "name": "parent of a profile"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000256",
+                        "document": {
+                            "$document": {
+                                "$id": "tag side",
+                                "name": "tag side",
+                                "children": [
+                                    {
+                                        "$id": "marker",
+                                        "name": "child of a tag"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.remove_hook",
+                    "args": {
+                        "hook": {
+                            "$obj": "o2030"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000252",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "parent of a child"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000253",
+                        "id": "child side"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000254",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "owner of a parent"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000252",
+                        "id": {
+                            "$ref": "s31980",
+                            "path": "/$document/parent/$document/$id"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000252",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "parent of an owner"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000254",
+                        "id": "owner side"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000252",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "parent of a profile"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000255",
+                        "id": "profile side"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000253",
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "name",
+                                                    "values": [
+                                                        "child of a tag"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000256",
+                        "id": "tag side"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000252",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000253",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000254",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedHookKeepsAStringMarkerAsAReference",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000257",
+                                "name": "u0000000000000000257",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000258",
+                                "name": "u0000000000000000258",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000259",
+                                "name": "u0000000000000000259",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000260",
+                                "name": "u0000000000000000260",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000261",
+                                "name": "u0000000000000000261",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000257",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000258",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000257",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000259",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "owner",
+                                "twoWayKey": "parents",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000257",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000260",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "profile",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000258",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000261",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "tags",
+                                "twoWayKey": "children",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000259",
+                        "document": {
+                            "$document": {
+                                "$id": "marker",
+                                "name": "literal"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.add_hook",
+                    "args": {
+                        "hook": {
+                            "$hook": "Nested",
+                            "marker": "marker",
+                            "as": "o2033"
+                        }
+                    },
+                    "bind": "s32015"
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000257",
+                        "document": {
+                            "$document": {
+                                "$id": "marker",
+                                "name": "linked",
+                                "owner": "marker"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.remove_hook",
+                    "args": {
+                        "hook": {
+                            "$obj": "o2033"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000257",
+                        "id": "marker"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "u0000000000000000259"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedPreparationChecksGrants",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000262",
+                                "name": "u0000000000000000262",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000263",
+                                "name": "u0000000000000000263",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000264",
+                                "name": "u0000000000000000264",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000263",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000264",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": false,
+                                "key": "owner",
+                                "twoWayKey": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "u0000000000000000262",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "refused",
+                                                "name": "refused",
+                                                "children": [
+                                                    {
+                                                        "name": "refused",
+                                                        "$permissions": [
+                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "id": "refused"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "u0000000000000000263"
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "u0000000000000000262",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "held",
+                                                "name": "held",
+                                                "children": [
+                                                    {
+                                                        "name": "held",
+                                                        "$permissions": [
+                                                            "read(\"any\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "db.authorization.skip",
+                                    "args": {
+                                        "callback": {
+                                            "steps": [
+                                                {
+                                                    "op": "database.create_document",
+                                                    "args": {
+                                                        "collection": "u0000000000000000262",
+                                                        "document": {
+                                                            "$document": {
+                                                                "$id": "privileged",
+                                                                "name": "privileged",
+                                                                "children": [
+                                                                    {
+                                                                        "name": "privileged",
+                                                                        "$permissions": [
+                                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "return": true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "document": {
+                            "$document": {
+                                "$id": "unchecked",
+                                "name": "unchecked",
+                                "children": [
+                                    {
+                                        "name": "unchecked",
+                                        "$permissions": [
+                                            "read(\"user:nestedPreparationUnheld\")"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "id": "held"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000262",
+                                        "id": "privileged"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000262",
+                                        "id": "unchecked"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "document": {
+                            "$document": {
+                                "$id": "update target",
+                                "name": "update target"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.update_document",
+                                    "args": {
+                                        "collection": "u0000000000000000262",
+                                        "id": "update target",
+                                        "document": {
+                                            "$document": {
+                                                "children": [
+                                                    {
+                                                        "name": "update refused",
+                                                        "$permissions": [
+                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000262",
+                        "id": "update target"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedHookRunsInThePreChecksBeforeTheGrantCheck",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000265",
+                                "name": "u0000000000000000265",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000266",
+                                "name": "u0000000000000000266",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000267",
+                                "name": "u0000000000000000267",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000268",
+                                "name": "u0000000000000000268",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000269",
+                                "name": "u0000000000000000269",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000265",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000266",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000265",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000267",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "owner",
+                                "twoWayKey": "parents",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000265",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000268",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "profile",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000266",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000269",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "tags",
+                                "twoWayKey": "children",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "u0000000000000000266",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "marker",
+                                                "name": "stored",
+                                                "$permissions": [
+                                                    "read(\"user:nestedPreparationUnheld\")"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.authorize_create",
+                                    "args": {
+                                        "collection": "u0000000000000000265",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "unhooked",
+                                                "name": "unhooked",
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "stored",
+                                                        "$permissions": [
+                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.add_hook",
+                    "args": {
+                        "hook": {
+                            "$hook": "Nested",
+                            "marker": "marker",
+                            "as": "o2038"
+                        }
+                    },
+                    "bind": "s32064"
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.authorize_create",
+                                    "args": {
+                                        "collection": "u0000000000000000265",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "checked",
+                                                "name": "checked",
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "stored",
+                                                        "$permissions": [
+                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "u0000000000000000265",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "refused",
+                                                "name": "refused",
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "stored",
+                                                        "$permissions": [
+                                                            "read(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.authorize_create",
+                                    "args": {
+                                        "collection": "u0000000000000000265",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "created",
+                                                "name": "created",
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "stored",
+                                                        "$permissions": [
+                                                            "read(\"any\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "u0000000000000000265",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "created",
+                                                "name": "created",
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "stored",
+                                                        "$permissions": [
+                                                            "read(\"any\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    },
+                    "bind": "s32070"
+                },
+                {
+                    "op": "db.log",
+                    "args": {}
+                },
+                {
+                    "op": "database.remove_hook",
+                    "args": {
+                        "hook": {
+                            "$obj": "o2038"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000265",
+                        "id": "refused"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000265",
+                        "id": "created"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000266",
+                        "id": {
+                            "$ref": "s32070",
+                            "path": "/result/$document/children/0/$document/$id"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.find",
+                                    "args": {
+                                        "collection": "u0000000000000000266"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "u0000000000000000266",
+                                        "id": "marker"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "NestedPreparationTests::testNestedPreparationRefusesRelatedDocumentsInABulkUpdate",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000270",
+                                "name": "u0000000000000000270",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000271",
+                                "name": "u0000000000000000271",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "u0000000000000000272",
+                                "name": "u0000000000000000272",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000270",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000271",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "children",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "u0000000000000000270",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "u0000000000000000272",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": false,
+                                "key": "owner",
+                                "twoWayKey": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::SetNull"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000270",
+                        "document": {
+                            "$document": {
+                                "$id": "bulk",
+                                "name": "bulk"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.update_documents",
+                                    "args": {
+                                        "collection": "u0000000000000000270",
+                                        "updates": {
+                                            "$document": {
+                                                "children": [
+                                                    {
+                                                        "$id": "marker",
+                                                        "name": "bulk child",
+                                                        "$permissions": [
+                                                            "update(\"user:nestedPreparationUnheld\")"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.update_documents",
+                                    "args": {
+                                        "collection": "u0000000000000000270",
+                                        "updates": {
+                                            "$document": {
+                                                "owner": {
+                                                    "name": "bulk owner",
+                                                    "$permissions": [
+                                                        "update(\"user:nestedPreparationUnheld\")"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "u0000000000000000271"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "u0000000000000000272"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000270",
+                        "id": "bulk"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "u0000000000000000272",
+                        "document": {
+                            "$document": {
+                                "$id": "linked owner",
+                                "name": "linked owner"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_check_grants",
+                    "args": {
+                        "check": true,
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.update_documents",
+                                    "args": {
+                                        "collection": "u0000000000000000270",
+                                        "updates": {
+                                            "$document": {
+                                                "owner": "linked owner"
+                                            }
+                                        },
+                                        "queries": [
+                                            {
+                                                "$query": {
+                                                    "method": "equal",
+                                                    "attribute": "$id",
+                                                    "values": [
+                                                        "bulk"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "u0000000000000000270",
+                        "id": "bulk"
+                    }
+                }
+            ]
+        }
+    ]
+}

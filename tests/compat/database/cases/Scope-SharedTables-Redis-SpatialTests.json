@@ -25,21 +25,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -68,10 +53,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -98,21 +93,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -141,10 +121,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -171,19 +161,82 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialRequiredDropAcceptsNull",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "db.add_format",
@@ -214,18 +267,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
+          "op": "database.add_filter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -252,21 +307,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -295,10 +335,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -325,21 +375,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -368,18 +403,30 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -406,21 +453,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -449,18 +481,30 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -487,19 +531,82 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testDistanceLessThanMatchesTheExactDistance",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "db.add_format",
@@ -530,18 +637,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
+          "op": "database.add_filter",
           "args": {
-            "method": "getSupportForRelationships",
-            "args": {}
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -568,21 +677,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -611,10 +705,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -641,21 +745,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -684,10 +773,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -714,21 +813,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -757,10 +841,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -787,21 +881,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -830,10 +909,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -860,21 +949,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -903,10 +977,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -933,21 +1017,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -976,10 +1045,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1006,21 +1085,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1049,10 +1113,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1079,21 +1153,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1122,10 +1181,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1152,21 +1221,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1195,10 +1249,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1225,21 +1289,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1268,10 +1317,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1298,21 +1357,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1341,83 +1385,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "SpatialTests::testSpatialDistanceInMeterError",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1444,21 +1425,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1487,10 +1453,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1517,21 +1493,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1560,10 +1521,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1590,21 +1561,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1633,10 +1589,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1663,21 +1629,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1706,10 +1657,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1736,21 +1697,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1779,83 +1725,20 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "SpatialTests::testInvalidCoordinateDocuments",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1882,21 +1765,6 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1925,10 +1793,20 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }
@@ -1955,19 +1833,72 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialDistanceInMeterError",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "db.add_format",
@@ -1998,10 +1929,224 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testBatchSpatialAttributesMatchSingleCreation",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testRequiredSpatialAttributesOnPopulatedCollection",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testCreateCollectionWithRequiredSpatialColumns",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
           },
           "expect": false
         }

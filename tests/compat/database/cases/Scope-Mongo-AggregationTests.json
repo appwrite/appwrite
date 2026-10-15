@@ -1,0 +1,6288 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/AggregationTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AggregationTests::testCountAll",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountWithAlias",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountEmptyCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountWithMultipleFilters",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountDistinct",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountDistinctWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumAll",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumEmptyResult",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumOfStock",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAvgAll",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAvgWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAvgOfRating",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMinAll",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMinWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMaxAll",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMaxWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMinMaxTogether",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMultipleAggregationsTogether",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMultipleAggregationsWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupBySingleColumn",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByWithSum",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByWithAvg",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByWithMinMax",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByWithMultipleAggregations",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByOrdersStatus",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByCustomerOrders",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testHavingGreaterThan",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testHavingLessThan",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testHavingWithCount",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testInnerJoinBasic",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testInnerJoinWithGroupBy",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testInnerJoinWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testInnerJoinWithHaving",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testInnerJoinProductReviewStats",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testLeftJoinBasic",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testLeftJoinWithFilter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testLeftJoinCustomerOrderSummary",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testJoinAggregationWithPermissionsGrouped",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testLeftJoinPermissionFiltered",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count all products",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count electronics",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count clothing",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count books",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count price > 100",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count price <= 50",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum all prices",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum electronics",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum clothing",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum books",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum stock",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#sum stock electronics",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#min all price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#min electronics price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#min clothing price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#min books price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#min stock",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#max all price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#max electronics price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#max clothing price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#max books price",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#max stock",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count distinct categories",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSingleAggregation#count distinct price > 50",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByCount#group by category no filter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByCount#group by category price > 50",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupByCount#group by category price > 200",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testOrderStatusAggregation#completed orders revenue",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testOrderStatusAggregation#pending orders revenue",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testOrderStatusAggregation#cancelled orders revenue",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#electronics count",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#electronics sum",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#electronics min",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#electronics max",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#clothing count",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#clothing sum",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#clothing min",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#clothing max",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#books count",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#books sum",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#books min",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCategoryAggregation#books max",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#laptop reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#phone reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#shirt reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#novel reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#jacket reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testReviewCounts#textbook reviews",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 0-20",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 0-50",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 0-100",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 50-200",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 100-500",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 500-1500",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPriceRangeCount#price 0-10000",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testStddevAndVarianceArePopulationOnEveryAdapter",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testStddevPopOfPrice",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testStddevSampOfPrice",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testVarPopOfPrice",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testVarSampOfPrice",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testBitAndOfIntegerColumn",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testBitOrOfIntegerColumn",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testBitXorOfIntegerColumn",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testJoinCountIsCappedAtEight",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testHavingConditionsFollowTheFilterRules",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testNumericAggregatesRejectAttributesThatAreNotNumbers",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testEmptySetAggregatesAreZeroForCountsAndNullOtherwise",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testBitwiseAggregatesOfOnlyNullValuesAreNull",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testUnknownColumnsAreAttributeNotFound",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAggregateAliasesAreLimitedToSixtyThreeCharacters",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testDistinctOrderedByAnUnselectedAttributeIsRejectedWhereTheEngineRefusesIt",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testMainAttributeAggregatedUnderItsOwnNameOverAJoinIsReadFromTheMainTable",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAggregateAliasNamingAnotherResultColumnIsAnInvalidQuery",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSelectNextToAnAggregateMustNameAGroupedAttribute",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testWildcardSelectNextToAnAggregateReturnsOnlyTheAggregates",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testRelationshipWildcardsNextToAnAggregateAddNothingToTheRows",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testGroupedSelectReturnsEachGroupOnceWithItsAggregate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAggregateNextToASearchWithoutAnOrderCountsTheMatches",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAggregateNextToAVectorQueryWithoutAnOrderCountsTheMatches",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testDistinctNextToASearchReturnsEachSelectionOnce",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testDistinctNextToAVectorQueryReturnsEachSelectionOnce",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testRowsNextToAVectorQueryAreOrderedByDistance",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexFulltext"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSearchReadsFollowTheirOrderInsteadOfARelevanceRanking",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexFulltext"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "search_explicit_order"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "search_explicit_order",
+                "name": "search_explicit_order",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "search_explicit_order",
+              "name": "search_explicit_order",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_explicit_order",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_explicit_order",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "category",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 50,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 50,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_explicit_order",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "price",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_explicit_order",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "stock",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "stock",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_explicit_order",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "rating",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Double"
+                },
+                "size": null,
+                "required": false,
+                "default": 0.0,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": 0.0,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "laptop",
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "laptop",
+              "name": "Laptop",
+              "category": "electronics",
+              "price": 1200,
+              "stock": 50,
+              "rating": 4.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "phone",
+                "name": "Phone",
+                "category": "electronics",
+                "price": 800,
+                "stock": 100,
+                "rating": 4.2,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "phone",
+              "name": "Phone",
+              "category": "electronics",
+              "price": 800,
+              "stock": 100,
+              "rating": 4.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "tablet",
+                "name": "Tablet",
+                "category": "electronics",
+                "price": 500,
+                "stock": 75,
+                "rating": 3.8,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tablet",
+              "name": "Tablet",
+              "category": "electronics",
+              "price": 500,
+              "stock": 75,
+              "rating": 3.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "shirt",
+                "name": "Shirt",
+                "category": "clothing",
+                "price": 30,
+                "stock": 200,
+                "rating": 4.0,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shirt",
+              "name": "Shirt",
+              "category": "clothing",
+              "price": 30,
+              "stock": 200,
+              "rating": 4.0,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "pants",
+                "name": "Pants",
+                "category": "clothing",
+                "price": 50,
+                "stock": 150,
+                "rating": 3.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "pants",
+              "name": "Pants",
+              "category": "clothing",
+              "price": 50,
+              "stock": 150,
+              "rating": 3.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "jacket",
+                "name": "Jacket",
+                "category": "clothing",
+                "price": 120,
+                "stock": 80,
+                "rating": 4.7,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jacket",
+              "name": "Jacket",
+              "category": "clothing",
+              "price": 120,
+              "stock": 80,
+              "rating": 4.7,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "novel",
+                "name": "Novel",
+                "category": "books",
+                "price": 15,
+                "stock": 300,
+                "rating": 4.8,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "novel",
+              "name": "Novel",
+              "category": "books",
+              "price": 15,
+              "stock": 300,
+              "rating": 4.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "textbook",
+                "name": "Textbook",
+                "category": "books",
+                "price": 60,
+                "stock": 40,
+                "rating": 3.2,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "textbook",
+              "name": "Textbook",
+              "category": "books",
+              "price": 60,
+              "stock": 40,
+              "rating": 3.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "comic",
+                "name": "Comic",
+                "category": "books",
+                "price": 10,
+                "stock": 500,
+                "rating": 4.1,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "comic",
+              "name": "Comic",
+              "category": "books",
+              "price": 10,
+              "stock": 500,
+              "rating": 4.1,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "dock",
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dock",
+              "name": "Laptop Laptop Dock",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "sleeve",
+                "name": "Laptop Sleeve",
+                "category": "clothing",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "sleeve",
+              "name": "Laptop Sleeve",
+              "category": "clothing",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_explicit_order",
+            "document": {
+              "$document": {
+                "$id": "bag",
+                "name": "Laptop Bag",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "bag",
+              "name": "Laptop Bag",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_explicit_order",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "search_explicit_order",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "name_search",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Fulltext"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "name_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_explicit_order",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "laptop",
+                "$collection": "search_explicit_order"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Laptop Dock",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "dock",
+                "$collection": "search_explicit_order"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Sleeve",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "sleeve",
+                "$collection": "search_explicit_order"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Bag",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "bag",
+                "$collection": "search_explicit_order"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_explicit_order",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "search_explicit_order",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "laptop"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Bag",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_explicit_order",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "bag"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_explicit_order",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "dock"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Sleeve",
+                "category": "clothing",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_explicit_order",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "sleeve"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "search_explicit_order"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSearchPagedWithACursorListsEachMatchOnce",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexFulltext"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "search_cursor_pages"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "search_cursor_pages",
+                "name": "search_cursor_pages",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "search_cursor_pages",
+              "name": "search_cursor_pages",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_cursor_pages",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_cursor_pages",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "category",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 50,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 50,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_cursor_pages",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "price",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_cursor_pages",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "stock",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "stock",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "search_cursor_pages",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "rating",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Double"
+                },
+                "size": null,
+                "required": false,
+                "default": 0.0,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": 0.0,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "laptop",
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s1232",
+          "expect": {
+            "$document": {
+              "$id": "laptop",
+              "name": "Laptop",
+              "category": "electronics",
+              "price": 1200,
+              "stock": 50,
+              "rating": 4.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "phone",
+                "name": "Phone",
+                "category": "electronics",
+                "price": 800,
+                "stock": 100,
+                "rating": 4.2,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "phone",
+              "name": "Phone",
+              "category": "electronics",
+              "price": 800,
+              "stock": 100,
+              "rating": 4.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "tablet",
+                "name": "Tablet",
+                "category": "electronics",
+                "price": 500,
+                "stock": 75,
+                "rating": 3.8,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tablet",
+              "name": "Tablet",
+              "category": "electronics",
+              "price": 500,
+              "stock": 75,
+              "rating": 3.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "shirt",
+                "name": "Shirt",
+                "category": "clothing",
+                "price": 30,
+                "stock": 200,
+                "rating": 4.0,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shirt",
+              "name": "Shirt",
+              "category": "clothing",
+              "price": 30,
+              "stock": 200,
+              "rating": 4.0,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "pants",
+                "name": "Pants",
+                "category": "clothing",
+                "price": 50,
+                "stock": 150,
+                "rating": 3.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "pants",
+              "name": "Pants",
+              "category": "clothing",
+              "price": 50,
+              "stock": 150,
+              "rating": 3.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "jacket",
+                "name": "Jacket",
+                "category": "clothing",
+                "price": 120,
+                "stock": 80,
+                "rating": 4.7,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jacket",
+              "name": "Jacket",
+              "category": "clothing",
+              "price": 120,
+              "stock": 80,
+              "rating": 4.7,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "novel",
+                "name": "Novel",
+                "category": "books",
+                "price": 15,
+                "stock": 300,
+                "rating": 4.8,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "novel",
+              "name": "Novel",
+              "category": "books",
+              "price": 15,
+              "stock": 300,
+              "rating": 4.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "textbook",
+                "name": "Textbook",
+                "category": "books",
+                "price": 60,
+                "stock": 40,
+                "rating": 3.2,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "textbook",
+              "name": "Textbook",
+              "category": "books",
+              "price": 60,
+              "stock": 40,
+              "rating": 3.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "comic",
+                "name": "Comic",
+                "category": "books",
+                "price": 10,
+                "stock": 500,
+                "rating": 4.1,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "comic",
+              "name": "Comic",
+              "category": "books",
+              "price": 10,
+              "stock": 500,
+              "rating": 4.1,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "dock",
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s1241",
+          "expect": {
+            "$document": {
+              "$id": "dock",
+              "name": "Laptop Laptop Dock",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "sleeve",
+                "name": "Laptop Sleeve",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s1242",
+          "expect": {
+            "$document": {
+              "$id": "sleeve",
+              "name": "Laptop Sleeve",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "document": {
+              "$document": {
+                "$id": "bag",
+                "name": "Laptop Bag",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s1243",
+          "expect": {
+            "$document": {
+              "$id": "bag",
+              "name": "Laptop Bag",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "rating": 0.0,
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "search_cursor_pages",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "name_search",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Fulltext"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "name_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "laptop"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop",
+                        "category": "electronics",
+                        "price": 1200,
+                        "stock": 50,
+                        "rating": 4.5,
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1232",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-5090-7049-95d3-7f4fd0c9c2d9"
+                        },
+                        "$id": "laptop"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "dock"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Laptop Dock",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1241",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a0-70e5-ad29-5a593dcbb343"
+                        },
+                        "$id": "dock"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop Sleeve",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "sleeve"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Sleeve",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1242",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a2-725d-9986-914e4d169fee"
+                        },
+                        "$id": "sleeve"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop Bag",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "bag"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Bag",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1243",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a4-71cf-ba57-9106026606f7"
+                        },
+                        "$id": "bag"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "search_cursor_pages",
+            "id": "bag"
+          },
+          "expect": {
+            "$document": {
+              "name": "Laptop Bag",
+              "category": "electronics",
+              "price": 90,
+              "stock": 5,
+              "rating": 0.0,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "search_cursor_pages",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "bag"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Bag",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1243",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a4-71cf-ba57-9106026606f7"
+                        },
+                        "$id": "bag"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop Sleeve",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "sleeve"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Sleeve",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1242",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a2-725d-9986-914e4d169fee"
+                        },
+                        "$id": "sleeve"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "dock"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop Laptop Dock",
+                        "category": "electronics",
+                        "price": 90,
+                        "stock": 5,
+                        "rating": 0.0,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1241",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-50a0-70e5-ad29-5a593dcbb343"
+                        },
+                        "$id": "dock"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "laptop"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "name": "Laptop",
+                        "category": "electronics",
+                        "price": 1200,
+                        "stock": 50,
+                        "rating": 4.5,
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "search_cursor_pages",
+                        "$createdAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$updatedAt": {
+                          "$now": 0,
+                          "format": "Y-m-d\\TH:i:s.vP"
+                        },
+                        "$sequence": {
+                          "$ref": "s1232",
+                          "path": "/$document/$sequence",
+                          "default": "01a13e1a-5090-7049-95d3-7f4fd0c9c2d9"
+                        },
+                        "$id": "laptop"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "search_cursor_pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "search",
+                  "attribute": "name",
+                  "values": [
+                    "Laptop"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Laptop",
+                "category": "electronics",
+                "price": 1200,
+                "stock": 50,
+                "rating": 4.5,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "laptop"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Laptop Dock",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "dock"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Sleeve",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "sleeve"
+              }
+            },
+            {
+              "$document": {
+                "name": "Laptop Bag",
+                "category": "electronics",
+                "price": 90,
+                "stock": 5,
+                "rating": 0.0,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "search_cursor_pages",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "bag"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "search_cursor_pages"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

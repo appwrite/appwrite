@@ -22,19 +22,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -51,54 +84,65 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000077"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000083",
+                "name": "u0000000000000000083",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000077",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000077",
+              "$id": "u0000000000000000083",
+              "name": "u0000000000000000083",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc1",
@@ -140,7 +184,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -150,7 +194,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -184,7 +228,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -196,7 +240,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -234,7 +278,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -246,11 +290,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -280,7 +324,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -292,7 +336,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc2",
@@ -334,7 +378,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -344,7 +388,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -378,7 +422,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -390,7 +434,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -428,7 +472,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -440,7 +484,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "id": "doc1",
             "document": {
               "$document": {
@@ -482,7 +526,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -493,7 +537,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -527,7 +571,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -539,11 +583,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -573,7 +617,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -585,7 +629,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -605,7 +649,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -639,7 +683,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -651,7 +695,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -679,7 +723,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -717,7 +761,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -729,7 +773,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "id": "doc1"
           },
           "expect": {
@@ -750,7 +794,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -761,7 +805,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -809,7 +853,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc1",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             }
           ]
@@ -817,7 +861,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -852,7 +896,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc2",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             }
           ]
@@ -860,7 +904,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc3",
@@ -878,7 +922,7 @@
                 "read(\"any\")"
               ],
               "meta": null,
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -888,7 +932,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc4",
@@ -906,7 +950,7 @@
                 "read(\"any\")"
               ],
               "meta": [],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -916,7 +960,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc5",
@@ -954,7 +998,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -964,7 +1008,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1004,7 +1048,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1016,7 +1060,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1056,7 +1100,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1068,7 +1112,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc6",
@@ -1114,7 +1158,7 @@
                   "key": "value"
                 }
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1124,7 +1168,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1160,7 +1204,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1172,7 +1216,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1208,7 +1252,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1220,7 +1264,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1256,7 +1300,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1268,7 +1312,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc7",
@@ -1302,7 +1346,7 @@
                   "rust"
                 ]
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1312,11 +1356,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1342,7 +1386,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1354,7 +1398,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc8",
@@ -1386,7 +1430,7 @@
                   100
                 ]
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1396,11 +1440,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1425,7 +1469,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1437,11 +1481,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1457,7 +1501,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1491,7 +1535,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1516,7 +1560,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1528,7 +1572,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1541,7 +1585,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1564,7 +1608,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1591,7 +1635,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1611,7 +1655,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1623,7 +1667,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc9",
@@ -1681,7 +1725,7 @@
                 ],
                 "company": "TechCorp"
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1691,7 +1735,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1733,7 +1777,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1745,7 +1789,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1804,7 +1848,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1816,7 +1860,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc10",
@@ -1842,7 +1886,7 @@
                 "emoji": "🚀🎉",
                 "symbols": "@#$%^&*()"
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1852,7 +1896,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1878,7 +1922,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1890,7 +1934,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc11",
@@ -1920,7 +1964,7 @@
                   "language": "en"
                 }
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -1930,7 +1974,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -1961,7 +2005,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -1973,7 +2017,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -2003,7 +2047,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -2015,7 +2059,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "id": "doc11",
             "document": {
               "$document": {
@@ -2033,7 +2077,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -2044,7 +2088,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "doc12",
@@ -2098,7 +2142,7 @@
                   ]
                 ]
               },
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -2108,11 +2152,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -2154,7 +2198,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000077",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -2166,7 +2210,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "id": "doc6"
           },
           "expect": {
@@ -2189,7 +2233,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -2200,7 +2244,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "id": "doc10"
           },
           "expect": {
@@ -2213,7 +2257,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000077",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -2224,7 +2268,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -2279,7 +2323,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc5",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             }
           ]
@@ -2287,7 +2331,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -2333,7 +2377,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc1",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2358,7 +2402,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc2",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2370,7 +2414,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc3",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2383,7 +2427,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc4",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2406,7 +2450,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc5",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2433,7 +2477,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc6",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2454,7 +2498,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc7",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2474,7 +2518,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc8",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2507,7 +2551,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc9",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2524,7 +2568,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc10",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2537,7 +2581,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc11",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             },
             {
@@ -2568,7 +2612,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc12",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             }
           ]
@@ -2576,7 +2620,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000077",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -2625,7 +2669,7 @@
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
                 "$id": "doc7",
-                "$collection": "u0000000000000000077"
+                "$collection": "u0000000000000000083"
               }
             }
           ]
@@ -2633,9 +2677,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000077"
+            "collection": "u0000000000000000083"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -2657,19 +2701,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2686,17 +2763,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
         }
@@ -2720,19 +2794,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2749,25 +2856,26 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         }
@@ -2791,19 +2899,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2820,25 +2961,26 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         }
@@ -2862,19 +3004,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2891,54 +3066,65 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000078"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000084",
+                "name": "u0000000000000000084",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000078",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000078",
+              "$id": "u0000000000000000084",
+              "name": "u0000000000000000084",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000084",
             "document": {
               "$document": {
                 "$id": "bigInts",
@@ -2968,7 +3154,7 @@
                   "deep": 3408048000
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000084",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -2978,15 +3164,15 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000078",
+            "collection": "u0000000000000000084",
             "id": "bigInts"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000084",
             "id": "bigInts"
           },
           "expect": {
@@ -3001,7 +3187,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000084",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3012,9 +3198,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000078"
+            "collection": "u0000000000000000084"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -3036,19 +3222,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3065,54 +3284,65 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000079"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000085",
+                "name": "u0000000000000000085",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000079",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000079",
+              "$id": "u0000000000000000085",
+              "name": "u0000000000000000085",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "document": {
               "$document": {
                 "$id": "emptyObject",
@@ -3130,7 +3360,7 @@
                 "read(\"any\")"
               ],
               "meta": {},
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -3140,15 +3370,15 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "id": "emptyObject"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "id": "emptyObject"
           },
           "expect": {
@@ -3157,7 +3387,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3168,7 +3398,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "id": "emptyObject"
           },
           "expect": {
@@ -3177,7 +3407,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3188,7 +3418,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "id": "emptyObject",
             "document": {
               "$document": {
@@ -3202,7 +3432,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3213,7 +3443,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000085",
             "id": "emptyObject",
             "document": {
               "$document": {
@@ -3231,9 +3461,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000079"
+            "collection": "u0000000000000000085"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -3255,19 +3485,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3284,54 +3547,65 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000080"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000086",
+                "name": "u0000000000000000086",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000080",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000080",
+              "$id": "u0000000000000000086",
+              "name": "u0000000000000000086",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000086",
             "document": {
               "$document": {
                 "$id": "nestedEmptyObjects",
@@ -3367,7 +3641,7 @@
                 ],
                 "emptyArray": []
               },
-              "$collection": "u0000000000000000080",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
@@ -3377,15 +3651,15 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000080",
+            "collection": "u0000000000000000086",
             "id": "nestedEmptyObjects"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000086",
             "id": "nestedEmptyObjects"
           },
           "expect": {
@@ -3403,7 +3677,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000080",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3414,7 +3688,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000086",
             "id": "nestedEmptyObjects"
           },
           "expect": {
@@ -3432,7 +3706,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000080",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3443,7 +3717,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000086",
             "id": "nestedEmptyObjects",
             "document": {
               "$document": {
@@ -3475,7 +3749,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "u0000000000000000080",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -3486,9 +3760,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000080"
+            "collection": "u0000000000000000086"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -3510,19 +3784,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3539,17 +3846,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3573,19 +3877,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3602,17 +3939,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         }
@@ -3636,19 +3970,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3665,17 +4032,119 @@
           "expect": null
         },
         {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectPathKeysOutsideTheAllowedCharsAreRefused",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         }
@@ -3699,19 +4168,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3728,82 +4230,125 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000081"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000087",
+                "name": "u0000000000000000087",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000081",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000081",
+              "$id": "u0000000000000000087",
+              "name": "u0000000000000000087",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_deep_nest",
-            "type": "key",
-            "attributes": [
-              "profile.level1.level2.level3.level4.value"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_deep_nest",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.level1.level2.level3.level4.value"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_deep_nest",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.level1.level2.level3.level4.value"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -3850,15 +4395,19 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -3888,7 +4437,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -3900,43 +4449,115 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_email",
-            "type": "key",
-            "attributes": [
-              "profile.user.email"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_country",
-            "type": "key",
-            "attributes": [
-              "profile.user.info.country"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_country",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.info.country"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_country",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.info.country"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_city",
-            "type": "key",
-            "attributes": [
-              "profile.user.info.city"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_city",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.info.city"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_city",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.info.city"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -3979,7 +4600,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4007,7 +4628,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4019,7 +4640,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4047,7 +4668,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4059,7 +4680,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4087,7 +4708,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4099,7 +4720,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -4148,7 +4769,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4166,7 +4787,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -4213,31 +4834,79 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_name",
-            "type": "key",
-            "attributes": [
-              "name"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_age",
-            "type": "key",
-            "attributes": [
-              "age"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_age",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "age"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4276,7 +4945,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4288,7 +4957,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4335,7 +5004,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4347,7 +5016,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "id": "mixed1",
             "document": {
               "$document": {
@@ -4385,7 +5054,7 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$collection": "u0000000000000000081",
+              "$collection": "u0000000000000000087",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>",
@@ -4396,7 +5065,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4414,7 +5083,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4444,7 +5113,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4456,7 +5125,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4484,7 +5153,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4503,7 +5172,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4526,7 +5195,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4549,7 +5218,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4561,7 +5230,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -4604,7 +5273,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4632,7 +5301,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4644,7 +5313,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -4707,7 +5376,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4752,7 +5421,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4774,7 +5443,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4786,7 +5455,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4831,7 +5500,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4852,7 +5521,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4874,7 +5543,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4896,7 +5565,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4908,7 +5577,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -4970,7 +5639,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -4992,7 +5661,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5014,7 +5683,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5026,7 +5695,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -5083,7 +5752,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5120,7 +5789,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5140,7 +5809,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5152,7 +5821,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5197,7 +5866,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5209,7 +5878,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -5234,7 +5903,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5261,7 +5930,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5273,15 +5942,15 @@
         {
           "op": "database.delete_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_email"
+            "collection": "u0000000000000000087",
+            "key": "idx_email"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5311,7 +5980,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5323,19 +5992,43 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "idx_email_recreated",
-            "type": "key",
-            "attributes": [
-              "profile.user.email"
-            ]
+            "collection": "u0000000000000000087",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_email_recreated",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_email_recreated",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5365,7 +6058,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5377,15 +6070,19 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForIdenticalIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexIdentical"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "documents": [
               {
                 "$document": {
@@ -5428,7 +6125,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5456,7 +6153,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5468,7 +6165,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000087",
             "queries": [
               {
                 "$query": {
@@ -5496,7 +6193,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5517,7 +6214,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000081",
+                "$collection": "u0000000000000000087",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$sequence": "<uuid7>",
@@ -5529,9 +6226,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000081"
+            "collection": "u0000000000000000087"
           },
-          "expect": true
+          "expect": null
         }
       ]
     }

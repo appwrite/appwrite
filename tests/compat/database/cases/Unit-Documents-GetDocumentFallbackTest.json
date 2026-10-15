@@ -1,0 +1,1218 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/GetDocumentFallbackTest.php"
+  ],
+  "cases": [
+    {
+      "name": "GetDocumentFallbackTest::testAnEmptyCollectionIdIsNotFound",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2598"
+          },
+          "bind": "s4373",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2598"
+              },
+              "cache": "memory"
+            },
+            "as": "o2599"
+          },
+          "bind": "s4374",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2599"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "fallback"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2599"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "fallback_u000000000074"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2599"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "owner",
+              "size": 32
+            },
+            "as": "o2600"
+          },
+          "bind": "s4378",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "owner",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "startedAt"
+            },
+            "as": "o2601"
+          },
+          "bind": "s4379",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "startedAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2602"
+          },
+          "bind": "s4380",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2602"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2603"
+          },
+          "bind": "s4382",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2603"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "sessions",
+              "attributes": [
+                {
+                  "$obj": "o2600"
+                },
+                {
+                  "$obj": "o2601"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o2604"
+          },
+          "bind": "s4384",
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2599"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2604"
+              }
+            },
+            "as": "o2605"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2599"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "",
+              "id": "session"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetDocumentFallbackTest::testAJoinOnAnAdapterWithoutJoinsIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2606"
+          },
+          "bind": "s4387",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2606"
+              },
+              "cache": "memory"
+            },
+            "as": "o2607"
+          },
+          "bind": "s4388",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2607"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "fallback"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2607"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "fallback_u000000000075"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2607"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "owner",
+              "size": 32
+            },
+            "as": "o2608"
+          },
+          "bind": "s4392",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "owner",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "startedAt"
+            },
+            "as": "o2609"
+          },
+          "bind": "s4393",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "startedAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2610"
+          },
+          "bind": "s4394",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2610"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2611"
+          },
+          "bind": "s4396",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2611"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "sessions",
+              "attributes": [
+                {
+                  "$obj": "o2608"
+                },
+                {
+                  "$obj": "o2609"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o2612"
+          },
+          "bind": "s4398",
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2607"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2612"
+              }
+            },
+            "as": "o2613"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "owner",
+              "right": "owner"
+            },
+            "as": "o2614"
+          },
+          "bind": "s4400",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "owner",
+                "=",
+                "owner"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "sessions",
+              "alias": "twin",
+              "on": [
+                {
+                  "$obj": "o2614"
+                }
+              ]
+            },
+            "as": "o2615"
+          },
+          "bind": "s4401",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "sessions",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "owner",
+                      "=",
+                      "owner"
+                    ]
+                  }
+                }
+              ],
+              "alias": "twin"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2607"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "sessions",
+              "id": "session",
+              "queries": [
+                {
+                  "$obj": "o2615"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GetDocumentFallbackTest::testACacheThatCannotBeReadOrWrittenFallsBackToTheDatabase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o2616"
+          },
+          "bind": "s4403",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o2616"
+              },
+              "cache": "memory"
+            },
+            "as": "o2617"
+          },
+          "bind": "s4404",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "fallback"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "fallback_u000000000076"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "owner",
+              "size": 32
+            },
+            "as": "o2618"
+          },
+          "bind": "s4408",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "owner",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "startedAt"
+            },
+            "as": "o2619"
+          },
+          "bind": "s4409",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "startedAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2620"
+          },
+          "bind": "s4410",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o2620"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2621"
+          },
+          "bind": "s4412",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o2621"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "sessions",
+              "attributes": [
+                {
+                  "$obj": "o2618"
+                },
+                {
+                  "$obj": "o2619"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o2622"
+          },
+          "bind": "s4414",
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o2622"
+              }
+            },
+            "as": "o2623"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sessions",
+              "name": "sessions",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "startedAt",
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "datetime"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "session",
+                "owner": "ada"
+              }
+            },
+            "as": "o2624"
+          },
+          "bind": "s4416",
+          "expect": {
+            "$document": {
+              "$id": "session",
+              "owner": "ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "sessions",
+              "document": {
+                "$obj": "o2624"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "session",
+              "owner": "ada",
+              "$collection": "sessions",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "startedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "sessions",
+              "id": "session"
+            },
+            "as": "o2625"
+          },
+          "bind": "s4418",
+          "expect": {
+            "$document": {
+              "owner": "ada",
+              "$sequence": "1",
+              "$id": "session",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "sessions",
+              "startedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2617"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "sessions",
+              "id": "absent"
+            },
+            "as": "o2626"
+          },
+          "bind": "s4419",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2625"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "owner"
+            }
+          },
+          "expect": "ada"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2626"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

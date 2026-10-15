@@ -27,6 +27,20 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_${ns}Absent"
+          },
+          "expect": false
+        },
+        {
           "op": "database.delete",
           "args": {
             "database": "${ns}"
@@ -34,14 +48,775 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": false
+        },
+        {
           "op": "database.create",
           "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
           "expect": true
         },
         {
           "op": "database.set_database",
           "args": {
             "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testSkipDuplicatesKeepsEachTenantsSequence",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "database.is_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "tenantSequences",
+                "name": "tenantSequences",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tenantSequences",
+              "name": "tenantSequences",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$tenant": null
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "tenantSequences",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "existing",
+                  "$tenant": 1,
+                  "name": "tenant one"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "existing",
+                  "$tenant": 2,
+                  "name": "tenant two"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.ignore_duplicates",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_documents",
+                  "args": {
+                    "collection": "tenantSequences",
+                    "documents": [
+                      {
+                        "$document": {
+                          "$id": "existing",
+                          "$tenant": 1,
+                          "name": "tenant one"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "$id": "existing",
+                          "$tenant": 2,
+                          "name": "tenant two"
+                        }
+                      }
+                    ],
+                    "onNext": true
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 0,
+                      "calls": {
+                        "onNext": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "tenantSequences",
+            "id": "existing"
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant one",
+              "$collection": "tenantSequences",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "existing",
+              "$tenant": "1"
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "tenantSequences",
+            "id": "existing"
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant two",
+              "$collection": "tenantSequences",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "existing",
+              "$tenant": "2"
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.ignore_duplicates",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_documents",
+                  "args": {
+                    "collection": "tenantSequences",
+                    "documents": [
+                      {
+                        "$document": {
+                          "$id": "inserted",
+                          "$tenant": 1,
+                          "name": "tenant one"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "$id": "inserted",
+                          "$tenant": 2,
+                          "name": "tenant two"
+                        }
+                      }
+                    ],
+                    "onNext": true
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 2,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": 2,
+                      "calls": {
+                        "onNext": [
+                          {
+                            "args": [
+                              {
+                                "$document": {
+                                  "$id": "inserted",
+                                  "$tenant": "1",
+                                  "name": "tenant one",
+                                  "$collection": "tenantSequences",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$sequence": "<uuid7>"
+                                }
+                              },
+                              null
+                            ],
+                            "steps": []
+                          },
+                          {
+                            "args": [
+                              {
+                                "$document": {
+                                  "$id": "inserted",
+                                  "$tenant": "2",
+                                  "name": "tenant two",
+                                  "$collection": "tenantSequences",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$sequence": "<uuid7>"
+                                }
+                              },
+                              null
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "tenantSequences",
+            "id": "inserted"
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant one",
+              "$collection": "tenantSequences",
+              "$createdAt": "<now>",
+              "$permissions": [],
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "inserted",
+              "$tenant": "1"
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "tenantSequences",
+            "id": "inserted"
+          },
+          "expect": {
+            "$document": {
+              "name": "tenant two",
+              "$collection": "tenantSequences",
+              "$createdAt": "<now>",
+              "$permissions": [],
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "inserted",
+              "$tenant": "2"
+            }
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant_per_document",
+          "args": {
+            "enabled": false
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testPooledDefinitionsAreListedUnderTheirReadPermissions",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": 999
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "pooledDefinition",
+                "name": "pooledDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "pooledDefinition",
+              "name": "pooledDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": null,
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "pooledAdminDefinition",
+                "name": "pooledAdminDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "pooledAdminDefinition",
+              "name": "pooledAdminDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": null,
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "ownedDefinition",
+                "name": "ownedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ownedDefinition",
+              "name": "ownedDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 990
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "_metadata",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "pooledDefinition",
+                    "pooledAdminDefinition",
+                    "ownedDefinition"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "pooledDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "pooledDefinition",
+                "$tenant": null
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "_metadata",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "pooledDefinition",
+                    "pooledAdminDefinition",
+                    "ownedDefinition"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 999
           },
           "expect": {
             "$database": true

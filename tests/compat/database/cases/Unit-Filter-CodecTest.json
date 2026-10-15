@@ -1,0 +1,3978 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Filter/CodecTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CodecTest::testRegisteredTypeEncodesAndDecodesOnItsHandle",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3061"
+          },
+          "bind": "s5647",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3062"
+          },
+          "bind": "s5648",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3061"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3063"
+          },
+          "bind": "s5649",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3062"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3062"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3064"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes"
+            },
+            "as": "o3065"
+          },
+          "bind": "s5655",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3065"
+              }
+            },
+            "as": "o3066"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "filters": [
+                "reversed"
+              ]
+            },
+            "as": "o3067"
+          },
+          "bind": "s5657",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "reversed"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "notes",
+              "attribute": {
+                "$obj": "o3067"
+              }
+            },
+            "as": "o3068"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "reversed"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3069"
+          },
+          "bind": "s5659",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3069"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "hello"
+              }
+            },
+            "as": "o3070"
+          },
+          "bind": "s5661",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o3070"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "notes"
+            },
+            "as": "o3071"
+          },
+          "bind": "s5663",
+          "expect": {
+            "$document": {
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3061"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o3071"
+              },
+              "id": "note"
+            },
+            "as": "o3072"
+          },
+          "bind": "s5664",
+          "expect": {
+            "$document": {
+              "body": "olleh",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3072"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "olleh"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3063"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o3073"
+          },
+          "bind": "s5666",
+          "expect": {
+            "$document": {
+              "body": "hello",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3073"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "hello"
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testHandlesWithoutTheRegistryCannotEncodeItsTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3074"
+          },
+          "bind": "s5668",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3074"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3075"
+          },
+          "bind": "s5669",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3075"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3075"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3076"
+          },
+          "bind": "s5672",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3076"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3077"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3075"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3076"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3078"
+          },
+          "bind": "s5675",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3078"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3079"
+          },
+          "bind": "s5676",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3079"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3079"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "reversed"
+                ]
+              }
+            },
+            "as": "o3080"
+          },
+          "bind": "s5679",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "notes",
+                "attributes": [
+                  {
+                    "$obj": "o3080"
+                  }
+                ]
+              }
+            },
+            "as": "o3081"
+          },
+          "bind": "s5680",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "hello"
+              }
+            },
+            "as": "o3082"
+          },
+          "bind": "s5681",
+          "expect": {
+            "$document": {
+              "body": "hello"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3079"
+            },
+            "method": "encode",
+            "args": {
+              "collection": {
+                "$obj": "o3081"
+              },
+              "document": {
+                "$obj": "o3082"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Filter: reversed not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testHandlesWithoutTheRegistryCannotDecodeItsTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3083"
+          },
+          "bind": "s5683",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3083"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3084"
+          },
+          "bind": "s5684",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3084"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3084"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3085"
+          },
+          "bind": "s5687",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3085"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3086"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3084"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3085"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3087"
+          },
+          "bind": "s5690",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3087"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3088"
+          },
+          "bind": "s5691",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3088"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3088"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "reversed"
+                ]
+              }
+            },
+            "as": "o3089"
+          },
+          "bind": "s5694",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "notes",
+                "attributes": [
+                  {
+                    "$obj": "o3089"
+                  }
+                ]
+              }
+            },
+            "as": "o3090"
+          },
+          "bind": "s5695",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "olleh"
+              }
+            },
+            "as": "o3091"
+          },
+          "bind": "s5696",
+          "expect": {
+            "$document": {
+              "body": "olleh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3088"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o3090"
+              },
+              "document": {
+                "$obj": "o3091"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Filter \"reversed\" not found for attribute \"body\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testABuiltInNameCannotBreakOtherHandles",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3092"
+          },
+          "bind": "s5698",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3092"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3093"
+          },
+          "bind": "s5699",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes"
+            },
+            "as": "o3094"
+          },
+          "bind": "s5703",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3094"
+              }
+            },
+            "as": "o3095"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "filters": []
+            },
+            "as": "o3096"
+          },
+          "bind": "s5705",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "notes",
+              "attribute": {
+                "$obj": "o3096"
+              }
+            },
+            "as": "o3097"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3098"
+          },
+          "bind": "s5707",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3098"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "hello"
+              }
+            },
+            "as": "o3099"
+          },
+          "bind": "s5709",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3093"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o3099"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3100"
+          },
+          "bind": "s5711",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3101"
+          },
+          "bind": "s5712",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3101"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3102"
+          },
+          "bind": "s5713",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3102"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3102"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3102"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3100"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3100"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "json",
+                "as": "o3103"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Filter \"json\" collides with the built-in filter of the same name"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3092"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3104"
+          },
+          "bind": "s5718",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3104"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3104"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3104"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o3105"
+          },
+          "bind": "s5721",
+          "expect": {
+            "$document": {
+              "body": "hello",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3105"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "hello"
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testARegisteredTypeShadowsAGlobalFilterOnlyOnItsHandle",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3106"
+          },
+          "bind": "s5723",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3106"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3107"
+          },
+          "bind": "s5724",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3107"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3107"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3108"
+          },
+          "bind": "s5727",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3108"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3109"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3107"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3108"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3110"
+          },
+          "bind": "s5730",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3110"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3111"
+          },
+          "bind": "s5731",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3111"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3111"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "addFilter",
+            "args": {
+              "name": "reversed",
+              "encode": true,
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "global"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "reversed"
+                ]
+              }
+            },
+            "as": "o3112"
+          },
+          "bind": "s5735",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "notes",
+                "attributes": [
+                  {
+                    "$obj": "o3112"
+                  }
+                ]
+              }
+            },
+            "as": "o3113"
+          },
+          "bind": "s5736",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "olleh"
+              }
+            },
+            "as": "o3114"
+          },
+          "bind": "s5737",
+          "expect": {
+            "$document": {
+              "body": "olleh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3107"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o3113"
+              },
+              "document": {
+                "$obj": "o3114"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "body": "hello",
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "hello"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "reversed"
+                ]
+              }
+            },
+            "as": "o3115"
+          },
+          "bind": "s5740",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "notes",
+                "attributes": [
+                  {
+                    "$obj": "o3115"
+                  }
+                ]
+              }
+            },
+            "as": "o3116"
+          },
+          "bind": "s5741",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "olleh"
+              }
+            },
+            "as": "o3117"
+          },
+          "bind": "s5742",
+          "expect": {
+            "$document": {
+              "body": "olleh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3111"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o3116"
+              },
+              "document": {
+                "$obj": "o3117"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Filter \"reversed\" not found for attribute \"body\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3117"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "olleh"
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testRegisteringATypeChangesOnlyItsHandlesCacheKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3118"
+          },
+          "bind": "s5745",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3118"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3119"
+          },
+          "bind": "s5746",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3119"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3119"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3119"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:19ac5a9b31d89e411f201223e3a2fdd0"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3120"
+          },
+          "bind": "s5750",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3120"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3121"
+          },
+          "bind": "s5751",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3121"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3121"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3122"
+          },
+          "bind": "s5754",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3122"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3123"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3121"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3122"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3121"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:12fe806fb83411efbfd7add47310fd1e"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3119"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:19ac5a9b31d89e411f201223e3a2fdd0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testCacheKeysFollowTheTypeClass",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3124"
+          },
+          "bind": "s5759",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3124"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3125"
+          },
+          "bind": "s5760",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3126"
+          },
+          "bind": "s5763",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3126"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "text",
+                "as": "o3127"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3126"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3128"
+          },
+          "bind": "s5766",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3128"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3129"
+          },
+          "bind": "s5767",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3129"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3129"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3130"
+          },
+          "bind": "s5770",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3130"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "rot13",
+                "name": "text",
+                "as": "o3131"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3129"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3130"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3132"
+          },
+          "bind": "s5773",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3132"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3133"
+          },
+          "bind": "s5774",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3133"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3133"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3134"
+          },
+          "bind": "s5777",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3134"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "text",
+                "as": "o3135"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3133"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3134"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:decfc332bcc6bdd2a6b4b0ecf891f501"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3129"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:57d7e0ef7303cc7d3588a74780388efe"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o3136"
+          },
+          "bind": "s5782",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "getQueryCacheField",
+            "args": {
+              "collection": null,
+              "queries": [
+                {
+                  "$obj": "o3136"
+                }
+              ]
+            }
+          },
+          "expect": ":cb66d8b85d9c9cc30458f6e8a8d9a6b6:documents"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o3137"
+          },
+          "bind": "s5784",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3129"
+            },
+            "method": "getQueryCacheField",
+            "args": {
+              "collection": null,
+              "queries": [
+                {
+                  "$obj": "o3137"
+                }
+              ]
+            }
+          },
+          "expect": ":b503fdae0025a6505ebb8638bc5c0741:documents"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3125"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:decfc332bcc6bdd2a6b4b0ecf891f501"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3133"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:decfc332bcc6bdd2a6b4b0ecf891f501"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testCacheKeysFollowTheSignatureOfASignedCodec",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3138"
+          },
+          "bind": "s5788",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3138"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3139"
+          },
+          "bind": "s5789",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3139"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3139"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3140"
+          },
+          "bind": "s5792",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3140"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "prefixed",
+                "prefix": "a:",
+                "as": "o3141"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3139"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3140"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3142"
+          },
+          "bind": "s5795",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3142"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3143"
+          },
+          "bind": "s5796",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3143"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3143"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3144"
+          },
+          "bind": "s5799",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3144"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "prefixed",
+                "prefix": "b:",
+                "as": "o3145"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3143"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3144"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3146"
+          },
+          "bind": "s5802",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3146"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3147"
+          },
+          "bind": "s5803",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3147"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3147"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3148"
+          },
+          "bind": "s5806",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3148"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "prefixed",
+                "prefix": "a:",
+                "as": "o3149"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "text"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3147"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3148"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3139"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:0090b1fd26301f3246d7fbde2ffb7e5a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3143"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:db37ff0fc0ba22a1233fe6f4bbe1b740"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3139"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:0090b1fd26301f3246d7fbde2ffb7e5a"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3147"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:0090b1fd26301f3246d7fbde2ffb7e5a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testConstructorFiltersEncodeAndDecodeOnTheirHandle",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3150"
+          },
+          "bind": "s5813",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3150"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$codec": "reversed",
+                  "name": "reversed",
+                  "as": "o3151"
+                }
+              ]
+            },
+            "as": "o3152"
+          },
+          "bind": "s5814",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes"
+            },
+            "as": "o3153"
+          },
+          "bind": "s5818",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3153"
+              }
+            },
+            "as": "o3154"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "filters": [
+                "reversed"
+              ]
+            },
+            "as": "o3155"
+          },
+          "bind": "s5820",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "reversed"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "notes",
+              "attribute": {
+                "$obj": "o3155"
+              }
+            },
+            "as": "o3156"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "reversed"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3157"
+          },
+          "bind": "s5822",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3157"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "note",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "hello"
+              }
+            },
+            "as": "o3158"
+          },
+          "bind": "s5824",
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o3158"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "hello",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "notes"
+            },
+            "as": "o3159"
+          },
+          "bind": "s5826",
+          "expect": {
+            "$document": {
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3150"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o3159"
+              },
+              "id": "note"
+            },
+            "as": "o3160"
+          },
+          "bind": "s5827",
+          "expect": {
+            "$document": {
+              "body": "olleh",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3160"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "olleh"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "note"
+            },
+            "as": "o3161"
+          },
+          "bind": "s5829",
+          "expect": {
+            "$document": {
+              "body": "hello",
+              "$sequence": "1",
+              "$id": "note",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3161"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "hello"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3152"
+            },
+            "method": "getFilters",
+            "args": {},
+            "as": "o3162"
+          },
+          "bind": "s5831",
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3162"
+            },
+            "method": "has",
+            "args": {
+              "name": "reversed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testSetFiltersReplacesTheConstructorFilters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Callback",
+            "args": {
+              "name": "reversed",
+              "encode": true,
+              "decode": true
+            },
+            "as": "o3163"
+          },
+          "bind": "s5833",
+          "expect": {
+            "result": {
+              "$codec": true
+            },
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3164"
+          },
+          "bind": "s5834",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3164"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$obj": "o3163"
+                }
+              ]
+            },
+            "as": "o3165"
+          },
+          "bind": "s5835",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3165"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3165"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3166"
+          },
+          "bind": "s5838",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3166"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3167"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3165"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3166"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3168"
+          },
+          "bind": "s5841",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3168"
+              },
+              "cache": "none",
+              "filters": []
+            },
+            "as": "o3169"
+          },
+          "bind": "s5842",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3169"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3169"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "types"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Filter\\Registry",
+            "args": {},
+            "as": "o3170"
+          },
+          "bind": "s5845",
+          "expect": {
+            "$registry": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "register",
+            "args": {
+              "codec": {
+                "$codec": "reversed",
+                "name": "reversed",
+                "as": "o3171"
+              }
+            }
+          },
+          "expect": {
+            "$registry": [
+              "reversed"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3169"
+            },
+            "method": "setFilters",
+            "args": {
+              "filters": {
+                "$obj": "o3170"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "type": "string",
+                "array": false,
+                "filters": [
+                  "reversed"
+                ]
+              }
+            },
+            "as": "o3172"
+          },
+          "bind": "s5848",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "type": "string",
+              "array": false,
+              "filters": [
+                "reversed"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "notes",
+                "attributes": [
+                  {
+                    "$obj": "o3172"
+                  }
+                ]
+              }
+            },
+            "as": "o3173"
+          },
+          "bind": "s5849",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "type": "string",
+                    "array": false,
+                    "filters": [
+                      "reversed"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "olleh"
+              }
+            },
+            "as": "o3174"
+          },
+          "bind": "s5850",
+          "expect": {
+            "$document": {
+              "body": "olleh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3165"
+            },
+            "method": "decode",
+            "args": {
+              "collection": {
+                "$obj": "o3173"
+              },
+              "document": {
+                "$obj": "o3174"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "body": "hello",
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3174"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "body"
+            }
+          },
+          "expect": "hello"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3169"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:12fe806fb83411efbfd7add47310fd1e"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3165"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "notes",
+              "documentId": "note"
+            }
+          },
+          "expect": [
+            "default-cache-:types:types::collection:notes",
+            "default-cache-:types:types::collection:notes:note",
+            "default-cache-:types:types::collection:notes:note:12fe806fb83411efbfd7add47310fd1e"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CodecTest::testAConstructorFilterNamedAfterABuiltInIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3175"
+          },
+          "bind": "s5855",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3175"
+              },
+              "cache": "none",
+              "filters": [
+                {
+                  "$codec": "reversed",
+                  "name": "json",
+                  "as": "o3176"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Filter \"json\" collides with the built-in filter of the same name"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

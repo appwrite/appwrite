@@ -22,19 +22,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -47,13 +80,6 @@
           "op": "database.add_filter",
           "args": {
             "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
           },
           "expect": null
         },
@@ -82,19 +108,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -111,52 +170,88 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForTimeouts",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "global-timeouts"
+            "collection": {
+              "$document": {
+                "$id": "global-timeouts",
+                "name": "global-timeouts",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "global-timeouts",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "global-timeouts",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "global-timeouts",
-            "id": "longtext",
-            "type": "string",
-            "size": 100000000,
-            "required": true
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "longtext",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100000000,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "longtext",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100000000,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
@@ -878,9 +973,2239 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "global-timeouts"
+            "collection": "global-timeouts"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesUpdateTenant",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
           },
           "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocument",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.is_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocumentUpsertRefreshesTheQueryCache",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesReadsScopeToTheSelectedTenant",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionAtomicity",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "transactionAtomicity",
+                "name": "transactionAtomicity",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "transactionAtomicity",
+              "name": "transactionAtomicity",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "transactionAtomicity",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "tx_success",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Committed",
+                "$collection": "transactionAtomicity",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed",
+                        "$collection": "transactionAtomicity",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_success"
+          },
+          "expect": {
+            "$document": {
+              "title": "Committed",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "transactionAtomicity",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "tx_success"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_fail",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Should be rolled back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "Intentional failure to trigger rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Intentional failure to trigger rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_fail"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "transactionAtomicity"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterATransactionCommits",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheCommit",
+                "name": "txDocumentCacheCommit",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheCommit",
+              "name": "txDocumentCacheCommit",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "updated"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$collection": "txDocumentCacheCommit",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "<uuid7>",
+                        "$id": "user"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$collection": "txDocumentCacheCommit",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "<uuid7>",
+                        "$id": "user"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheCommit"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheOriginalDocumentAfterATransactionRollsBack",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheRollback",
+                "name": "txDocumentCacheRollback",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheRollback",
+              "name": "txDocumentCacheRollback",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "rolled-back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user"
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Conflict",
+                    "message": "rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Conflict",
+              "message": "rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "user"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheRollback"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterANestedTransactionCommits",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testASiblingReadAfterAWriteRunsNoStatement",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCacheInvalidationDoesNotAddRedisKeysPerWrite",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "ownerKeys6ad069c6e6d7c4b72a68",
+                "name": "ownerKeys6ad069c6e6d7c4b72a68",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ownerKeys6ad069c6e6d7c4b72a68",
+              "name": "ownerKeys6ad069c6e6d7c4b72a68",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o950"
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.get_query_cache",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": "memory"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o951"
+          },
+          "expect": {
+            "$cache": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterKnownException",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txKnownException",
+                "name": "txKnownException",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txKnownException",
+              "name": "txKnownException",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "txKnownException",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txKnownException",
+            "document": {
+              "$document": {
+                "$id": "existing_doc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "existing_doc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "Original",
+              "$collection": "txKnownException",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txKnownException",
+                    "document": {
+                      "$document": {
+                        "$id": "existing_doc",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Duplicate"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txKnownException",
+            "id": "existing_doc"
+          },
+          "expect": {
+            "$document": {
+              "title": "Original",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "txKnownException",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "existing_doc"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txKnownException"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterRetriesExhausted",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionRetries"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Contention",
+                    "message": "Deadlock detected"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Contention",
+              "message": "Deadlock detected"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testInvalidDocumentInATransactionIsNotRetried",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testNestedTransactionState",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": false
         }
       ]
     },
@@ -902,19 +3227,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -931,52 +3289,88 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForTimeouts",
-            "args": {}
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "count-timeouts"
+            "collection": {
+              "$document": {
+                "$id": "count-timeouts",
+                "name": "count-timeouts",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "count-timeouts",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "count-timeouts",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "count-timeouts",
-            "id": "longtext",
-            "type": "string",
-            "size": 100000000,
-            "required": true
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "longtext",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 100000000,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "longtext",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100000000,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
@@ -1698,343 +4092,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "count-timeouts"
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testPreserveDatesUpdate",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
+            "collection": "count-timeouts"
           },
           "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.disable",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testPreserveDatesCreate",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.disable",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testGetAttributeLimit",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.get_limit_for_attributes",
-          "args": {},
-          "expect": 0
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testGetIndexLimit",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.get_limit_for_indexes",
-          "args": {},
-          "expect": 58
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testSharedTablesUpdateTenant",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.get_shared_tables",
-          "args": {},
-          "expect": false
-        },
-        {
-          "op": "database.get_namespace",
-          "args": {},
-          "expect": "compat"
-        },
-        {
-          "op": "database.get_database",
-          "args": {},
-          "expect": "${ns}"
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSchemas",
-            "args": {}
-          },
-          "expect": false
         }
       ]
     },
@@ -2056,758 +4116,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
+          "op": "db.authorization.clean_roles",
           "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.create_collection",
-          "args": {
-            "id": "movies",
-            "permissions": [
-              "create(\"any\")",
-              "update(\"users\")"
-            ]
-          },
           "expect": {
-            "$document": {
-              "$id": "movies",
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"users\")"
-              ],
-              "name": "movies",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>"
-            }
+            "$authorization": true
           }
         },
         {
-          "op": "database.create_attribute",
+          "op": "db.authorization.add_role",
           "args": {
-            "collection": "movies",
-            "id": "name",
-            "type": "string",
-            "size": 128,
-            "required": true
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
           },
           "expect": true
         },
         {
-          "op": "database.create_attribute",
+          "op": "db.add_format",
           "args": {
-            "collection": "movies",
-            "id": "director",
-            "type": "string",
-            "size": 128,
-            "required": true
+            "name": "priceRangeNew"
           },
           "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "year",
-            "type": "integer",
-            "size": 0,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "price",
-            "type": "double",
-            "size": 0,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "active",
-            "type": "boolean",
-            "size": 0,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "genres",
-            "type": "string",
-            "size": 32,
-            "required": true,
-            "array": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "with-dash",
-            "type": "string",
-            "size": 128,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "movies",
-            "id": "nullable",
-            "type": "string",
-            "size": 128,
-            "required": false
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$id": "frozen",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works"
-              }
-            }
-          },
-          "bind": "s764",
-          "expect": {
-            "$document": {
-              "$id": "frozen",
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works"
-              }
-            }
-          },
-          "bind": "s765",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen II",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2019,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Captain America: The First Avenger",
-                "director": "Joe Johnston",
-                "year": 2011,
-                "price": 25.94,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2"
-              }
-            }
-          },
-          "bind": "s766",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Captain America: The First Avenger",
-              "director": "Joe Johnston",
-              "year": 2011,
-              "price": 25.94,
-              "active": true,
-              "genres": [
-                "science fiction",
-                "action",
-                "comics"
-              ],
-              "with-dash": "Works2",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Captain Marvel",
-                "director": "Anna Boden & Ryan Fleck",
-                "year": 2019,
-                "price": 25.99,
-                "active": true,
-                "genres": [
-                  "science fiction",
-                  "action",
-                  "comics"
-                ],
-                "with-dash": "Works2"
-              }
-            }
-          },
-          "bind": "s767",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Captain Marvel",
-              "director": "Anna Boden & Ryan Fleck",
-              "year": 2019,
-              "price": 25.99,
-              "active": true,
-              "genres": [
-                "science fiction",
-                "action",
-                "comics"
-              ],
-              "with-dash": "Works2",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Work in Progress",
-                "director": "TBD",
-                "year": 2025,
-                "price": 0.0,
-                "active": false,
-                "genres": [],
-                "with-dash": "Works3"
-              }
-            }
-          },
-          "bind": "s768",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Work in Progress",
-              "director": "TBD",
-              "year": 2025,
-              "price": 0.0,
-              "active": false,
-              "genres": [],
-              "with-dash": "Works3",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"user:x\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Work in Progress 2",
-                "director": "TBD",
-                "year": 2026,
-                "price": 0.0,
-                "active": false,
-                "genres": [],
-                "with-dash": "Works3",
-                "nullable": "Not null"
-              }
-            }
-          },
-          "bind": "s769",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"user:x\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Work in Progress 2",
-              "director": "TBD",
-              "year": 2026,
-              "price": 0.0,
-              "active": false,
-              "genres": [],
-              "with-dash": "Works3",
-              "nullable": "Not null",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>"
-            }
-          }
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "movies",
-            "id": "name",
-            "type": "fulltext",
-            "attributes": [
-              "name"
-            ]
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "movies",
-            "id": "name",
-            "type": "fulltext",
-            "attributes": [
-              "name"
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Index already exists"
-            }
-          }
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "movies",
-            "id": "uniqueIndex",
-            "type": "unique",
-            "attributes": [
-              "name"
-            ],
-            "lengths": [
-              128
-            ],
-            "orders": [
-              "ASC"
-            ]
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4"
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Unique",
-              "message": "Unique index violation"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen 5",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4"
-              }
-            }
-          },
-          "bind": "s1263",
-          "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen 5",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "$id": "<uniqid>",
-              "$collection": "movies",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "nullable": null
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "movies",
-            "id": {
-              "$ref": "s1263",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4",
-                "$id": {
-                  "$ref": "s1263",
-                  "path": "/$document/$id"
-                },
-                "$collection": "movies",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$sequence": {
-                  "$ref": "s1263",
-                  "path": "/$document/$sequence",
-                  "default": "01a131c0-7c0c-7029-876e-0570864f3705"
-                },
-                "nullable": null
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Unique",
-              "message": "Unique index violation"
-            }
-          }
         },
         {
           "op": "database.add_filter",
@@ -2824,16 +4178,41 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
+          "op": "database.create_collection",
           "args": {
-            "name": "operator_double_decode"
+            "collection": {
+              "$document": {
+                "$id": "cursorCollection_u000000000067",
+                "name": "cursorCollection_u000000000067",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
-          "expect": null
+          "expect": {
+            "$document": {
+              "$id": "cursorCollection_u000000000067",
+              "name": "cursorCollection_u000000000067",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "movies",
+            "collection": "cursorCollection_u000000000067",
             "queries": [
               {
                 "$query": {
@@ -2860,6 +4239,8 @@
                   "values": [
                     {
                       "$document": {
+                        "$id": "cursor",
+                        "$sequence": "1",
                         "$collection": "other collection"
                       }
                     }
@@ -2870,10 +4251,223 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Invalid cursor: UID must contain at most 255 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+              "class": "Utopia\\Database\\Exception",
+              "message": "cursor Document must be from the same Collection."
             }
           }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursorCollection_u000000000067"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetAttributeLimit",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "database.get_limit_for_attributes",
+          "args": {},
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetIndexLimit",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_limit_for_indexes",
+          "args": {},
+          "expect": 58
         }
       ]
     },
@@ -2895,19 +4489,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2924,60 +4551,74 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "database.create_collection",
           "args": {
-            "id": "testNestedQueryValidation",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "size": 255,
-                  "required": true
-                }
-              }
-            ],
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")",
-              "update(\"any\")",
-              "delete(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "testNestedQueryValidation",
+                "name": "testNestedQueryValidation",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testNestedQueryValidation",
+              "name": "testNestedQueryValidation",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")",
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "name": "testNestedQueryValidation",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "name",
-                    "type": "string",
-                    "size": 255,
-                    "required": true
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -2987,13 +4628,13 @@
             "documents": [
               {
                 "$document": {
-                  "$id": "u0000000000000000082",
+                  "$id": "u0000000000000000068",
                   "name": "test1"
                 }
               },
               {
                 "$document": {
-                  "$id": "u0000000000000000083",
+                  "$id": "u0000000000000000069",
                   "name": "doc2"
                 }
               }
@@ -3040,381 +4681,18 @@
               "message": "Searching by attribute \"name\" requires a fulltext index."
             }
           }
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testSharedTablesTenantPerDocument",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.get_shared_tables",
-          "args": {},
-          "expect": false
-        },
-        {
-          "op": "database.get_tenant_per_document",
-          "args": {},
-          "expect": false
-        },
-        {
-          "op": "database.get_namespace",
-          "args": {},
-          "expect": "compat"
-        },
-        {
-          "op": "database.get_database",
-          "args": {},
-          "expect": "${ns}"
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForSchemas",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testCacheFallback",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForCacheSkipOnFailure",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testTransactionAtomicity",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.create_collection",
-          "args": {
-            "id": "transactionAtomicity"
-          },
-          "expect": {
-            "$document": {
-              "$id": "transactionAtomicity",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "transactionAtomicity",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>"
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "transactionAtomicity",
-            "id": "title",
-            "type": "string",
-            "size": 128,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.with_transaction",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.create_document",
-                  "args": {
-                    "collection": "transactionAtomicity",
-                    "document": {
-                      "$document": {
-                        "$id": "tx_success",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "title": "Committed"
-                      }
-                    }
-                  },
-                  "return": true
-                }
-              ]
-            }
-          },
-          "expect": {
-            "result": {
-              "$document": {
-                "$id": "tx_success",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "title": "Committed",
-                "$collection": "transactionAtomicity",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$sequence": "<uuid7>"
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$id": "tx_success",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "title": "Committed",
-                        "$collection": "transactionAtomicity",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "<uuid7>"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "transactionAtomicity",
-            "id": "tx_success"
-          },
-          "expect": {
-            "$document": {
-              "title": "Committed",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "transactionAtomicity",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "$id": "tx_success"
-            }
-          }
-        },
-        {
-          "op": "database.with_transaction",
-          "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.create_document",
-                  "args": {
-                    "collection": "transactionAtomicity",
-                    "document": {
-                      "$document": {
-                        "$id": "tx_fail",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "title": "Should be rolled back"
-                      }
-                    }
-                  }
-                },
-                {
-                  "op": "$throw",
-                  "args": {
-                    "class": "Exception",
-                    "message": "Intentional failure to trigger rollback"
-                  }
-                }
-              ]
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Exception",
-              "message": "Intentional failure to trigger rollback"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "transactionAtomicity",
-            "id": "tx_fail"
-          },
-          "expect": {
-            "$document": {}
-          }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "transactionAtomicity"
+            "collection": "testNestedQueryValidation"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
     {
-      "name": "GeneralTests::testTransactionStateAfterKnownException",
+      "name": "GeneralTests::testPreserveDatesCreate",
       "state": [
         "mongo@database-mongo"
       ],
@@ -3431,19 +4709,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3460,142 +4771,411 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
+          "op": "db.adapter",
           "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.create_collection",
-          "args": {
-            "id": "txKnownException"
-          },
-          "expect": {
-            "$document": {
-              "$id": "txKnownException",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "txKnownException",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>"
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "txKnownException",
-            "id": "title",
-            "type": "string",
-            "size": 128,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "txKnownException",
-            "document": {
-              "$document": {
-                "$id": "existing_doc",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "title": "Original"
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
               }
             }
           },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testPreserveDatesUpdate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
           "expect": {
-            "$document": {
-              "$id": "existing_doc",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "title": "Original",
-              "$collection": "txKnownException",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>"
-            }
+            "$handle": "*"
           }
         },
         {
-          "op": "database.with_transaction",
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
           "args": {
-            "callback": {
-              "steps": [
-                {
-                  "op": "database.create_document",
-                  "args": {
-                    "collection": "txKnownException",
-                    "document": {
-                      "$document": {
-                        "$id": "existing_doc",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "title": "Duplicate"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
+            "role": "any"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Document already exists"
-            }
+            "$authorization": true
           }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "inTransaction",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
-        },
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testLostConnectionInsideANestedTransactionFailsTheOuterTransaction",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
         {
-          "op": "database.get_document",
+          "op": "db.open",
           "args": {
-            "collection": "txKnownException",
-            "id": "existing_doc"
+            "engine": "mongo",
+            "schemaless": true
           },
+          "bind": "db",
           "expect": {
-            "$document": {
-              "title": "Original",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "txKnownException",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "<uuid7>",
-              "$id": "existing_doc"
-            }
+            "$handle": "*"
           }
         },
         {
-          "op": "database.delete_collection",
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
           "args": {
-            "id": "txKnownException"
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Connection"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testWritesReadTheirCollectionDefinitionFromTheCache",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testDocumentCacheRoundTripsStayWithinSevenThreeCounts",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
           },
           "expect": true
         }
       ]
     },
     {
-      "name": "GeneralTests::testTransactionStateAfterRetriesExhausted",
+      "name": "GeneralTests::testTenantPerDocumentRejectsATenantThatIsNotAnIntegerOrString",
       "state": [
         "mongo@database-mongo"
       ],
@@ -3612,19 +5192,52 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3641,80 +5254,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForTransactionRetries",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "GeneralTests::testNestedTransactionState",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForNestedTransactions",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
           },
           "expect": false
         }

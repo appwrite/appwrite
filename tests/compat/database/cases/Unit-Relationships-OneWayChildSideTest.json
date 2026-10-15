@@ -1,0 +1,4943 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Relationships/OneWayChildSideTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OneWayChildSideTest::testAChildSideUpdateRenamesTheParentKey#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o33683"
+          },
+          "bind": "s39580",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o33683"
+              },
+              "cache": "none"
+            },
+            "as": "o33684"
+          },
+          "bind": "s39581",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o33685"
+          },
+          "bind": "s39582",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o33685"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "one_way"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "one_way_u000000001198"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33686"
+          },
+          "bind": "s39587",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o33686"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33687"
+          },
+          "bind": "s39589",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o33687"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33688"
+          },
+          "bind": "s39591",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o33688"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33689"
+          },
+          "bind": "s39593",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o33689"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o33690"
+          },
+          "bind": "s39595",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "attributes": [
+                {
+                  "$obj": "o33690"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33691"
+          },
+          "bind": "s39596",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33691"
+              }
+            },
+            "as": "o33692"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "number",
+              "size": 64
+            },
+            "as": "o33693"
+          },
+          "bind": "s39598",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "number",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "passports",
+              "attributes": [
+                {
+                  "$obj": "o33693"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33694"
+          },
+          "bind": "s39599",
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33694"
+              }
+            },
+            "as": "o33695"
+          },
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33696"
+          },
+          "bind": "s39601",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33696"
+              }
+            },
+            "as": "o33697"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "x1",
+                "number": "A-1"
+              }
+            },
+            "as": "o33698"
+          },
+          "bind": "s39603",
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "passports",
+              "document": {
+                "$obj": "o33698"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1",
+              "$collection": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "p1",
+                "name": "Ada",
+                "passport": "x1"
+              }
+            },
+            "as": "o33699"
+          },
+          "bind": "s39605",
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "people",
+              "document": {
+                "$obj": "o33699"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "owner",
+              "twoWayKey": "document"
+            },
+            "as": "o33700"
+          },
+          "bind": "s39607",
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "owner",
+              "twoWayKey": "document",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "updateRelationship",
+            "args": {
+              "collection": "passports",
+              "key": "holder",
+              "update": {
+                "$obj": "o33700"
+              }
+            },
+            "as": "o33701"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "people",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "owner",
+              "twoWayKey": "document",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33702"
+          },
+          "bind": "s39609",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "people",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "document",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33702"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "number",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "owner",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "people",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "owner",
+                    "twoWayKey": "document",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Child"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33703"
+          },
+          "bind": "s39611",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33703"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "document",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "passports",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "document",
+                    "twoWayKey": "owner",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33704"
+          },
+          "bind": "s39613",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33704"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "document",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "passports",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "document",
+                    "twoWayKey": "owner",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33705"
+          },
+          "bind": "s39615",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33705"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "_index_document",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "document"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33706"
+          },
+          "bind": "s39617",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "people",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "document",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33706"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33684"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33707"
+          },
+          "bind": "s39619",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "document": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33707"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "document"
+            }
+          },
+          "expect": "x1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33707"
+            },
+            "method": "offsetExists",
+            "args": {
+              "key": "passport"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "OneWayChildSideTest::testAChildSideUpdateRenamesTheParentKey#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o33708"
+          },
+          "bind": "s39622",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o33708"
+              },
+              "cache": "none"
+            },
+            "as": "o33709"
+          },
+          "bind": "s39623",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o33710"
+          },
+          "bind": "s39624",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o33710"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "one_way"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "one_way_u000000001199"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33711"
+          },
+          "bind": "s39629",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o33711"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33712"
+          },
+          "bind": "s39631",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o33712"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33713"
+          },
+          "bind": "s39633",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o33713"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33714"
+          },
+          "bind": "s39635",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o33714"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o33715"
+          },
+          "bind": "s39637",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "attributes": [
+                {
+                  "$obj": "o33715"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33716"
+          },
+          "bind": "s39638",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33716"
+              }
+            },
+            "as": "o33717"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "number",
+              "size": 64
+            },
+            "as": "o33718"
+          },
+          "bind": "s39640",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "number",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "passports",
+              "attributes": [
+                {
+                  "$obj": "o33718"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33719"
+          },
+          "bind": "s39641",
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33719"
+              }
+            },
+            "as": "o33720"
+          },
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33721"
+          },
+          "bind": "s39643",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33721"
+              }
+            },
+            "as": "o33722"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "x1",
+                "number": "A-1"
+              }
+            },
+            "as": "o33723"
+          },
+          "bind": "s39645",
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "passports",
+              "document": {
+                "$obj": "o33723"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1",
+              "$collection": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "p1",
+                "name": "Ada",
+                "passport": "x1"
+              }
+            },
+            "as": "o33724"
+          },
+          "bind": "s39647",
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "people",
+              "document": {
+                "$obj": "o33724"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Relationship\\Update",
+            "args": {
+              "key": "owner",
+              "twoWayKey": "document"
+            },
+            "as": "o33725"
+          },
+          "bind": "s39649",
+          "expect": {
+            "$value": "Relationship\\Update",
+            "fields": {
+              "key": "owner",
+              "twoWayKey": "document",
+              "twoWay": null,
+              "onDelete": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "updateRelationship",
+            "args": {
+              "collection": "passports",
+              "key": "holder",
+              "update": {
+                "$obj": "o33725"
+              }
+            },
+            "as": "o33726"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "people",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "owner",
+              "twoWayKey": "document",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33727"
+          },
+          "bind": "s39651",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "people",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "document",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33727"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "number",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "owner",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "people",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "owner",
+                    "twoWayKey": "document",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Child"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33728"
+          },
+          "bind": "s39653",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33728"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "document",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "passports",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "document",
+                    "twoWayKey": "owner",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33729"
+          },
+          "bind": "s39655",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33729"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "document",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": {
+                  "$value": "Relationship",
+                  "fields": {
+                    "relatedCollection": "passports",
+                    "type": {
+                      "$enum": "RelationshipType::OneToOne"
+                    },
+                    "twoWay": false,
+                    "key": "document",
+                    "twoWayKey": "owner",
+                    "onDelete": {
+                      "$enum": "RelationshipDeleteAction::Restrict"
+                    }
+                  }
+                },
+                "side": {
+                  "$enum": "RelationshipSide::Parent"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33730"
+          },
+          "bind": "s39657",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "document",
+                    "key": "document",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "passports",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "owner",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_document",
+                    "key": "_index_document",
+                    "type": "unique",
+                    "attributes": [
+                      "document"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33730"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "_index_document",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "document"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33731"
+          },
+          "bind": "s39659",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "owner",
+                    "key": "owner",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "people",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "document",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33731"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33709"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33732"
+          },
+          "bind": "s39661",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "document": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33732"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "document"
+            }
+          },
+          "expect": "x1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33732"
+            },
+            "method": "offsetExists",
+            "args": {
+              "key": "passport"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "OneWayChildSideTest::testAChildSideDeleteRemovesTheParentKey#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o33733"
+          },
+          "bind": "s39664",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o33733"
+              },
+              "cache": "none"
+            },
+            "as": "o33734"
+          },
+          "bind": "s39665",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o33735"
+          },
+          "bind": "s39666",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o33735"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "one_way"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "one_way_u000000001200"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33736"
+          },
+          "bind": "s39671",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o33736"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33737"
+          },
+          "bind": "s39673",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o33737"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33738"
+          },
+          "bind": "s39675",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o33738"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33739"
+          },
+          "bind": "s39677",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o33739"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o33740"
+          },
+          "bind": "s39679",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "attributes": [
+                {
+                  "$obj": "o33740"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33741"
+          },
+          "bind": "s39680",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33741"
+              }
+            },
+            "as": "o33742"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "number",
+              "size": 64
+            },
+            "as": "o33743"
+          },
+          "bind": "s39682",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "number",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "passports",
+              "attributes": [
+                {
+                  "$obj": "o33743"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33744"
+          },
+          "bind": "s39683",
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33744"
+              }
+            },
+            "as": "o33745"
+          },
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33746"
+          },
+          "bind": "s39685",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33746"
+              }
+            },
+            "as": "o33747"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "x1",
+                "number": "A-1"
+              }
+            },
+            "as": "o33748"
+          },
+          "bind": "s39687",
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "passports",
+              "document": {
+                "$obj": "o33748"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1",
+              "$collection": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "p1",
+                "name": "Ada",
+                "passport": "x1"
+              }
+            },
+            "as": "o33749"
+          },
+          "bind": "s39689",
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "people",
+              "document": {
+                "$obj": "o33749"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "passports",
+              "key": "holder"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33750"
+          },
+          "bind": "s39692",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33750"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "number",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33751"
+          },
+          "bind": "s39694",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33751"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33752"
+          },
+          "bind": "s39696",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33752"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33753"
+          },
+          "bind": "s39698",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33753"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "Ada"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33753"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "passport"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33754"
+          },
+          "bind": "s39701",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33754"
+              }
+            },
+            "as": "o33755"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "passport": "x1"
+              }
+            },
+            "as": "o33756"
+          },
+          "bind": "s39703",
+          "expect": {
+            "$document": {
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1",
+              "document": {
+                "$obj": "o33756"
+              }
+            },
+            "as": "o33757"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33734"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33758"
+          },
+          "bind": "s39705",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33758"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "passport"
+            }
+          },
+          "expect": "x1"
+        }
+      ]
+    },
+    {
+      "name": "OneWayChildSideTest::testAChildSideDeleteRemovesTheParentKey#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o33759"
+          },
+          "bind": "s39707",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o33759"
+              },
+              "cache": "none"
+            },
+            "as": "o33760"
+          },
+          "bind": "s39708",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o33761"
+          },
+          "bind": "s39709",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o33761"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "one_way"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "one_way_u000000001201"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33762"
+          },
+          "bind": "s39714",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o33762"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33763"
+          },
+          "bind": "s39716",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o33763"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33764"
+          },
+          "bind": "s39718",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o33764"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o33765"
+          },
+          "bind": "s39720",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o33765"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o33766"
+          },
+          "bind": "s39722",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "attributes": [
+                {
+                  "$obj": "o33766"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33767"
+          },
+          "bind": "s39723",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33767"
+              }
+            },
+            "as": "o33768"
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "number",
+              "size": 64
+            },
+            "as": "o33769"
+          },
+          "bind": "s39725",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "number",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "passports",
+              "attributes": [
+                {
+                  "$obj": "o33769"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o33770"
+          },
+          "bind": "s39726",
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o33770"
+              }
+            },
+            "as": "o33771"
+          },
+          "expect": {
+            "$document": {
+              "$id": "passports",
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33772"
+          },
+          "bind": "s39728",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33772"
+              }
+            },
+            "as": "o33773"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "x1",
+                "number": "A-1"
+              }
+            },
+            "as": "o33774"
+          },
+          "bind": "s39730",
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "passports",
+              "document": {
+                "$obj": "o33774"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x1",
+              "number": "A-1",
+              "$collection": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "p1",
+                "name": "Ada",
+                "passport": "x1"
+              }
+            },
+            "as": "o33775"
+          },
+          "bind": "s39732",
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "people",
+              "document": {
+                "$obj": "o33775"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "name": "Ada",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "passports",
+              "key": "holder"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "passports"
+            },
+            "as": "o33776"
+          },
+          "bind": "s39735",
+          "expect": {
+            "$document": {
+              "name": "passports",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "number",
+                    "key": "number",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "passports",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33776"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "number",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33777"
+          },
+          "bind": "s39737",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33777"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "people"
+            },
+            "as": "o33778"
+          },
+          "bind": "s39739",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33778"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33779"
+          },
+          "bind": "s39741",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33779"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "Ada"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33779"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "passport"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToOne",
+            "args": {
+              "relatedCollection": "passports",
+              "key": "passport",
+              "twoWayKey": "holder"
+            },
+            "as": "o33780"
+          },
+          "bind": "s39744",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "people",
+              "relationship": {
+                "$obj": "o33780"
+              }
+            },
+            "as": "o33781"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "passports",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "passport",
+              "twoWayKey": "holder",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "passport": "x1"
+              }
+            },
+            "as": "o33782"
+          },
+          "bind": "s39746",
+          "expect": {
+            "$document": {
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1",
+              "document": {
+                "$obj": "o33782"
+              }
+            },
+            "as": "o33783"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33760"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "people",
+              "id": "p1"
+            },
+            "as": "o33784"
+          },
+          "bind": "s39748",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people",
+              "passport": "x1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o33784"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "passport"
+            }
+          },
+          "expect": "x1"
+        }
+      ]
+    }
+  ]
+}

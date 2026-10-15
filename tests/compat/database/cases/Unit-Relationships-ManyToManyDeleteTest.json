@@ -1,0 +1,4607 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Relationships/ManyToManyDeleteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ManyToManyDeleteTest::testDeletingAManyToManyDropsItsJunction#memory from the parent side",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o6433"
+          },
+          "bind": "s14273",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6434"
+          },
+          "bind": "s14274",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6435"
+          },
+          "bind": "s14275",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6435"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6434"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6433"
+              },
+              "cache": "none"
+            },
+            "as": "o6436"
+          },
+          "bind": "s14278",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6434"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "many_to_many_delete"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "many_to_many_delete_u000000000186"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6437"
+          },
+          "bind": "s14283",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6437"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6438"
+          },
+          "bind": "s14285",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6438"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6439"
+          },
+          "bind": "s14287",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o6439"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6440"
+          },
+          "bind": "s14289",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o6440"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6441"
+          },
+          "bind": "s14291",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o6441"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o6442"
+          },
+          "bind": "s14293",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o6442"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6443"
+          },
+          "bind": "s14294",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6443"
+              }
+            },
+            "as": "o6444"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o6445"
+          },
+          "bind": "s14296",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "attributes": [
+                {
+                  "$obj": "o6445"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6446"
+          },
+          "bind": "s14297",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6446"
+              }
+            },
+            "as": "o6447"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6448"
+          },
+          "bind": "s14299",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6448"
+              }
+            },
+            "as": "o6449"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "name": "Ada"
+              }
+            },
+            "as": "o6450"
+          },
+          "bind": "s14301",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "authors",
+              "document": {
+                "$obj": "o6450"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada",
+              "$collection": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "title": "Notes",
+                "authors": [
+                  "a1"
+                ]
+              }
+            },
+            "as": "o6451"
+          },
+          "bind": "s14303",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "authors": [
+                "a1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o6451"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "authors": [
+                {
+                  "$document": {
+                    "name": "Ada",
+                    "$id": "a1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "authors"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o6452"
+          },
+          "bind": "s14305",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "authors",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "books",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6452"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "authors"
+            },
+            "as": "o6453"
+          },
+          "bind": "s14307",
+          "expect": {
+            "$document": {
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "books",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "authors",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6453"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "books",
+              "key": "authors"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6454"
+          },
+          "bind": "s14311",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6454"
+              }
+            },
+            "as": "o6455"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            },
+            "as": "o6456"
+          },
+          "expect": {
+            "$document": {
+              "name": "_1_2",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_authors",
+                    "key": "_index_authors",
+                    "type": "key",
+                    "attributes": [
+                      "authors"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "_index_books",
+                    "key": "_index_books",
+                    "type": "key",
+                    "attributes": [
+                      "books"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "4",
+              "$id": "_1_2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "books",
+              "id": "b1"
+            },
+            "as": "o6457"
+          },
+          "bind": "s14314",
+          "expect": {
+            "$document": {
+              "title": "Notes",
+              "$sequence": "1",
+              "$id": "b1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6457"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "authors"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6436"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "authors",
+              "id": "a1"
+            },
+            "as": "o6458"
+          },
+          "bind": "s14316",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "authors",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6458"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "books"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyDeleteTest::testDeletingAManyToManyDropsItsJunction#memory from the child side",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o6459"
+          },
+          "bind": "s14318",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6460"
+          },
+          "bind": "s14319",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6461"
+          },
+          "bind": "s14320",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6461"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6460"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6459"
+              },
+              "cache": "none"
+            },
+            "as": "o6462"
+          },
+          "bind": "s14323",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6460"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "many_to_many_delete"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "many_to_many_delete_u000000000187"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6463"
+          },
+          "bind": "s14328",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6463"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6464"
+          },
+          "bind": "s14330",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6464"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6465"
+          },
+          "bind": "s14332",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o6465"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6466"
+          },
+          "bind": "s14334",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o6466"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6467"
+          },
+          "bind": "s14336",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o6467"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o6468"
+          },
+          "bind": "s14338",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o6468"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6469"
+          },
+          "bind": "s14339",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6469"
+              }
+            },
+            "as": "o6470"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o6471"
+          },
+          "bind": "s14341",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "attributes": [
+                {
+                  "$obj": "o6471"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6472"
+          },
+          "bind": "s14342",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6472"
+              }
+            },
+            "as": "o6473"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6474"
+          },
+          "bind": "s14344",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6474"
+              }
+            },
+            "as": "o6475"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "name": "Ada"
+              }
+            },
+            "as": "o6476"
+          },
+          "bind": "s14346",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "authors",
+              "document": {
+                "$obj": "o6476"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada",
+              "$collection": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "title": "Notes",
+                "authors": [
+                  "a1"
+                ]
+              }
+            },
+            "as": "o6477"
+          },
+          "bind": "s14348",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "authors": [
+                "a1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o6477"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "authors": [
+                {
+                  "$document": {
+                    "name": "Ada",
+                    "$id": "a1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$sequence": "1",
+                    "$collection": "authors"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o6478"
+          },
+          "bind": "s14350",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "authors",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "books",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6478"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "authors"
+            },
+            "as": "o6479"
+          },
+          "bind": "s14352",
+          "expect": {
+            "$document": {
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "books",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "authors",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6479"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "authors",
+              "key": "books"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6480"
+          },
+          "bind": "s14356",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6480"
+              }
+            },
+            "as": "o6481"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            },
+            "as": "o6482"
+          },
+          "expect": {
+            "$document": {
+              "name": "_1_2",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_authors",
+                    "key": "_index_authors",
+                    "type": "key",
+                    "attributes": [
+                      "authors"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "_index_books",
+                    "key": "_index_books",
+                    "type": "key",
+                    "attributes": [
+                      "books"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "4",
+              "$id": "_1_2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "books",
+              "id": "b1"
+            },
+            "as": "o6483"
+          },
+          "bind": "s14359",
+          "expect": {
+            "$document": {
+              "title": "Notes",
+              "$sequence": "1",
+              "$id": "b1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6483"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "authors"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6462"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "authors",
+              "id": "a1"
+            },
+            "as": "o6484"
+          },
+          "bind": "s14361",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "authors",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6484"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "books"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyDeleteTest::testDeletingAManyToManyDropsItsJunction#sqlite from the parent side",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o6485"
+          },
+          "bind": "s14363",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6486"
+          },
+          "bind": "s14364",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6487"
+          },
+          "bind": "s14365",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6487"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6486"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6485"
+              },
+              "cache": "none"
+            },
+            "as": "o6488"
+          },
+          "bind": "s14368",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6486"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "many_to_many_delete"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "many_to_many_delete_u000000000188"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6489"
+          },
+          "bind": "s14373",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6489"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6490"
+          },
+          "bind": "s14375",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6490"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6491"
+          },
+          "bind": "s14377",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o6491"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6492"
+          },
+          "bind": "s14379",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o6492"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6493"
+          },
+          "bind": "s14381",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o6493"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o6494"
+          },
+          "bind": "s14383",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o6494"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6495"
+          },
+          "bind": "s14384",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6495"
+              }
+            },
+            "as": "o6496"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o6497"
+          },
+          "bind": "s14386",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "attributes": [
+                {
+                  "$obj": "o6497"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6498"
+          },
+          "bind": "s14387",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6498"
+              }
+            },
+            "as": "o6499"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6500"
+          },
+          "bind": "s14389",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6500"
+              }
+            },
+            "as": "o6501"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "name": "Ada"
+              }
+            },
+            "as": "o6502"
+          },
+          "bind": "s14391",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "authors",
+              "document": {
+                "$obj": "o6502"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada",
+              "$collection": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "title": "Notes",
+                "authors": [
+                  "a1"
+                ]
+              }
+            },
+            "as": "o6503"
+          },
+          "bind": "s14393",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "authors": [
+                "a1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o6503"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o6504"
+          },
+          "bind": "s14395",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "authors",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "books",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6504"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "authors"
+            },
+            "as": "o6505"
+          },
+          "bind": "s14397",
+          "expect": {
+            "$document": {
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "books",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "authors",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6505"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "books",
+              "key": "authors"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6506"
+          },
+          "bind": "s14401",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6506"
+              }
+            },
+            "as": "o6507"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            },
+            "as": "o6508"
+          },
+          "expect": {
+            "$document": {
+              "name": "_1_2",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_authors",
+                    "key": "_index_authors",
+                    "type": "key",
+                    "attributes": [
+                      "authors"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "_index_books",
+                    "key": "_index_books",
+                    "type": "key",
+                    "attributes": [
+                      "books"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "4",
+              "$id": "_1_2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "books",
+              "id": "b1"
+            },
+            "as": "o6509"
+          },
+          "bind": "s14404",
+          "expect": {
+            "$document": {
+              "title": "Notes",
+              "$sequence": "1",
+              "$id": "b1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6509"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "authors"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6488"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "authors",
+              "id": "a1"
+            },
+            "as": "o6510"
+          },
+          "bind": "s14406",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "authors",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6510"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "books"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyDeleteTest::testDeletingAManyToManyDropsItsJunction#sqlite from the child side",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o6511"
+          },
+          "bind": "s14408",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o6512"
+          },
+          "bind": "s14409",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6513"
+          },
+          "bind": "s14410",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6513"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6512"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o6511"
+              },
+              "cache": "none"
+            },
+            "as": "o6514"
+          },
+          "bind": "s14413",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o6512"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "many_to_many_delete"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "many_to_many_delete_u000000000189"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Relationships",
+            "args": {},
+            "as": "o6515"
+          },
+          "bind": "s14418",
+          "expect": {
+            "$hook": "Relationships"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o6515"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6516"
+          },
+          "bind": "s14420",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6516"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6517"
+          },
+          "bind": "s14422",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o6517"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6518"
+          },
+          "bind": "s14424",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o6518"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6519"
+          },
+          "bind": "s14426",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o6519"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o6520"
+          },
+          "bind": "s14428",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o6520"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6521"
+          },
+          "bind": "s14429",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6521"
+              }
+            },
+            "as": "o6522"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o6523"
+          },
+          "bind": "s14431",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "attributes": [
+                {
+                  "$obj": "o6523"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o6524"
+          },
+          "bind": "s14432",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6524"
+              }
+            },
+            "as": "o6525"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6526"
+          },
+          "bind": "s14434",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6526"
+              }
+            },
+            "as": "o6527"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "name": "Ada"
+              }
+            },
+            "as": "o6528"
+          },
+          "bind": "s14436",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "authors",
+              "document": {
+                "$obj": "o6528"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "name": "Ada",
+              "$collection": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "title": "Notes",
+                "authors": [
+                  "a1"
+                ]
+              }
+            },
+            "as": "o6529"
+          },
+          "bind": "s14438",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "authors": [
+                "a1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o6529"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "title": "Notes",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o6530"
+          },
+          "bind": "s14440",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "authors",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "books",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6530"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "authors"
+            },
+            "as": "o6531"
+          },
+          "bind": "s14442",
+          "expect": {
+            "$document": {
+              "name": "authors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "books",
+                      "relationType": "manyToMany",
+                      "twoWay": true,
+                      "twoWayKey": "authors",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "2",
+              "$id": "authors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6531"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "deleteRelationship",
+            "args": {
+              "collection": "authors",
+              "key": "books"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "authors",
+              "twoWay": true,
+              "twoWayKey": "books"
+            },
+            "as": "o6532"
+          },
+          "bind": "s14446",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o6532"
+              }
+            },
+            "as": "o6533"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "authors",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "_1_2"
+            },
+            "as": "o6534"
+          },
+          "expect": {
+            "$document": {
+              "name": "_1_2",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "authors",
+                    "key": "authors",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_authors",
+                    "key": "_index_authors",
+                    "type": "key",
+                    "attributes": [
+                      "authors"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "_index_books",
+                    "key": "_index_books",
+                    "type": "key",
+                    "attributes": [
+                      "books"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "4",
+              "$id": "_1_2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "books",
+              "id": "b1"
+            },
+            "as": "o6535"
+          },
+          "bind": "s14449",
+          "expect": {
+            "$document": {
+              "title": "Notes",
+              "$sequence": "1",
+              "$id": "b1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "books",
+              "authors": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6535"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "authors"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6514"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "authors",
+              "id": "a1"
+            },
+            "as": "o6536"
+          },
+          "bind": "s14451",
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "authors",
+              "books": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o6536"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "books"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

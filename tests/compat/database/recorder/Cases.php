@@ -43,6 +43,9 @@ final class Cases
 
     private int $fake = 0;
 
+    /** @var array<string, int> stored object (`as`) => the top-level step that defines it */
+    private array $definers = [];
+
     /**
      * @param list<Step> $stream
      * @param list<array<string, mixed>> $tests
@@ -56,9 +59,16 @@ final class Cases
         private array|\stdClass $open,
         private string $schema,
         private array $dirty = [],
+        private bool $units = false,
     ) {
+        self::$profileName = $this->profile->name;
         self::$innodb = \in_array($this->profile->engine(), ['mariadb', 'mysql'], true);
         self::$mysql = $this->profile->engine() === 'mysql';
+        foreach ($this->stream as $step) {
+            foreach ($step->defines as $name) {
+                $this->definers[$name] ??= $step->index;
+            }
+        }
         foreach ($this->stream as $step) {
             $this->rewrite($step);
         }
@@ -69,7 +79,7 @@ final class Cases
         $refs = [];
         $args = $this->value($step->args, $refs, null);
         foreach ($step->callbacks as $param => $invocations) {
-            $args[$param] = $this->callback($step, $param, $invocations, $refs);
+            self::place($args, $step->op, $param, $this->callback($step, $param, $invocations, $refs));
         }
         $this->args[$step->index] = $args;
         $this->refs[$step->index] = array_values(array_unique($refs));
@@ -77,6 +87,24 @@ final class Cases
             $this->bound[$r] = true;
         }
         $this->produce($step->result, $step->index, '');
+    }
+
+    /** Operations whose method arguments are under `args` (the others take them directly). */
+    private const NESTED_ARGS = ['object.new', 'object.call', 'adapter.call', 'db.adapter', 'db.profiler'];
+
+    /**
+     * Puts a callback argument where its operation reads the method's
+     * arguments.
+     *
+     * @param array<string, mixed> $args
+     */
+    private static function place(array &$args, string $op, string $param, mixed $callback): void
+    {
+        if (\in_array($op, self::NESTED_ARGS, true)) {
+            $args['args'][$param] = $callback;
+        } else {
+            $args[$param] = $callback;
+        }
     }
 
     /**
@@ -105,7 +133,7 @@ final class Cases
             $nestedRefs = [];
             $entry = ['op' => $nested->op, 'args' => $this->value($nested->args, $nestedRefs, $locals)];
             foreach ($nested->callbacks as $p => $inner) {
-                $entry['args'][$p] = $this->callback($nested, $p, $inner, $nestedRefs);
+                self::place($entry['args'], $nested->op, $p, $this->callback($nested, $p, $inner, $nestedRefs));
             }
             if ($entry['args'] === []) {
                 $entry['args'] = new \stdClass();
@@ -171,6 +199,14 @@ final class Cases
             return $this->tokens($value, $locals);
         }
         if (\is_array($value)) {
+            // A stored object: the step defining it comes along.
+            if (\count($value) === 1 && \is_string($value['$obj'] ?? null)) {
+                if (isset($this->definers[$value['$obj']])) {
+                    $refs[] = $this->definers[$value['$obj']];
+                }
+
+                return $value;
+            }
             // A reference the recorder made itself (a peer database's handle).
             if (\count($value) === 1 && \is_string($value['$ref'] ?? null)) {
                 if (str_starts_with($value['$ref'], 's')) {
@@ -322,6 +358,9 @@ final class Cases
             return [];
         }
         $start = $own[0];
+        if ($this->units) {
+            return $this->unitSlice($own);
+        }
         $needed = [];
         foreach ($own as $i) {
             foreach ($this->collectionsOf($i) as $c) {
@@ -340,7 +379,7 @@ final class Cases
             }
             if ($s->op === 'database.delete_collection' && \count($s->collections) === 1) {
                 $cuts[$s->collections[0]] = $i;
-            } elseif ($s->op === 'database.delete' && !isset($s->args['database'])) {
+            } elseif ($s->resets) {
                 $reset = $i;
             }
         }
@@ -390,10 +429,47 @@ final class Cases
     }
 
     /**
+     * A unit test's steps: its own (setUp, the test, tearDown) and the
+     * earlier ones they refer to, closed over their references, plus
+     * process-wide registrations. Unit tests build their objects afresh, so
+     * collections tie nothing together.
+     *
+     * @param list<int> $own
+     * @return list<int>
+     */
+    private function unitSlice(array $own): array
+    {
+        $start = $own[0];
+        $included = [];
+        for ($i = 0; $i < $start; $i++) {
+            if ($this->stream[$i]->sticky) {
+                $included[$i] = true;
+            }
+        }
+        $queue = $own;
+        while ($queue !== []) {
+            $i = array_pop($queue);
+            foreach ($this->refs[$i] as $r) {
+                if ($r < $start && !isset($included[$r])) {
+                    $included[$r] = true;
+                    $queue[] = $r;
+                }
+            }
+        }
+        $all = array_keys($included);
+        sort($all);
+
+        return array_merge($all, $own);
+    }
+
+    /**
      * A step whose result legitimately differs between runs or runtimes.
      *
      * @return array{paths: list<string>, reason: string}|null
      */
+    /** The recording profile's name. */
+    private static string $profileName = '';
+
     /** Whether the cases run on MariaDB/MySQL (InnoDB). */
     private static bool $innodb = false;
 
@@ -418,14 +494,17 @@ final class Cases
         if (self::lists($step)) {
             return ['paths' => [''], 'reason' => 'a MongoDB listing names every database on the server, other runs\' included'];
         }
-        if ($step->op === 'database.get_size_of_collection_on_disk' && str_starts_with(Target::$profile, 'mongo')) {
+        if ($step->op === 'database.get_size_of_collection_on_disk' && str_starts_with(self::$profileName, 'mongo')) {
             return ['paths' => [''], 'reason' => 'a MongoDB collection\'s storage size depends on when WiredTiger last checkpointed it'];
         }
-        if ($step->op === 'database.iterate' && str_starts_with(Target::$profile, 'mongo')) {
-            return ['paths' => ['/*/$document/$createdAt', '/*/$document/$updatedAt'], 'reason' => 'PHP\'s MongoDB adapter casts the cursor of the next page in place, so the last document of each page it already yielded holds UTCDateTime objects (an alias of the Document object); Rust yields values'];
-        }
-        if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
+        if (\in_array($step->op, ['database.get_hostname', 'database.get_connection_id'], true) || ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['hostname', 'id'], true))) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
+        }
+        if ($step->op === 'db.profiler' && \in_array($step->args['method'] ?? '', ['getLogs', 'getSlowQueries'], true)) {
+            return ['paths' => ['/*/fields/durationMs', '/*/fields/backtrace'], 'reason' => 'a profiled statement\'s duration and the PHP stack it ran from are the runtime\'s own'];
+        }
+        if ($step->op === 'db.profiler' && ($step->args['method'] ?? '') === 'getTotalTime') {
+            return ['paths' => [''], 'reason' => 'the time the profiled statements took'];
         }
 
         return null;
@@ -437,7 +516,7 @@ final class Cases
      */
     private static function lists(Step $step): bool
     {
-        if (!str_starts_with(Target::$profile, 'mongo')) {
+        if (!str_starts_with(self::$profileName, 'mongo')) {
             return false;
         }
 
@@ -486,6 +565,11 @@ final class Cases
             $trait = basename($file, '.php');
             $files[$file] ??= ['tests' => 0, 'cases' => [], 'steps' => 0, 'statuses' => []];
             $files[$file]['tests']++;
+            // A test left out (a unit test a case cannot carry): counted only.
+            if ($test['skip'] ?? false) {
+                $files[$file]['statuses'][$test['status']] = ($files[$file]['statuses'][$test['status']] ?? 0) + 1;
+                continue;
+            }
             $files[$file]['statuses'][$test['status']] = ($files[$file]['statuses'][$test['status']] ?? 0) + 1;
             $indexes = $this->slice($t);
             if ($indexes === []) {
@@ -494,7 +578,7 @@ final class Cases
             }
             // Restoring steps name the recorder's schema as the tests left it.
             $dirty = $this->renamed($this->dirty[$t] ?? []);
-            $steps = [['op' => 'db.open', 'args' => $this->open, 'bind' => 'db'], ...$this->profile->opening, ...$dirty];
+            $steps = $this->units ? [] : [['op' => 'db.open', 'args' => $this->open, 'bind' => 'db'], ...$this->profile->opening, ...$dirty];
             $present = array_flip($indexes);
             foreach ($indexes as $i) {
                 $s = $this->stream[$i];
@@ -538,7 +622,11 @@ final class Cases
         foreach ($files as $file => $data) {
             $adapter = 'tests/e2e/Adapter/' . $this->profile->suite;
             $base = 'vendor/utopia-php/database/';
-            if (!str_starts_with($file, 'Scopes/')) {
+            if ($this->units) {
+                // A unit test class: Unit-<its path under tests/unit>.json.
+                $name = 'Unit-' . str_replace('/', '-', substr($file, 0, -4)) . '.json';
+                $source = [$base . 'tests/unit/' . $file];
+            } elseif (!str_starts_with($file, 'Scopes/')) {
                 // The suite's own tests (the MongoDB ones under the profile's
                 // prefix: Mongo-[SharedTables-|Schemaless-]MongoDBTest.json).
                 $name = (str_starts_with($this->profile->name, 'mongo') ? $this->profile->prefix : '') . basename($file, '.php') . '.json';

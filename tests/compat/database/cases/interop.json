@@ -9,92 +9,276 @@
       ],
       "steps": [
         {
-          "side": "a",
           "op": "db.open",
           "args": {
             "cache": "redis-shared-igbinary"
           },
+          "side": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "side": "a",
           "op": "database.set_cache_name",
           "args": {
             "name": "${ns}"
           },
+          "side": "a",
           "expect": {
             "$database": true
           }
         },
         {
-          "side": "a",
-          "op": "database.create_collection",
+          "op": "object.call",
           "args": {
-            "id": "people",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ]
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "c66"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "$id": "people",
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ],
               "name": "people",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c66"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a67"
+          },
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
         {
-          "side": "a",
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "name",
-            "type": "string",
-            "size": 64,
-            "required": false
+            "attribute": {
+              "$obj": "a67"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "score",
+                "key": "score",
+                "type": "double",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a68"
+          },
           "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "score",
-            "type": "double",
-            "size": 0,
-            "required": false
+            "attribute": {
+              "$obj": "a68"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 32,
+                "required": false,
+                "array": true
+              }
+            },
+            "as": "a69"
+          },
           "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "tags",
-            "type": "string",
-            "size": 32,
-            "required": false,
-            "array": true
+            "attribute": {
+              "$obj": "a69"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
-          "side": "a",
           "op": "database.create_document",
           "args": {
             "collection": "people",
@@ -108,6 +292,7 @@
               ]
             }
           },
+          "side": "a",
           "expect": {
             "$document": {
               "$id": "ada",
@@ -126,12 +311,12 @@
           }
         },
         {
-          "side": "a",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "name": "Ada",
@@ -150,22 +335,22 @@
           }
         },
         {
-          "side": "b",
           "op": "db.open",
           "args": {
             "cache": "redis-shared-igbinary",
             "create": false
           },
+          "side": "b",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "side": "b",
           "op": "database.set_cache_name",
           "args": {
             "name": "${ns}"
           },
+          "side": "b",
           "expect": {
             "$database": true
           }
@@ -183,12 +368,12 @@
           ]
         },
         {
-          "side": "b",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "b",
           "expect": {
             "$document": {
               "name": "Ada",
@@ -207,7 +392,6 @@
           }
         },
         {
-          "side": "b",
           "op": "database.get_document",
           "args": {
             "collection": "people",
@@ -224,6 +408,7 @@
               }
             ]
           },
+          "side": "b",
           "expect": {
             "$document": {
               "name": "Grace",
@@ -237,21 +422,21 @@
           }
         },
         {
-          "side": "b",
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "people",
+            "collection": "people",
             "id": "ada"
           },
-          "expect": true
+          "side": "b",
+          "expect": null
         },
         {
-          "side": "a",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "name": "Grace",
@@ -270,11 +455,11 @@
           }
         },
         {
-          "side": "a",
           "op": "database.get_collection",
           "args": {
-            "id": "people"
+            "collection": "people"
           },
+          "side": "a",
           "bind": "col",
           "expect": {
             "$document": {
@@ -337,20 +522,20 @@
                 "create(\"any\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
-          "side": "a",
           "op": "database.get_query_cache_key",
           "args": {
             "collectionId": "people"
           },
+          "side": "a",
           "bind": "key",
-          "expect": "${ns}-cache-compat-database-postgres:compat::collection:people:query"
+          "expect": "${ns}-cache-compat-database-postgres:${ns}:compat::collection:people:query"
         },
         {
-          "side": "a",
           "op": "database.get_query_cache_field",
           "args": {
             "collection": {
@@ -368,6 +553,7 @@
               }
             ]
           },
+          "side": "a",
           "bind": "field",
           "mask": {
             "paths": [
@@ -378,7 +564,6 @@
           "expect": "<masked>"
         },
         {
-          "side": "a",
           "op": "database.with_cache",
           "args": {
             "key": {
@@ -410,6 +595,7 @@
               ]
             }
           },
+          "side": "a",
           "expect": {
             "result": [
               {
@@ -459,7 +645,6 @@
           }
         },
         {
-          "side": "b",
           "op": "database.with_cache",
           "args": {
             "key": {
@@ -479,6 +664,7 @@
               ]
             }
           },
+          "side": "b",
           "expect": {
             "result": [
               {
@@ -537,11 +723,11 @@
           "expect": "0"
         },
         {
-          "side": "b",
           "op": "database.purge_cached_queries",
           "args": {
             "collection": "people"
           },
+          "side": "b",
           "expect": true
         },
         {
@@ -564,7 +750,7 @@
               }
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "side": "b",
@@ -580,7 +766,9 @@
               }
             }
           },
-          "expect": false
+          "expect": {
+            "value": "stale"
+          }
         }
       ]
     },
@@ -592,92 +780,276 @@
       ],
       "steps": [
         {
-          "side": "a",
           "op": "db.open",
           "args": {
             "cache": "redis-shared"
           },
+          "side": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "side": "a",
           "op": "database.set_cache_name",
           "args": {
             "name": "${ns}"
           },
+          "side": "a",
           "expect": {
             "$database": true
           }
         },
         {
-          "side": "a",
-          "op": "database.create_collection",
+          "op": "object.call",
           "args": {
-            "id": "people",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ]
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "c70"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "$id": "people",
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ],
               "name": "people",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c70"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 64,
+                "required": false
+              }
+            },
+            "as": "a71"
+          },
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
         {
-          "side": "a",
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "name",
-            "type": "string",
-            "size": 64,
-            "required": false
+            "attribute": {
+              "$obj": "a71"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "score",
+                "key": "score",
+                "type": "double",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a72"
+          },
           "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "score",
-            "type": "double",
-            "size": 0,
-            "required": false
+            "attribute": {
+              "$obj": "a72"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 32,
+                "required": false,
+                "array": true
+              }
+            },
+            "as": "a73"
+          },
           "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "tags",
-            "type": "string",
-            "size": 32,
-            "required": false,
-            "array": true
+            "attribute": {
+              "$obj": "a73"
+            }
           },
-          "expect": true
+          "side": "a",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
-          "side": "a",
           "op": "database.create_document",
           "args": {
             "collection": "people",
@@ -691,6 +1063,7 @@
               ]
             }
           },
+          "side": "a",
           "expect": {
             "$document": {
               "$id": "ada",
@@ -709,12 +1082,12 @@
           }
         },
         {
-          "side": "a",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "name": "Ada",
@@ -733,22 +1106,22 @@
           }
         },
         {
-          "side": "b",
           "op": "db.open",
           "args": {
             "cache": "redis-shared",
             "create": false
           },
+          "side": "b",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "side": "b",
           "op": "database.set_cache_name",
           "args": {
             "name": "${ns}"
           },
+          "side": "b",
           "expect": {
             "$database": true
           }
@@ -766,12 +1139,12 @@
           ]
         },
         {
-          "side": "b",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "b",
           "expect": {
             "$document": {
               "name": "Ada",
@@ -790,7 +1163,6 @@
           }
         },
         {
-          "side": "b",
           "op": "database.get_document",
           "args": {
             "collection": "people",
@@ -807,6 +1179,7 @@
               }
             ]
           },
+          "side": "b",
           "expect": {
             "$document": {
               "name": "Grace",
@@ -820,21 +1193,21 @@
           }
         },
         {
-          "side": "b",
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "people",
+            "collection": "people",
             "id": "ada"
           },
-          "expect": true
+          "side": "b",
+          "expect": null
         },
         {
-          "side": "a",
           "op": "database.get_document",
           "args": {
             "collection": "people",
             "id": "ada"
           },
+          "side": "a",
           "expect": {
             "$document": {
               "name": "Grace",
@@ -853,11 +1226,11 @@
           }
         },
         {
-          "side": "a",
           "op": "database.get_collection",
           "args": {
-            "id": "people"
+            "collection": "people"
           },
+          "side": "a",
           "bind": "col",
           "expect": {
             "$document": {
@@ -920,20 +1293,20 @@
                 "create(\"any\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
-          "side": "a",
           "op": "database.get_query_cache_key",
           "args": {
             "collectionId": "people"
           },
+          "side": "a",
           "bind": "key",
-          "expect": "${ns}-cache-compat-database-postgres:compat::collection:people:query"
+          "expect": "${ns}-cache-compat-database-postgres:${ns}:compat::collection:people:query"
         },
         {
-          "side": "a",
           "op": "database.get_query_cache_field",
           "args": {
             "collection": {
@@ -951,6 +1324,7 @@
               }
             ]
           },
+          "side": "a",
           "bind": "field",
           "mask": {
             "paths": [
@@ -961,7 +1335,6 @@
           "expect": "<masked>"
         },
         {
-          "side": "a",
           "op": "database.with_cache",
           "args": {
             "key": {
@@ -993,6 +1366,7 @@
               ]
             }
           },
+          "side": "a",
           "expect": {
             "result": [
               {
@@ -1042,7 +1416,6 @@
           }
         },
         {
-          "side": "b",
           "op": "database.with_cache",
           "args": {
             "key": {
@@ -1062,6 +1435,7 @@
               ]
             }
           },
+          "side": "b",
           "expect": {
             "result": [
               {
@@ -1120,11 +1494,11 @@
           "expect": "0"
         },
         {
-          "side": "b",
           "op": "database.purge_cached_queries",
           "args": {
             "collection": "people"
           },
+          "side": "b",
           "expect": true
         },
         {
@@ -1147,7 +1521,7 @@
               }
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "side": "b",
@@ -1163,7 +1537,9 @@
               }
             }
           },
-          "expect": false
+          "expect": {
+            "value": "stale"
+          }
         }
       ]
     }

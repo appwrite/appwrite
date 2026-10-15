@@ -1,0 +1,1468 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/DatabaseGuardsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DatabaseGuardsTest::testFromIsRefusedWithoutAQueryBuilder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1031"
+          },
+          "bind": "s1932",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1031"
+              },
+              "cache": "none"
+            },
+            "as": "o1032"
+          },
+          "bind": "s1933",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1032"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1032"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000051"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1032"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o1033"
+          },
+          "bind": "s1936",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1033"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1032"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "anything"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Query builder is not supported by this adapter"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSchemaIsRefusedWithoutAQueryBuilder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1034"
+          },
+          "bind": "s1938",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1034"
+              },
+              "cache": "none"
+            },
+            "as": "o1035"
+          },
+          "bind": "s1939",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1035"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1035"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000052"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1035"
+            },
+            "method": "schema",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Schema builder is not supported by this adapter"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testQueryAndMutateAreRefusedWithoutRawQueries",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1036"
+          },
+          "bind": "s1943",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1036"
+              },
+              "cache": "none"
+            },
+            "as": "o1037"
+          },
+          "bind": "s1944",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000053"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Statement",
+            "args": {
+              "query": "SELECT 1",
+              "bindings": [],
+              "readOnly": true
+            },
+            "as": "o1038"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT 1",
+              "bindings": [],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o1039"
+          },
+          "bind": "s1948",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1039"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "Utopia\\Database\\Exception",
+                      "message": "Raw queries are not supported by this adapter"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Raw queries are not supported by this adapter"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1037"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1039"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "Utopia\\Database\\Exception",
+                      "message": "Raw queries are not supported by this adapter"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Raw queries are not supported by this adapter"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSetTimeoutIsRefusedWithoutTimeouts#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1040"
+          },
+          "bind": "s1952",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1040"
+              },
+              "cache": "none"
+            },
+            "as": "o1041"
+          },
+          "bind": "s1953",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1041"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1041"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000054"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1041"
+            },
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support timeouts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSetTimeoutIsRefusedWithoutTimeouts#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1042"
+          },
+          "bind": "s1957",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1042"
+              },
+              "cache": "none"
+            },
+            "as": "o1043"
+          },
+          "bind": "s1958",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1043"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1043"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000055"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1043"
+            },
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support timeouts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testClearTimeoutIsRefusedWithoutTimeouts#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1044"
+          },
+          "bind": "s1962",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1044"
+              },
+              "cache": "none"
+            },
+            "as": "o1045"
+          },
+          "bind": "s1963",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1045"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1045"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000056"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1045"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support timeouts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testClearTimeoutIsRefusedWithoutTimeouts#sqlite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1046"
+          },
+          "bind": "s1967",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1046"
+              },
+              "cache": "none"
+            },
+            "as": "o1047"
+          },
+          "bind": "s1968",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1047"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1047"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000057"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1047"
+            },
+            "method": "clearTimeout",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Adapter does not support timeouts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testGetConnectionIdIsNullWithoutAConnection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1048"
+          },
+          "bind": "s1972",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1048"
+              },
+              "cache": "none"
+            },
+            "as": "o1049"
+          },
+          "bind": "s1973",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1049"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1049"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000058"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1049"
+            },
+            "method": "getConnectionId",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSchemaIntrospectionWithoutTheFeatureListsNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1050"
+          },
+          "bind": "s1977",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1050"
+              },
+              "cache": "none"
+            },
+            "as": "o1051"
+          },
+          "bind": "s1978",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000059"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 32
+            },
+            "as": "o1052"
+          },
+          "bind": "s1982",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "byName",
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o1053"
+          },
+          "bind": "s1983",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "byName",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "introspected",
+              "attributes": [
+                {
+                  "$obj": "o1052"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o1053"
+                }
+              ]
+            },
+            "as": "o1054"
+          },
+          "bind": "s1984",
+          "expect": {
+            "$document": {
+              "$id": "introspected",
+              "name": "introspected",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byName",
+                    "key": "byName",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o1054"
+              }
+            },
+            "as": "o1055"
+          },
+          "expect": {
+            "$document": {
+              "$id": "introspected",
+              "name": "introspected",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byName",
+                    "key": "byName",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "introspected"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "getSchemaIndexes",
+            "args": {
+              "collection": "introspected"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testDropUnknownAttributesGetterFollowsTheSetter",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1056"
+          },
+          "bind": "s1988",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1056"
+              },
+              "cache": "none"
+            },
+            "as": "o1057"
+          },
+          "bind": "s1989",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000060"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "setDropUnknownAttributes",
+            "args": {
+              "drop": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "setDropUnknownAttributes",
+            "args": {
+              "drop": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "isDroppingUnknownAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSkipRelationshipsWithoutTheHookRunsTheCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1058"
+          },
+          "bind": "s1997",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1058"
+              },
+              "cache": "none"
+            },
+            "as": "o1059"
+          },
+          "bind": "s1998",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1059"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1059"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000061"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1059"
+            },
+            "method": "skipRelationships",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1059"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o1060"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": {},
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": true,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseGuardsTest::testSkipRelationshipsExistCheckWithoutTheHookRunsTheCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1061"
+          },
+          "bind": "s2002",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1061"
+              },
+              "cache": "none"
+            },
+            "as": "o1062"
+          },
+          "bind": "s2003",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1062"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "guards"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1062"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "guards_u000000000062"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1062"
+            },
+            "method": "skipRelationshipsExistCheck",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1062"
+                      },
+                      "method": "snapshot",
+                      "args": {},
+                      "as": "o1063"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": {},
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "State\\Snapshot",
+                      "fields": {
+                        "authorization": true,
+                        "roles": [
+                          "any"
+                        ],
+                        "relationships": true,
+                        "existCheck": true,
+                        "population": false,
+                        "silenced": false,
+                        "silencedListeners": [],
+                        "tenant": null,
+                        "filters": true,
+                        "disabledFilters": [],
+                        "validation": true,
+                        "preserveDates": false,
+                        "preserveSequence": false,
+                        "ignoreDuplicates": false,
+                        "requestTimestamp": null,
+                        "checkGrants": false,
+                        "rewriting": true
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

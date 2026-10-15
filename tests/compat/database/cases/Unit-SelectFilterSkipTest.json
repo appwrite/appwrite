@@ -1,0 +1,732 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SelectFilterSkipTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SelectFilterSkipTest::testFilterNotAppliedWhenAttributeNotSelected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o51968"
+          },
+          "bind": "s79327",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o51968"
+              },
+              "cache": "memory"
+            },
+            "as": "o51969"
+          },
+          "bind": "s79328",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "select_filter_u000000000047"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "addFilter",
+            "args": {
+              "name": "subQueryProbeUnit",
+              "encode": true,
+              "decode": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        "fanned",
+                        "out"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "encode": [],
+              "decode": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "filterSelect"
+            },
+            "as": "o51970"
+          },
+          "bind": "s79333",
+          "expect": {
+            "$document": {
+              "$id": "filterSelect",
+              "name": "filterSelect",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o51970"
+              }
+            },
+            "as": "o51971"
+          },
+          "expect": {
+            "$document": {
+              "$id": "filterSelect",
+              "name": "filterSelect",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "plain",
+              "size": 128
+            },
+            "as": "o51972"
+          },
+          "bind": "s79335",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "plain",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "filterSelect",
+              "attribute": {
+                "$obj": "o51972"
+              }
+            },
+            "as": "o51973"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "plain",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "kids",
+              "size": 128,
+              "filters": [
+                "subQueryProbeUnit"
+              ]
+            },
+            "as": "o51974"
+          },
+          "bind": "s79337",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "kids",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "subQueryProbeUnit"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "filterSelect",
+              "attribute": {
+                "$obj": "o51974"
+              }
+            },
+            "as": "o51975"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "kids",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "subQueryProbeUnit"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o51976"
+          },
+          "bind": "s79339",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o51976"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o51977"
+          },
+          "bind": "s79341",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o51977"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o51978"
+          },
+          "bind": "s79343",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o51978"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "plain": "x"
+              }
+            },
+            "as": "o51979"
+          },
+          "bind": "s79345",
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "plain": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "filterSelect",
+              "document": {
+                "$obj": "o51979"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Filter \"subQueryProbeUnit\" not found for attribute \"kids\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "filterSelect",
+              "id": "doc1"
+            },
+            "as": "o51980"
+          },
+          "bind": "s79347",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Filter \"subQueryProbeUnit\" not found for attribute \"kids\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51980"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "$id",
+                "plain"
+              ]
+            },
+            "as": "o51981"
+          },
+          "bind": "s79349"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "filterSelect",
+              "id": "doc1",
+              "queries": [
+                {
+                  "$obj": "o51981"
+                }
+              ]
+            },
+            "as": "o51982"
+          },
+          "bind": "s79350"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51982"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51982"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "plain"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "$id",
+                "kids"
+              ]
+            },
+            "as": "o51983"
+          },
+          "bind": "s79353"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "filterSelect",
+              "id": "doc1",
+              "queries": [
+                {
+                  "$obj": "o51983"
+                }
+              ]
+            },
+            "as": "o51984"
+          },
+          "bind": "s79354"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51984"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "*"
+              ]
+            },
+            "as": "o51985"
+          },
+          "bind": "s79356"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "filterSelect",
+              "id": "doc1",
+              "queries": [
+                {
+                  "$obj": "o51985"
+                }
+              ]
+            },
+            "as": "o51986"
+          },
+          "bind": "s79357"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51986"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "$id",
+                "plain"
+              ]
+            },
+            "as": "o51987"
+          },
+          "bind": "s79359"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "find",
+            "args": {
+              "collection": "filterSelect",
+              "queries": [
+                {
+                  "$obj": "o51987"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "plain": "x",
+                "$id": "doc1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "filterSelect"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o51969"
+            },
+            "method": "find",
+            "args": {
+              "collection": "filterSelect"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "plain": "x",
+                "$id": "doc1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "1",
+                "kids": [
+                  "fanned",
+                  "out"
+                ],
+                "$collection": "filterSelect"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kids"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

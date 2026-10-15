@@ -1,0 +1,1719 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/FullOuterJoinRandomOrderTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FullOuterJoinRandomOrderTest::testAFullOuterJoinInRandomOrderReturnsEveryRow#emulated full outer join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o17833"
+          },
+          "bind": "s46058",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o17833"
+              },
+              "cache": "none"
+            },
+            "as": "o17834"
+          },
+          "bind": "s46059",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "random_order"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "random_order"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o17835"
+          },
+          "bind": "s46062",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o17835"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o17836"
+          },
+          "bind": "s46065",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "customerId",
+              "size": 16
+            },
+            "as": "o17837"
+          },
+          "bind": "s46066",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "customerId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 16
+            },
+            "as": "o17838"
+          },
+          "bind": "s46067",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o17839"
+          },
+          "bind": "s46068",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o17839"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o17840"
+          },
+          "bind": "s46070",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o17840"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "customers",
+              "attributes": [
+                {
+                  "$obj": "o17836"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o17841"
+          },
+          "bind": "s46072",
+          "expect": {
+            "$document": {
+              "$id": "customers",
+              "name": "customers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o17841"
+              }
+            },
+            "as": "o17842"
+          },
+          "expect": {
+            "$document": {
+              "$id": "customers",
+              "name": "customers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o17843"
+          },
+          "bind": "s46074",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o17843"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o17844"
+          },
+          "bind": "s46076",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o17844"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o17837"
+                },
+                {
+                  "$obj": "o17838"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o17845"
+          },
+          "bind": "s46078",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o17845"
+              }
+            },
+            "as": "o17846"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c1",
+                "name": "c1"
+              }
+            },
+            "as": "o17847"
+          },
+          "bind": "s46080",
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "name": "c1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "customers",
+              "document": {
+                "$obj": "o17847"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "name": "c1",
+              "$collection": "customers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c2",
+                "name": "c2"
+              }
+            },
+            "as": "o17848"
+          },
+          "bind": "s46082",
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "name": "c2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "customers",
+              "document": {
+                "$obj": "o17848"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "name": "c2",
+              "$collection": "customers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c3",
+                "name": "c3"
+              }
+            },
+            "as": "o17849"
+          },
+          "bind": "s46084",
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "name": "c3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "customers",
+              "document": {
+                "$obj": "o17849"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "name": "c3",
+              "$collection": "customers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "n1",
+                "customerId": "c1",
+                "body": "n1"
+              }
+            },
+            "as": "o17850"
+          },
+          "bind": "s46086",
+          "expect": {
+            "$document": {
+              "$id": "n1",
+              "customerId": "c1",
+              "body": "n1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o17850"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "n1",
+              "customerId": "c1",
+              "body": "n1",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "n2",
+                "customerId": "c1",
+                "body": "n2"
+              }
+            },
+            "as": "o17851"
+          },
+          "bind": "s46088",
+          "expect": {
+            "$document": {
+              "$id": "n2",
+              "customerId": "c1",
+              "body": "n2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o17851"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "n2",
+              "customerId": "c1",
+              "body": "n2",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "n3",
+                "customerId": "c2",
+                "body": "n3"
+              }
+            },
+            "as": "o17852"
+          },
+          "bind": "s46090",
+          "expect": {
+            "$document": {
+              "$id": "n3",
+              "customerId": "c2",
+              "body": "n3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o17852"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "n3",
+              "customerId": "c2",
+              "body": "n3",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "n4",
+                "customerId": "cx",
+                "body": "n4"
+              }
+            },
+            "as": "o17853"
+          },
+          "bind": "s46092",
+          "expect": {
+            "$document": {
+              "$id": "n4",
+              "customerId": "cx",
+              "body": "n4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o17853"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "n4",
+              "customerId": "cx",
+              "body": "n4",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o17854"
+          },
+          "bind": "s46094",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "notes",
+              "alias": "note",
+              "on": [
+                {
+                  "$obj": "o17854"
+                }
+              ]
+            },
+            "as": "o17855"
+          },
+          "bind": "s46095",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "notes",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "note"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "name",
+                "note.body"
+              ]
+            },
+            "as": "o17856"
+          },
+          "bind": "s46096",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "name",
+                "note.body"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "find",
+            "args": {
+              "collection": "customers",
+              "queries": [
+                {
+                  "$obj": "o17855"
+                },
+                {
+                  "$obj": "o17856"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n4"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderRandom",
+            "args": {},
+            "as": "o17857"
+          },
+          "bind": "s46108",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 100
+            },
+            "as": "o17858"
+          },
+          "bind": "s46109",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o17834"
+            },
+            "method": "find",
+            "args": {
+              "collection": "customers",
+              "queries": [
+                {
+                  "$obj": "o17855"
+                },
+                {
+                  "$obj": "o17856"
+                },
+                {
+                  "$obj": "o17857"
+                },
+                {
+                  "$obj": "o17858"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c1",
+                "note.body": "n2",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c2",
+                "note.body": "n3",
+                "$id": "c2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "c3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": "c3",
+                "note.body": null,
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "name": null,
+                "note.body": "n4",
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note.body"
+            }
+          },
+          "expect": "n4"
+        }
+      ]
+    }
+  ]
+}

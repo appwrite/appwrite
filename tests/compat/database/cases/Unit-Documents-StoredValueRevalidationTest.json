@@ -1,0 +1,2403 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/StoredValueRevalidationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "StoredValueRevalidationTest::testAnUpdateKeepsAStoredValueANarrowedRangeNoLongerAdmits",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3148"
+          },
+          "bind": "s5457",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3148"
+              },
+              "cache": "none"
+            },
+            "as": "o3149"
+          },
+          "bind": "s5458",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "stored_u000000000102"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3150"
+          },
+          "bind": "s5461",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3151"
+          },
+          "bind": "s5462",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3151"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3150"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            },
+            "as": "o3152"
+          },
+          "bind": "s5466",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "level",
+              "format": {
+                "$obj": "o3152"
+              }
+            },
+            "as": "o3153"
+          },
+          "bind": "s5467",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "level",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 100
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o3154"
+          },
+          "bind": "s5468",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "kind",
+              "size": 8,
+              "format": {
+                "$obj": "o3154"
+              }
+            },
+            "as": "o3155"
+          },
+          "bind": "s5469",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "kind",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedEnum",
+                  "options": {
+                    "elements": [
+                      "a",
+                      "b"
+                    ]
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "note",
+              "size": 32
+            },
+            "as": "o3156"
+          },
+          "bind": "s5470",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "note",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3157"
+          },
+          "bind": "s5471",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3157"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3158"
+          },
+          "bind": "s5473",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3158"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3159"
+          },
+          "bind": "s5475",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o3159"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "rows",
+              "attributes": [
+                {
+                  "$obj": "o3153"
+                },
+                {
+                  "$obj": "o3155"
+                },
+                {
+                  "$obj": "o3156"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o3160"
+          },
+          "bind": "s5477",
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3160"
+              }
+            },
+            "as": "o3161"
+          },
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "row",
+                "level": 50,
+                "kind": "b",
+                "note": "before"
+              }
+            },
+            "as": "o3162"
+          },
+          "bind": "s5479",
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "rows",
+              "document": {
+                "$obj": "o3162"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"storedRange\""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 10
+              }
+            },
+            "as": "o3163"
+          },
+          "bind": "s5481",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 10
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "format": {
+                "$obj": "o3163"
+              }
+            },
+            "as": "o3164"
+          },
+          "bind": "s5482",
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 10
+                  }
+                }
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "updateAttribute",
+            "args": {
+              "collection": "rows",
+              "key": "level",
+              "update": {
+                "$obj": "o3164"
+              }
+            },
+            "as": "o3165"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"storedRange\") not available for this attribute type (\"integer\")"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "note": "after narrow"
+              }
+            },
+            "as": "o3166"
+          },
+          "bind": "s5484",
+          "expect": {
+            "$document": {
+              "note": "after narrow"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row",
+              "document": {
+                "$obj": "o3166"
+              }
+            },
+            "as": "o3167"
+          },
+          "bind": "s5485",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3167"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3149"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row"
+            },
+            "as": "o3168"
+          },
+          "bind": "s5487",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3168"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3168"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "level"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StoredValueRevalidationTest::testAnUpdateKeepsAStoredValueAShrunkEnumNoLongerAdmits",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3169"
+          },
+          "bind": "s5490",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3169"
+              },
+              "cache": "none"
+            },
+            "as": "o3170"
+          },
+          "bind": "s5491",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "stored_u000000000103"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3171"
+          },
+          "bind": "s5494",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3172"
+          },
+          "bind": "s5495",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3172"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3171"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            },
+            "as": "o3173"
+          },
+          "bind": "s5499",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "level",
+              "format": {
+                "$obj": "o3173"
+              }
+            },
+            "as": "o3174"
+          },
+          "bind": "s5500",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "level",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 100
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o3175"
+          },
+          "bind": "s5501",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "kind",
+              "size": 8,
+              "format": {
+                "$obj": "o3175"
+              }
+            },
+            "as": "o3176"
+          },
+          "bind": "s5502",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "kind",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedEnum",
+                  "options": {
+                    "elements": [
+                      "a",
+                      "b"
+                    ]
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "note",
+              "size": 32
+            },
+            "as": "o3177"
+          },
+          "bind": "s5503",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "note",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3178"
+          },
+          "bind": "s5504",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3178"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3179"
+          },
+          "bind": "s5506",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3179"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3180"
+          },
+          "bind": "s5508",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o3180"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "rows",
+              "attributes": [
+                {
+                  "$obj": "o3174"
+                },
+                {
+                  "$obj": "o3176"
+                },
+                {
+                  "$obj": "o3177"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o3181"
+          },
+          "bind": "s5510",
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3181"
+              }
+            },
+            "as": "o3182"
+          },
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "row",
+                "level": 50,
+                "kind": "b",
+                "note": "before"
+              }
+            },
+            "as": "o3183"
+          },
+          "bind": "s5512",
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "rows",
+              "document": {
+                "$obj": "o3183"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"storedRange\""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a"
+                ]
+              }
+            },
+            "as": "o3184"
+          },
+          "bind": "s5514",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "format": {
+                "$obj": "o3184"
+              }
+            },
+            "as": "o3185"
+          },
+          "bind": "s5515",
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedEnum",
+                  "options": {
+                    "elements": [
+                      "a"
+                    ]
+                  }
+                }
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "updateAttribute",
+            "args": {
+              "collection": "rows",
+              "key": "kind",
+              "update": {
+                "$obj": "o3185"
+              }
+            },
+            "as": "o3186"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"storedEnum\") not available for this attribute type (\"string\")"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "note": "after shrink"
+              }
+            },
+            "as": "o3187"
+          },
+          "bind": "s5517",
+          "expect": {
+            "$document": {
+              "note": "after shrink"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row",
+              "document": {
+                "$obj": "o3187"
+              }
+            },
+            "as": "o3188"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3170"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row"
+            },
+            "as": "o3189"
+          },
+          "bind": "s5519",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3189"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "kind"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StoredValueRevalidationTest::testAnUpdateThatWritesAValueTheNarrowedRangeRefusesFails",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3190"
+          },
+          "bind": "s5522",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3190"
+              },
+              "cache": "none"
+            },
+            "as": "o3191"
+          },
+          "bind": "s5523",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "stored_u000000000104"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o3192"
+          },
+          "bind": "s5526",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3193"
+          },
+          "bind": "s5527",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3193"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3192"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            },
+            "as": "o3194"
+          },
+          "bind": "s5531",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 100
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "level",
+              "format": {
+                "$obj": "o3194"
+              }
+            },
+            "as": "o3195"
+          },
+          "bind": "s5532",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "level",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 100
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o3196"
+          },
+          "bind": "s5533",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedEnum",
+              "options": {
+                "elements": [
+                  "a",
+                  "b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "kind",
+              "size": 8,
+              "format": {
+                "$obj": "o3196"
+              }
+            },
+            "as": "o3197"
+          },
+          "bind": "s5534",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "kind",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedEnum",
+                  "options": {
+                    "elements": [
+                      "a",
+                      "b"
+                    ]
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "note",
+              "size": 32
+            },
+            "as": "o3198"
+          },
+          "bind": "s5535",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "note",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3199"
+          },
+          "bind": "s5536",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3199"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3200"
+          },
+          "bind": "s5538",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3200"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3201"
+          },
+          "bind": "s5540",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o3201"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "rows",
+              "attributes": [
+                {
+                  "$obj": "o3195"
+                },
+                {
+                  "$obj": "o3197"
+                },
+                {
+                  "$obj": "o3198"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o3202"
+          },
+          "bind": "s5542",
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3202"
+              }
+            },
+            "as": "o3203"
+          },
+          "expect": {
+            "$document": {
+              "$id": "rows",
+              "name": "rows",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "level",
+                    "key": "level",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedRange",
+                    "formatOptions": {
+                      "min": 0,
+                      "max": 100
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "kind",
+                    "key": "kind",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "storedEnum",
+                    "formatOptions": {
+                      "elements": [
+                        "a",
+                        "b"
+                      ]
+                    },
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "note",
+                    "key": "note",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "row",
+                "level": 50,
+                "kind": "b",
+                "note": "before"
+              }
+            },
+            "as": "o3204"
+          },
+          "bind": "s5544",
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "rows",
+              "document": {
+                "$obj": "o3204"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"storedRange\""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 10
+              }
+            },
+            "as": "o3205"
+          },
+          "bind": "s5546",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "storedRange",
+              "options": {
+                "min": 0,
+                "max": 10
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "format": {
+                "$obj": "o3205"
+              }
+            },
+            "as": "o3206"
+          },
+          "bind": "s5547",
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 10
+                  }
+                }
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "updateAttribute",
+            "args": {
+              "collection": "rows",
+              "key": "level",
+              "update": {
+                "$obj": "o3206"
+              }
+            },
+            "as": "o3207"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"storedRange\") not available for this attribute type (\"integer\")"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "level": 60,
+                "note": "written"
+              }
+            },
+            "as": "o3208"
+          },
+          "bind": "s5549",
+          "expect": {
+            "$document": {
+              "level": 60,
+              "note": "written"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row",
+              "document": {
+                "$obj": "o3208"
+              }
+            }
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3191"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "rows",
+              "id": "row"
+            },
+            "as": "o3209"
+          },
+          "bind": "s5551",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3209"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "note"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

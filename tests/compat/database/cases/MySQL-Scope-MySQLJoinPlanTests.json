@@ -1,0 +1,3418 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/MySQLJoinPlanTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "MySQLJoinPlanTests::testEightCheckedSelfJoinsKeepTheJoinOrderSearchSmall",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "checked_self_joins",
+                                "name": "checked_self_joins",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_checked_self_joins` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_checked_self_joins_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:caller"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer5"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer6"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer7"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer8"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SHOW SESSION STATUS LIKE 'Last_query_partial_plans'"
+                        }
+                    }
+                },
+                {
+                    "op": "database.count",
+                    "args": {
+                        "collection": "checked_self_joins",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer5"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer6"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer7"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "checked_self_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer8"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SHOW SESSION STATUS LIKE 'Last_query_partial_plans'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "checked_self_joins"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MySQLJoinPlanTests::testEightJoinsOfWhichFourAreCheckedKeepTheJoinOrderSearchSmall",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "partly_checked_joins",
+                                "name": "partly_checked_joins",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "partly_checked_labels",
+                                "name": "partly_checked_labels",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_partly_checked_joins` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_partly_checked_joins_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_partly_checked_labels` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_partly_checked_labels_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "partly_checked_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:caller"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SHOW SESSION STATUS LIKE 'Last_query_partial_plans'"
+                        }
+                    }
+                },
+                {
+                    "op": "database.count",
+                    "args": {
+                        "collection": "partly_checked_joins",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_joins",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "$id",
+                                                    "=",
+                                                    "$id"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "peer4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "partly_checked_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "label4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SHOW SESSION STATUS LIKE 'Last_query_partial_plans'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "partly_checked_labels"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "partly_checked_joins"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MySQLJoinPlanTests::testLeftJoinedChecksStaySubqueries",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "left_joined_customers",
+                                "name": "left_joined_customers",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "left_joined_link1",
+                                "name": "left_joined_link1",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "left_joined_link2",
+                                "name": "left_joined_link2",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "left_joined_link3",
+                                "name": "left_joined_link3",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "left_joined_link4",
+                                "name": "left_joined_link4",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_customers` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_customers_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link1` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link1_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link1",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link2` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link2_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link2",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link3` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link3_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link3",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link4` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_left_joined_link4_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "left_joined_link4",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:caller"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=on', optimizer_trace_offset = -5, optimizer_trace_limit = 5"
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link1",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "orderAsc",
+                                    "attribute": "name",
+                                    "values": []
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SELECT QUERY FROM information_schema.OPTIMIZER_TRACE"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=off'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "EXPLAIN FORMAT=TREE SELECT `table_main`.*, `c1`.`_uid` AS `c1._uid`, `c1`.`name` AS `c1.name` FROM (SELECT `table_main`.* FROM `${ns}`.`compat_left_joined_customers` AS `table_main` ORDER BY `name` ASC, `_id` ASC LIMIT 100) AS `table_main` LEFT JOIN `${ns}`.`compat_left_joined_link1` AS `c1` ON `table_main`.`name` = `c1`.`name` AND `c1`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link1_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') ORDER BY `table_main`.`name` ASC, `table_main`.`_id` ASC, `c1`.`_uid` ASC LIMIT 100 OFFSET 0"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=on', optimizer_trace_offset = -5, optimizer_trace_limit = 5"
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link1",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link2",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "orderAsc",
+                                    "attribute": "name",
+                                    "values": []
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SELECT QUERY FROM information_schema.OPTIMIZER_TRACE"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=off'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "EXPLAIN FORMAT=TREE SELECT `table_main`.*, `c1`.`_uid` AS `c1._uid`, `c1`.`name` AS `c1.name`, `c2`.`_uid` AS `c2._uid`, `c2`.`name` AS `c2.name` FROM (SELECT `table_main`.* FROM `${ns}`.`compat_left_joined_customers` AS `table_main` ORDER BY `name` ASC, `_id` ASC LIMIT 100) AS `table_main` LEFT JOIN `${ns}`.`compat_left_joined_link1` AS `c1` ON `table_main`.`name` = `c1`.`name` AND `c1`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link1_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link2` AS `c2` ON `table_main`.`name` = `c2`.`name` AND `c2`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link2_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') ORDER BY `table_main`.`name` ASC, `table_main`.`_id` ASC, `c1`.`_uid` ASC, `c2`.`_uid` ASC LIMIT 100 OFFSET 0"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=on', optimizer_trace_offset = -5, optimizer_trace_limit = 5"
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link1",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link2",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link3",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "orderAsc",
+                                    "attribute": "name",
+                                    "values": []
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SELECT QUERY FROM information_schema.OPTIMIZER_TRACE"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=off'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "EXPLAIN FORMAT=TREE SELECT `table_main`.*, `c1`.`_uid` AS `c1._uid`, `c1`.`name` AS `c1.name`, `c2`.`_uid` AS `c2._uid`, `c2`.`name` AS `c2.name`, `c3`.`_uid` AS `c3._uid`, `c3`.`name` AS `c3.name` FROM (SELECT `table_main`.* FROM `${ns}`.`compat_left_joined_customers` AS `table_main` ORDER BY `name` ASC, `_id` ASC LIMIT 100) AS `table_main` LEFT JOIN `${ns}`.`compat_left_joined_link1` AS `c1` ON `table_main`.`name` = `c1`.`name` AND `c1`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link1_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link2` AS `c2` ON `table_main`.`name` = `c2`.`name` AND `c2`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link2_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link3` AS `c3` ON `table_main`.`name` = `c3`.`name` AND `c3`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link3_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') ORDER BY `table_main`.`name` ASC, `table_main`.`_id` ASC, `c1`.`_uid` ASC, `c2`.`_uid` ASC, `c3`.`_uid` ASC LIMIT 100 OFFSET 0"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=on', optimizer_trace_offset = -5, optimizer_trace_limit = 5"
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "left_joined_customers",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link1",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c1"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link2",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c2"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link3",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c3"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "leftJoin",
+                                    "attribute": "left_joined_link4",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "c4"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "orderAsc",
+                                    "attribute": "name",
+                                    "values": []
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SELECT QUERY FROM information_schema.OPTIMIZER_TRACE"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=off'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "EXPLAIN FORMAT=TREE SELECT `table_main`.*, `c1`.`_uid` AS `c1._uid`, `c1`.`name` AS `c1.name`, `c2`.`_uid` AS `c2._uid`, `c2`.`name` AS `c2.name`, `c3`.`_uid` AS `c3._uid`, `c3`.`name` AS `c3.name`, `c4`.`_uid` AS `c4._uid`, `c4`.`name` AS `c4.name` FROM (SELECT `table_main`.* FROM `${ns}`.`compat_left_joined_customers` AS `table_main` ORDER BY `name` ASC, `_id` ASC LIMIT 100) AS `table_main` LEFT JOIN `${ns}`.`compat_left_joined_link1` AS `c1` ON `table_main`.`name` = `c1`.`name` AND `c1`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link1_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link2` AS `c2` ON `table_main`.`name` = `c2`.`name` AND `c2`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link2_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link3` AS `c3` ON `table_main`.`name` = `c3`.`name` AND `c3`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link3_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') LEFT JOIN `${ns}`.`compat_left_joined_link4` AS `c4` ON `table_main`.`name` = `c4`.`name` AND `c4`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `${ns}`.`compat_left_joined_link4_perms` WHERE _permission IN ('any', 'user:caller') AND _type = 'read') ORDER BY `table_main`.`name` ASC, `table_main`.`_id` ASC, `c1`.`_uid` ASC, `c2`.`_uid` ASC, `c3`.`_uid` ASC, `c4`.`_uid` ASC LIMIT 100 OFFSET 0"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "left_joined_link1"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "left_joined_link2"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "left_joined_link3"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "left_joined_link4"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "left_joined_customers"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MySQLJoinPlanTests::testJoinNoIndexServesIsNotLookedUpByTheTenant",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "tenant_lookup_customers",
+                                "name": "tenant_lookup_customers",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "tenant_lookup_labels",
+                                "name": "tenant_lookup_labels",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "tenant_lookup_tags",
+                                "name": "tenant_lookup_tags",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.get_roles",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_customers` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_customers_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"user:eve\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_labels` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_labels_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_labels",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "name",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 64,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_tags` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "ALTER TABLE `${ns}`.`compat_tenant_lookup_tags_perms` STATS_AUTO_RECALC = 0"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "alice",
+                                "name": "Alice",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "bob",
+                                "name": "Bob",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "carol",
+                                "name": "Carol",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "dave",
+                                "name": "Dave",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "frank",
+                                "name": "Frank",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "document": {
+                            "$document": {
+                                "$id": "eve",
+                                "name": "Eve",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_index",
+                    "args": {
+                        "collection": "tenant_lookup_tags",
+                        "index": {
+                            "$value": "Index",
+                            "fields": {
+                                "key": "name_key",
+                                "type": {
+                                    "$enum": "Query\\Schema\\IndexType::Key"
+                                },
+                                "attributes": [
+                                    "name"
+                                ],
+                                "lengths": [],
+                                "orders": [],
+                                "ttl": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:caller"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=on', optimizer_trace_offset = -5, optimizer_trace_limit = 5, optimizer_trace_max_mem_size = 67108864"
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "tenant_lookup_customers",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "tenant_lookup_labels",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "named"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "join",
+                                    "attribute": "tenant_lookup_tags",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "on",
+                                                "attribute": "",
+                                                "values": [
+                                                    "name",
+                                                    "=",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "alias": "tagged"
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        100
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawQuery",
+                        "args": {
+                            "query": "SELECT QUERY, TRACE FROM information_schema.OPTIMIZER_TRACE"
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "rawMutation",
+                        "args": {
+                            "query": "SET SESSION optimizer_trace = 'enabled=off'"
+                        }
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "tenant_lookup_tags"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "tenant_lookup_labels"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "tenant_lookup_customers"
+                    }
+                }
+            ]
+        }
+    ]
+}

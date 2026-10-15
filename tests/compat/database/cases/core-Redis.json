@@ -19,34 +19,99 @@
           }
         },
         {
-          "op": "database.create_collection",
+          "op": "object.call",
           "args": {
-            "id": "things",
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")",
-              "update(\"any\")",
-              "delete(\"any\")"
-            ],
-            "documentSecurity": false
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "things",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c64"
           },
           "expect": {
             "$document": {
               "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c64"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
               "$permissions": [
                 "create(\"any\")",
                 "read(\"any\")",
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "name": "things",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": false,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 32,
+                "required": false
+              }
+            },
+            "as": "a65"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -54,12 +119,28 @@
           "op": "database.create_attribute",
           "args": {
             "collection": "things",
-            "id": "name",
-            "type": "string",
-            "size": 32,
-            "required": false
+            "attribute": {
+              "$obj": "a65"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
@@ -122,13 +203,13 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "2",
               "$id": "second",
               "name": "Second",
               "$collection": "things",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$permissions": [],
-              "$sequence": "2"
+              "$permissions": []
             }
           }
         },

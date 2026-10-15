@@ -1,0 +1,61 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php"
+    ],
+    "cases": [
+        {
+            "name": "MariaDBTest::testTransactionsDeadlockedOnALockedGapBothCommit",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "deadlockedGap",
+                                "name": "deadlockedGap",
+                                "attributes": [
+                                    {
+                                        "$id": "count",
+                                        "key": "count",
+                                        "type": "integer",
+                                        "size": 0,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": true,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "deadlockedGap"
+                    }
+                }
+            ]
+        }
+    ]
+}

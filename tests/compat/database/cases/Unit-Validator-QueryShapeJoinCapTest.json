@@ -1,0 +1,3372 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/QueryShapeJoinCapTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryShapeJoinCapTest::testAtMostEightJoinsPerQuery",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1054"
+          },
+          "bind": "s1491",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o1055"
+          },
+          "bind": "s1492",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o1054"
+                },
+                {
+                  "$obj": "o1055"
+                }
+              ]
+            },
+            "as": "o1056"
+          },
+          "bind": "s1493",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1057"
+          },
+          "bind": "s1494",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1058"
+          },
+          "bind": "s1495",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1059"
+          },
+          "bind": "s1496",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1060"
+          },
+          "bind": "s1497",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined5"
+            },
+            "as": "o1061"
+          },
+          "bind": "s1498",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined6"
+            },
+            "as": "o1062"
+          },
+          "bind": "s1499",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined6"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined7"
+            },
+            "as": "o1063"
+          },
+          "bind": "s1500",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined8"
+            },
+            "as": "o1064"
+          },
+          "bind": "s1501",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined8"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1057"
+                },
+                {
+                  "$obj": "o1058"
+                },
+                {
+                  "$obj": "o1059"
+                },
+                {
+                  "$obj": "o1060"
+                },
+                {
+                  "$obj": "o1061"
+                },
+                {
+                  "$obj": "o1062"
+                },
+                {
+                  "$obj": "o1063"
+                },
+                {
+                  "$obj": "o1064"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1065"
+          },
+          "bind": "s1504",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1066"
+          },
+          "bind": "s1505",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1067"
+          },
+          "bind": "s1506",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1068"
+          },
+          "bind": "s1507",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined5"
+            },
+            "as": "o1069"
+          },
+          "bind": "s1508",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined6"
+            },
+            "as": "o1070"
+          },
+          "bind": "s1509",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined6"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined7"
+            },
+            "as": "o1071"
+          },
+          "bind": "s1510",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined8"
+            },
+            "as": "o1072"
+          },
+          "bind": "s1511",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined8"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined9"
+            },
+            "as": "o1073"
+          },
+          "bind": "s1512",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined9"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1065"
+                },
+                {
+                  "$obj": "o1066"
+                },
+                {
+                  "$obj": "o1067"
+                },
+                {
+                  "$obj": "o1068"
+                },
+                {
+                  "$obj": "o1069"
+                },
+                {
+                  "$obj": "o1070"
+                },
+                {
+                  "$obj": "o1071"
+                },
+                {
+                  "$obj": "o1072"
+                },
+                {
+                  "$obj": "o1073"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many joins: at most 8 are allowed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1074"
+          },
+          "bind": "s1515",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1075"
+          },
+          "bind": "s1516",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1076"
+          },
+          "bind": "s1517",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1077"
+          },
+          "bind": "s1518",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined5"
+            },
+            "as": "o1078"
+          },
+          "bind": "s1519",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined6"
+            },
+            "as": "o1079"
+          },
+          "bind": "s1520",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined6"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined7"
+            },
+            "as": "o1080"
+          },
+          "bind": "s1521",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined8"
+            },
+            "as": "o1081"
+          },
+          "bind": "s1522",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined8"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined9"
+            },
+            "as": "o1082"
+          },
+          "bind": "s1523",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined9"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined10"
+            },
+            "as": "o1083"
+          },
+          "bind": "s1524",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined10"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined11"
+            },
+            "as": "o1084"
+          },
+          "bind": "s1525",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined11"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined12"
+            },
+            "as": "o1085"
+          },
+          "bind": "s1526",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined12"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined13"
+            },
+            "as": "o1086"
+          },
+          "bind": "s1527",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined13"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined14"
+            },
+            "as": "o1087"
+          },
+          "bind": "s1528",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined14"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined15"
+            },
+            "as": "o1088"
+          },
+          "bind": "s1529",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined15"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined16"
+            },
+            "as": "o1089"
+          },
+          "bind": "s1530",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined16"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined17"
+            },
+            "as": "o1090"
+          },
+          "bind": "s1531",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined17"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined18"
+            },
+            "as": "o1091"
+          },
+          "bind": "s1532",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined18"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined19"
+            },
+            "as": "o1092"
+          },
+          "bind": "s1533",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined19"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined20"
+            },
+            "as": "o1093"
+          },
+          "bind": "s1534",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined20"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined21"
+            },
+            "as": "o1094"
+          },
+          "bind": "s1535",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined21"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined22"
+            },
+            "as": "o1095"
+          },
+          "bind": "s1536",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined22"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined23"
+            },
+            "as": "o1096"
+          },
+          "bind": "s1537",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined23"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined24"
+            },
+            "as": "o1097"
+          },
+          "bind": "s1538",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined24"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined25"
+            },
+            "as": "o1098"
+          },
+          "bind": "s1539",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined25"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined26"
+            },
+            "as": "o1099"
+          },
+          "bind": "s1540",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined26"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined27"
+            },
+            "as": "o1100"
+          },
+          "bind": "s1541",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined27"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined28"
+            },
+            "as": "o1101"
+          },
+          "bind": "s1542",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined28"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined29"
+            },
+            "as": "o1102"
+          },
+          "bind": "s1543",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined29"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined30"
+            },
+            "as": "o1103"
+          },
+          "bind": "s1544",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined30"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined31"
+            },
+            "as": "o1104"
+          },
+          "bind": "s1545",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined31"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined32"
+            },
+            "as": "o1105"
+          },
+          "bind": "s1546",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined32"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined33"
+            },
+            "as": "o1106"
+          },
+          "bind": "s1547",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined33"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined34"
+            },
+            "as": "o1107"
+          },
+          "bind": "s1548",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined34"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined35"
+            },
+            "as": "o1108"
+          },
+          "bind": "s1549",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined35"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined36"
+            },
+            "as": "o1109"
+          },
+          "bind": "s1550",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined36"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined37"
+            },
+            "as": "o1110"
+          },
+          "bind": "s1551",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined37"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined38"
+            },
+            "as": "o1111"
+          },
+          "bind": "s1552",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined38"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined39"
+            },
+            "as": "o1112"
+          },
+          "bind": "s1553",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined39"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined40"
+            },
+            "as": "o1113"
+          },
+          "bind": "s1554",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined40"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined41"
+            },
+            "as": "o1114"
+          },
+          "bind": "s1555",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined41"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined42"
+            },
+            "as": "o1115"
+          },
+          "bind": "s1556",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined42"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined43"
+            },
+            "as": "o1116"
+          },
+          "bind": "s1557",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined43"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined44"
+            },
+            "as": "o1117"
+          },
+          "bind": "s1558",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined44"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined45"
+            },
+            "as": "o1118"
+          },
+          "bind": "s1559",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined45"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined46"
+            },
+            "as": "o1119"
+          },
+          "bind": "s1560",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined46"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined47"
+            },
+            "as": "o1120"
+          },
+          "bind": "s1561",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined47"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined48"
+            },
+            "as": "o1121"
+          },
+          "bind": "s1562",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined48"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined49"
+            },
+            "as": "o1122"
+          },
+          "bind": "s1563",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined49"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined50"
+            },
+            "as": "o1123"
+          },
+          "bind": "s1564",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined50"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined51"
+            },
+            "as": "o1124"
+          },
+          "bind": "s1565",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined51"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined52"
+            },
+            "as": "o1125"
+          },
+          "bind": "s1566",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined52"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined53"
+            },
+            "as": "o1126"
+          },
+          "bind": "s1567",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined53"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined54"
+            },
+            "as": "o1127"
+          },
+          "bind": "s1568",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined54"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined55"
+            },
+            "as": "o1128"
+          },
+          "bind": "s1569",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined55"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined56"
+            },
+            "as": "o1129"
+          },
+          "bind": "s1570",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined56"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined57"
+            },
+            "as": "o1130"
+          },
+          "bind": "s1571",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined57"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined58"
+            },
+            "as": "o1131"
+          },
+          "bind": "s1572",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined58"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined59"
+            },
+            "as": "o1132"
+          },
+          "bind": "s1573",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined59"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined60"
+            },
+            "as": "o1133"
+          },
+          "bind": "s1574",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined60"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined61"
+            },
+            "as": "o1134"
+          },
+          "bind": "s1575",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined61"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o1135"
+          },
+          "bind": "s1576",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1074"
+                },
+                {
+                  "$obj": "o1075"
+                },
+                {
+                  "$obj": "o1076"
+                },
+                {
+                  "$obj": "o1077"
+                },
+                {
+                  "$obj": "o1078"
+                },
+                {
+                  "$obj": "o1079"
+                },
+                {
+                  "$obj": "o1080"
+                },
+                {
+                  "$obj": "o1081"
+                },
+                {
+                  "$obj": "o1082"
+                },
+                {
+                  "$obj": "o1083"
+                },
+                {
+                  "$obj": "o1084"
+                },
+                {
+                  "$obj": "o1085"
+                },
+                {
+                  "$obj": "o1086"
+                },
+                {
+                  "$obj": "o1087"
+                },
+                {
+                  "$obj": "o1088"
+                },
+                {
+                  "$obj": "o1089"
+                },
+                {
+                  "$obj": "o1090"
+                },
+                {
+                  "$obj": "o1091"
+                },
+                {
+                  "$obj": "o1092"
+                },
+                {
+                  "$obj": "o1093"
+                },
+                {
+                  "$obj": "o1094"
+                },
+                {
+                  "$obj": "o1095"
+                },
+                {
+                  "$obj": "o1096"
+                },
+                {
+                  "$obj": "o1097"
+                },
+                {
+                  "$obj": "o1098"
+                },
+                {
+                  "$obj": "o1099"
+                },
+                {
+                  "$obj": "o1100"
+                },
+                {
+                  "$obj": "o1101"
+                },
+                {
+                  "$obj": "o1102"
+                },
+                {
+                  "$obj": "o1103"
+                },
+                {
+                  "$obj": "o1104"
+                },
+                {
+                  "$obj": "o1105"
+                },
+                {
+                  "$obj": "o1106"
+                },
+                {
+                  "$obj": "o1107"
+                },
+                {
+                  "$obj": "o1108"
+                },
+                {
+                  "$obj": "o1109"
+                },
+                {
+                  "$obj": "o1110"
+                },
+                {
+                  "$obj": "o1111"
+                },
+                {
+                  "$obj": "o1112"
+                },
+                {
+                  "$obj": "o1113"
+                },
+                {
+                  "$obj": "o1114"
+                },
+                {
+                  "$obj": "o1115"
+                },
+                {
+                  "$obj": "o1116"
+                },
+                {
+                  "$obj": "o1117"
+                },
+                {
+                  "$obj": "o1118"
+                },
+                {
+                  "$obj": "o1119"
+                },
+                {
+                  "$obj": "o1120"
+                },
+                {
+                  "$obj": "o1121"
+                },
+                {
+                  "$obj": "o1122"
+                },
+                {
+                  "$obj": "o1123"
+                },
+                {
+                  "$obj": "o1124"
+                },
+                {
+                  "$obj": "o1125"
+                },
+                {
+                  "$obj": "o1126"
+                },
+                {
+                  "$obj": "o1127"
+                },
+                {
+                  "$obj": "o1128"
+                },
+                {
+                  "$obj": "o1129"
+                },
+                {
+                  "$obj": "o1130"
+                },
+                {
+                  "$obj": "o1131"
+                },
+                {
+                  "$obj": "o1132"
+                },
+                {
+                  "$obj": "o1133"
+                },
+                {
+                  "$obj": "o1134"
+                },
+                {
+                  "$obj": "o1135"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many joins: at most 8 are allowed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1136"
+          },
+          "bind": "s1579",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1137"
+          },
+          "bind": "s1580",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1138"
+          },
+          "bind": "s1581",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1139"
+          },
+          "bind": "s1582",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customer"
+            },
+            "as": "o1140"
+          },
+          "bind": "s1583",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "first",
+              "on": [
+                {
+                  "$obj": "o1140"
+                }
+              ]
+            },
+            "as": "o1141"
+          },
+          "bind": "s1584",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customer"
+                    ]
+                  }
+                }
+              ],
+              "alias": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customer"
+            },
+            "as": "o1142"
+          },
+          "bind": "s1585",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "second",
+              "on": [
+                {
+                  "$obj": "o1142"
+                }
+              ]
+            },
+            "as": "o1143"
+          },
+          "bind": "s1586",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customer"
+                    ]
+                  }
+                }
+              ],
+              "alias": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customer"
+            },
+            "as": "o1144"
+          },
+          "bind": "s1587",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "rightJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "third",
+              "on": [
+                {
+                  "$obj": "o1144"
+                }
+              ]
+            },
+            "as": "o1145"
+          },
+          "bind": "s1588",
+          "expect": {
+            "$query": {
+              "method": "rightJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customer"
+                    ]
+                  }
+                }
+              ],
+              "alias": "third"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customer"
+            },
+            "as": "o1146"
+          },
+          "bind": "s1589",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "fourth",
+              "on": [
+                {
+                  "$obj": "o1146"
+                }
+              ]
+            },
+            "as": "o1147"
+          },
+          "bind": "s1590",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customer"
+                    ]
+                  }
+                }
+              ],
+              "alias": "fourth"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "fifth.customer"
+            },
+            "as": "o1148"
+          },
+          "bind": "s1591",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "fifth.customer"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "fifth",
+              "on": [
+                {
+                  "$obj": "o1148"
+                }
+              ]
+            },
+            "as": "o1149"
+          },
+          "bind": "s1592",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "fifth.customer"
+                    ]
+                  }
+                }
+              ],
+              "alias": "fifth"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1136"
+                },
+                {
+                  "$obj": "o1137"
+                },
+                {
+                  "$obj": "o1138"
+                },
+                {
+                  "$obj": "o1139"
+                },
+                {
+                  "$obj": "o1141"
+                },
+                {
+                  "$obj": "o1143"
+                },
+                {
+                  "$obj": "o1145"
+                },
+                {
+                  "$obj": "o1147"
+                },
+                {
+                  "$obj": "o1149"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many joins: at most 8 are allowed"
+        }
+      ]
+    },
+    {
+      "name": "QueryShapeJoinCapTest::testJoinCapAppliesToSingleDocumentQueries",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1150"
+          },
+          "bind": "s1595",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1151"
+          },
+          "bind": "s1596",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1152"
+          },
+          "bind": "s1597",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1153"
+          },
+          "bind": "s1598",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1154"
+          },
+          "bind": "s1599",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1155"
+          },
+          "bind": "s1600",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o1156"
+          },
+          "bind": "s1601",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1157"
+          },
+          "bind": "s1602",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o1158"
+          },
+          "bind": "s1603",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1159"
+          },
+          "bind": "s1604",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1159"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1160"
+          },
+          "bind": "s1605",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Document",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1150"
+                },
+                {
+                  "$obj": "o1151"
+                },
+                {
+                  "$obj": "o1152"
+                },
+                {
+                  "$obj": "o1153"
+                },
+                {
+                  "$obj": "o1154"
+                },
+                {
+                  "$obj": "o1155"
+                },
+                {
+                  "$obj": "o1156"
+                },
+                {
+                  "$obj": "o1157"
+                },
+                {
+                  "$obj": "o1158"
+                }
+              ],
+              "profile": {
+                "$obj": "o1160"
+              }
+            },
+            "as": "o1161"
+          },
+          "bind": "s1606",
+          "expect": {
+            "$value": "Validator\\Queries\\Document",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1162"
+          },
+          "bind": "s1607",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1163"
+          },
+          "bind": "s1608",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1164"
+          },
+          "bind": "s1609",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1165"
+          },
+          "bind": "s1610",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined5"
+            },
+            "as": "o1166"
+          },
+          "bind": "s1611",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined6"
+            },
+            "as": "o1167"
+          },
+          "bind": "s1612",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined6"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined7"
+            },
+            "as": "o1168"
+          },
+          "bind": "s1613",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined8"
+            },
+            "as": "o1169"
+          },
+          "bind": "s1614",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined8"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1162"
+                },
+                {
+                  "$obj": "o1163"
+                },
+                {
+                  "$obj": "o1164"
+                },
+                {
+                  "$obj": "o1165"
+                },
+                {
+                  "$obj": "o1166"
+                },
+                {
+                  "$obj": "o1167"
+                },
+                {
+                  "$obj": "o1168"
+                },
+                {
+                  "$obj": "o1169"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined1"
+            },
+            "as": "o1170"
+          },
+          "bind": "s1617",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined2"
+            },
+            "as": "o1171"
+          },
+          "bind": "s1618",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined3"
+            },
+            "as": "o1172"
+          },
+          "bind": "s1619",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined4"
+            },
+            "as": "o1173"
+          },
+          "bind": "s1620",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined5"
+            },
+            "as": "o1174"
+          },
+          "bind": "s1621",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined5"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined6"
+            },
+            "as": "o1175"
+          },
+          "bind": "s1622",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined6"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined7"
+            },
+            "as": "o1176"
+          },
+          "bind": "s1623",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined7"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined8"
+            },
+            "as": "o1177"
+          },
+          "bind": "s1624",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined8"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "other",
+              "alias": "joined9"
+            },
+            "as": "o1178"
+          },
+          "bind": "s1625",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "other",
+              "values": [],
+              "alias": "joined9"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o1170"
+                },
+                {
+                  "$obj": "o1171"
+                },
+                {
+                  "$obj": "o1172"
+                },
+                {
+                  "$obj": "o1173"
+                },
+                {
+                  "$obj": "o1174"
+                },
+                {
+                  "$obj": "o1175"
+                },
+                {
+                  "$obj": "o1176"
+                },
+                {
+                  "$obj": "o1177"
+                },
+                {
+                  "$obj": "o1178"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Too many joins: at most 8 are allowed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/FeatureTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "FeatureTests::testSpatialFeatureIsWhetherAPointAttributeCanBeCreated",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+                        }
+                    }
+                },
+                {
+                    "op": "database.profile",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "feature_spatial",
+                                "name": "feature_spatial",
+                                "attributes": [],
+                                "indexes": [],
+                                "documentSecurity": true
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "feature_spatial",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "location",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::Point"
+                                },
+                                "size": null,
+                                "required": true,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [
+                                    "point"
+                                ],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "feature_spatial"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "feature_spatial"
+                    }
+                }
+            ]
+        }
+    ]
+}

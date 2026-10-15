@@ -6,7 +6,8 @@ Every `cases/Adapter-<Area>.json` (but `Adapter-PostgresTest.json`, the
 PostgreSQL suite's own tests) becomes `cases/Adapter-MariaDB-<Area>.json`
 and `cases/Adapter-MySQL-<Area>.json`: the same steps on an adapter opened
 with `driver` `mariadb` or `mysql` (and `process_exception` and the fuzz
-operations with that driver), each case snapshotting the database
+operations with that driver; `adapter.call`s name the adapter, so they
+follow it), each case snapshotting the database
 (`mysql@database-<driver>`), without expectations: `bin/compat record
 database --case Adapter-MariaDB` (and `Adapter-MySQL`) records them from
 PHP. Re-run it when the PostgreSQL cases change.
@@ -29,7 +30,7 @@ UNORDERED = "MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes
 def derive_step(step, driver):
     step = copy.deepcopy(step)
     step.pop('expect', None)
-    if driver == 'mysql' and step.get('op') == 'adapter.schema_attributes':
+    if driver == 'mysql' and step.get('op') == 'adapter.call' and (step.get('args') or {}).get('method') == 'getSchemaAttributes':
         step['mask'] = {'paths': [''], 'reason': UNORDERED}
     if step.get('op') in DRIVER_OPS:
         args = step.get('args')
@@ -52,7 +53,7 @@ def derive_case(case, driver):
 def main():
     for path in sorted(glob.glob(os.path.join(CASES, 'Adapter-*.json'))):
         name = os.path.basename(path)[len('Adapter-'):-len('.json')]
-        if name == 'PostgresTest' or name.split('-')[0] in DRIVERS.values():
+        if name in ('PostgresTest', 'SQLite', 'Memory') or name.split('-')[0] in DRIVERS.values():
             continue
         data = json.load(open(path, encoding='utf-8'))
         for driver, label in DRIVERS.items():

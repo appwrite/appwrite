@@ -1,0 +1,2732 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/Relationships/ChildSideTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "ChildSideTests::testChildSideUpdateRenamesBothKeys#oneToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000199",
+                                "name": "parents_u0000000000000000199",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000200",
+                                "name": "children_u0000000000000000200",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000199",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000200",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000200",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000199",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000200",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": "owner",
+                                "twoWayKey": "items",
+                                "twoWay": null,
+                                "onDelete": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000200"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000199"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000200"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000199"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000199",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000200",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideUpdateRenamesBothKeys#manyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000201",
+                                "name": "parents_u0000000000000000201",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000202",
+                                "name": "children_u0000000000000000202",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000201",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000202",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000202",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000201",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000202",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": "owner",
+                                "twoWayKey": "items",
+                                "twoWay": null,
+                                "onDelete": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000202"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000201"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000202"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000201"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000201",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000202",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideUpdateRenamesBothKeys#manyToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000203",
+                                "name": "parents_u0000000000000000203",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000204",
+                                "name": "children_u0000000000000000204",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000203",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000204",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000204",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000203",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000204",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": "owner",
+                                "twoWayKey": "items",
+                                "twoWay": null,
+                                "onDelete": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000204"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000203"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000204"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000203"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000203",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000204",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideUpdateChangesTheDeleteActionOfBothSides#oneToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000205",
+                                "name": "parents_u0000000000000000205",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000206",
+                                "name": "children_u0000000000000000206",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000205",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000206",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000206",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000205",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000206",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": null,
+                                "twoWayKey": null,
+                                "twoWay": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Cascade"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000206"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000205"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000205",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000206",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideUpdateChangesTheDeleteActionOfBothSides#manyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000207",
+                                "name": "parents_u0000000000000000207",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000208",
+                                "name": "children_u0000000000000000208",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000207",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000208",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000208",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000207",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000208",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": null,
+                                "twoWayKey": null,
+                                "twoWay": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Cascade"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000208"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000207"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "children_u0000000000000000208",
+                        "id": "c1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000207",
+                        "id": "p1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideUpdateChangesTheDeleteActionOfBothSides#manyToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000209",
+                                "name": "parents_u0000000000000000209",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000210",
+                                "name": "children_u0000000000000000210",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000209",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000210",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000210",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000209",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000210",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": null,
+                                "twoWayKey": null,
+                                "twoWay": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Cascade"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000210"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000209"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000209",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000210",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideDeleteRemovesBothSides#oneToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000211",
+                                "name": "parents_u0000000000000000211",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000212",
+                                "name": "children_u0000000000000000212",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000211",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000212",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000212",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000211",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000211"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000212"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000212",
+                        "key": "back"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000212"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000211"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000211",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000212",
+                        "id": "c1"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000211",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000212",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000211",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000212",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideDeleteRemovesBothSides#manyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000213",
+                                "name": "parents_u0000000000000000213",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000214",
+                                "name": "children_u0000000000000000214",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000213",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000214",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000214",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000213",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000213"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000214"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000214",
+                        "key": "back"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000214"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000213"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000213",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000214",
+                        "id": "c1"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000213",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000214",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToOne"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000213",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000214",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testChildSideDeleteRemovesBothSides#manyToMany",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000215",
+                                "name": "parents_u0000000000000000215",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000216",
+                                "name": "children_u0000000000000000216",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000215",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000216",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000216",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000215",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": [
+                                    "c1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000215"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000216"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000216",
+                        "key": "back"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000216"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000215"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000215",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000216",
+                        "id": "c1"
+                    }
+                },
+                {
+                    "op": "database.find_collection",
+                    "args": {
+                        "collection": "_1674_1675"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000215",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000216",
+                                "type": {
+                                    "$enum": "RelationshipType::ManyToMany"
+                                },
+                                "twoWay": true,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000215",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "children_u0000000000000000216",
+                        "id": "c1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testOneWayOneToOneChildSideUpdateRenamesTheParentKey",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000217",
+                                "name": "parents_u0000000000000000217",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000218",
+                                "name": "children_u0000000000000000218",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000217",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000218",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": false,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000218",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000217",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000218",
+                        "key": "back",
+                        "update": {
+                            "$value": "Relationship\\Update",
+                            "fields": {
+                                "key": "owner",
+                                "twoWayKey": "item",
+                                "twoWay": null,
+                                "onDelete": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000217"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000217"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000218"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000217",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000217",
+                        "id": "p1",
+                        "document": {
+                            "$document": {
+                                "item": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000217",
+                        "id": "p1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChildSideTests::testOneWayOneToOneChildSideDeleteRemovesTheParentKey",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt",
+                        "fixture": "encrypt_operator"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "parents_u0000000000000000219",
+                                "name": "parents_u0000000000000000219",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "children_u0000000000000000220",
+                                "name": "children_u0000000000000000220",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000220",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": false,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "children_u0000000000000000220",
+                        "document": {
+                            "$document": {
+                                "$id": "c1",
+                                "name": "child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "document": {
+                            "$document": {
+                                "$id": "p1",
+                                "name": "parent",
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "children_u0000000000000000220",
+                        "key": "back"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "children_u0000000000000000220"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "parents_u0000000000000000219"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "id": "p1"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "children_u0000000000000000220",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": false,
+                                "key": "related",
+                                "twoWayKey": "back",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "id": "p1",
+                        "document": {
+                            "$document": {
+                                "related": "c1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parents_u0000000000000000219",
+                        "id": "p1"
+                    }
+                }
+            ]
+        }
+    ]
+}

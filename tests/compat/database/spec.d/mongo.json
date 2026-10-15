@@ -1,143 +1,5 @@
 {
   "ops": {
-    "mongo.adapter": {
-      "doc": "$db->getAdapter()->{method}(...args) on a database db.open opened with engine \"mongo\" (Utopia\\Database\\Adapter\\Mongo over utopia-php/mongo): named arguments as database.*, getDriver() as {\"$client\": true}",
-      "services": [
-        "database-mongo"
-      ],
-      "covers": [
-        "Utopia\\Database\\Adapter\\Mongo::__construct",
-        "Utopia\\Database\\Adapter\\Mongo::getHostname",
-        "Utopia\\Database\\Adapter\\Mongo::getDriver",
-        "Utopia\\Database\\Adapter\\Mongo::setTimeout",
-        "Utopia\\Database\\Adapter\\Mongo::clearTimeout",
-        "Utopia\\Database\\Adapter\\Mongo::withTransaction",
-        "Utopia\\Database\\Adapter\\Mongo::startTransaction",
-        "Utopia\\Database\\Adapter\\Mongo::commitTransaction",
-        "Utopia\\Database\\Adapter\\Mongo::rollbackTransaction",
-        "Utopia\\Database\\Adapter\\Mongo::ping",
-        "Utopia\\Database\\Adapter\\Mongo::reconnect",
-        "Utopia\\Database\\Adapter\\Mongo::create",
-        "Utopia\\Database\\Adapter\\Mongo::exists",
-        "Utopia\\Database\\Adapter\\Mongo::list",
-        "Utopia\\Database\\Adapter\\Mongo::delete",
-        "Utopia\\Database\\Adapter\\Mongo::createCollection",
-        "Utopia\\Database\\Adapter\\Mongo::listCollections",
-        "Utopia\\Database\\Adapter\\Mongo::getSizeOfCollectionOnDisk",
-        "Utopia\\Database\\Adapter\\Mongo::getSizeOfCollection",
-        "Utopia\\Database\\Adapter\\Mongo::deleteCollection",
-        "Utopia\\Database\\Adapter\\Mongo::analyzeCollection",
-        "Utopia\\Database\\Adapter\\Mongo::createAttribute",
-        "Utopia\\Database\\Adapter\\Mongo::createAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::deleteAttribute",
-        "Utopia\\Database\\Adapter\\Mongo::renameAttribute",
-        "Utopia\\Database\\Adapter\\Mongo::createRelationship",
-        "Utopia\\Database\\Adapter\\Mongo::updateRelationship",
-        "Utopia\\Database\\Adapter\\Mongo::deleteRelationship",
-        "Utopia\\Database\\Adapter\\Mongo::createIndex",
-        "Utopia\\Database\\Adapter\\Mongo::renameIndex",
-        "Utopia\\Database\\Adapter\\Mongo::deleteIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getDocument",
-        "Utopia\\Database\\Adapter\\Mongo::createDocument",
-        "Utopia\\Database\\Adapter\\Mongo::castingAfter",
-        "Utopia\\Database\\Adapter\\Mongo::castingBefore",
-        "Utopia\\Database\\Adapter\\Mongo::createDocuments",
-        "Utopia\\Database\\Adapter\\Mongo::updateDocument",
-        "Utopia\\Database\\Adapter\\Mongo::updateDocuments",
-        "Utopia\\Database\\Adapter\\Mongo::upsertDocuments",
-        "Utopia\\Database\\Adapter\\Mongo::getSequences",
-        "Utopia\\Database\\Adapter\\Mongo::increaseDocumentAttribute",
-        "Utopia\\Database\\Adapter\\Mongo::deleteDocument",
-        "Utopia\\Database\\Adapter\\Mongo::deleteDocuments",
-        "Utopia\\Database\\Adapter\\Mongo::updateAttribute",
-        "Utopia\\Database\\Adapter\\Mongo::find",
-        "Utopia\\Database\\Adapter\\Mongo::count",
-        "Utopia\\Database\\Adapter\\Mongo::sum",
-        "Utopia\\Database\\Adapter\\Mongo::getLimitForString",
-        "Utopia\\Database\\Adapter\\Mongo::getMaxVarcharLength",
-        "Utopia\\Database\\Adapter\\Mongo::getLimitForInt",
-        "Utopia\\Database\\Adapter\\Mongo::getLimitForBigInt",
-        "Utopia\\Database\\Adapter\\Mongo::getLimitForAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getLimitForIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getMinDateTime",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSchemas",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForIndexArray",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForInternalCasting",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForUTCCasting",
-        "Utopia\\Database\\Adapter\\Mongo::setUTCDatetime",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::setSupportForAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForUniqueIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForFulltextIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForFulltextWildcardIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForQueryContains",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForTimeouts",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForRelationships",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForUpdateLock",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForAttributeResizing",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForBatchOperations",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForGetConnectionId",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForPCRERegex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForPOSIXRegex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForCacheSkipOnFailure",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForCaching",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForHostname",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSchemaAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForCastIndexArray",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForUpserts",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForUpsertOnUniqueIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForReconnection",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForBatchCreateAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForObject",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForObjectIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getCountOfAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getCountOfIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getCountOfDefaultAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getCountOfDefaultIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getDocumentSizeLimit",
-        "Utopia\\Database\\Adapter\\Mongo::getAttributeWidth",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForCasting",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSpatialAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSpatialIndexNull",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForOperators",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForIntegerBooleans",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForBoundaryInclusiveContains",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSpatialIndexOrder",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSpatialAxisOrder",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForOptionalSpatialAttributeWithExistingRows",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForMultipleFulltextIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForIdenticalIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForOrderRandom",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForVectors",
-        "Utopia\\Database\\Adapter\\Mongo::getKeywords",
-        "Utopia\\Database\\Adapter\\Mongo::getIdAttributeType",
-        "Utopia\\Database\\Adapter\\Mongo::getMaxIndexLength",
-        "Utopia\\Database\\Adapter\\Mongo::getMaxUIDLength",
-        "Utopia\\Database\\Adapter\\Mongo::getConnectionId",
-        "Utopia\\Database\\Adapter\\Mongo::getInternalIndexesKeys",
-        "Utopia\\Database\\Adapter\\Mongo::getSchemaAttributes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForSchemaIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getSchemaIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getTenantFilters",
-        "Utopia\\Database\\Adapter\\Mongo::decodePoint",
-        "Utopia\\Database\\Adapter\\Mongo::decodeLinestring",
-        "Utopia\\Database\\Adapter\\Mongo::decodePolygon",
-        "Utopia\\Database\\Adapter\\Mongo::getTenantQuery",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForAlterLocks",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportNonUtfCharacters",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForTrigramIndex",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForTTLIndexes",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForTransactionRetries",
-        "Utopia\\Database\\Adapter\\Mongo::getSupportForNestedTransactions",
-        "Utopia\\Database\\Adapter::getColumnType"
-      ]
-    },
-    "mongo.permission_strings": {
-      "doc": "Mongo::permissionStrings(type) (private, by reflection, as MongoPermissionStringsTest calls it) on an adapter whose Authorization (enabled, cleaned) holds `roles`",
-      "covers": []
-    },
     "mongo.fuzz_find": {
       "doc": "find() on collection `fz` of the session's MongoDB fuzz adapter (database ${ns} of the compat MongoDB, namespace `fz`, seeded as adapter.fuzz_find seeds its schema): the same programs as adapter.fuzz_find, without filters on `$sequence` (a random UUIDv7 here, so which documents a filter on it matches differs between the runtimes)",
       "services": [
@@ -304,6 +166,36 @@
         }
       ]
     },
+    "mongo.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "mongo.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
     "mongo.query": {
       "gen": "object",
       "fields": {
@@ -368,36 +260,6 @@
           }
         }
       }
-    },
-    "mongo.logical": {
-      "gen": "object",
-      "fields": {
-        "$query": {
-          "gen": "object",
-          "fields": {
-            "method": {
-              "gen": "pick",
-              "from": [
-                "and",
-                "or"
-              ]
-            },
-            "attribute": {
-              "gen": "const",
-              "value": ""
-            },
-            "values": {
-              "gen": "array",
-              "items": {
-                "gen": "ref",
-                "name": "mongo.query"
-              },
-              "min": 0,
-              "max": 3
-            }
-          }
-        }
-      }
     }
   },
   "scrub": [
@@ -411,11 +273,6 @@
       "symbol": "Utopia\\Database\\Adapter\\Mongo::list",
       "php": "Returns the values of the listDatabases reply as they decode: the list of databases (stdClass objects), totalSize, ok, $clusterTime and operationTime.",
       "reason": "Adapter::list returns documents in Rust (one per value, as the other adapters' lists are documents); Mongo::database_list returns the reply's values as PHP does. The cases mask the listing, which names every database on the shared server."
-    },
-    {
-      "symbol": "Utopia\\Database\\Database::iterate",
-      "php": "On MongoDB, the adapter casts the cursor of the next page in place, so the last document of each page already yielded holds MongoDB\\BSON\\UTCDateTime objects in $createdAt and $updatedAt (the cursor is the same Document object).",
-      "reason": "Rust documents are values: the cursor is cast on a copy, and the yielded documents keep their datetime strings. The cases mask those two attributes of an iteration on MongoDB."
     }
   ]
 }

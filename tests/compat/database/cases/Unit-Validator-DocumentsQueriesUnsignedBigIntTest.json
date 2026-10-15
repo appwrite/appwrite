@@ -1,0 +1,620 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/DocumentsQueriesUnsignedBigIntTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentsQueriesUnsignedBigIntTest::test_documents_validator_accepts_unsigned_values_above_signed_max_by_default",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "biginteger",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o866"
+          },
+          "bind": "s1408",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "key": "counter",
+              "type": "biginteger",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o867"
+          },
+          "bind": "s1409",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o867"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o868"
+          },
+          "bind": "s1410",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o866"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o868"
+              }
+            },
+            "as": "o869"
+          },
+          "bind": "s1411",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            },
+            "as": "o870"
+          },
+          "bind": "s1412",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o869"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o870"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o869"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesUnsignedBigIntTest::test_filter_validator_accepts_unsigned_values_above_signed_max_by_default",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "biginteger",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o871"
+          },
+          "bind": "s1415",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "key": "counter",
+              "type": "biginteger",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o871"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o872"
+          },
+          "bind": "s1416",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            },
+            "as": "o873"
+          },
+          "bind": "s1417",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o872"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o873"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o872"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesUnsignedBigIntTest::test_adapters_without_unsigned_bigint_still_reject_values_above_signed_max",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "biginteger",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o874"
+          },
+          "bind": "s1420",
+          "expect": {
+            "$document": {
+              "$id": "counter",
+              "key": "counter",
+              "type": "biginteger",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o875"
+          },
+          "bind": "s1421",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o875"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o876"
+          },
+          "bind": "s1422",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o874"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o876"
+              }
+            },
+            "as": "o877"
+          },
+          "bind": "s1423",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            },
+            "as": "o878"
+          },
+          "bind": "s1424",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "counter",
+              "values": [
+                "10000000000000000000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o877"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o878"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o877"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"counter\""
+        }
+      ]
+    }
+  ]
+}

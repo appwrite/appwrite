@@ -23,30 +23,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -77,87 +53,7 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "SchemalessTests::testSchemalessDocumentInvalidInteralAttributeValidation",
-      "state": [
-        "postgres@database-postgres"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
+            "name": "joinedSeal"
           },
           "expect": null
         },
@@ -169,10 +65,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -197,30 +105,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -251,15 +135,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -284,30 +187,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -338,15 +217,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -371,30 +269,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -425,15 +299,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -458,30 +351,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -512,15 +381,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -545,30 +433,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -599,15 +463,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -632,30 +515,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -686,15 +545,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -719,30 +597,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -773,15 +627,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -806,30 +679,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -860,15 +709,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -893,30 +761,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -947,87 +791,7 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "SchemalessTests::testSchemalessIndexDuplicatePrevention",
-      "state": [
-        "postgres@database-postgres"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
+            "name": "joinedSeal"
           },
           "expect": null
         },
@@ -1039,10 +803,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1067,30 +843,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1121,15 +873,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1154,30 +925,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1208,15 +955,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1241,30 +1007,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1295,15 +1037,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1328,30 +1089,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1382,15 +1119,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1415,30 +1171,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1469,15 +1201,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1502,30 +1253,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1556,15 +1283,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1589,30 +1335,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1643,15 +1365,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1676,30 +1417,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1730,15 +1447,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1763,30 +1499,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1817,15 +1529,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1850,30 +1581,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1904,15 +1611,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1937,30 +1663,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -1991,15 +1693,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2024,30 +1745,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2078,15 +1775,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2111,30 +1827,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2165,15 +1857,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2198,30 +1909,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2252,15 +1939,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2285,30 +1991,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2339,15 +2021,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2372,30 +2073,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2426,15 +2103,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2459,30 +2155,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2513,15 +2185,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2546,30 +2237,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2600,15 +2267,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2633,30 +2319,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2687,15 +2349,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2720,30 +2401,6 @@
           }
         },
         {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
@@ -2774,15 +2431,34 @@
         {
           "op": "database.add_filter",
           "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
             "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }

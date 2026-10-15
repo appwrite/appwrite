@@ -1,0 +1,239 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/FeatureTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/RedisTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FeatureTests::testSpatialFeatureIsWhetherAPointAttributeCanBeCreated",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "${ns}"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.profile",
+          "args": {},
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 4294967295,
+                  "varchar": 16381,
+                  "integer": 4294967295,
+                  "bigInteger": 9223372036854775807,
+                  "attributes": 1017,
+                  "indexes": 64,
+                  "defaultAttributes": 7,
+                  "defaultIndexes": 6,
+                  "indexLength": 1024,
+                  "uidLength": 255,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0001-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T23:59:59.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::AttributeResizing"
+                },
+                {
+                  "$enum": "Capability::IndexArray"
+                },
+                {
+                  "$enum": "Capability::IndexFulltext"
+                },
+                {
+                  "$enum": "Capability::IndexKey"
+                },
+                {
+                  "$enum": "Capability::IndexUnique"
+                },
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Operators"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                },
+                {
+                  "$enum": "Capability::Schemas"
+                },
+                {
+                  "$enum": "Capability::TransactionNested"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Connection",
+                "Utopia\\Database\\Adapter\\Feature\\Relationships",
+                "Utopia\\Database\\Adapter\\Feature\\Upserts"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "feature_spatial",
+                "name": "feature_spatial",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "feature_spatial",
+              "name": "feature_spatial",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "feature_spatial",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "location",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "point"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial attributes are not supported"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "feature_spatial"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

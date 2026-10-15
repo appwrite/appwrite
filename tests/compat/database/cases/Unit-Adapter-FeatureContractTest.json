@@ -1,0 +1,618 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/FeatureContractTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FeatureContractTest::testSqlOnlyMembersAreNotPartOfTheContract",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1898"
+          },
+          "bind": "s13149",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1898"
+            },
+            "method": "limits",
+            "args": {},
+            "as": "o1899"
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 1017,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0001-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1900"
+          },
+          "bind": "s13151",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1900"
+            },
+            "method": "limits",
+            "args": {},
+            "as": "o1901"
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 1017,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0001-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FeatureContractTest::testDocumentWritesTakeTheCollectionDocument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1908"
+          },
+          "bind": "s13184",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1909"
+          },
+          "bind": "s13185",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1909"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "contract"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "contract"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "create",
+            "args": {
+              "name": "contract"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "reads",
+              "required": false
+            },
+            "as": "o1910"
+          },
+          "bind": "s13190",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "reads",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "books",
+              "attributes": [
+                {
+                  "$obj": "o1910"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books"
+            },
+            "as": "o1911"
+          },
+          "bind": "s13192",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "reads": 1,
+                "$permissions": []
+              }
+            },
+            "as": "o1912"
+          },
+          "bind": "s13193",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "reads": 1,
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "document": {
+                "$obj": "o1912"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "reads": 1,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "reads": 1,
+                "$permissions": []
+              }
+            },
+            "as": "o1913"
+          },
+          "bind": "s13195",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "reads": 1,
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "document": {
+                "$obj": "o1913"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "reads": 1,
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o1914"
+          },
+          "bind": "s13197",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "getSequences",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "documents": [
+                {
+                  "$obj": "o1914"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$sequence": "1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1914"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "1"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "first",
+              "attribute": "reads",
+              "value": 4,
+              "updatedAt": "2026-01-01 00:00:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "first"
+            },
+            "as": "o1915"
+          },
+          "bind": "s13201",
+          "expect": {
+            "$document": {
+              "reads": 5,
+              "$id": "first",
+              "$createdAt": null,
+              "$updatedAt": "2026-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1915"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "reads"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "first"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "first"
+            },
+            "as": "o1916"
+          },
+          "bind": "s13204",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1916"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "second"
+            },
+            "as": "o1917"
+          },
+          "bind": "s13206",
+          "expect": {
+            "$document": {
+              "reads": 1,
+              "$id": "second",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1917"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "deleteDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "sequences": [
+                "2"
+              ],
+              "permissionIds": []
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1908"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o1911"
+              },
+              "id": "second"
+            },
+            "as": "o1918"
+          },
+          "bind": "s13209",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1918"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

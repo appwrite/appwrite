@@ -1,0 +1,5121 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/SumAttributeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SumAttributeTest::testADeclaredIntegerIsSummed",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3210"
+          },
+          "bind": "s5553",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3210"
+              },
+              "cache": "memory"
+            },
+            "as": "o3211"
+          },
+          "bind": "s5554",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000105"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3212"
+          },
+          "bind": "s5558",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3212"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3213"
+          },
+          "bind": "s5560",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3213"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3214"
+          },
+          "bind": "s5562",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3214"
+              }
+            },
+            "as": "o3215"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3216"
+          },
+          "bind": "s5564",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3217"
+          },
+          "bind": "s5565",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3218"
+          },
+          "bind": "s5566",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3219"
+          },
+          "bind": "s5567",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3216"
+                },
+                {
+                  "$obj": "o3217"
+                },
+                {
+                  "$obj": "o3218"
+                },
+                {
+                  "$obj": "o3219"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3220"
+          },
+          "bind": "s5568",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3220"
+              }
+            },
+            "as": "o3221"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3222"
+          },
+          "bind": "s5570",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3222"
+              }
+            },
+            "as": "o3223"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3224"
+          },
+          "bind": "s5572",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3224"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3225"
+          },
+          "bind": "s5574",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3225"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3211"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "pages"
+            }
+          },
+          "expect": 12
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testADeclaredFloatIsSummed",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3226"
+          },
+          "bind": "s5577",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3226"
+              },
+              "cache": "memory"
+            },
+            "as": "o3227"
+          },
+          "bind": "s5578",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000106"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3228"
+          },
+          "bind": "s5582",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3228"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3229"
+          },
+          "bind": "s5584",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3229"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3230"
+          },
+          "bind": "s5586",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3230"
+              }
+            },
+            "as": "o3231"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3232"
+          },
+          "bind": "s5588",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3233"
+          },
+          "bind": "s5589",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3234"
+          },
+          "bind": "s5590",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3235"
+          },
+          "bind": "s5591",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3232"
+                },
+                {
+                  "$obj": "o3233"
+                },
+                {
+                  "$obj": "o3234"
+                },
+                {
+                  "$obj": "o3235"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3236"
+          },
+          "bind": "s5592",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3236"
+              }
+            },
+            "as": "o3237"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3238"
+          },
+          "bind": "s5594",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3238"
+              }
+            },
+            "as": "o3239"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3240"
+          },
+          "bind": "s5596",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3240"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3241"
+          },
+          "bind": "s5598",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3241"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3227"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "rating"
+            }
+          },
+          "expect": 7.5
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testAnAttributeThatIsNotASingleNumberIsRefused#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3242"
+          },
+          "bind": "s5601",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3242"
+              },
+              "cache": "memory"
+            },
+            "as": "o3243"
+          },
+          "bind": "s5602",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000107"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3244"
+          },
+          "bind": "s5606",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3244"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3245"
+          },
+          "bind": "s5608",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3245"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3246"
+          },
+          "bind": "s5610",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3246"
+              }
+            },
+            "as": "o3247"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3248"
+          },
+          "bind": "s5612",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3249"
+          },
+          "bind": "s5613",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3250"
+          },
+          "bind": "s5614",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3251"
+          },
+          "bind": "s5615",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3248"
+                },
+                {
+                  "$obj": "o3249"
+                },
+                {
+                  "$obj": "o3250"
+                },
+                {
+                  "$obj": "o3251"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3252"
+          },
+          "bind": "s5616",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3252"
+              }
+            },
+            "as": "o3253"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3254"
+          },
+          "bind": "s5618",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3254"
+              }
+            },
+            "as": "o3255"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3256"
+          },
+          "bind": "s5620",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3256"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3257"
+          },
+          "bind": "s5622",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3257"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3243"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "title"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: title"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testAnAttributeThatIsNotASingleNumberIsRefused#numeric array",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3258"
+          },
+          "bind": "s5625",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3258"
+              },
+              "cache": "memory"
+            },
+            "as": "o3259"
+          },
+          "bind": "s5626",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000108"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3260"
+          },
+          "bind": "s5630",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3260"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3261"
+          },
+          "bind": "s5632",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3261"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3262"
+          },
+          "bind": "s5634",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3262"
+              }
+            },
+            "as": "o3263"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3264"
+          },
+          "bind": "s5636",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3265"
+          },
+          "bind": "s5637",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3266"
+          },
+          "bind": "s5638",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3267"
+          },
+          "bind": "s5639",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3264"
+                },
+                {
+                  "$obj": "o3265"
+                },
+                {
+                  "$obj": "o3266"
+                },
+                {
+                  "$obj": "o3267"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3268"
+          },
+          "bind": "s5640",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3268"
+              }
+            },
+            "as": "o3269"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3270"
+          },
+          "bind": "s5642",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3270"
+              }
+            },
+            "as": "o3271"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3272"
+          },
+          "bind": "s5644",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3272"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3273"
+          },
+          "bind": "s5646",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3273"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3259"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "chapters"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: chapters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testAnAttributeThatIsNotASingleNumberIsRefused#virtual relationship",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3274"
+          },
+          "bind": "s5649",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3274"
+              },
+              "cache": "memory"
+            },
+            "as": "o3275"
+          },
+          "bind": "s5650",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000109"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3276"
+          },
+          "bind": "s5654",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3276"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3277"
+          },
+          "bind": "s5656",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3277"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3278"
+          },
+          "bind": "s5658",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3278"
+              }
+            },
+            "as": "o3279"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3280"
+          },
+          "bind": "s5660",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3281"
+          },
+          "bind": "s5661",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3282"
+          },
+          "bind": "s5662",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3283"
+          },
+          "bind": "s5663",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3280"
+                },
+                {
+                  "$obj": "o3281"
+                },
+                {
+                  "$obj": "o3282"
+                },
+                {
+                  "$obj": "o3283"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3284"
+          },
+          "bind": "s5664",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3284"
+              }
+            },
+            "as": "o3285"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3286"
+          },
+          "bind": "s5666",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3286"
+              }
+            },
+            "as": "o3287"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3288"
+          },
+          "bind": "s5668",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3288"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3289"
+          },
+          "bind": "s5670",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3289"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3275"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "books"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: books"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testAnAttributeThatIsNotASingleNumberIsRefused#relationship",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3290"
+          },
+          "bind": "s5673",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3290"
+              },
+              "cache": "memory"
+            },
+            "as": "o3291"
+          },
+          "bind": "s5674",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000110"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3292"
+          },
+          "bind": "s5678",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3292"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3293"
+          },
+          "bind": "s5680",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3293"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3294"
+          },
+          "bind": "s5682",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3294"
+              }
+            },
+            "as": "o3295"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3296"
+          },
+          "bind": "s5684",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3297"
+          },
+          "bind": "s5685",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3298"
+          },
+          "bind": "s5686",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3299"
+          },
+          "bind": "s5687",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3296"
+                },
+                {
+                  "$obj": "o3297"
+                },
+                {
+                  "$obj": "o3298"
+                },
+                {
+                  "$obj": "o3299"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3300"
+          },
+          "bind": "s5688",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3300"
+              }
+            },
+            "as": "o3301"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3302"
+          },
+          "bind": "s5690",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3302"
+              }
+            },
+            "as": "o3303"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3304"
+          },
+          "bind": "s5692",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3304"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3305"
+          },
+          "bind": "s5694",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3305"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3291"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "author"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: author"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumAttributeTest::testAnAttributeThatIsNotASingleNumberIsRefused#undeclared",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "storedEnum"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3306"
+          },
+          "bind": "s5697",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3306"
+              },
+              "cache": "memory"
+            },
+            "as": "o3307"
+          },
+          "bind": "s5698",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "sums"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "sums_u000000000111"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3308"
+          },
+          "bind": "s5702",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3308"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3309"
+          },
+          "bind": "s5704",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3309"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "authors",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3310"
+          },
+          "bind": "s5706",
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3310"
+              }
+            },
+            "as": "o3311"
+          },
+          "expect": {
+            "$document": {
+              "$id": "authors",
+              "name": "authors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o3312"
+          },
+          "bind": "s5708",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "pages"
+            },
+            "as": "o3313"
+          },
+          "bind": "s5709",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "pages",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "rating"
+            },
+            "as": "o3314"
+          },
+          "bind": "s5710",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rating",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "chapters",
+              "array": true
+            },
+            "as": "o3315"
+          },
+          "bind": "s5711",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "chapters",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o3312"
+                },
+                {
+                  "$obj": "o3313"
+                },
+                {
+                  "$obj": "o3314"
+                },
+                {
+                  "$obj": "o3315"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o3316"
+          },
+          "bind": "s5712",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3316"
+              }
+            },
+            "as": "o3317"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "pages",
+                    "key": "pages",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "rating",
+                    "key": "rating",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "chapters",
+                    "key": "chapters",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "authors",
+              "key": "author",
+              "twoWayKey": "books"
+            },
+            "as": "o3318"
+          },
+          "bind": "s5714",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "createRelationship",
+            "args": {
+              "collection": "books",
+              "relationship": {
+                "$obj": "o3318"
+              }
+            },
+            "as": "o3319"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "books",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "pages": 7,
+                "rating": 4.5,
+                "chapters": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "as": "o3320"
+          },
+          "bind": "s5716",
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3320"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "pages": 7,
+              "rating": 4.5,
+              "chapters": [
+                1,
+                2
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "emma",
+                "title": "Emma",
+                "pages": 5,
+                "rating": 3.0,
+                "chapters": [
+                  3
+                ]
+              }
+            },
+            "as": "o3321"
+          },
+          "bind": "s5718",
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "books",
+              "document": {
+                "$obj": "o3321"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emma",
+              "title": "Emma",
+              "pages": 5,
+              "rating": 3.0,
+              "chapters": [
+                3
+              ],
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3307"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "books",
+              "attribute": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: missing"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

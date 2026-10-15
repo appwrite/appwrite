@@ -1,0 +1,33 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Relationships/RelationshipValidationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RelationshipValidationTest::testCreateInvalidRelationship",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "relatedCollection": "test4",
+                "relationType": "invalid",
+                "twoWay": true
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Unknown relationship type \"invalid\""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

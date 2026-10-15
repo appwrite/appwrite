@@ -25,19 +25,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -61,66 +80,112 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000078"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000082",
+                "name": "u0000000000000000082",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000078",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000078",
+              "$id": "u0000000000000000082",
+              "name": "u0000000000000000082",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000078",
-            "id": "meta",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000082",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc1",
@@ -162,7 +227,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -173,7 +238,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -208,7 +273,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -220,7 +285,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -259,7 +324,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -271,11 +336,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -306,7 +371,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -318,7 +383,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc2",
@@ -360,7 +425,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -371,7 +436,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -406,7 +471,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -418,7 +483,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -457,7 +522,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -469,7 +534,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "id": "doc1",
             "document": {
               "$document": {
@@ -495,6 +560,7 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "doc1",
               "$permissions": [
                 "read(\"any\")"
@@ -512,18 +578,17 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": 999,
-              "$sequence": "1"
+              "$tenant": 999
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -558,7 +623,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -570,11 +635,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -605,7 +670,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -617,7 +682,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -637,7 +702,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -672,7 +737,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -684,7 +749,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -712,7 +777,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -751,7 +816,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -763,11 +828,12 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "id": "doc1"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "doc1",
               "$permissions": [
                 "read(\"any\")"
@@ -785,18 +851,17 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -841,7 +906,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -853,7 +918,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -885,7 +950,7 @@
                   "read(\"any\")",
                   "update(\"any\")"
                 ],
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -897,7 +962,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc3",
@@ -915,7 +980,7 @@
                 "read(\"any\")"
               ],
               "meta": null,
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -926,7 +991,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc4",
@@ -944,7 +1009,7 @@
                 "read(\"any\")"
               ],
               "meta": [],
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -955,7 +1020,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc5",
@@ -993,7 +1058,7 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1004,7 +1069,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1045,7 +1110,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1057,7 +1122,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1098,7 +1163,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1110,7 +1175,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc6",
@@ -1156,7 +1221,7 @@
                   "key": "value"
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1167,7 +1232,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1204,7 +1269,7 @@
                     "key": "value"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1216,7 +1281,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1253,7 +1318,7 @@
                     "key": "value"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1265,7 +1330,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1302,7 +1367,7 @@
                     "key": "value"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1314,7 +1379,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc7",
@@ -1348,7 +1413,7 @@
                   "rust"
                 ]
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1359,11 +1424,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1390,7 +1455,7 @@
                     "rust"
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1402,7 +1467,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc8",
@@ -1434,7 +1499,7 @@
                   100
                 ]
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1445,11 +1510,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1475,7 +1540,7 @@
                     100
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1487,11 +1552,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -1507,7 +1572,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1542,7 +1607,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1568,7 +1633,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1582,7 +1647,7 @@
                   "read(\"any\")"
                 ],
                 "meta": [],
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1606,7 +1671,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1634,7 +1699,7 @@
                     "key": "value"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1655,7 +1720,7 @@
                     100
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1667,7 +1732,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc9",
@@ -1725,7 +1790,7 @@
                 ],
                 "company": "TechCorp"
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1736,7 +1801,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1779,7 +1844,7 @@
                   ],
                   "company": "TechCorp"
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1791,7 +1856,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1851,7 +1916,7 @@
                   ],
                   "company": "TechCorp"
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1863,7 +1928,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc10",
@@ -1889,7 +1954,7 @@
                 "emoji": "🚀🎉",
                 "symbols": "@#$%^&*()"
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1900,7 +1965,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -1927,7 +1992,7 @@
                   "emoji": "🚀🎉",
                   "symbols": "@#$%^&*()"
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -1939,7 +2004,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc11",
@@ -1969,7 +2034,7 @@
                   "language": "en"
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -1980,7 +2045,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -2012,7 +2077,7 @@
                     "language": "en"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2024,7 +2089,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -2055,7 +2120,7 @@
                     "language": "en"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2067,7 +2132,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "id": "doc11",
             "document": {
               "$document": {
@@ -2081,23 +2146,23 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "11",
               "$id": "doc11",
               "$permissions": [
                 "read(\"any\")"
               ],
               "meta": [],
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": 999,
-              "$sequence": "11"
+              "$tenant": 999
             }
           }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "document": {
               "$document": {
                 "$id": "doc12",
@@ -2151,7 +2216,7 @@
                   ]
                 ]
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -2162,11 +2227,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -2209,7 +2274,7 @@
                     ]
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2221,11 +2286,12 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "id": "doc6"
           },
           "expect": {
             "$document": {
+              "$sequence": "6",
               "$id": "doc6",
               "$permissions": [
                 "read(\"any\")"
@@ -2245,22 +2311,22 @@
                   "key": "value"
                 }
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "6"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "id": "doc10"
           },
           "expect": {
             "$document": {
+              "$sequence": "10",
               "$id": "doc10",
               "$permissions": [
                 "read(\"any\")"
@@ -2270,18 +2336,17 @@
                 "emoji": "🚀🎉",
                 "symbols": "@#$%^&*()"
               },
-              "$collection": "u0000000000000000078",
+              "$collection": "u0000000000000000082",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "10"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -2333,7 +2398,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2345,7 +2410,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -2388,7 +2453,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2414,7 +2479,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2428,7 +2493,7 @@
                   "read(\"any\")"
                 ],
                 "meta": null,
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2442,7 +2507,7 @@
                   "read(\"any\")"
                 ],
                 "meta": [],
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2466,7 +2531,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2494,7 +2559,7 @@
                     "key": "value"
                   }
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2516,7 +2581,7 @@
                     "rust"
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2537,7 +2602,7 @@
                     100
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2571,7 +2636,7 @@
                   ],
                   "company": "TechCorp"
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2589,7 +2654,7 @@
                   "emoji": "🚀🎉",
                   "symbols": "@#$%^&*()"
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2603,7 +2668,7 @@
                   "read(\"any\")"
                 ],
                 "meta": [],
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2635,7 +2700,7 @@
                     ]
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2647,7 +2712,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000078",
+            "collection": "u0000000000000000082",
             "queries": [
               {
                 "$query": {
@@ -2693,7 +2758,7 @@
                     "rust"
                   ]
                 },
-                "$collection": "u0000000000000000078",
+                "$collection": "u0000000000000000082",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -2705,9 +2770,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000078"
+            "collection": "u0000000000000000082"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -2732,19 +2797,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -2768,17 +2852,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
         }
@@ -2805,19 +2886,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -2841,74 +2941,124 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000079"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000083",
+                "name": "u0000000000000000083",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000079",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000079",
+              "$id": "u0000000000000000083",
+              "name": "u0000000000000000083",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000079",
-            "id": "meta",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000083",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "invalid1",
@@ -2929,7 +3079,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "invalid2",
@@ -2950,7 +3100,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "invalid3",
@@ -2971,7 +3121,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "valid1",
@@ -3003,7 +3153,7 @@
                   "theme": "dark"
                 }
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -3014,7 +3164,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -3036,7 +3186,51 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "settings": {
+                        "notifications": true
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "valid1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "name": "John",
+                  "age": 30,
+                  "settings": {
+                    "notifications": true,
+                    "theme": "dark"
+                  }
+                },
+                "$collection": "u0000000000000000083",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -3056,7 +3250,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "valid2",
@@ -3086,7 +3280,7 @@
                   "orange"
                 ]
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -3097,11 +3291,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "meta",
                   "values": [
                     {
@@ -3115,9 +3309,50 @@
           "expect": []
         },
         {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000083",
+            "queries": [
+              {
+                "$query": {
+                  "method": "containsAny",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "fruits": "banana"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "valid2",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "fruits": [
+                    "apple",
+                    "banana",
+                    "orange"
+                  ]
+                },
+                "$collection": "u0000000000000000083",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            }
+          ]
+        },
+        {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "order_test",
@@ -3143,7 +3378,7 @@
                 "a_first": "value",
                 "m_middle": "value"
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -3154,7 +3389,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$id": "large_structure",
@@ -4774,7 +5009,7 @@
                   ]
                 }
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -4785,7 +5020,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -5624,7 +5859,7 @@
                     ]
                   }
                 },
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -5636,11 +5871,12 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "id": "large_structure"
           },
           "expect": {
             "$document": {
+              "$sequence": "4",
               "$id": "large_structure",
               "$permissions": [
                 "read(\"any\")"
@@ -6447,18 +6683,17 @@
                   ]
                 }
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "4"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -6498,7 +6733,7 @@
                     "theme": "dark"
                   }
                 },
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6510,11 +6745,12 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "id": "valid1"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "valid1",
               "$permissions": [
                 "read(\"any\")"
@@ -6527,18 +6763,17 @@
                   "theme": "dark"
                 }
               },
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -6574,7 +6809,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6586,7 +6821,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "id": "does_not_exist"
           },
           "expect": {
@@ -6596,32 +6831,75 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000079",
-            "id": "settings",
-            "type": "object",
-            "size": 0,
-            "required": false,
-            "default": {
-              "config": {
-                "theme": "light",
-                "lang": "en"
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
               }
             }
           },
           "expect": true
         },
         {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000083",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "settings",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": {
+                  "config": {
+                    "theme": "light",
+                    "lang": "en"
+                  }
+                },
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "settings",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": {
+                "config": {
+                  "theme": "light",
+                  "lang": "en"
+                }
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "$permissions": [
@@ -6636,7 +6914,7 @@
                 "read(\"any\")"
               ],
               "$id": "<uniqid>",
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -6654,7 +6932,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "document": {
               "$document": {
                 "settings": {
@@ -6681,7 +6959,7 @@
                 "read(\"any\")"
               ],
               "$id": "<uniqid>",
-              "$collection": "u0000000000000000079",
+              "$collection": "u0000000000000000083",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -6693,7 +6971,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
@@ -6722,7 +7000,7 @@
                   "read(\"any\")"
                 ],
                 "$id": "<uniqid>",
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6748,7 +7026,7 @@
                   "read(\"any\")"
                 ],
                 "$id": "<uniqid>",
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6761,11 +7039,11 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000079",
+            "collection": "u0000000000000000083",
             "queries": [
               {
                 "$query": {
-                  "method": "contains",
+                  "method": "containsAny",
                   "attribute": "settings",
                   "values": [
                     {
@@ -6785,7 +7063,7 @@
                   "read(\"any\")"
                 ],
                 "$id": "<uniqid>",
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6811,7 +7089,7 @@
                   "read(\"any\")"
                 ],
                 "$id": "<uniqid>",
-                "$collection": "u0000000000000000079",
+                "$collection": "u0000000000000000083",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -6824,9 +7102,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000079"
+            "collection": "u0000000000000000083"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -6851,19 +7129,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -6887,91 +7184,12 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_collection",
-          "args": {
-            "id": "u0000000000000000080"
-          },
-          "expect": {
-            "$document": {
-              "$id": "u0000000000000000080",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000080",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
-            }
-          }
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000080",
-            "id": "metaDefaultEmpty",
-            "type": "object",
-            "size": 0,
-            "required": false,
-            "default": []
-          },
-          "expect": true
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000080",
-            "id": "settings",
-            "type": "object",
-            "size": 0,
-            "required": false,
-            "default": {
-              "config": {
-                "theme": "light",
-                "lang": "en"
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
               }
             }
           },
@@ -6980,67 +7198,356 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000080",
-            "id": "profile",
-            "type": "object",
-            "size": 0,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000080",
-            "id": "profile2",
-            "type": "object",
-            "size": 0,
-            "required": false,
-            "default": {
-              "name": "anon"
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
             }
           },
           "expect": true
         },
         {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000084",
+                "name": "u0000000000000000084",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000084",
+              "name": "u0000000000000000084",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000080",
-            "id": "misc",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000084",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "metaDefaultEmpty",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "metaDefaultEmpty",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": [],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000084",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "settings",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": {
+                  "config": {
+                    "theme": "light",
+                    "lang": "en"
+                  }
+                },
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "settings",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": {
+                "config": {
+                  "theme": "light",
+                  "lang": "en"
+                }
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000084",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "profile",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "profile",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000084",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "profile2",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": {
+                  "name": "anon"
+                },
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "profile2",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": {
+                "name": "anon"
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000084",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "misc",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "misc",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000084",
             "document": {
               "$document": {
                 "$id": "def1",
@@ -7060,7 +7567,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000084",
             "document": {
               "$document": {
                 "$id": "def2",
@@ -7082,7 +7589,7 @@
               "profile": {
                 "name": "provided"
               },
-              "$collection": "u0000000000000000080",
+              "$collection": "u0000000000000000084",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -7104,7 +7611,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000080",
+            "collection": "u0000000000000000084",
             "queries": [
               {
                 "$query": {
@@ -7131,7 +7638,7 @@
                 "profile": {
                   "name": "provided"
                 },
-                "$collection": "u0000000000000000080",
+                "$collection": "u0000000000000000084",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -7154,9 +7661,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000080"
+            "collection": "u0000000000000000084"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -7181,19 +7688,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -7217,66 +7743,112 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000081"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000085",
+                "name": "u0000000000000000085",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000081",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000081",
+              "$id": "u0000000000000000085",
+              "name": "u0000000000000000085",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000081",
-            "id": "meta",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000085",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000085",
             "document": {
               "$document": {
                 "$id": "bigInts",
@@ -7306,7 +7878,7 @@
                   "deep": 3408048000
                 }
               },
-              "$collection": "u0000000000000000081",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -7317,19 +7889,20 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000081",
+            "collection": "u0000000000000000085",
             "id": "bigInts"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000081",
+            "collection": "u0000000000000000085",
             "id": "bigInts"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "bigInts",
               "$permissions": [
                 "read(\"any\")"
@@ -7341,20 +7914,19 @@
                   "deep": 3408048000
                 }
               },
-              "$collection": "u0000000000000000081",
+              "$collection": "u0000000000000000085",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000081"
+            "collection": "u0000000000000000085"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -7379,19 +7951,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -7415,66 +8006,112 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000082"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000086",
+                "name": "u0000000000000000086",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000082",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000082",
+              "$id": "u0000000000000000086",
+              "name": "u0000000000000000086",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000082",
-            "id": "meta",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000086",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "document": {
               "$document": {
                 "$id": "emptyObject",
@@ -7492,7 +8129,7 @@
                 "read(\"any\")"
               ],
               "meta": {},
-              "$collection": "u0000000000000000082",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -7503,57 +8140,57 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "id": "emptyObject"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "id": "emptyObject"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "emptyObject",
               "$permissions": [
                 "read(\"any\")"
               ],
               "meta": {},
-              "$collection": "u0000000000000000082",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "id": "emptyObject"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "emptyObject",
               "$permissions": [
                 "read(\"any\")"
               ],
               "meta": {},
-              "$collection": "u0000000000000000082",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "id": "emptyObject",
             "document": {
               "$document": {
@@ -7563,23 +8200,23 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "emptyObject",
               "$permissions": [
                 "read(\"any\")"
               ],
               "meta": {},
-              "$collection": "u0000000000000000082",
+              "$collection": "u0000000000000000086",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": 999,
-              "$sequence": "1"
+              "$tenant": 999
             }
           }
         },
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000082",
+            "collection": "u0000000000000000086",
             "id": "emptyObject",
             "document": {
               "$document": {
@@ -7597,9 +8234,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000082"
+            "collection": "u0000000000000000086"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -7624,19 +8261,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -7660,66 +8316,112 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000083"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000087",
+                "name": "u0000000000000000087",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000083",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000083",
+              "$id": "u0000000000000000087",
+              "name": "u0000000000000000087",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000083",
-            "id": "meta",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000087",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
-            "collection": "u0000000000000000083",
+            "collection": "u0000000000000000087",
             "document": {
               "$document": {
                 "$id": "nestedEmptyObjects",
@@ -7755,7 +8457,7 @@
                 ],
                 "emptyArray": []
               },
-              "$collection": "u0000000000000000083",
+              "$collection": "u0000000000000000087",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
@@ -7766,19 +8468,20 @@
         {
           "op": "database.purge_cached_document",
           "args": {
-            "collectionId": "u0000000000000000083",
+            "collection": "u0000000000000000087",
             "id": "nestedEmptyObjects"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000083",
+            "collection": "u0000000000000000087",
             "id": "nestedEmptyObjects"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "nestedEmptyObjects",
               "$permissions": [
                 "read(\"any\")"
@@ -7793,22 +8496,22 @@
                 ],
                 "emptyArray": []
               },
-              "$collection": "u0000000000000000083",
+              "$collection": "u0000000000000000087",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "u0000000000000000083",
+            "collection": "u0000000000000000087",
             "id": "nestedEmptyObjects"
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "nestedEmptyObjects",
               "$permissions": [
                 "read(\"any\")"
@@ -7823,18 +8526,17 @@
                 ],
                 "emptyArray": []
               },
-              "$collection": "u0000000000000000083",
+              "$collection": "u0000000000000000087",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+              "$tenant": "999"
             }
           }
         },
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000083",
+            "collection": "u0000000000000000087",
             "id": "nestedEmptyObjects",
             "document": {
               "$document": {
@@ -7853,6 +8555,7 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "1",
               "$id": "nestedEmptyObjects",
               "$permissions": [
                 "read(\"any\")"
@@ -7867,20 +8570,19 @@
                 ],
                 "emptyArray": []
               },
-              "$collection": "u0000000000000000083",
+              "$collection": "u0000000000000000087",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": 999,
-              "$sequence": "1"
+              "$tenant": 999
             }
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000083"
+            "collection": "u0000000000000000087"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -7905,19 +8607,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -7941,17 +8662,14 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -7978,19 +8696,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -8014,25 +8751,26 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
         }
@@ -8059,19 +8797,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -8095,27 +8852,1522 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectPathKeysOutsideTheAllowedCharsAreRefused",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000088",
+                "name": "u0000000000000000088",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000088",
+              "name": "u0000000000000000088",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000088",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "meta",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000088",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "secret",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "secret",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000088",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "d1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "x"
+                  },
+                  "secret": "s1"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "d2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "y"
+                  },
+                  "secret": "s2"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a' IN ('x') OR secret='s2' OR 'x\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "meta.a",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "startsWith",
+                        "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a' IN ('x') OR secret='s2' OR 'x\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta.a'||(select 1)||'",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a'||(select 1)||'\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "meta.a",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "startsWith",
+                        "attribute": "meta.a'||(select 1)||'",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a'||(select 1)||'\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta.a' OR 1=1 --",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a' OR 1=1 --\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "meta.a",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "startsWith",
+                        "attribute": "meta.a' OR 1=1 --",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a' OR 1=1 --\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta.a'b.c",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a'b.c\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "meta.a",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "startsWith",
+                        "attribute": "meta.a'b.c",
+                        "values": [
+                          "x"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid object path \"meta.a'b.c\": Object path keys must be non-empty and contain only a-z, A-Z, 0-9, underscore and hyphen"
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "$id": "d1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "x"
+                  },
+                  "secret": "s1",
+                  "$collection": "u0000000000000000088",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$tenant": "999",
+                  "$sequence": "1"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "$id": "d1",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "meta": {
+                            "a": "x"
+                          },
+                          "secret": "s1",
+                          "$collection": "u0000000000000000088",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$tenant": "999",
+                          "$sequence": "1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a' IN ('x') OR secret='s2' OR 'x",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a'||(select 1)||'",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a'||(select 1)||'",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a'||(select 1)||'",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "$id": "d1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "x"
+                  },
+                  "secret": "s1",
+                  "$collection": "u0000000000000000088",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$tenant": "999",
+                  "$sequence": "1"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "$id": "d1",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "meta": {
+                            "a": "x"
+                          },
+                          "secret": "s1",
+                          "$collection": "u0000000000000000088",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$tenant": "999",
+                          "$sequence": "1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a'||(select 1)||'",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a' OR 1=1 --",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a' OR 1=1 --",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a' OR 1=1 --",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "$id": "d1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "x"
+                  },
+                  "secret": "s1",
+                  "$collection": "u0000000000000000088",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$tenant": "999",
+                  "$sequence": "1"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "$id": "d1",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "meta": {
+                            "a": "x"
+                          },
+                          "secret": "s1",
+                          "$collection": "u0000000000000000088",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$tenant": "999",
+                          "$sequence": "1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a' OR 1=1 --",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a'b.c",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.a'b.c",
+                          "values": [
+                            "x"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 0,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a'b.c",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "$id": "d1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "meta": {
+                    "a": "x"
+                  },
+                  "secret": "s1",
+                  "$collection": "u0000000000000000088",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$tenant": "999",
+                  "$sequence": "1"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "$id": "d1",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "meta": {
+                            "a": "x"
+                          },
+                          "secret": "s1",
+                          "$collection": "u0000000000000000088",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$tenant": "999",
+                          "$sequence": "1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.count",
+                  "args": {
+                    "collection": "u0000000000000000088",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "or",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "equal",
+                                "attribute": "meta.a",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            },
+                            {
+                              "$query": {
+                                "method": "startsWith",
+                                "attribute": "meta.a'b.c",
+                                "values": [
+                                  "x"
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000088",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta.a",
+                  "values": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "d1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "a": "x"
+                },
+                "secret": "s1",
+                "$collection": "u0000000000000000088",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "u0000000000000000088"
+          },
+          "expect": null
         }
       ]
     },
@@ -8140,19 +10392,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -8176,116 +10447,256 @@
           "expect": null
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "u0000000000000000084"
+            "collection": {
+              "$document": {
+                "$id": "u0000000000000000089",
+                "name": "u0000000000000000089",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000084",
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "name": "u0000000000000000084",
+              "$id": "u0000000000000000089",
+              "name": "u0000000000000000089",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "u0000000000000000089",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "profile",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "object"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "profile",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
             }
           }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "profile",
-            "type": "object",
-            "size": 0,
-            "required": false
+            "collection": "u0000000000000000089",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "name",
-            "type": "string",
-            "size": 255,
-            "required": false
+            "collection": "u0000000000000000089",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "age",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Integer"
+                },
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "u0000000000000000084",
-            "id": "age",
-            "type": "integer",
-            "size": 0,
-            "required": false
-          },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_deep_nest",
-            "type": "key",
-            "attributes": [
-              "profile.level1.level2.level3.level4.value"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_deep_nest",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.level1.level2.level3.level4.value"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_deep_nest",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.level1.level2.level3.level4.value"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -8332,15 +10743,19 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8363,7 +10778,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8394,7 +10809,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8408,43 +10823,115 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_email",
-            "type": "key",
-            "attributes": [
-              "profile.user.email"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_email",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_email",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_country",
-            "type": "key",
-            "attributes": [
-              "profile.user.info.country"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_country",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.info.country"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_country",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.info.country"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_city",
-            "type": "key",
-            "attributes": [
-              "profile.user.info.city"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_city",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.info.city"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_city",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.info.city"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -8487,7 +10974,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8516,7 +11003,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8530,7 +11017,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8559,7 +11046,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8573,7 +11060,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8602,7 +11089,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8616,7 +11103,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -8665,7 +11152,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8683,7 +11170,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -8730,31 +11217,79 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_name",
-            "type": "key",
-            "attributes": [
-              "name"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_age",
-            "type": "key",
-            "attributes": [
-              "age"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_age",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "age"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_age",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "age"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8794,7 +11329,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8806,7 +11341,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8854,7 +11389,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8866,7 +11401,7 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "id": "mixed1",
             "document": {
               "$document": {
@@ -8890,6 +11425,7 @@
           },
           "expect": {
             "$document": {
+              "$sequence": "8",
               "$id": "mixed1",
               "$permissions": [
                 "read(\"any\")",
@@ -8905,18 +11441,17 @@
                   }
                 }
               },
-              "$collection": "u0000000000000000084",
+              "$collection": "u0000000000000000089",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$tenant": 999,
-              "$sequence": "8"
+              "$tenant": 999
             }
           }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8934,7 +11469,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -8965,7 +11500,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -8977,7 +11512,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9006,7 +11541,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9028,7 +11563,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9054,7 +11589,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9078,7 +11613,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9090,7 +11625,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -9133,7 +11668,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9162,7 +11697,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9176,7 +11711,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -9239,7 +11774,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9285,7 +11820,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9310,7 +11845,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9324,7 +11859,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9370,7 +11905,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9394,7 +11929,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9419,7 +11954,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9444,7 +11979,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9458,7 +11993,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9521,7 +12056,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9546,7 +12081,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9571,7 +12106,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9585,7 +12120,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -9642,7 +12177,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9680,7 +12215,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9703,7 +12238,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9717,7 +12252,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9763,7 +12298,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9777,7 +12312,7 @@
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -9802,7 +12337,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9830,7 +12365,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9844,15 +12379,15 @@
         {
           "op": "database.delete_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_email"
+            "collection": "u0000000000000000089",
+            "key": "idx_email"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9883,7 +12418,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9895,19 +12430,43 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "u0000000000000000084",
-            "id": "idx_email_recreated",
-            "type": "key",
-            "attributes": [
-              "profile.user.email"
-            ]
+            "collection": "u0000000000000000089",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "idx_email_recreated",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "profile.user.email"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_email_recreated",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "profile.user.email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -9938,7 +12497,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -9950,15 +12509,19 @@
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForIdenticalIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexIdentical"
+              }
+            }
           },
           "expect": false
         },
         {
           "op": "database.create_documents",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "documents": [
               {
                 "$document": {
@@ -10001,7 +12564,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -10030,7 +12593,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -10044,7 +12607,7 @@
         {
           "op": "database.find",
           "args": {
-            "collection": "u0000000000000000084",
+            "collection": "u0000000000000000089",
             "queries": [
               {
                 "$query": {
@@ -10073,7 +12636,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -10097,7 +12660,7 @@
                     }
                   }
                 },
-                "$collection": "u0000000000000000084",
+                "$collection": "u0000000000000000089",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$tenant": "999",
@@ -10111,9 +12674,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "u0000000000000000084"
+            "collection": "u0000000000000000089"
           },
-          "expect": true
+          "expect": null
         }
       ]
     }

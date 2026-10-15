@@ -1,0 +1,1029 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/PostgresDistanceTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInDegreesLeadsWithDWithin",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1865"
+          },
+          "bind": "s4999",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": 5
+            },
+            "as": "o1866"
+          },
+          "bind": "s5000",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  5,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1866"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1865"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1866"
+                }
+              ]
+            },
+            "as": "o1867"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(ST_DWithin(\"location\", ST_GeomFromText(?, 4326), ?) AND ST_Distance(\"location\", ST_GeomFromText(?, 4326)) < ?)",
+              "bindings": [
+                "POINT(10 20)",
+                5.0,
+                "POINT(10 20)",
+                5.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersFromAPointLeadsWithADegreeBox",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1868"
+          },
+          "bind": "s5003",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": 1000,
+              "meters": true
+            },
+            "as": "o1869"
+          },
+          "bind": "s5004",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  1000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1869"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1868"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1869"
+                }
+              ]
+            },
+            "as": "o1870"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(\"location\" && ST_Expand(ST_GeomFromText(?, 4326), ?, ?) AND ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?)",
+              "bindings": [
+                "POINT(10 20)",
+                0.009560263084334466,
+                0.009043717329571146,
+                "POINT(10 20)",
+                1000.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a line column",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": 1000,
+              "meters": true
+            },
+            "as": "o1871"
+          },
+          "bind": "s5007",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  1000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1878"
+          },
+          "bind": "s5021",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1878"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1871"
+                }
+              ]
+            },
+            "as": "o1879"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(10 20)",
+                1000.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a polygon value",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ],
+              "distance": 1000,
+              "meters": true
+            },
+            "as": "o1872"
+          },
+          "bind": "s5009",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        0,
+                        1
+                      ],
+                      [
+                        1,
+                        1
+                      ],
+                      [
+                        0,
+                        0
+                      ]
+                    ]
+                  ],
+                  1000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1880"
+          },
+          "bind": "s5023",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1880"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1872"
+                }
+              ]
+            },
+            "as": "o1881"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POLYGON((0 0, 0 1, 1 1, 0 0))",
+                1000.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a box reaching a pole",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                89.99
+              ],
+              "distance": 5000,
+              "meters": true
+            },
+            "as": "o1873"
+          },
+          "bind": "s5011",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    89.99
+                  ],
+                  5000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1882"
+          },
+          "bind": "s5025",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1882"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1873"
+                }
+              ]
+            },
+            "as": "o1883"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(10 89.99)",
+                5000.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a box reaching the antimeridian",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                179.99,
+                0
+              ],
+              "distance": 5000,
+              "meters": true
+            },
+            "as": "o1874"
+          },
+          "bind": "s5013",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    179.99,
+                    0
+                  ],
+                  5000,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1884"
+          },
+          "bind": "s5027",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1884"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1874"
+                }
+              ]
+            },
+            "as": "o1885"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(179.99 0)",
+                5000.0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a distance that is not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": {
+                "$float": "NAN"
+              },
+              "meters": true
+            },
+            "as": "o1875"
+          },
+          "bind": "s5015",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  {
+                    "$float": "NAN"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1886"
+          },
+          "bind": "s5029",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1886"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1875"
+                }
+              ]
+            },
+            "as": "o1887"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(10 20)",
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#an infinite distance",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": {
+                "$float": "INF"
+              },
+              "meters": true
+            },
+            "as": "o1876"
+          },
+          "bind": "s5017",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  {
+                    "$float": "INF"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1888"
+          },
+          "bind": "s5031",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1888"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1876"
+                }
+              ]
+            },
+            "as": "o1889"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(10 20)",
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a negatively infinite distance",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceLessThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": {
+                "$float": "-INF"
+              },
+              "meters": true
+            },
+            "as": "o1877"
+          },
+          "bind": "s5019",
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  {
+                    "$float": "-INF"
+                  },
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1890"
+          },
+          "bind": "s5033",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1890"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1877"
+                }
+              ]
+            },
+            "as": "o1891"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
+              "bindings": [
+                "POINT(10 20)",
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PostgresDistanceTest::testDistanceGreaterThanIsUnchanged",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1892"
+          },
+          "bind": "s5035",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distanceGreaterThan",
+            "args": {
+              "attribute": "location",
+              "values": [
+                10,
+                20
+              ],
+              "distance": 5
+            },
+            "as": "o1893"
+          },
+          "bind": "s5036",
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "location",
+              "values": [
+                [
+                  [
+                    10,
+                    20
+                  ],
+                  5,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1893"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1892"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1893"
+                }
+              ]
+            },
+            "as": "o1894"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "ST_Distance(\"location\", ST_GeomFromText(?, 4326)) > ?",
+              "bindings": [
+                "POINT(10 20)",
+                5.0
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1690 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/WithCacheLeaseTest.php"
+  ],
+  "cases": [
+    {
+      "name": "WithCacheLeaseTest::testDocumentPurgeRemovesAllVariants",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "email"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o4972"
+          },
+          "bind": "s8029",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o4972"
+              },
+              "cache": "memory"
+            },
+            "as": "o4973"
+          },
+          "bind": "s8030",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000040"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "projects"
+            },
+            "as": "o4974"
+          },
+          "bind": "s8034",
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o4974"
+              }
+            },
+            "as": "o4975"
+          },
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o4976"
+          },
+          "bind": "s8036",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "projects",
+              "attribute": {
+                "$obj": "o4976"
+              }
+            },
+            "as": "o4977"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4978"
+          },
+          "bind": "s8038",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o4978"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "project",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "fresh"
+              }
+            },
+            "as": "o4979"
+          },
+          "bind": "s8040",
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "projects",
+              "document": {
+                "$obj": "o4979"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh",
+              "$collection": "projects",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "projects"
+            }
+          },
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000040::collection:projects:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            },
+            "as": "o4980"
+          },
+          "bind": "s8043",
+          "expect": {
+            "$document": {
+              "name": "fresh",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4980"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "fresh"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4981"
+          },
+          "bind": "s8045",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project",
+              "queries": [
+                {
+                  "$obj": "o4981"
+                }
+              ]
+            },
+            "as": "o4982"
+          },
+          "bind": "s8046",
+          "expect": {
+            "$document": {
+              "name": "fresh",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4982"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "fresh"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "projects"
+            },
+            "as": "o4983"
+          },
+          "bind": "s8048",
+          "expect": {
+            "$document": {
+              "name": "projects",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "projects",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4972"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o4983"
+              },
+              "id": "project"
+            },
+            "as": "o4984"
+          },
+          "bind": "s8049",
+          "expect": {
+            "$document": {
+              "name": "fresh",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4984"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "name",
+              "value": "changed"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4972"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o4983"
+              },
+              "id": "project",
+              "document": {
+                "$obj": "o4984"
+              },
+              "skipPermissions": true
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            },
+            "as": "o4985"
+          },
+          "bind": "s8052",
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4985"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "changed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4986"
+          },
+          "bind": "s8054",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project",
+              "queries": [
+                {
+                  "$obj": "o4986"
+                }
+              ]
+            },
+            "as": "o4987"
+          },
+          "bind": "s8055",
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4987"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "changed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "purgeCachedDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            },
+            "as": "o4988"
+          },
+          "bind": "s8058",
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4988"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "changed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o4989"
+          },
+          "bind": "s8060",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4973"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project",
+              "queries": [
+                {
+                  "$obj": "o4989"
+                }
+              ]
+            },
+            "as": "o4990"
+          },
+          "bind": "s8061",
+          "expect": {
+            "$document": {
+              "name": "changed",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4990"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "changed"
+        }
+      ]
+    },
+    {
+      "name": "WithCacheLeaseTest::testStaleListWriteAfterConcurrentPurgeIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "email"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o5008"
+          },
+          "bind": "s8093",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5008"
+              },
+              "cache": "memory"
+            },
+            "as": "o5009"
+          },
+          "bind": "s8094",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000043"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "projects"
+            },
+            "as": "o5010"
+          },
+          "bind": "s8098",
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5010"
+              }
+            },
+            "as": "o5011"
+          },
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o5012"
+          },
+          "bind": "s8100",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "projects",
+              "attribute": {
+                "$obj": "o5012"
+              }
+            },
+            "as": "o5013"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5014"
+          },
+          "bind": "s8102",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5014"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "project",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "fresh"
+              }
+            },
+            "as": "o5015"
+          },
+          "bind": "s8104",
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "projects",
+              "document": {
+                "$obj": "o5015"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh",
+              "$collection": "projects",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "projects"
+            }
+          },
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            },
+            "as": "o5016"
+          },
+          "bind": "s8107",
+          "expect": {
+            "$document": {
+              "name": "fresh",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o5009"
+                      },
+                      "method": "purgeCachedQueries",
+                      "args": {
+                        "collection": "projects"
+                      }
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        {
+                          "$obj": "o5016"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "hash": "list-hash"
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$obj": "o5016"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    true,
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5009"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": []
+                    }
+                  }
+                ]
+              },
+              "hash": "list-hash"
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WithCacheLeaseTest::testListWriteLandsWhenNoConcurrentPurge",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "email"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o5017"
+          },
+          "bind": "s8110",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o5017"
+              },
+              "cache": "memory"
+            },
+            "as": "o5018"
+          },
+          "bind": "s8111",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "with_cache_u000000000044"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "projects"
+            },
+            "as": "o5019"
+          },
+          "bind": "s8115",
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o5019"
+              }
+            },
+            "as": "o5020"
+          },
+          "expect": {
+            "$document": {
+              "$id": "projects",
+              "name": "projects",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o5021"
+          },
+          "bind": "s8117",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "projects",
+              "attribute": {
+                "$obj": "o5021"
+              }
+            },
+            "as": "o5022"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o5023"
+          },
+          "bind": "s8119",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o5023"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "project",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "fresh"
+              }
+            },
+            "as": "o5024"
+          },
+          "bind": "s8121",
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "projects",
+              "document": {
+                "$obj": "o5024"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "project",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "fresh",
+              "$collection": "projects",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "projects"
+            }
+          },
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "projects",
+              "id": "project"
+            },
+            "as": "o5025"
+          },
+          "bind": "s8124",
+          "expect": {
+            "$document": {
+              "name": "fresh",
+              "$sequence": "1",
+              "$id": "project",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "projects"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        {
+                          "$obj": "o5025"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "hash": "list-hash"
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$obj": "o5025"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5018"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query",
+              "callback": true,
+              "hash": "list-hash"
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$obj": "o5025"
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

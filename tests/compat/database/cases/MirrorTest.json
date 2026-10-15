@@ -4,7 +4,7 @@
   ],
   "cases": [
     {
-      "name": "MirrorTest::testGetMirrorSource",
+      "name": "MirrorTest::test_get_mirror_source",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -67,7 +67,7 @@
       ]
     },
     {
-      "name": "MirrorTest::testGetMirrorDestination",
+      "name": "MirrorTest::test_get_mirror_destination",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -130,7 +130,7 @@
       ]
     },
     {
-      "name": "MirrorTest::testCreateMirroredCollection",
+      "name": "MirrorTest::test_create_mirrored_collection",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -175,7 +175,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -194,23 +196,33 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testCreateMirroredCollection"
+            "collection": {
+              "$document": {
+                "$id": "testCreateMirroredCollection",
+                "name": "testCreateMirroredCollection",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testCreateMirroredCollection",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "testCreateMirroredCollection",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -221,12 +233,12 @@
           }
         },
         {
-          "op": "database.get_collection",
+          "op": "database.find_collection",
           "args": {
             "db": {
               "$ref": "src"
             },
-            "id": "testCreateMirroredCollection"
+            "collection": "testCreateMirroredCollection"
           },
           "expect": {
             "$document": {
@@ -242,7 +254,8 @@
                 "create(\"any\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -253,12 +266,12 @@
           }
         },
         {
-          "op": "database.get_collection",
+          "op": "database.find_collection",
           "args": {
             "db": {
               "$ref": "dst"
             },
-            "id": "testCreateMirroredCollection"
+            "collection": "testCreateMirroredCollection"
           },
           "expect": {
             "$document": {
@@ -274,13 +287,14 @@
                 "create(\"any\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         }
       ]
     },
     {
-      "name": "MirrorTest::testUpdateMirroredCollection",
+      "name": "MirrorTest::test_update_mirrored_collection",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -325,7 +339,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -344,32 +360,42 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testUpdateMirroredCollection",
-            "permissions": [
-              "read(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "testUpdateMirroredCollection",
+                "name": "testUpdateMirroredCollection",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testUpdateMirroredCollection",
-              "$permissions": [
-                "read(\"any\")"
-              ],
               "name": "testUpdateMirroredCollection",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.get_collection",
           "args": {
-            "id": "testUpdateMirroredCollection"
+            "collection": "testUpdateMirroredCollection"
           },
           "expect": {
             "$document": {
@@ -385,17 +411,23 @@
                 "read(\"any\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.update_collection",
           "args": {
-            "id": "testUpdateMirroredCollection",
-            "permissions": [
-              "read(\"users\")"
-            ],
-            "documentSecurity": true
+            "collection": "testUpdateMirroredCollection",
+            "update": {
+              "$value": "Collection\\Update",
+              "fields": {
+                "permissions": [
+                  "read(\"users\")"
+                ],
+                "documentSecurity": true
+              }
+            }
           },
           "expect": {
             "$document": {
@@ -411,7 +443,8 @@
                 "read(\"users\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -427,7 +460,7 @@
             "db": {
               "$ref": "src"
             },
-            "id": "testUpdateMirroredCollection"
+            "collection": "testUpdateMirroredCollection"
           },
           "expect": {
             "$document": {
@@ -443,7 +476,8 @@
                 "read(\"users\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -459,7 +493,7 @@
             "db": {
               "$ref": "dst"
             },
-            "id": "testUpdateMirroredCollection"
+            "collection": "testUpdateMirroredCollection"
           },
           "expect": {
             "$document": {
@@ -475,13 +509,14 @@
                 "read(\"users\")"
               ],
               "$collection": "_metadata"
-            }
+            },
+            "$class": "Collection"
           }
         }
       ]
     },
     {
-      "name": "MirrorTest::testDeleteMirroredCollection",
+      "name": "MirrorTest::test_delete_mirrored_collection",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -526,7 +561,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -545,31 +582,41 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testDeleteMirroredCollection"
+            "collection": {
+              "$document": {
+                "$id": "testDeleteMirroredCollection",
+                "name": "testDeleteMirroredCollection",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testDeleteMirroredCollection",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "testDeleteMirroredCollection",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "testDeleteMirroredCollection"
+            "collection": "testDeleteMirroredCollection"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.get_source",
@@ -579,16 +626,14 @@
           }
         },
         {
-          "op": "database.get_collection",
+          "op": "database.find_collection",
           "args": {
             "db": {
               "$ref": "src"
             },
-            "id": "testDeleteMirroredCollection"
+            "collection": "testDeleteMirroredCollection"
           },
-          "expect": {
-            "$document": {}
-          }
+          "expect": null
         },
         {
           "op": "database.get_destination",
@@ -598,21 +643,19 @@
           }
         },
         {
-          "op": "database.get_collection",
+          "op": "database.find_collection",
           "args": {
             "db": {
               "$ref": "dst"
             },
-            "id": "testDeleteMirroredCollection"
+            "collection": "testDeleteMirroredCollection"
           },
-          "expect": {
-            "$document": {}
-          }
+          "expect": null
         }
       ]
     },
     {
-      "name": "MirrorTest::testCreateMirroredDocument",
+      "name": "MirrorTest::test_create_mirrored_document",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -657,7 +700,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -676,48 +721,68 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testCreateMirroredDocument",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "required": true,
-                  "size": 255
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ],
-            "documentSecurity": false
+            "collection": {
+              "$document": {
+                "$id": "testCreateMirroredDocument",
+                "name": "testCreateMirroredDocument",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testCreateMirroredDocument",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "testCreateMirroredDocument",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
+                    "size": 255,
                     "required": true,
-                    "size": 255
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -731,7 +796,7 @@
               }
             }
           },
-          "bind": "s44",
+          "bind": "s80",
           "expect": {
             "$document": {
               "name": "Jake",
@@ -759,7 +824,7 @@
             },
             "collection": "testCreateMirroredDocument",
             "id": {
-              "$ref": "s44",
+              "$ref": "s80",
               "path": "/$document/$id"
             }
           },
@@ -790,7 +855,7 @@
             },
             "collection": "testCreateMirroredDocument",
             "id": {
-              "$ref": "s44",
+              "$ref": "s80",
               "path": "/$document/$id"
             }
           },
@@ -809,7 +874,7 @@
       ]
     },
     {
-      "name": "MirrorTest::testUpdateMirroredDocument",
+      "name": "MirrorTest::test_update_mirrored_document",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -854,7 +919,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -873,50 +940,70 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testUpdateMirroredDocument",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "required": true,
-                  "size": 255
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")",
-              "update(\"any\")"
-            ],
-            "documentSecurity": false
+            "collection": {
+              "$document": {
+                "$id": "testUpdateMirroredDocument",
+                "name": "testUpdateMirroredDocument",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "testUpdateMirroredDocument",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
               "name": "testUpdateMirroredDocument",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
+                    "size": 255,
                     "required": true,
-                    "size": 255
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -930,7 +1017,7 @@
               }
             }
           },
-          "bind": "s54",
+          "bind": "s96",
           "expect": {
             "$document": {
               "name": "Jake",
@@ -948,7 +1035,7 @@
           "args": {
             "collection": "testUpdateMirroredDocument",
             "id": {
-              "$ref": "s54",
+              "$ref": "s96",
               "path": "/$document/$id"
             },
             "document": {
@@ -956,7 +1043,7 @@
                 "name": "John",
                 "$permissions": [],
                 "$id": {
-                  "$ref": "s54",
+                  "$ref": "s96",
                   "path": "/$document/$id"
                 },
                 "$collection": "testUpdateMirroredDocument",
@@ -999,7 +1086,7 @@
             },
             "collection": "testUpdateMirroredDocument",
             "id": {
-              "$ref": "s54",
+              "$ref": "s96",
               "path": "/$document/$id"
             }
           },
@@ -1030,7 +1117,7 @@
             },
             "collection": "testUpdateMirroredDocument",
             "id": {
-              "$ref": "s54",
+              "$ref": "s96",
               "path": "/$document/$id"
             }
           },
@@ -1049,7 +1136,7 @@
       ]
     },
     {
-      "name": "MirrorTest::testDeleteMirroredDocument",
+      "name": "MirrorTest::testUpdateMirroredDocumentIgnoresSourceSequence",
       "state": [
         "postgres@database-postgres",
         "postgres@database-postgres-mirror"
@@ -1094,7 +1181,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -1113,50 +1202,393 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "testDeleteMirroredDocument",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "required": true,
-                  "size": 255
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")",
-              "delete(\"any\")"
-            ],
-            "documentSecurity": false
+            "collection": {
+              "$document": {
+                "$id": "mirrorSequenceTargeting",
+                "name": "mirrorSequenceTargeting",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
-              "$id": "testDeleteMirroredDocument",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")",
-                "delete(\"any\")"
-              ],
-              "name": "testDeleteMirroredDocument",
+              "$id": "mirrorSequenceTargeting",
+              "name": "mirrorSequenceTargeting",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
+                    "size": 255,
                     "required": true,
-                    "size": 255
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "document": {
+              "$document": {
+                "$id": "bystander",
+                "name": "untouched",
+                "$permissions": []
+              }
             }
+          },
+          "expect": {
+            "$document": {
+              "$id": "bystander",
+              "name": "untouched",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "document": {
+              "$document": {
+                "$id": "shared",
+                "name": "before",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shared",
+              "name": "before",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "document": {
+              "$document": {
+                "$id": "shared",
+                "name": "before",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "shared",
+              "name": "before",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "mirrorSequenceTargeting",
+            "id": "shared",
+            "document": {
+              "$document": {
+                "name": "after"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "after",
+              "$sequence": "1",
+              "$id": "shared",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "id": "bystander"
+          },
+          "expect": {
+            "$document": {
+              "name": "untouched",
+              "$sequence": "1",
+              "$id": "bystander",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "dst"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "id": "shared"
+          },
+          "expect": {
+            "$document": {
+              "name": "after",
+              "$sequence": "2",
+              "$id": "shared",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting"
+            }
+          }
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "src"
+            },
+            "collection": "mirrorSequenceTargeting",
+            "id": "shared"
+          },
+          "expect": {
+            "$document": {
+              "name": "after",
+              "$sequence": "1",
+              "$id": "shared",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "mirrorSequenceTargeting"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MirrorTest::test_delete_mirrored_document",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "bind": "s0",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "testDeleteMirroredDocument",
+                "name": "testDeleteMirroredDocument",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "testDeleteMirroredDocument",
+              "name": "testDeleteMirroredDocument",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -1170,7 +1602,7 @@
               }
             }
           },
-          "bind": "s65",
+          "bind": "s134",
           "expect": {
             "$document": {
               "name": "Jake",
@@ -1188,7 +1620,7 @@
           "args": {
             "collection": "testDeleteMirroredDocument",
             "id": {
-              "$ref": "s65",
+              "$ref": "s134",
               "path": "/$document/$id"
             }
           },
@@ -1209,7 +1641,7 @@
             },
             "collection": "testDeleteMirroredDocument",
             "id": {
-              "$ref": "s65",
+              "$ref": "s134",
               "path": "/$document/$id"
             }
           },
@@ -1232,7 +1664,7 @@
             },
             "collection": "testDeleteMirroredDocument",
             "id": {
-              "$ref": "s65",
+              "$ref": "s134",
               "path": "/$document/$id"
             }
           },
@@ -1288,7 +1720,9 @@
             "role": "any"
           },
           "bind": "s0",
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.get_source",
@@ -1307,48 +1741,68 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "mirrorSkipDup",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "required": true,
-                  "size": 255
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ],
-            "documentSecurity": false
+            "collection": {
+              "$document": {
+                "$id": "mirrorSkipDup",
+                "name": "mirrorSkipDup",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "mirrorSkipDup",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "mirrorSkipDup",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
+                    "size": 255,
                     "required": true,
-                    "size": 255
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -1392,6 +1846,13 @@
           }
         },
         {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
           "op": "database.get_source",
           "args": {},
           "expect": {
@@ -1423,13 +1884,6 @@
           }
         },
         {
-          "op": "database.get_destination",
-          "args": {},
-          "expect": {
-            "$database": true
-          }
-        },
-        {
           "op": "database.get_document",
           "args": {
             "db": {
@@ -1443,7 +1897,7 @@
           }
         },
         {
-          "op": "database.skip_duplicates",
+          "op": "database.ignore_duplicates",
           "args": {
             "callback": {
               "steps": [
@@ -1480,13 +1934,13 @@
             }
           },
           "expect": {
-            "result": 2,
+            "result": 1,
             "calls": {
               "callback": [
                 {
                   "args": [],
                   "steps": [
-                    2
+                    1
                   ]
                 }
               ]
@@ -1556,13 +2010,6 @@
           }
         },
         {
-          "op": "database.get_destination",
-          "args": {},
-          "expect": {
-            "$database": true
-          }
-        },
-        {
           "op": "database.get_document",
           "args": {
             "db": {
@@ -1584,13 +2031,6 @@
               ],
               "$collection": "mirrorSkipDup"
             }
-          }
-        },
-        {
-          "op": "database.get_destination",
-          "args": {},
-          "expect": {
-            "$database": true
           }
         },
         {

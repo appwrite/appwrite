@@ -6,18 +6,25 @@
       "steps": [
         {
           "op": "adapter.open",
+          "args": {},
           "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "POINT(1 2)"
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             1.0,
@@ -25,12 +32,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "point(1.5 -2)"
+            "method": "decode",
+            "args": {
+              "value": "point(1.5 -2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             1.5,
@@ -38,12 +51,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "POINT( 3 )"
+            "method": "decode",
+            "args": {
+              "value": "POINT( 3 )",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             3.0,
@@ -51,12 +70,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "POINT(1 2"
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             0.0,
@@ -64,12 +89,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101000020E6100000000000000000F03F0000000000000040"
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             1.0,
@@ -77,12 +108,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101000020e6100000000000000000f03f0000000000000040"
+            "method": "decode",
+            "args": {
+              "value": "0101000020e6100000000000000000f03f0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             1.0,
@@ -90,12 +127,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "00000000013FF00000000000004000000000000000"
+            "method": "decode",
+            "args": {
+              "value": "00000000013FF00000000000004000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": [
             1.0,
@@ -103,12 +146,18 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101"
+            "method": "decode",
+            "args": {
+              "value": "0101",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -118,71 +167,17 @@
           }
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "zz"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid hex WKB string"
-            }
-          }
-        },
-        {
-          "op": "adapter.decode_point",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkb": "0101000020E6100000000000000000F03F00000000000000"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "WKB too short for coordinates"
-            }
-          }
-        },
-        {
-          "op": "adapter.decode_point",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkb": "01010000000000000000000000"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "WKB too short for coordinates"
-            }
-          }
-        },
-        {
-          "op": "adapter.decode_point",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkb": "010100000000000000000000000000000000000000"
-          },
-          "expect": [
-            0.0,
-            0.0
-          ]
-        },
-        {
-          "op": "adapter.decode_point",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkb": {
-              "$bytes": "AQEAAAA="
+            "method": "decode",
+            "args": {
+              "value": "zz",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
             }
           },
           "expect": {
@@ -193,12 +188,102 @@
           }
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": ""
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F00000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short for coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "01010000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short for coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "010100000000000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQEAAAA="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid hex WKB string"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -208,12 +293,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "LINESTRING(0 0,1 1, 2 3)"
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING(0 0,1 1, 2 3)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": [
             [
@@ -231,12 +322,18 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "linestring(1 1)"
+            "method": "decode",
+            "args": {
+              "value": "linestring(1 1)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": [
             [
@@ -246,12 +343,18 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "LINESTRING()"
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING()",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": [
             [
@@ -261,12 +364,18 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0102000020E610000002000000000000000000000000000000000000000000000000000000000000000000F03F"
+            "method": "decode",
+            "args": {
+              "value": "0102000020E610000002000000000000000000000000000000000000000000000000000000000000000000F03F",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": [
             [
@@ -280,12 +389,18 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "01020000000200000000000000000000000000000000000000000000000000F03F000000000000F03F"
+            "method": "decode",
+            "args": {
+              "value": "01020000000200000000000000000000000000000000000000000000000000F03F000000000000F03F",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": [
             [
@@ -299,12 +414,18 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0102000020E6100000020000000000"
+            "method": "decode",
+            "args": {
+              "value": "0102000020E6100000020000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -314,12 +435,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "000000000200000000"
+            "method": "decode",
+            "args": {
+              "value": "000000000200000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -329,12 +456,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0302000000"
+            "method": "decode",
+            "args": {
+              "value": "0302000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -344,12 +477,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101000000000000000000000000"
+            "method": "decode",
+            "args": {
+              "value": "0101000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -359,12 +498,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101000020E6100000000000000000F03F0000000000000040"
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -374,12 +519,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "abc"
+            "method": "decode",
+            "args": {
+              "value": "abc",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -389,12 +540,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "01020000000300000000000000000000000000000000000000"
+            "method": "decode",
+            "args": {
+              "value": "01020000000300000000000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -404,13 +561,19 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": {
-              "$bytes": "AQIAAAABAAAAAAAAAAAA8D8="
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQIAAAABAAAAAAAAAAAA8D8="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
             }
           },
           "expect": {
@@ -421,12 +584,18 @@
           }
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": ""
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -436,12 +605,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "POLYGON((0 0,1 0,1 1,0 0),(2 2,3 3))"
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),(2 2,3 3))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": [
             [
@@ -475,12 +650,18 @@
           ]
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "POLYGON((1 2))"
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((1 2))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": [
             [
@@ -492,12 +673,18 @@
           ]
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "polygon((1 2))"
+            "method": "decode",
+            "args": {
+              "value": "polygon((1 2))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -507,12 +694,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000"
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": [
             [
@@ -536,12 +729,18 @@
           ]
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000\n"
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000\n",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -551,12 +750,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0103000020E61000000100000004000000000000"
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -566,12 +771,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0101000020E6100000000000000000F03F0000000000000040"
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -581,12 +792,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "0103000000"
+            "method": "decode",
+            "args": {
+              "value": "0103000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -596,12 +813,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "010300000001000000020000000000"
+            "method": "decode",
+            "args": {
+              "value": "010300000001000000020000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -611,12 +834,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": "xyz"
+            "method": "decode",
+            "args": {
+              "value": "xyz",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -626,12 +855,18 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": ""
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
           },
           "expect": {
             "$error": {
@@ -641,13 +876,19 @@
           }
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": {
-              "$bytes": "AQMAAAABAAAAAQAAAAAAAAAAAPA/AAAAAAAAAEA="
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQMAAAABAAAAAQAAAAAAAAAAAPA/AAAAAAAAAEA="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
             }
           },
           "expect": [
@@ -658,132 +899,6 @@
               ]
             ]
           ]
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": "POINT(1 2)"
-          },
-          "expect": "point"
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": "  Polygon ((0 0))"
-          },
-          "expect": "polygon"
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": "LINESTRING"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid spatial type"
-            }
-          }
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": "(1 2)"
-          },
-          "expect": ""
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": "MULTIPOINT ((1 2))"
-          },
-          "expect": "multipoint"
-        },
-        {
-          "op": "adapter.spatial_type",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "wkt": ""
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid spatial type"
-            }
-          }
-        },
-        {
-          "op": "adapter.casting_before",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "c",
-            "document": {
-              "$document": {
-                "$id": "x",
-                "a": 1
-              }
-            }
-          },
-          "expect": {
-            "$document": {
-              "$id": "x",
-              "a": 1
-            }
-          }
-        },
-        {
-          "op": "adapter.casting_after",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "c",
-            "document": {
-              "$document": {
-                "$id": "x",
-                "a": [
-                  1
-                ]
-              }
-            }
-          },
-          "expect": {
-            "$document": {
-              "$id": "x",
-              "a": [
-                1
-              ]
-            }
-          }
-        },
-        {
-          "op": "adapter.set_utc_datetime",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "value": "2020-01-01T00:00:00+05:00"
-          },
-          "expect": "2020-01-01T00:00:00+05:00"
         }
       ]
     },
@@ -792,112 +907,219 @@
       "steps": [
         {
           "op": "adapter.open",
+          "args": {},
           "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.create",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_collection",
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "p",
+                "key": "p",
+                "type": "point",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a391"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "p",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "l",
+                "key": "l",
+                "type": "linestring",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a392"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "l",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "a",
+                "key": "a",
+                "type": "polygon",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a393"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "g",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "p",
-                  "type": "point",
-                  "size": 0,
-                  "required": false,
-                  "signed": true,
-                  "array": false
+            "method": "createCollection",
+            "args": {
+              "collection": "g",
+              "attributes": [
+                {
+                  "$obj": "a391"
+                },
+                {
+                  "$obj": "a392"
+                },
+                {
+                  "$obj": "a393"
                 }
-              },
-              {
-                "$document": {
-                  "$id": "l",
-                  "type": "linestring",
-                  "size": 0,
-                  "required": false,
-                  "signed": true,
-                  "array": false
-                }
-              },
-              {
-                "$document": {
-                  "$id": "a",
-                  "type": "polygon",
-                  "size": 0,
-                  "required": false,
-                  "signed": true,
-                  "array": false
-                }
-              }
-            ]
+              ]
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": {
-              "$document": {
-                "$id": "g",
-                "attributes": [
-                  {
-                    "$document": {
-                      "$id": "p",
-                      "type": "point",
-                      "size": 0,
-                      "required": false,
-                      "signed": true,
-                      "array": false
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "g",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "p",
+                        "type": "point",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "l",
+                        "type": "linestring",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "a",
+                        "type": "polygon",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
                     }
-                  },
-                  {
-                    "$document": {
-                      "$id": "l",
-                      "type": "linestring",
-                      "size": 0,
-                      "required": false,
-                      "signed": true,
-                      "array": false
-                    }
-                  },
-                  {
-                    "$document": {
-                      "$id": "a",
-                      "type": "polygon",
-                      "size": 0,
-                      "required": false,
-                      "signed": true,
-                      "array": false
-                    }
-                  }
-                ]
-              }
-            },
-            "document": {
-              "$document": {
-                "$id": "g1",
-                "$permissions": [],
-                "p": "POINT(1.5 -2.25)",
-                "l": "LINESTRING(0 0, 1 2, 3 4)",
-                "a": "POLYGON((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 2 1, 2 2, 1 1))"
+                  ]
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "g1",
+                  "$permissions": [],
+                  "p": "POINT(1.5 -2.25)",
+                  "l": "LINESTRING(0 0, 1 2, 3 4)",
+                  "a": "POLYGON((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 2 1, 2 2, 1 1))"
+                }
               }
             }
           },
@@ -913,22 +1135,35 @@
           }
         },
         {
-          "op": "adapter.set_authorization",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "status": false
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "roles": [],
+                "status": false
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "Postgres"
+          }
         },
         {
-          "op": "adapter.find",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "g"
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "g"
+              }
+            }
           },
           "bind": "rows",
           "expect": [
@@ -947,14 +1182,20 @@
           ]
         },
         {
-          "op": "adapter.decode_point",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": {
-              "$ref": "rows",
-              "path": "/0/$document/p"
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/p"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
             }
           },
           "expect": [
@@ -963,14 +1204,20 @@
           ]
         },
         {
-          "op": "adapter.decode_linestring",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": {
-              "$ref": "rows",
-              "path": "/0/$document/l"
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/l"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
             }
           },
           "expect": [
@@ -989,14 +1236,20 @@
           ]
         },
         {
-          "op": "adapter.decode_polygon",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "wkb": {
-              "$ref": "rows",
-              "path": "/0/$document/a"
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/a"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
             }
           },
           "expect": [
@@ -1043,10 +1296,14 @@
           ]
         },
         {
-          "op": "adapter.delete",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
