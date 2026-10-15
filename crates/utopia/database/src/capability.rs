@@ -248,4 +248,25 @@ mod tests {
         assert_eq!(set.without(Capability::Joins).iter().collect::<Vec<_>>(), [Capability::IndexKey]);
         assert!(set.with(Capability::Vectors).contains(Capability::Vectors));
     }
+
+    /// An adapter lists its capabilities as PHP's `capabilities()` does (the
+    /// base adapter's first); a profile in the enum's order, without
+    /// DefinedAttributes (`Database::profile()`).
+    #[cfg(feature = "memory")]
+    #[test]
+    fn profiles_list_capabilities_in_the_enum_order() {
+        use std::sync::Arc;
+
+        use crate::adapter::{Adapter, Profile};
+        let memory: Arc<dyn Adapter> = Arc::new(crate::adapter::memory::Memory::new());
+        let listed: Vec<_> = memory.capabilities().iter().take(4).collect();
+        assert_eq!(
+            listed,
+            [Capability::IndexKey, Capability::IndexArray, Capability::IndexUnique, Capability::Schemas]
+        );
+        let profile: Vec<_> = Profile::of(memory, false).capabilities.iter().collect();
+        assert_eq!(profile.first(), Some(&Capability::AttributeResizing));
+        assert!(!profile.contains(&Capability::DefinedAttributes));
+        assert!(profile.windows(2).all(|w| (w[0] as u8) < (w[1] as u8)));
+    }
 }
