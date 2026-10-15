@@ -383,9 +383,13 @@ class Redis implements Synchronous, Consumer
                 break;
             }
 
-            // The payload expired; nothing left to requeue.
+            // An expired payload leaves nothing to requeue. One the codec cannot
+            // read is parked, so it stays inspectable and something references it.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
+                if (\is_string($this->commands->get("{$queue->namespace}.jobs.{$queue->name}.{$pid}"))) {
+                    $this->commands->leftPush("{$queue->namespace}.dead.{$queue->name}", $pid);
+                }
                 continue;
             }
 
