@@ -1075,6 +1075,10 @@ jobs:
       # organization (the suite seeds its own when one exists).
       - name: Compare PHP and Rust request lifecycles
         timeout-minutes: 40
+        # Every identity, origin and variant on the Users routes (the generic
+        # hooks); the other services' routes under fewer.
+        env:
+          COMPAT_DIFF_QUICK: '1'
         run: bin/compat appwrite diff
 
       - name: Run tests

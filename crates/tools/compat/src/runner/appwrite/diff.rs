@@ -992,11 +992,26 @@ struct Scenario {
     variant: Variant,
 }
 
+/// The identities and origins a route outside Users runs under in quick
+/// mode (`COMPAT_DIFF_QUICK`, as CI runs it): the Users routes run every
+/// identity, origin and variant, which covers the generic hooks; the other
+/// services' routes need the ones that change what an action does.
+const QUICK_IDENTITIES: [Identity; 6] =
+    [Identity::Guest, Identity::Key, Identity::NarrowKey, Identity::Session, Identity::Jwt, Identity::InvalidJwt];
+const QUICK_ORIGINS: [Origin; 2] = [Origin::None, Origin::Platform];
+const QUICK_VARIANTS: [Variant; 2] = [Variant::OldFormat, Variant::Locale];
+
 fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
+    let quick = std::env::var_os("COMPAT_DIFF_QUICK").is_some();
     let mut out = Vec::new();
     for route in ROUTES {
-        for identity in IDENTITIES {
-            for origin in ORIGINS {
+        let reduced = quick && !route.name.starts_with("users.");
+        let identities: &[Identity] = if reduced { &QUICK_IDENTITIES } else { &IDENTITIES };
+        let origins: &[Origin] = if reduced { &QUICK_ORIGINS } else { &ORIGINS };
+        let rule_identities: &[Identity] = if reduced { &[] } else { &RULE_IDENTITIES };
+        let variants: &[Variant] = if reduced { &QUICK_VARIANTS } else { &VARIANTS };
+        for &identity in identities {
+            for &origin in origins {
                 let n = out.len();
                 let id = format!("{} {identity:?} origin:{origin:?}", route.name).to_ascii_lowercase();
                 if filter.is_some_and(|f| !id.contains(&f.to_ascii_lowercase())) {
@@ -1005,7 +1020,7 @@ fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
                 out.push(Scenario { id, n, route, identity, origin, variant: Variant::Plain });
             }
         }
-        for identity in RULE_IDENTITIES {
+        for &identity in rule_identities {
             for origin in RULE_ORIGINS {
                 let n = out.len();
                 let id = format!("{} {identity:?} origin:{origin:?}", route.name).to_ascii_lowercase();
@@ -1017,7 +1032,7 @@ fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
         }
         // Each variant with a key from an allowed platform, and for the
         // locale as a guest too (its error messages are translated).
-        for variant in VARIANTS {
+        for &variant in variants {
             let identities: &[Identity] =
                 if matches!(variant, Variant::Locale) { &[Identity::Key, Identity::Guest] } else { &[Identity::Key] };
             for &identity in identities {
