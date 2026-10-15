@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T20:02:00Z",
+  "updated": "2026-10-15T20:30:00Z",
   "tasks": [
     {
       "id": "db-lanes-ci",
@@ -24,6 +24,22 @@
       "status": "progress",
       "updated": "2026-10-15T19:17:00Z",
       "note": "30 from custom-domain rule origins (401 vs 403, one header fewer), 8 internal IDs in queued messages, 6 team searches. Clean in a local run, so reproducing in a CI-like stack first."
+    },
+    {
+      "id": "async-callbacks",
+      "title": "Callbacks as async closures, without Box::pin",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-15T20:20:00Z",
+      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). CONVERSION.md makes it the rule."
+    },
+    {
+      "id": "async-traits",
+      "title": "Adapter traits take async fn, without BoxFuture",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T20:20:00Z",
+      "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
     },
     {
       "id": "lib-sync",
