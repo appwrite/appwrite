@@ -2961,6 +2961,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת התראות Push דרך APNS (iOS).',
   'Send push notifications via FCM (Android, iOS, web).':
     'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send push notifications through the Appwrite push service.':
+    'שליחת התראות Push דרך שירות ה-Push של Appwrite.',
+  'Quality of service': 'איכות השירות',
+  'Let the subscriber choose': 'מתן בחירה למנוי',
+  'At most once (QoS 0)': 'לכל היותר פעם אחת (QoS 0)',
+  'At least once (QoS 1)': 'לפחות פעם אחת (QoS 1)',
+  'Default delivery guarantee for topics on this provider.':
+    'ברירת המחדל לאחריות המסירה עבור נושאים בספק הזה.',
+  'Message expiry (seconds)': 'תפוגת הודעה (שניות)',
+  'Message expiry must be a whole number of seconds.':
+    'תפוגת ההודעה חייבת להיות מספר שלם של שניות.',
+  'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
+    'כמה זמן הודעות שלא נמסרו נשמרות עבור מכשירים לא מקוונים. עד 7 ימים (604800).',
   'Send transactional email through Amazon SES.':
     'שליחת אימייל טרנזקציוני דרך Amazon SES.',
   'Send transactional email through Mailgun.':

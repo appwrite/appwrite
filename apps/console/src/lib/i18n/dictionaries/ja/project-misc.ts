@@ -2466,6 +2466,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'APNS (iOS) 経由でプッシュ通知を送信します。',
   'Send push notifications via FCM (Android, iOS, web).':
     'FCM (Android、iOS、Web) 経由でプッシュ通知を送信します。',
+  'Send push notifications through the Appwrite push service.':
+    'Appwrite のプッシュサービス経由でプッシュ通知を送信します。',
+  'Quality of service': 'QoS',
+  'Let the subscriber choose': 'サブスクライバーに選択させる',
+  'At most once (QoS 0)': '最大1回 (QoS 0)',
+  'At least once (QoS 1)': '最低1回 (QoS 1)',
+  'Default delivery guarantee for topics on this provider.':
+    'このプロバイダーのトピックに対するデフォルトの配信保証です。',
+  'Message expiry (seconds)': 'メッセージの有効期限 (秒)',
+  'Message expiry must be a whole number of seconds.':
+    'メッセージの有効期限は秒単位の整数で指定してください。',
+  'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
+    'オフラインデバイス向けに未配信メッセージを保持する期間です。最大7日 (604800)。',
   'Send transactional email through Amazon SES.':
     'Amazon SES 経由でトランザクションメールを送信します。',
   'Send transactional email through Mailgun.':
