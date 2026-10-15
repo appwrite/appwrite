@@ -27,7 +27,7 @@ Getting push notifications working on iOS has always meant a long checklist acro
 
 None of it is hard. It is just easy to get one value slightly wrong, and the error only shows up when the first push fails.
 
-Today we are announcing **one-click APNs setup** in the Appwrite CLI. Run `appwrite init apns` in your iOS project, and the CLI configures [Appwrite Messaging](/docs/products/messaging), your Xcode project, and your Apple App ID in one pass.
+Today we are announcing **one-click APNs setup** in the Appwrite CLI, available from version 28.5.0. Run `appwrite init apns` in your iOS project, and the CLI configures [Appwrite Messaging](/docs/products/messaging), your Xcode project, and your Apple App ID in one pass.
 
 ```bash
 appwrite init apns
@@ -133,7 +133,7 @@ Stick with the Console when you are configuring an app you don't have the source
 
 # Get started with APNs in Appwrite
 
-Update the [Appwrite CLI](/docs/tooling/command-line/installation) to the latest version, log in to your [Appwrite Cloud](https://cloud.appwrite.io) project, and run `appwrite init apns` from your iOS project folder.
+Update the [Appwrite CLI](/docs/tooling/command-line/installation) to version 28.5.0 or later, log in to your [Appwrite Cloud](https://cloud.appwrite.io) project, and run `appwrite init apns` from your iOS project folder.
 
 - [One-click APNs setup](/docs/products/messaging/apns#one-click-setup)
 - [Send push notifications](/docs/products/messaging/send-push-notifications)

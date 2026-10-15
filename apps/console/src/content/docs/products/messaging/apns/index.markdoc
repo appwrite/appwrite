@@ -10,7 +10,7 @@ APNs will save the last message for 30 days or less and attempt delivery as soon
 
 # One-click setup with the CLI {% #one-click-setup %}
 
-The [Appwrite CLI](/docs/tooling/command-line/installation) sets up APNs for an iOS app in one command. Run it from your app's project folder:
+The [Appwrite CLI](/docs/tooling/command-line/installation) sets up APNs for an iOS app in one command, from version 28.5.0. Run it from your app's project folder:
 
 ```bash
 appwrite init apns
