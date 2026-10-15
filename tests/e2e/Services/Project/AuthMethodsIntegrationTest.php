@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AuthMethodsIntegrationTest extends Scope
 {
@@ -76,7 +76,7 @@ final class AuthMethodsIntegrationTest extends Scope
 
         // Step 3 — email/password account creation.
         $createAccount = fn () => $this->client->call(Client::METHOD_POST, '/account', $publicHeaders, [
-            'userId'   => ID::unique(),
+            'userId'   => Id::unique(),
             'email'    => $email,
             'password' => $password,
             'name'     => 'Auth Methods User',
@@ -119,7 +119,7 @@ final class AuthMethodsIntegrationTest extends Scope
 
         // Step 6 — magic URL token.
         $magicUrlAttempt = fn () => $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $publicHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email'  => 'magic_' . \uniqid() . '@localhost.test',
         ]);
 
@@ -133,7 +133,7 @@ final class AuthMethodsIntegrationTest extends Scope
         // still fail for provider reasons — we only assert that the auth-method
         // gate stops fighting us.
         $phoneAttempt = fn () => $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $publicHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone'  => '+14155550199',
         ]);
 
@@ -145,7 +145,7 @@ final class AuthMethodsIntegrationTest extends Scope
         // isn't a team owner, so we don't assert on 201 here — the gate itself
         // is what's under test and any non-501 proves it was lifted.
         $teamResponse = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name'   => 'Auth Methods Team',
         ]);
         $this->assertSame(201, $teamResponse['headers']['status-code']);

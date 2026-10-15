@@ -49,11 +49,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Vcs** -- Git provider helpers
   - **Deployment** -- build and deploy helpers
   - **Usage** -- metrics
-  - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
+  - **Utopia** -- extensions of Utopia libraries, `src/Appwrite/Utopia/{Lib}` (`Database`, `Fetch`, `Messaging`, `Request`, `Response`, `WebSocket`, …); see [Libraries](#libraries)
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
 - **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **apps/** -- deployable applications with their own runtime, image, and release (`console`: the web Console, Bun + TanStack Start, shipped as `appwrite/new`). Not Utopia packages: no Composer autoload, no split mirror. Do not confuse with `app/`, the PHP server. See [apps/README.md](apps/README.md) and [Console](#console).
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -64,11 +65,17 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **docs/** -- references, tutorials, SDK getting-started notes, [release process](docs/releases.md)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
 
+## Console
+
+Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance.
+
 ## Libraries
 
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
 Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
+
+Code that extends, subclasses, adapts or wraps a Utopia library goes in `src/Appwrite/Utopia/{Lib}/` (namespace `Appwrite\Utopia\{Lib}`), mirroring the library name: [`Utopia/Database/Validator`](src/Appwrite/Utopia/Database/Validator), [`Utopia/Database/Documents/User.php`](src/Appwrite/Utopia/Database/Documents/User.php), [`Utopia/Request`](src/Appwrite/Utopia/Request), [`Utopia/Response`](src/Appwrite/Utopia/Response). Appwrite-domain logic stays in its own domain namespace or platform module, not under `Utopia/`. Behavior any app would need belongs in the Utopia library itself: fix the library instead of adding an app-side gap-filler.
 
 ## Modules
 
@@ -282,7 +289,7 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 - **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. Scopes are never removed: keys, functions, sites and OAuth2/MCP clients store them. Retire one with `'deprecated' => true`; `app/config/scopes/lock.json` records every shipped scope and `tests/unit/General/ScopesTest.php` fails on a removal or an unlocked addition. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
 - **Collections:** lowercase plural. Attributes camelCase; do not prefix with the collection name. `resourceType` is usually plural (`functions`, `sites`, `deployments`).
 - **DI:** inject object dependencies only (`$dbForProject`, `$queueForEvents`, `$user`). `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new resources in `app/init/resources.php` and `app/init/resources/request.php`. Never inject callbacks or global-shaped functions to reuse logic — see [Reuse](#reuse).
-- **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`.
+- **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`. A required rule needs a `default` its schema accepts (an enum member, an array for an array rule), because SDK models fill a field an older server does not send from it; without one, make the rule `required => false`.
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
 
@@ -306,6 +313,8 @@ Never hardcode a collection schema only inside a patch script. If the collection
 **E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
 
 **Unit** (`tests/unit/`) covers **local src libraries** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters), plus **contract locks** for configuration clients persist (`tests/unit/General/ScopesTest.php` against `app/config/scopes/lock.json`). A contract lock pins what must never disappear from a published catalog; do not use it to mirror config shape or values. Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+
+CI runs only the e2e lanes a change can affect, using [`.github/ci/e2e.json`](.github/ci/e2e.json). Add a new e2e service there, and list the module and controller paths it covers. Any file the map doesn't claim runs every lane.
 
 Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 

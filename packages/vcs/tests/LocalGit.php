@@ -6,7 +6,7 @@ namespace Utopia\VCS\Tests;
 
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 /**

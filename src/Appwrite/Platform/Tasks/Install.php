@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
@@ -18,7 +19,7 @@ use Utopia\Auth\Proofs\Password;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
@@ -26,6 +27,7 @@ use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -69,8 +71,8 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
@@ -146,10 +148,7 @@ class Install extends Action
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
-                $ports = [
-                    $defaultHttpPort => $defaultHttpPort,
-                    $defaultHttpsPort => $defaultHttpsPort
-                ];
+                $ports = [];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
@@ -188,15 +187,25 @@ class Install extends Action
                             $vars[$key]['default'] = $value;
                         }
                     }
+
+                    // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
+                    $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
+                    $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
                 }
 
-                foreach ($ports as $key => $value) {
-                    if ($value === $defaultHttpPort) {
-                        $defaultHttpPort = $key;
+                // A literal port in the compose file is what is published, even if .env says otherwise.
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
                     }
 
-                    if ($value === $defaultHttpsPort) {
-                        $defaultHttpsPort = $key;
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
                     }
                 }
             }
@@ -261,6 +270,14 @@ class Install extends Action
         if (empty($httpsPort)) {
             $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHttpsPort . ')');
             $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
+        }
+
+        $portValidator = new Port();
+        foreach (['HTTP' => $httpPort, 'HTTPS' => $httpsPort] as $label => $port) {
+            if (!$portValidator->isValid($port)) {
+                Console::error("Invalid {$label} port '{$port}'. " . $portValidator->getDescription() . '.');
+                Console::exit(1);
+            }
         }
 
         $userInput = [];
@@ -703,8 +720,8 @@ class Install extends Action
 
             if (!$useExistingConfig && $startIndex <= 1) {
                 $this->copyConfigFiles(match ($database) {
-                    'mongodb' => ['clickhouse-config.xml', 'mongo-entrypoint.sh', 'mongo-init.js'],
-                    default => ['clickhouse-config.xml'],
+                    'mongodb' => ['clickhouse-config.xml', 'clickhouse-init.sh', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml', 'clickhouse-init.sh'],
                 });
             }
 
@@ -1063,6 +1080,12 @@ class Install extends Action
 
         $healthPath = '/v1/health/version';
 
+        // A port bound to one host interface (127.0.0.1:80) is still reached on its port.
+        $separator = \strrpos($httpPort, ':');
+        if ($separator !== false) {
+            $httpPort = \substr($httpPort, $separator + 1);
+        }
+
         if ($isLocalInstall) {
             $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
                 ? ['http://host.docker.internal:' . $httpPort . $healthPath]
@@ -1278,6 +1301,8 @@ class Install extends Action
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
@@ -1305,7 +1330,6 @@ class Install extends Action
         if ($isLocalInstall && $this->hostPath !== '') {
             $composePath = $this->hostPath;
         }
-        $composeFile = $composePath . '/' . $this->getComposeFileName();
         $envFile = $composePath . '/' . $this->getEnvFileName();
 
         $command = [
@@ -1313,9 +1337,11 @@ class Install extends Action
             'compose',
             '--env-file',
             $envFile,
-            '-f',
-            $composeFile,
         ];
+        foreach ((new Files($this->path, $this->getComposeFileName()))->names() as $name) {
+            $command[] = '-f';
+            $command[] = $composePath . '/' . $name;
+        }
 
         if ($isLocalInstall) {
             $command[] = '--project-name';
@@ -1334,6 +1360,10 @@ class Install extends Action
             throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
         }
 
+        $servicesCommand = $command;
+        $servicesCommand[] = 'config';
+        $servicesCommand[] = '--services';
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
@@ -1341,7 +1371,7 @@ class Install extends Action
         $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
 
         if ($progress) {
-            $totalServices = $this->countComposeServices($composeFile);
+            $totalServices = $this->countComposeServices($env . implode(' ', array_map(escapeshellarg(...), $servicesCommand)));
             if ($totalServices > 0) {
                 $verb = $isUpgrade ? 'Restarting' : 'Starting';
                 try {
@@ -1371,14 +1401,17 @@ class Install extends Action
         }
     }
 
-    private function countComposeServices(string $composeFile): int
+    /**
+     * Services in the merged compose configuration, overrides included.
+     */
+    private function countComposeServices(string $commandLine): int
     {
-        $content = @file_get_contents($composeFile);
-        if ($content === false) {
+        \exec($commandLine . ' 2> /dev/null', $services, $exit);
+        if ($exit !== 0) {
             return 0;
         }
-        $count = preg_match_all('/^\s*container_name:/m', $content);
-        return $count !== false ? $count : 0;
+
+        return count(array_filter($services, fn (string $service): bool => trim($service) !== ''));
     }
 
     private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array

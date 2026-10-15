@@ -1,0 +1,147 @@
+---
+layout: article
+title: Better Auth
+description: Use an Appwrite native PostgreSQL database as the database for Better Auth. Point runtime traffic at the pooler, run schema generation and migrations over a direct connection, and store users and sessions in PostgreSQL.
+---
+
+[Better Auth](https://www.better-auth.com/) is a framework-agnostic authentication library for TypeScript that keeps its state, including users, sessions, accounts, and verification tokens, in a database you own. A native PostgreSQL database gives Better Auth a standard PostgreSQL engine, so you can use the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and run the Better Auth CLI to create the schema.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [PostgreSQL databases](/docs/products/databases/postgresql) to create one, then open the database and click **Credentials** to copy values from the **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tab. The primary user is `admin`, and each database has its own generated database name.
+{% /info %}
+
+# Set the connection strings {% #connection-strings %}
+
+Better Auth needs two connection strings for the same database: a **pooled** URL for your application runtime and a **direct** URL for schema work. Copy the values from the Console **Credentials** dialog, or fetch them with [`postgresql.get()`](/docs/products/databases/postgresql/connections#credentials), and put both in your environment. Never commit them.
+
+```env
+# Runtime: pooler port (transaction mode), absorbs serverless connection churn
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Schema generation & migrations: direct connection to the engine
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+Use `sslmode=require` for Appwrite Cloud connections. The edge proxy terminates TLS for every native PostgreSQL database, so drivers need no extra certificate configuration. See the [Network security](/docs/products/databases/postgresql/network-security) page for TLS and network controls.
+
+The PostgreSQL pooler runs on port `6432`, and the engine runs on port `5432`. See [Connections](/docs/products/databases/postgresql/connections) for connection details and the [connection pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the pool modes.
+
+# Configure Better Auth {% #configure %}
+
+Better Auth accepts either a **database instance** (a driver connection pool, which it drives through its built-in Kysely adapter) or an **ORM adapter** (Prisma, Drizzle, Kysely). Both work against a native PostgreSQL database.
+
+## With a driver pool {% #pool %}
+
+Pass a `pg` `Pool` pointed at the **pooled** URL so runtime traffic is multiplexed. Set `ssl: { rejectUnauthorized: true }` so the driver verifies the proxy's certificate:
+
+```ts
+import { betterAuth } from 'better-auth';
+import { Pool } from 'pg';
+
+export const auth = betterAuth({
+    database: new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: true }
+    }),
+    emailAndPassword: { enabled: true }
+});
+```
+
+This is the simplest path: Better Auth manages the schema for you and can both generate and apply migrations through the CLI below.
+
+## With an ORM adapter {% #adapter %}
+
+If you already use an ORM, hand Better Auth an adapter instead of a raw `Pool`. Configure the ORM's own client against the native PostgreSQL database (pooled URL for the runtime client, direct URL for migrations), then wrap it:
+
+```ts
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { db } from './db';
+
+export const auth = betterAuth({
+    database: drizzleAdapter(db, { provider: 'pg' }),
+    emailAndPassword: { enabled: true }
+});
+```
+
+Set the ORM up against the native PostgreSQL database first, then return here for the schema steps. The [Prisma](/docs/products/databases/postgresql/integrations/prisma) and [Drizzle](/docs/products/databases/postgresql/integrations/drizzle) guides cover the `datasource`/client config, the pooled-vs-direct URL split, and how transaction-mode pooling affects prepared statements.
+
+# Generate and migrate the schema {% #migrate %}
+
+The [Better Auth CLI](https://www.better-auth.com/docs/concepts/cli) reads your `auth` config and creates the tables it needs. Run it with the **direct** URL so it gets a session connection with DDL privileges. Transaction-mode pooling is designed for short application transactions, not schema changes.
+
+Generate the schema for your setup. With a driver pool (built-in Kysely adapter) this produces a SQL file; with an ORM adapter it produces that ORM's schema (a Prisma schema, a Drizzle `schema.ts`):
+
+```bash
+DATABASE_URL="$DIRECT_URL" npx @better-auth/cli@latest generate
+```
+
+If you're using the built-in adapter (a driver pool), apply the generated schema directly:
+
+```bash
+DATABASE_URL="$DIRECT_URL" npx @better-auth/cli@latest migrate
+```
+
+`migrate` is only available for the built-in Kysely adapter. With a **Prisma** or **Drizzle** adapter, run `generate` to produce the schema, then apply it with that ORM's own migration tool, `prisma migrate deploy` or `drizzle-kit migrate`, again over `DIRECT_URL`. See the [Prisma](/docs/products/databases/postgresql/integrations/prisma#migrate) and [Drizzle](/docs/products/databases/postgresql/integrations/drizzle) guides for the exact commands.
+
+Both commands connect over the engine port, so they get full DDL privileges. The primary `admin` user owns the database and can run schema changes; narrower [database roles](/docs/products/databases/postgresql/connections#roles) (`readonly` / `readwrite`) intentionally cannot run DDL.
+
+# A minimal example {% #example %}
+
+After the schema exists, your runtime connects on the pooler URL and Better Auth handles the rest. Mount the handler for your framework and start creating users:
+
+```ts
+import { auth } from './auth';
+
+const result = await auth.api.signUpEmail({
+    body: {
+        email: 'ada@example.com',
+        password: 'a-strong-password',
+        name: 'Ada Lovelace'
+    }
+});
+
+console.log(result.user.id);
+```
+
+On a long-running server, instantiate `auth` once and reuse it. On serverless, keep a single instance per module scope so warm invocations reuse it, and rely on the pooler to absorb cold-start connection churn.
+
+# Pooling and prepared statements {% #pooling %}
+
+Auth workloads, including sign-up, login, and session lookups, are short transactions, which is exactly what the pooler's default **transaction mode** is built for. Pointing your runtime pool at port `6432` lets a large number of serverless instances share a small backend pool.
+
+The one constraint of transaction mode is that it does not hold a backend connection across statements, so **server-side prepared statements are unavailable**. On PostgreSQL, the node-postgres `Pool` is fine with this out of the box. If you drive Better Auth through an ORM, disable prepared statements on the runtime client: with `postgres.js`, set `prepare: false`; with Prisma, add `pgbouncer=true` to the pooled URL. If your app needs prepared statements, advisory locks, or `LISTEN`/`NOTIFY`, switch the pooler to **session mode**. See the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string, ideal for running auth migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL` (and the pooled variant as `DATABASE_URL`).
+3. Run the Better Auth CLI (or your ORM migration) and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so auth flows run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/prisma" title="Prisma" %}
+Drive the Better Auth Prisma adapter with pooled and direct URLs.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/drizzle" title="Drizzle" %}
+Drive the Better Auth Drizzle adapter against a native PostgreSQL database.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/auth-js" title="Auth.js" %}
+Use a native PostgreSQL database as the Auth.js (NextAuth) database.
+{% /cards_item %}
+{% /cards %}

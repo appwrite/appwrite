@@ -11,8 +11,9 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -44,6 +45,9 @@ class Update extends Action
             ->label('audits.event', 'file.update')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -90,7 +94,7 @@ class Update extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
+        $valid = $authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -104,18 +108,18 @@ class Update extends Action
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$user->isKey($roles) && !$user->isPrivileged($roles) && !\is_null($permissions)) {
-            foreach (Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(

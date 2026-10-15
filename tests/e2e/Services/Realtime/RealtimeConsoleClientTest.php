@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use WebSocket\ConnectionException;
 
 final class RealtimeConsoleClientTest extends Scope
@@ -31,7 +31,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -41,7 +41,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -85,7 +85,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors Tables DB',
         ]);
 
@@ -96,7 +96,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
         ]);
 
@@ -351,7 +351,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -361,7 +361,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -465,7 +465,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -475,7 +475,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -608,7 +608,10 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -627,7 +630,11 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'available'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -688,7 +695,10 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.create", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -707,7 +717,11 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'available'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -1097,7 +1111,7 @@ final class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',

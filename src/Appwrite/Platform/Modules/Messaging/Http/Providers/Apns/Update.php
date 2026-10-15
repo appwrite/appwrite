@@ -71,7 +71,7 @@ class Update extends Action
                     ]
                 )
             ])
-            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Provider ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('authKey', '', new Text(0), 'APNS authentication key.', true)

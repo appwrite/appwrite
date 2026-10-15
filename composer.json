@@ -39,6 +39,7 @@
             "Utopia\\Client\\": "packages/client/src",
             "Utopia\\Compression\\": "packages/compression/src",
             "Utopia\\Config\\": "packages/config/src",
+            "Utopia\\Console\\": "packages/console/src",
             "Utopia\\Detector\\": "packages/detector/src",
             "Utopia\\DI\\": "packages/di/src",
             "Utopia\\DNS\\": "packages/dns/src",
@@ -69,13 +70,14 @@
             "Utopia\\Telemetry\\": "packages/telemetry/src",
             "Utopia\\Usage\\": "packages/usage/src",
             "Utopia\\UserAgent\\": "packages/user-agent/src",
+            "Utopia\\Validator\\": "packages/validators/src",
             "Utopia\\VCS\\": "packages/vcs/src",
-            "Utopia\\WebSocket\\": "packages/websocket/src",
-            "Utopia\\": [
-                "packages/console/src",
-                "packages/validators/src"
-            ]
-        }
+            "Utopia\\WebSocket\\": "packages/websocket/src"
+        },
+        "files": [
+            "packages/console/src/compat.php",
+            "packages/validators/src/compat.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -152,8 +154,8 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/database": "^7.4.1",
-        "utopia-php/migration": "dev-feat/source-request-controls-2.0.x as 2.0.9",
+        "utopia-php/database": "^8.1.3",
+        "utopia-php/migration": "dev-feat/source-destinations as 3.2.0",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
@@ -161,7 +163,7 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "15.32.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*",
+        "enshrined/svg-sanitize": "1.0.*",
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
         "open-telemetry/sdk": "1.*",
@@ -171,7 +173,7 @@
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
         "psr/container": "^2.0",
-        "appwrite/appwrite": "^27.1",
+        "appwrite/appwrite": "^30.2.2",
         "web-auth/webauthn-lib": "^5.3"
     },
     "require-dev": {
@@ -180,7 +182,7 @@
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
-        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan": "^2.3",
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*",

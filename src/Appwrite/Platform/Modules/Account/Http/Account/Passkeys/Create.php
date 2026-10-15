@@ -11,15 +11,16 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -62,6 +63,7 @@ class Create extends Action
             ->label('abuse-key', 'url:{url},userId:{userId}')
             ->param('passkeyId', 'unique()', new CustomId(), 'Passkey ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('name', '', new Text(128, 0), 'Passkey name, shown when listing passkeys. Max length: 128 chars.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('user')
             ->inject('session')
@@ -74,6 +76,7 @@ class Create extends Action
     public function action(
         string $passkeyId,
         string $name,
+        Request $request,
         Response $response,
         Document $user,
         Document $session,
@@ -81,15 +84,15 @@ class Create extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $ceremony = Ceremony::fromProject($project);
+        $ceremony = Ceremony::fromProject($project, $request->getOrigin());
         if ($ceremony === null) {
-            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID in the passkey policy and add your app\'s domain as a web platform.');
         }
 
         // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone
         $userName = $user->getAttribute('email') ?: $user->getAttribute('phone') ?: $user->getAttribute('name') ?: $user->getId();
 
-        $passkeyId = $passkeyId === 'unique()' ? ID::unique() : $passkeyId;
+        $passkeyId = $passkeyId === 'unique()' ? Id::unique() : $passkeyId;
 
         // A registration restarted with the same ID replaces the pending one instead of conflicting with it.
         // The row lock keeps a verification that lands first from being deleted.
@@ -120,7 +123,7 @@ class Create extends Action
         $challenge = $ceremony->register($userName, $user->getAttribute('name') ?: $userName, $records);
 
         // Verification consumes the challenge the pending passkey points to, so a replaced registration's challenge is never used
-        $challengeId = ID::unique();
+        $challengeId = Id::unique();
 
         try {
             $passkey = $dbForProject->createDocument('authenticators', new Document([

@@ -9,7 +9,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 var client = new Client()
-  .SetEndpoint("http://<REGION>.cloud.appwrite.io/v1")  
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
   .SetProject("5ff3379a01d25")                 // Your project ID
   .SetKey("cd868db89");                         // Your secret API key
 

@@ -1,0 +1,73 @@
+---
+layout: post
+title: Migrate Firebase projects to Appwrite
+description: Migrate your Firebase projects to Appwrite Cloud in just one click.
+date: 2023-11-06
+lastUpdated: 2026-06-29
+cover: /images/blog/migrate-firebase-projects-to-appwrite/migrate-firebase-projects-to-appwrite.avif
+timeToRead: 10
+author: vincent-ge
+category: migrations
+removed: true
+faqs:
+  - question: "How do I migrate from Firebase to Appwrite?"
+    answer: "Use Appwrite Migrations from the Console. Create a new project, open the Migrations tab in Project Settings, select Firebase as the source, paste your Firebase Admin SDK service account JSON, choose which resources to import, and start the migration. The process runs in the background and handles users and files automatically."
+  - question: "What gets migrated automatically from Firebase to Appwrite?"
+    answer: "Appwrite Migrations automatically moves user accounts and files from Firebase. Firestore data and cloud functions need extra work because their data models and runtimes differ. Nested Firestore records need to be transformed into Appwrite relationships, usually with a small migration script."
+  - question: "Do I need to rewrite my Firebase Cloud Functions?"
+    answer: "Yes, [Appwrite Functions](/docs/products/functions) use different syntax, runtimes, and deployment methods, so most Firebase Cloud Functions need partial rewrites. The pattern is similar to standard HTTP controllers, so the lift is manageable. Appwrite supports more runtimes and flexible execution triggers than Firebase."
+  - question: "How does Appwrite handle nested data compared to Firebase?"
+    answer: "Firebase stores nested records directly, while Appwrite uses [database relationships](/docs/products/databases) (one to one, one to many, many to many) to model linked data. You typically restructure nested Firebase data into separate Appwrite tables connected by relationships. This makes querying more predictable and easier to optimize."
+  - question: "Is Appwrite Migrations free?"
+    answer: "Yes, the Migrations tool is included with every Appwrite project and there is no extra fee for running migrations. You pay for the storage and usage of the resulting resources just like any other project. Self hosted Appwrite users get the same Migrations functionality at no cost."
+  - question: "What do I do after the migration finishes?"
+    answer: "Register your existing web, mobile, or native apps as platforms in the Appwrite Console using the [quick starts](/docs/quick-starts). Then migrate any nested data with a Server SDK and database relationships, and rewrite Firebase Cloud Functions as [Appwrite Functions](/docs/products/functions). Finally, test all flows end to end before pointing production traffic at the new project."
+---
+If you’re ready to move from Firebase to Appwrite, or you just want to explore your BaaS options (see [backend as a service (BaaS)](/blog/post/backend-as-a-service)), we can give you a jump start with Appwrite Migrations.
+
+![Appwrite Console Migrations page](/images/blog/migrate-firebase-projects-to-appwrite/migrations-overview.avif)
+
+Moving is frustrating. Packing, unpacking, renting a truck, wondering if your bed fits through the door. Moving data between cloud platforms feels much the same, so we built Migrations to help lighten the load. Migrations will help you move users, data, and files out of Firebase and into your Appwrite project.
+
+## Limitations
+
+Just like moving houses, not every piece of old furniture will suit your new house. You’ll need some creative rearranging or maybe some new furniture. Appwrite is different from Firebase in a similar sense.
+
+- Appwrite automatically moves user accounts or files, but Firestore data and cloud functions require some work to move.
+- Nested Firestore records require some planning to be transformed into Appwrite relationships. In a future version, they might be added automatically, but you need to migrate them with a script for now.
+- Appwrite Functions also use different syntax and deployment methods than Firebase’s Cloud Functions. These will need the most work to migrate and likely need to be partially rewritten.
+
+## Prepare for your move
+
+To help you with your move, Appwrite Migrations will require keys to your old home to access your project’s users, files, and data. This means Appwrite will need your Firebase service account’s API key.
+
+![Firebase key management screen.](/images/blog/migrate-firebase-projects-to-appwrite/firebase-key.avif)
+
+The quickest way to get a key is to use your **Firebase Admin SDK** service account and key, found under **Project settings > Service accounts > Generate private key**.
+
+If you want to use an API key with a more fine-grained permission scope, checkout the [Appwrite documentation on this topic](/docs/advanced/migrations/firebase).
+
+## Starting the migration
+
+The Migration process is simple. Give Appwrite your keys, and it’ll pack up and move everything for you.
+
+1. Create a new project and click on the **Migrations** tab in **Project Settings**.
+2. Click on the **Create Migration** button and select **Firebase** as your source.
+3. Paste your Firebase API key’s JSON contents into the account credentials box and click **Next.**
+4. Select which resources you want Migrations to import and click **Create** to start the migration.
+
+Migrations will run in the background, get a cup of tea or coffee, and return in a few minutes.
+
+## Wrapping up the move
+
+After your migration is completed, you’ll need to do a few more things to wrap up your move to Appwrite.
+
+First, you register your existing web, mobile, and native apps as platforms. Follow one of these [quick starts](/docs/quick-starts) to learn how.
+
+Next, checkout our docs for [Database relationships](/docs/products/databases/relationships) and install one of Appwrite’s [Server SDKs](/docs/sdks#server) to migrate your nested data.
+
+Finally, learn about [Appwrite Functions](/docs/products/functions/quick-start) to migrate your Firebase functions. Appwrite’s functions support more runtimes, more flexible execution schemes, and follow patters found in HTTP controllers that you’re already familiar with.
+
+## Join the discussion
+
+We’re always having a blast on [Discord](https://appwrite.io/discord). With members in the community from all over the world, you’ll always find someone to support and share your Appwrite journey.

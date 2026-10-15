@@ -1,0 +1,38 @@
+---
+layout: article
+title: Change organization
+description: Reassign a domain from one Appwrite organization to another. This is not a registrar transfer.
+---
+
+You can reassign a domain to a different Appwrite organization from the domain **Settings** tab. The domain keeps its DNS zone and registration state. Only which organization owns the domain in the Console changes.
+
+{% info title="Not a registrar transfer" %}
+**Change organization** updates which Appwrite organization manages the domain. It does not move registration to or from Appwrite at the registry. For that, use [Transfer a domain](/docs/products/domains/transfer).
+{% /info %}
+
+# Before you change organization {% #before-you-change-organization %}
+
+- You must be a member of both the source and destination organizations.
+- The destination organization must have capacity under its [domain plan limit](/docs/products/domains/registration#plan-limits).
+- [Product connections](/docs/products/domains/connect) (Sites, Functions, API custom domains) in the source organization may need to be updated if they reference the domain. Plan cutover before changing production traffic.
+
+# Change organization {% #change-organization %}
+
+1. Open the domain in your organization.
+2. Go to the **Settings** tab.
+3. In **Change organization**, select the destination organization from the dropdown.
+4. Click **Move** and confirm in the dialog.
+
+After the change completes, the domain appears under **Domains** in the destination organization and is removed from the source organization's list.
+
+# Access after reassignment {% #access-after-reassignment %}
+
+Organization members who were not already in the destination organization do not automatically gain access to the domain. Invite them to the destination organization if they need to manage DNS or settings.
+
+Domain write access follows organization roles when [organization roles](/docs/advanced/platform/roles) are enabled (owners and developers with the domains write scope).
+
+# Auto-renewal and registration {% #auto-renewal-and-registration %}
+
+For Appwrite-registered domains, auto-renewal and billing are tied to the organization that owns the domain after reassignment. Ensure the destination organization has a valid payment method if auto-renewal is enabled. See [Renewal](/docs/products/domains/renewal).
+
+External domains keep registration at the external registrar. Only DNS management in Appwrite follows the organization change.

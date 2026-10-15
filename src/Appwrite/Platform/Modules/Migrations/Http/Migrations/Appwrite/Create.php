@@ -13,7 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
@@ -58,7 +58,7 @@ class Create extends Action
             ))
             ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
-            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Source Project ID', false, ['dbForProject'])
             ->param('apiKey', '', new Text(512), 'Source API Key')
             ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
             ->inject('response')
@@ -88,7 +88,7 @@ class Create extends Action
         $migrationEndpoint->validate($endpoint);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => AppwriteSource::getName(),

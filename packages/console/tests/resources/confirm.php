@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Utopia\Console;
+use Utopia\Console\Console;
 
 require __DIR__ . '/autoload.php';
 

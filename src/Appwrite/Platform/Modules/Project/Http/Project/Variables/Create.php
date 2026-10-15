@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -54,7 +54,7 @@ class Create extends Action
                     )
                 ],
             ))
-            ->param('variableId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Variable unique ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('key', null, new VariableKey(Database::LENGTH_KEY), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: ' . Database::LENGTH_KEY  . ' chars.')
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.')
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
@@ -73,7 +73,7 @@ class Create extends Action
         QueueEvent $queueForEvents,
         Database $dbForProject,
     ) {
-        $variableId = ($variableId === 'unique()') ? ID::unique() : $variableId;
+        $variableId = ($variableId === 'unique()') ? Id::unique() : $variableId;
 
         $variable = new Document([
             '$id' => $variableId,
