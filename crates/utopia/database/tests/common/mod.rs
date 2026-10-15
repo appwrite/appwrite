@@ -149,7 +149,7 @@ macro_rules! list {
 macro_rules! document {
     () => { ::utopia_database::Document::empty() };
     ($($k:expr => $v:expr),+ $(,)?) => {
-        ::utopia_database::Document::new(arr![$($k => $v),+]).expect("valid document")
+        ::utopia_database::Document::new($crate::common::arr![$($k => $v),+]).expect("valid document")
     };
 }
 

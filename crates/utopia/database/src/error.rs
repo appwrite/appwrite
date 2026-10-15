@@ -26,6 +26,9 @@ pub struct Error {
     /// The string code (a SQLSTATE such as `HY000`) the error was built
     /// with (`$state`).
     state: Option<String>,
+    /// The driver's own error code of a [`Kind::Pdo`] error
+    /// (`PDOException::$errorInfo[1]`, such as MySQL's `2006`).
+    driver_code: Option<i64>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -264,7 +267,16 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, state: None }
+        Self {
+            kind,
+            message: message.into(),
+            code: 0,
+            attribute: None,
+            previous: None,
+            raw: None,
+            state: None,
+            driver_code: None,
+        }
     }
 
     /// An error of `kind` whose message is bytes (PHP messages are: one can
@@ -317,6 +329,20 @@ impl Error {
     /// (`$state`); `None` for an integer code.
     pub fn state(&self) -> Option<&str> {
         self.state.as_deref()
+    }
+
+    /// The same error with the driver's own error code
+    /// (`PDOException::$errorInfo[1]`), which [`crate::connection::is_lost`]
+    /// reads.
+    pub fn with_driver_code(mut self, code: i64) -> Self {
+        self.driver_code = Some(code);
+        self
+    }
+
+    /// The driver's own error code (`$errorInfo[1]`), when the error carries
+    /// one.
+    pub fn driver_code(&self) -> Option<i64> {
+        self.driver_code
     }
 
     /// The same error wrapping `previous`.
