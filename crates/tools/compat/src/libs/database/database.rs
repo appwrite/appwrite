@@ -60,9 +60,10 @@ php_object!(RegistryObj, "Filter\\Registry", |r| {
 pub struct SnapshotObj(pub utopia_database::state::Snapshot);
 php_object!(SnapshotObj, "State\\Snapshot", |s| super::objects::snapshot(&s.0));
 
-/// A query builder held as an object (`{"$builder": true}`).
+/// A query builder held as an object (`{"$builder": true}`), with the
+/// database that runs its statements (PHP's executor), if any.
 #[derive(Clone)]
-pub struct BuilderObj(pub Arc<std::sync::Mutex<utopia_database::hook::SqlBuilder>>);
+pub struct BuilderObj(pub Arc<std::sync::Mutex<utopia_database::hook::SqlBuilder>>, pub Option<Database>);
 php_object!(BuilderObj, "Query\\Builder", |_b| json!({"$builder": true}));
 
 /// A schema builder held as an object (`{"$schema": true}`).
@@ -661,7 +662,10 @@ async fn call(db: &Database, method: &str, a: &Args, calls: &Calls) -> R<Obj> {
         "convertQuery" => ok(db.convert_query(&collection_param(a, "collection")?, a.query("query")?))?,
 
         // ----- Raw statements -----
-        "from" => object(BuilderObj(Arc::new(std::sync::Mutex::new(db.from(&s("collection")?, &a.string_or("alias", "")?)?)))),
+        "from" => object(BuilderObj(
+            Arc::new(std::sync::Mutex::new(db.from(&s("collection")?, &a.string_or("alias", "")?)?)),
+            Some(db.clone()),
+        )),
         "schema" => object(SchemaObj(Arc::new(std::sync::Mutex::new(db.schema()?)))),
         "query" => ok(db.query(&statement(a, "query")?).await)?,
         "mutate" => ok(db.mutate(&statement(a, "query")?).await)?,
