@@ -12,27 +12,42 @@
 //! future, not the thread. A task spawned with `tokio::spawn` starts
 //! outside every override; to run it under the caller's, wrap it with
 //! [`inherit`] (PHP's child coroutines inherit their parent's scopes; Rust
-//! tasks inherit what they are given).
+//! tasks inherit what they are given). As a PHP child coroutine does, an
+//! inheriting task sees the overrides open where it was started, and its
+//! own writes to them stay with it and the tasks it starts in turn: the
+//! caller keeps seeing the override as it left it. Once an override ends,
+//! the tasks that inherited it no longer see it, nor what they wrote to it.
 //!
 //! PHP: `Utopia\Database\State\Value` (per-coroutine overrides keyed by
-//! coroutine id, walking parent coroutines), `State\Frame` (one override),
-//! `State\Group` (the open scopes deciding where a cut-off coroutine's
-//! writes go, which has no counterpart: a Rust task is never cut off from
-//! the scopes it was given), `State\Snapshot`.
+//! coroutine id, walking parent coroutines), `State\Frame` (one override,
+//! with the writes of the coroutines that inherited it), `State\Group` (the
+//! open scopes deciding where a cut-off coroutine's writes go, which has no
+//! counterpart: a Rust task is never cut off from the scopes it was given),
+//! `State\Snapshot`.
 
 use std::any::Any;
 use std::future::Future;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
-/// One open override: the scoped value it overrides, its cell, and the
-/// override it is nested in.
+/// One link of the frames a future runs under: an open override of a
+/// [`Scoped`] value, or the point where a task [`inherit`]ed its caller's
+/// overrides, which keeps that task's writes to them.
 ///
-/// PHP: `Utopia\Database\State\Frame`.
+/// PHP: `Utopia\Database\State\Frame` (the override, and its `writes` by
+/// the coroutines that inherited it).
 pub struct Frame {
-    id: u64,
-    cell: Mutex<Box<dyn Any + Send>>,
+    link: Link,
     outer: Option<Arc<Frame>>,
+}
+
+enum Link {
+    /// An override of the value `id`, open while `alive`; `serial` tells it
+    /// apart from every other override.
+    Override { id: u64, serial: u64, alive: AtomicBool, cell: Mutex<Box<dyn Any + Send>> },
+    /// A task's inheritance: its writes to inherited overrides, by override
+    /// serial.
+    Fork { writes: Mutex<Vec<(u64, Box<dyn Any + Send>)>> },
 }
 
 /// The frames a future runs under.
@@ -50,7 +65,8 @@ fn current() -> Frames {
 }
 
 /// `future`, run under the overrides the caller runs under (for a task
-/// spawned on its behalf).
+/// spawned on its behalf). The task's writes to those overrides stay with
+/// it (and the tasks it starts with `inherit` in turn).
 ///
 /// ```
 /// use std::sync::Arc;
@@ -58,18 +74,31 @@ fn current() -> Frames {
 ///
 /// # tokio_test_block(async {
 /// let tenant = Arc::new(Scoped::new(1));
-/// let seen = tenant.with(2, {
+/// let (seen, after) = tenant.with(2, {
 ///     let tenant = tenant.clone();
-///     async move { tokio::spawn(inherit(async move { tenant.get() })).await.unwrap() }
+///     async move {
+///         let child = tenant.clone();
+///         let seen = tokio::spawn(inherit(async move {
+///             let seen = child.get();
+///             child.set(3);
+///             seen
+///         }))
+///         .await
+///         .unwrap();
+///         (seen, tenant.get())
+///     }
 /// }).await;
-/// assert_eq!(seen, 2);
+/// assert_eq!((seen, after), (2, 2));
 /// # });
 /// # fn tokio_test_block(f: impl std::future::Future<Output = ()>) {
 /// #     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(f)
 /// # }
 /// ```
 pub fn inherit<F: Future>(future: F) -> impl Future<Output = F::Output> {
-    FRAMES.scope(current(), future)
+    let frames = current().map(|outer| {
+        Arc::new(Frame { link: Link::Fork { writes: Mutex::new(Vec::new()) }, outer: Some(outer) })
+    });
+    FRAMES.scope(frames, future)
 }
 
 /// A value shared by a handle that scopes can override.
@@ -93,14 +122,35 @@ impl<T: Default + Clone + Send + Sync + 'static> Default for Scoped<T> {
     }
 }
 
-/// Decrements the open count when an override ends, also on unwind or
-/// cancellation.
-struct Open<'a>(&'a AtomicUsize);
+/// Ends an override when its scope ends, also on unwind or cancellation:
+/// the frame stops being seen, and the open count drops.
+struct Open<'a> {
+    count: &'a AtomicUsize,
+    frame: Arc<Frame>,
+}
 
 impl Drop for Open<'_> {
     fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::AcqRel);
+        if let Link::Override { alive, .. } = &self.frame.link {
+            alive.store(false, Ordering::Release);
+        }
+        self.count.fetch_sub(1, Ordering::AcqRel);
     }
+}
+
+fn lock<V: ?Sized>(m: &Mutex<V>) -> std::sync::MutexGuard<'_, V> {
+    m.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// Where the current future reads and writes a scoped value.
+enum Slot {
+    /// The handle-wide value.
+    Shared,
+    /// The cell of an override the future opened (or awaits inside).
+    Override(Arc<Frame>),
+    /// A fork's write to an inherited override (`serial`), when it has one;
+    /// else the override's cell.
+    Inherited { fork: Arc<Frame>, frame: Arc<Frame>, serial: u64 },
 }
 
 impl<T: Clone + Send + Sync + 'static> Scoped<T> {
@@ -109,40 +159,86 @@ impl<T: Clone + Send + Sync + 'static> Scoped<T> {
         Scoped { id: NEXT_ID.fetch_add(1, Ordering::Relaxed), shared: RwLock::new(value), open: AtomicUsize::new(0) }
     }
 
-    /// The innermost override of this value the current future runs under.
-    fn frame(&self) -> Option<Arc<Frame>> {
+    /// The innermost open override of this value the current future runs
+    /// under, and the nearest fork between the future and it.
+    fn slot(&self) -> Slot {
+        if self.open.load(Ordering::Acquire) == 0 {
+            return Slot::Shared;
+        }
+        let mut fork: Option<Arc<Frame>> = None;
         let mut frame = current();
         while let Some(f) = frame {
-            if f.id == self.id {
-                return Some(f);
+            match &f.link {
+                Link::Override { id, serial, alive, .. } if *id == self.id && alive.load(Ordering::Acquire) => {
+                    let serial = *serial;
+                    return match fork {
+                        None => Slot::Override(f),
+                        Some(fork) => Slot::Inherited { fork, frame: f, serial },
+                    };
+                }
+                Link::Fork { .. } if fork.is_none() => fork = Some(f.clone()),
+                _ => {}
             }
             frame = f.outer.clone();
         }
-        None
+        Slot::Shared
     }
 
-    /// The value the current future sees: its innermost override, else the
-    /// handle-wide value (`get()`).
+    /// The value the current future sees: its innermost override (as this
+    /// task, or a task it inherited from, wrote it), else the handle-wide
+    /// value (`get()`).
     pub fn get(&self) -> T {
-        if self.open.load(Ordering::Acquire) > 0
-            && let Some(frame) = self.frame()
-            && let Some(value) = frame.cell.lock().unwrap_or_else(|e| e.into_inner()).downcast_ref::<T>()
-        {
-            return value.clone();
-        }
-        self.shared.read().unwrap_or_else(|e| e.into_inner()).clone()
+        let override_value = |frame: &Frame| match &frame.link {
+            Link::Override { cell, .. } => lock(cell).downcast_ref::<T>().cloned(),
+            Link::Fork { .. } => None,
+        };
+        let found = match self.slot() {
+            Slot::Shared => None,
+            Slot::Override(frame) => override_value(&frame),
+            Slot::Inherited { fork, frame, serial } => {
+                // The nearest fork holding a write wins: this task's, else
+                // the task it inherited from, up to the override.
+                let mut link = Some(fork);
+                let mut written = None;
+                while let Some(f) = link {
+                    if Arc::ptr_eq(&f, &frame) {
+                        break;
+                    }
+                    if let Link::Fork { writes } = &f.link
+                        && let Some((_, v)) = lock(writes).iter().find(|(s, _)| *s == serial)
+                    {
+                        written = v.downcast_ref::<T>().cloned();
+                        break;
+                    }
+                    link = f.outer.clone();
+                }
+                written.or_else(|| override_value(&frame))
+            }
+        };
+        found.unwrap_or_else(|| self.shared())
     }
 
     /// Sets the value the current future sees: its innermost override until
-    /// that ends, else the handle-wide value (`set()`).
+    /// that ends (for a task that inherited the override, its own view of
+    /// it), else the handle-wide value (`set()`).
     pub fn set(&self, value: T) {
-        if self.open.load(Ordering::Acquire) > 0
-            && let Some(frame) = self.frame()
-        {
-            *frame.cell.lock().unwrap_or_else(|e| e.into_inner()) = Box::new(value);
-            return;
+        match self.slot() {
+            Slot::Shared => *self.shared.write().unwrap_or_else(|e| e.into_inner()) = value,
+            Slot::Override(frame) => {
+                if let Link::Override { cell, .. } = &frame.link {
+                    *lock(cell) = Box::new(value);
+                }
+            }
+            Slot::Inherited { fork, serial, .. } => {
+                if let Link::Fork { writes } = &fork.link {
+                    let mut writes = lock(writes);
+                    match writes.iter_mut().find(|(s, _)| *s == serial) {
+                        Some(entry) => entry.1 = Box::new(value),
+                        None => writes.push((serial, Box::new(value))),
+                    }
+                }
+            }
         }
-        *self.shared.write().unwrap_or_else(|e| e.into_inner()) = value;
     }
 
     /// The handle-wide value, whatever the current future's overrides.
@@ -150,24 +246,32 @@ impl<T: Clone + Send + Sync + 'static> Scoped<T> {
         self.shared.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
-    fn push(&self, value: T) -> Frames {
-        Some(Arc::new(Frame { id: self.id, cell: Mutex::new(Box::new(value)), outer: current() }))
+    fn open(&self, value: T) -> (Open<'_>, Arc<Frame>) {
+        self.open.fetch_add(1, Ordering::AcqRel);
+        let frame = Arc::new(Frame {
+            link: Link::Override {
+                id: self.id,
+                serial: NEXT_ID.fetch_add(1, Ordering::Relaxed),
+                alive: AtomicBool::new(true),
+                cell: Mutex::new(Box::new(value)),
+            },
+            outer: current(),
+        });
+        (Open { count: &self.open, frame: frame.clone() }, frame)
     }
 
     /// Runs `future` with the value overridden to `value` for it and what it
     /// awaits (`with()`).
     pub async fn with<F: Future>(&self, value: T, future: F) -> F::Output {
-        self.open.fetch_add(1, Ordering::AcqRel);
-        let _open = Open(&self.open);
-        FRAMES.scope(self.push(value), future).await
+        let (_open, frame) = self.open(value);
+        FRAMES.scope(Some(frame), future).await
     }
 
     /// Runs `callback` with the value overridden to `value` (`with()` for
     /// work that does not await).
     pub fn with_sync<R>(&self, value: T, callback: impl FnOnce() -> R) -> R {
-        self.open.fetch_add(1, Ordering::AcqRel);
-        let _open = Open(&self.open);
-        FRAMES.sync_scope(self.push(value), callback)
+        let (_open, frame) = self.open(value);
+        FRAMES.sync_scope(Some(frame), callback)
     }
 }
 
