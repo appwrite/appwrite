@@ -129,6 +129,12 @@ pub enum Kind {
     /// `DateMalformedStringException`: `new DateTime($value)` rejected a
     /// date string.
     DateMalformedString,
+    /// `InvalidArgumentException`: an invalid argument (a profiler capacity
+    /// below 1, an invalid hook argument).
+    InvalidArgument,
+    /// `BadMethodCallException`: a call the object cannot serve (a query
+    /// builder without an executor).
+    BadMethodCall,
 }
 
 impl Kind {
@@ -174,13 +180,15 @@ impl Kind {
             Kind::MongoUnsent => "Utopia\\Mongo\\UnsentException",
             Kind::MongoUnexpectedValue => "MongoDB\\Driver\\Exception\\UnexpectedValueException",
             Kind::DateMalformedString => "DateMalformedStringException",
+            Kind::InvalidArgument => "InvalidArgumentException",
+            Kind::BadMethodCall => "BadMethodCallException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 39] = [
+        const ALL: [Kind; 41] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Schema,
@@ -220,6 +228,8 @@ impl Kind {
             Kind::MongoUnsent,
             Kind::MongoUnexpectedValue,
             Kind::DateMalformedString,
+            Kind::InvalidArgument,
+            Kind::BadMethodCall,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -257,7 +267,9 @@ impl Kind {
             | Kind::Redis
             | Kind::Mongo
             | Kind::MongoUnexpectedValue
-            | Kind::DateMalformedString => None,
+            | Kind::DateMalformedString
+            | Kind::InvalidArgument
+            | Kind::BadMethodCall => None,
             Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }
@@ -432,6 +444,7 @@ impl From<php_std::EngineError> for Error {
             "ValueError" => Kind::ValueError,
             "JsonException" => Kind::Json,
             "Error" => Kind::Error,
+            "InvalidArgumentException" => Kind::InvalidArgument,
             _ => Kind::Exception,
         };
         Error::new(kind, e.message)

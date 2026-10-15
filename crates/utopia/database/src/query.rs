@@ -70,10 +70,10 @@ pub(crate) fn query_error(e: utopia_query::Error) -> Error {
     let code = e.code();
     let kind = match &e {
         Q::Query { .. } | Q::Validation(_) | Q::Unsupported(_) => Kind::Query,
-        Q::InvalidArgument(_) => Kind::Exception,
+        Q::InvalidArgument(_) => Kind::InvalidArgument,
         Q::InvalidValue(_) => Kind::ValueError,
         Q::Type(_) => Kind::TypeError,
-        Q::NoExecutor(_) => Kind::Exception,
+        Q::NoExecutor(_) => Kind::BadMethodCall,
         Q::Engine(_) => Kind::Error,
         Q::Json { .. } => Kind::Json,
     };
