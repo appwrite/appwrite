@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,6 +14,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import {
+  useConsoleVariables,
+  useOrganizationPlan,
+  useProject,
+} from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import { formatDecimalBytes, toByteCount } from '@/lib/utils/byte-display-unit'
 
@@ -36,6 +42,19 @@ export function UploadFileDialog({
   isLoading = false,
 }: UploadFileDialogProps) {
   const t = useT()
+  const { projectId } = useParams({ strict: false })
+  const { project } = useProject(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const { storageLimit } = useConsoleVariables(project?.region)
+  const planFileSize = toByteCount(plan?.fileSize)
+  // A bucket's 0 uses the plan's file size (MB), else _APP_STORAGE_LIMIT. -1 means
+  // no plan limit and MAX_SAFE_INTEGER is the stand-in plan on self-hosted or
+  // after a failed request.
+  const maximumFileSize =
+    toByteCount(bucket?.maximumFileSize) ||
+    (planFileSize > 0 && planFileSize < Number.MAX_SAFE_INTEGER
+      ? planFileSize * 1000 * 1000
+      : toByteCount(storageLimit))
   const [fileId, setFileId] = useState<string | undefined>(undefined)
   const [files, setFiles] = useState<File[]>([])
   const [invalidFiles, setInvalidFiles] = useState<
@@ -88,14 +107,8 @@ export function UploadFileDialog({
     }
 
     // Check file size
-    if (
-      bucket?.maximumFileSize &&
-      fileToValidate.size > toByteCount(bucket.maximumFileSize)
-    ) {
-      const maxSizeMB = (
-        toByteCount(bucket.maximumFileSize) /
-        (1000 * 1000)
-      ).toFixed(2)
+    if (maximumFileSize > 0 && fileToValidate.size > maximumFileSize) {
+      const maxSizeMB = (maximumFileSize / (1000 * 1000)).toFixed(2)
       return `${t('File size exceeds maximum of')} ${maxSizeMB} MB`
     }
 
@@ -241,9 +254,9 @@ export function UploadFileDialog({
                         {t('Allowed:')} {bucket.allowedFileExtensions.join(', ')}
                       </span>
                     )}
-                  {bucket?.maximumFileSize && (
+                  {maximumFileSize > 0 && (
                     <span className="text-[12px] text-muted-foreground">
-                      {t('Max size:')} {formatFileSize(bucket.maximumFileSize)}
+                      {t('Max size:')} {formatFileSize(maximumFileSize)}
                     </span>
                   )}
                 </label>

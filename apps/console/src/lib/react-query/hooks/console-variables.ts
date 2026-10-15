@@ -53,6 +53,7 @@ export function useConsoleVariables(region?: string) {
     sitesDomain: vars?._APP_DOMAIN_SITES,
     functionsDomain: vars?._APP_DOMAIN_FUNCTIONS,
     computeSizeLimit: vars?._APP_COMPUTE_SIZE_LIMIT,
+    storageLimit: vars?._APP_STORAGE_LIMIT,
     // Undefined until loaded (or on older servers): callers treat undefined
     // as "no capability info", not as "no provider supports it".
     vcsProvidersWithRepositoryCreation:
