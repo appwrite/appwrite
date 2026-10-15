@@ -174,8 +174,10 @@ macro_rules! probe_or_skip {
 
 /// A namespace no other test (or run) uses.
 pub fn namespace(name: &str) -> String {
+    static NEXT: AtomicUsize = AtomicUsize::new(0);
     let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    format!("{name}_{}", nanos % 1_000_000_000_000)
+    let n = NEXT.fetch_add(1, Ordering::SeqCst);
+    format!("{name}_{}_{}_{n}", std::process::id(), nanos % 1_000_000_000_000)
 }
 
 /// An adapter over `probe` with authorization disabled, on database `db`

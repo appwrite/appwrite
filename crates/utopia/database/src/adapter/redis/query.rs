@@ -5,8 +5,8 @@
 use redis::aio::ConnectionLike;
 use utopia_query::{CursorDirection, Method, OrderDirection};
 
-use super::operators::{ge, gt, le, lt, numeric, number_value};
 use super::Redis;
+use super::operators::{ge, gt, le, lt, number_value, numeric};
 use crate::adapter::{Adapter, Find, filter};
 use crate::collection::Collection;
 use crate::document::{self, Document};
@@ -53,7 +53,9 @@ pub(super) fn project(document: Document, selections: &[String]) -> Result<Docum
     let mut projected = Array::new();
     for (field, value) in document.array_copy() {
         let keep = match field.as_ref() {
-            KeyRef::Str(s) => s.starts_with(b"$") || s.starts_with(b"_") || selections.iter().any(|x| x.as_bytes() == s),
+            KeyRef::Str(s) => {
+                s.starts_with(b"$") || s.starts_with(b"_") || selections.iter().any(|x| x.as_bytes() == s)
+            }
             KeyRef::Int(i) => selections.iter().any(|x| *x == i.to_string()),
         };
         if keep {
@@ -211,7 +213,9 @@ fn matches_object(value: &Value, method: Method, values: &[Value]) -> Result<boo
         Method::Contains | Method::ContainsAny => {
             !missing && values.iter().any(|c| json_containment(&haystack, &wrap_scalar_candidate(c)))
         }
-        Method::ContainsAll => !missing && values.iter().all(|c| json_containment(&haystack, &wrap_scalar_candidate(c))),
+        Method::ContainsAll => {
+            !missing && values.iter().all(|c| json_containment(&haystack, &wrap_scalar_candidate(c)))
+        }
         Method::NotContains => {
             !missing && !values.iter().any(|c| json_containment(&haystack, &wrap_scalar_candidate(c)))
         }
@@ -332,7 +336,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     }
 
     /// `find()`.
-    pub(super) async fn find_documents(&self, collection: &Collection, queries: &[Query], options: Find) -> Result<Vec<Document>> {
+    pub(super) async fn find_documents(
+        &self,
+        collection: &Collection,
+        queries: &[Query],
+        options: Find,
+    ) -> Result<Vec<Document>> {
         let collection = filter(collection.id());
         self.require_collection(&collection).await?;
         self.tx(async {
@@ -410,7 +419,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
 
     /// `count()`: the id set's size when nothing filters (no queries, no
     /// authorization, no shared tables), else the matching documents.
-    pub(super) async fn count_documents(&self, collection: &Collection, queries: &[Query], max: Option<i64>) -> Result<i64> {
+    pub(super) async fn count_documents(
+        &self,
+        collection: &Collection,
+        queries: &[Query],
+        max: Option<i64>,
+    ) -> Result<i64> {
         let collection = filter(collection.id());
         self.require_collection(&collection).await?;
         if queries.is_empty() && !self.authorization().status() && !self.shared_tables() {
@@ -660,10 +674,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                 if reverse {
                     ascending = !ascending;
                 }
-                let reference = cursor
-                    .get(&ArrayKey::normalize(Str::from(attribute.as_str())))
-                    .cloned()
-                    .unwrap_or(Value::Null);
+                let reference =
+                    cursor.get(&ArrayKey::normalize(Str::from(attribute.as_str()))).cloned().unwrap_or(Value::Null);
                 (attribute.clone(), ascending, reference)
             })
             .collect();
@@ -692,4 +704,3 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         out
     }
 }
-

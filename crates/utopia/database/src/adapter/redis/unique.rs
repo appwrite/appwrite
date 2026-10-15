@@ -11,7 +11,7 @@ use super::{Redis, reply_bytes};
 use crate::adapter::Adapter;
 use crate::document::Document;
 use crate::error::{Error, Result, UNIQUE_MESSAGE};
-use crate::value::{Ext, Value};
+use crate::value::Value;
 
 /// A write of an upsert or a batch update (`Adapter\Redis\Write`): the id,
 /// the key, the payload it replaces (`None` when it creates the document),
@@ -46,7 +46,6 @@ pub(super) fn normalize_index_value(value: Value) -> Value {
             Some((php_std::value::Number::Float(f), _)) => Value::Float(f),
             None => Value::Str(s),
         },
-        Value::Ext(Ext::Document(d)) => Value::Ext(Ext::Document(d)),
         other => other,
     }
 }
@@ -89,7 +88,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     }
 
     /// `enforceUniqueIndexes()`.
-    pub(super) async fn enforce_unique(&self, collection: &str, document: &Document, exclude: Option<&str>) -> Result<()> {
+    pub(super) async fn enforce_unique(
+        &self,
+        collection: &str,
+        document: &Document,
+        exclude: Option<&str>,
+    ) -> Result<()> {
         let documents = std::slice::from_ref(document);
         let replaced: Vec<String> = exclude.map(|id| vec![id.to_owned()]).unwrap_or_default();
         self.enforce_unique_for(collection, documents, &replaced).await

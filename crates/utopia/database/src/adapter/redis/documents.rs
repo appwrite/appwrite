@@ -166,9 +166,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         let current: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(seq_key)).await?;
         let raise = match &current {
             None => true,
-            Some(current) => {
-                php_std::format::str_to_int(sequence.as_bytes()) > php_std::format::str_to_int(current)
-            }
+            Some(current) => php_std::format::str_to_int(sequence.as_bytes()) > php_std::format::str_to_int(current),
         };
         if raise {
             let _: redis::Value = self.run(redis::cmd("SET").arg(seq_key).arg(&sequence)).await?;
@@ -440,7 +438,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     }
 
     /// `getSequences()`: the stored `$sequence` of each document lacking one.
-    pub(super) async fn sequences(&self, collection: &Collection, mut documents: Vec<Document>) -> Result<Vec<Document>> {
+    pub(super) async fn sequences(
+        &self,
+        collection: &Collection,
+        mut documents: Vec<Document>,
+    ) -> Result<Vec<Document>> {
         if documents.is_empty() {
             return Ok(documents);
         }
@@ -457,9 +459,10 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         if positions.is_empty() {
             return Ok(documents);
         }
-        let payloads = self.pipe(&pipe).await.map_err(|e| {
-            Error::transaction(format!("Failed to load sequences: {}", e.message())).with_previous(e)
-        })?;
+        let payloads = self
+            .pipe(&pipe)
+            .await
+            .map_err(|e| Error::transaction(format!("Failed to load sequences: {}", e.message())).with_previous(e))?;
         for (i, position) in positions.into_iter().enumerate() {
             let Some(payload) = payload_of(payloads.get(i)) else {
                 continue;
@@ -674,7 +677,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
             unique.sort_unstable();
             fields.push((role.clone(), unique.join(",")));
             for letter in unique {
-                writes.push((role.clone(), letter.to_owned(), self.perm_key(collection, letter, role, tenant.as_ref())));
+                writes.push((
+                    role.clone(),
+                    letter.to_owned(),
+                    self.perm_key(collection, letter, role, tenant.as_ref()),
+                ));
             }
         }
         let mut pipe = redis::pipe();
@@ -757,7 +764,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     /// `applyPermissionFilter()`: the ids (in order) the authorization's
     /// roles may act on with `action`; all of them when authorization is
     /// off, none without roles.
-    pub(super) async fn permitted(&self, collection: &str, ids: Vec<String>, action: PermissionType) -> Result<Vec<String>> {
+    pub(super) async fn permitted(
+        &self,
+        collection: &str,
+        ids: Vec<String>,
+        action: PermissionType,
+    ) -> Result<Vec<String>> {
         if ids.is_empty() {
             return Ok(ids);
         }
@@ -815,7 +827,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
             let document = Self::decode(&payload)?;
             if shared {
                 let row = document.get(document::TENANT).cloned().unwrap_or(Value::Null);
-                if !row.strict_eq(&tenant) && !(allow_null && matches!(row, Value::Null)) {
+                if !(row.strict_eq(&tenant) || (allow_null && matches!(row, Value::Null))) {
                     continue;
                 }
             }
@@ -829,7 +841,10 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
 /// `TypeError` for anything else.
 fn operand(value: &Value) -> Result<Operand<'_>> {
     Operand::from_value(value).ok_or_else(|| {
-        Error::new(Kind::TypeError, format!("BigInt argument must be of type int|float|string, {} given", value.debug_type()))
+        Error::new(
+            Kind::TypeError,
+            format!("BigInt argument must be of type int|float|string, {} given", value.debug_type()),
+        )
     })
 }
 
@@ -843,4 +858,3 @@ pub(super) fn surface_using(keys: &[String], mut document: Document) -> Document
     }
     document
 }
-

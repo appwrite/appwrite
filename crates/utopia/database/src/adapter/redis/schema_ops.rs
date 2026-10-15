@@ -153,8 +153,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         if self.exists_key(&meta).await? {
             return Err(Error::duplicate("Collection already exists"));
         }
-        let attribute_payload: Vec<Value> =
-            attributes.iter().map(|a| Self::attribute_record(&a.key, a)).collect();
+        let attribute_payload: Vec<Value> = attributes.iter().map(|a| Self::attribute_record(&a.key, a)).collect();
         let index_payload: Vec<Value> = indexes
             .iter()
             .map(|i| Self::index_record(&i.key, i.kind, &i.attributes, &i.lengths, Self::order_values(i)))
@@ -352,8 +351,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     /// `measureKey()`: `MEMORY USAGE`, else the bytes of the key and its
     /// content.
     async fn measure_key(&self, key: &str) -> Result<i64> {
-        if let Ok(redis::Value::Int(usage)) =
-            self.run::<redis::Value>(redis::cmd("MEMORY").arg("USAGE").arg(key)).await
+        if let Ok(redis::Value::Int(usage)) = self.run::<redis::Value>(redis::cmd("MEMORY").arg("USAGE").arg(key)).await
         {
             return Ok(usage);
         }
@@ -513,7 +511,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
 
     /// `createRelationship()`: a relationship record on each side holding a
     /// key.
-    pub(super) async fn create_relationship_fields(&self, collection: &str, relationship: &Relationship) -> Result<bool> {
+    pub(super) async fn create_relationship_fields(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+    ) -> Result<bool> {
         let related = relationship.related_collection.as_str();
         let key = relationship.key.as_deref().unwrap_or("");
         let two_way_key = relationship.two_way_key.as_deref().unwrap_or("");
@@ -663,7 +665,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
 
     /// `resolveJunctionCollection()`: `_{parent sequence}_{child sequence}`
     /// of the stored definitions, `None` without them.
-    async fn junction_collection(&self, collection: &str, related: &str, side: RelationshipSide) -> Result<Option<String>> {
+    async fn junction_collection(
+        &self,
+        collection: &str,
+        related: &str,
+        side: RelationshipSide,
+    ) -> Result<Option<String>> {
         let (Some(collection), Some(related)) =
             (self.metadata_document(collection).await?, self.metadata_document(related).await?)
         else {
@@ -802,10 +809,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         self.tx(async {
             let mut indexes = self.read_indexes(&meta).await?;
             let (old, new) = (string(old.as_str()), string(new.as_str()));
-            let position = indexes
-                .iter()
-                .find(|(_, index)| index_identifier(index).strict_eq(&old))
-                .map(|(k, _)| k.to_owned());
+            let position =
+                indexes.iter().find(|(_, index)| index_identifier(index).strict_eq(&old)).map(|(k, _)| k.to_owned());
             let Some(position) = position else {
                 return Ok(indexes.values().any(|index| index_identifier(index).strict_eq(&new)));
             };

@@ -354,8 +354,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
             }
             OperatorType::ArrayUnique => {
                 let items: Array = coerce_array(current).into_iter().collect();
-                let unique = php_std::sort::array_unique(&items, php_std::sort::SortFlags::Regular)
-                    .map_err(Error::from)?;
+                let unique =
+                    php_std::sort::array_unique(&items, php_std::sort::SortFlags::Regular).map_err(Error::from)?;
                 list(unique.values().cloned().collect())
             }
             OperatorType::ArrayIntersect | OperatorType::ArrayDiff => {
@@ -390,4 +390,3 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
         })
     }
 }
-

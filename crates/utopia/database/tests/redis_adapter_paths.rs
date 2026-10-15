@@ -125,9 +125,7 @@ async fn test_rollback_restores_a_renamed_document() {
         .unwrap();
 
     let result: Result<(), Error> = with_transaction(&adapter, || async {
-        adapter
-            .update_document(&collection(NOTES), "a", doc(json!({"$id": "b", "title": "renamed"})), false)
-            .await?;
+        adapter.update_document(&collection(NOTES), "a", doc(json!({"$id": "b", "title": "renamed"})), false).await?;
         Err(Error::new(Kind::Runtime, "roll back"))
     })
     .await;
@@ -179,7 +177,10 @@ async fn test_renaming_a_many_to_many_key_of_a_tenantless_definition() {
             .unwrap();
     }
     let junction = "_1_2";
-    adapter.create_collection(junction, &[Attribute::string("authors", 64), Attribute::string("books", 64)], &[]).await.unwrap();
+    adapter
+        .create_collection(junction, &[Attribute::string("authors", 64), Attribute::string("books", 64)], &[])
+        .await
+        .unwrap();
 
     adapter.set_tenant(Value::Int(TENANT));
     adapter
@@ -202,7 +203,11 @@ async fn test_renaming_a_many_to_many_key_of_a_tenantless_definition() {
     );
 
     let link = adapter.get_document(&collection(junction), "link", vec![], false).await.unwrap();
-    assert_eq!(link.get("writers"), Some(&s("ann")), "The junction of a tenantless definition must be found from a tenant");
+    assert_eq!(
+        link.get("writers"),
+        Some(&s("ann")),
+        "The junction of a tenantless definition must be found from a tenant"
+    );
     assert_eq!(link.get("authors"), None);
 }
 
@@ -212,7 +217,10 @@ async fn test_null_checks_and_unsupported_methods_on_a_whole_object_attribute() 
     let adapter = adapter(&probe, DATABASE, &namespace("paths_object")).await;
     adapter.create_collection(NOTES, &[Attribute::object("meta")], &[]).await.unwrap();
     adapter
-        .create_document(&collection(NOTES), doc(json!({"$id": "filled", "$permissions": [], "meta": {"colour": "red"}})))
+        .create_document(
+            &collection(NOTES),
+            doc(json!({"$id": "filled", "$permissions": [], "meta": {"colour": "red"}})),
+        )
         .await
         .unwrap();
     adapter
@@ -298,7 +306,11 @@ async fn test_get_sequences_back_fills_only_the_documents_that_lack_one() {
     let documents = adapter
         .get_sequences(
             &collection(NOTES),
-            vec![doc(json!({"$id": "stored"})), doc(json!({"$id": "missing"})), doc(json!({"$id": "given", "$sequence": "99"}))],
+            vec![
+                doc(json!({"$id": "stored"})),
+                doc(json!({"$id": "missing"})),
+                doc(json!({"$id": "given", "$sequence": "99"})),
+            ],
         )
         .await
         .unwrap();
@@ -306,10 +318,8 @@ async fn test_get_sequences_back_fills_only_the_documents_that_lack_one() {
     assert_eq!(documents[1].sequence(), None);
     assert_eq!(documents[2].sequence(), Some(&s("99")));
 
-    let complete = adapter
-        .get_sequences(&collection(NOTES), vec![doc(json!({"$id": "given", "$sequence": "99"}))])
-        .await
-        .unwrap();
+    let complete =
+        adapter.get_sequences(&collection(NOTES), vec![doc(json!({"$id": "given", "$sequence": "99"}))]).await.unwrap();
     assert_eq!(complete[0].sequence(), Some(&s("99")));
 }
 
@@ -342,13 +352,29 @@ async fn test_increment_guards_of_the_adapter() {
         let at = "2026-01-01 00:00:00.000";
         assert!(
             adapter
-                .increase_document_attribute(&collection(NOTES), id, "count", Value::Int(1), at, None, Some(Value::Int(5)))
+                .increase_document_attribute(
+                    &collection(NOTES),
+                    id,
+                    "count",
+                    Value::Int(1),
+                    at,
+                    None,
+                    Some(Value::Int(5))
+                )
                 .await
                 .unwrap()
         );
         assert!(
             adapter
-                .increase_document_attribute(&collection(NOTES), id, "count", Value::Int(-1), at, Some(Value::Int(20)), None)
+                .increase_document_attribute(
+                    &collection(NOTES),
+                    id,
+                    "count",
+                    Value::Int(-1),
+                    at,
+                    Some(Value::Int(20)),
+                    None
+                )
                 .await
                 .unwrap()
         );
@@ -357,7 +383,15 @@ async fn test_increment_guards_of_the_adapter() {
     }
 
     let e = adapter
-        .increase_document_attribute(&collection(NOTES), "vanished", "count", Value::Int(1), "2026-01-01 00:00:00.000", None, None)
+        .increase_document_attribute(
+            &collection(NOTES),
+            "vanished",
+            "count",
+            Value::Int(1),
+            "2026-01-01 00:00:00.000",
+            None,
+            None,
+        )
         .await
         .unwrap_err();
     assert_eq!(e.kind(), Kind::NotFound);
@@ -459,11 +493,8 @@ async fn test_renaming_a_many_to_many_key_between_collections_without_definition
     let before = snapshot(&probe, &prefix).await;
 
     let relationship = Relationship::many_to_many("tags").two_way(true).key("tags").two_way_key("notes");
-    let update = relationship::Update {
-        key: Some("labels".into()),
-        two_way_key: Some("entries".into()),
-        ..Default::default()
-    };
+    let update =
+        relationship::Update { key: Some("labels".into()), two_way_key: Some("entries".into()), ..Default::default() };
     assert!(
         adapter
             .relationships()

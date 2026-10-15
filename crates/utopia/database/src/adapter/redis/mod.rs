@@ -614,7 +614,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                     let id = entry.text_or_empty("id");
                     let set_key =
                         entry.text("permKey").unwrap_or_else(|| self.perm_key(&collection, &letter, &role, None));
-                    let hash_key = entry.text("permDocKey").unwrap_or_else(|| self.perm_doc_key(&collection, &id, None));
+                    let hash_key =
+                        entry.text("permDocKey").unwrap_or_else(|| self.perm_doc_key(&collection, &id, None));
                     if entry.op == "createPerm" {
                         let _: i64 = self.run(redis::cmd("SREM").arg(&set_key).arg(&id)).await?;
                         let _: i64 = self.run(redis::cmd("HDEL").arg(&hash_key).arg(&role)).await?;
@@ -858,8 +859,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Adapter for Redis<C> {
     }
 
     async fn exists(&self, database: &str) -> Result<bool> {
-        let member: i64 =
-            self.run(redis::cmd("SISMEMBER").arg(self.dbs_key()).arg(super::filter(database))).await?;
+        let member: i64 = self.run(redis::cmd("SISMEMBER").arg(self.dbs_key()).arg(super::filter(database))).await?;
         Ok(member != 0)
     }
 
