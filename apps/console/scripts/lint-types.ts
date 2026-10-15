@@ -31,9 +31,9 @@ type Diagnostic = {
 }
 
 // tsc prints union members in the order their types were first created, so a
-// new literal anywhere can reorder a long union, such as the route paths, and
-// change every message that quotes it. Sort the top-level members of each
-// quoted type so a message only depends on what the union holds.
+// new literal anywhere can reorder a long union and change every message that
+// quotes it. Sort the top-level members of each quoted type so a message only
+// depends on what the union holds.
 export function canonical(message: string): string {
   const quotes: number[] = []
   for (let i = 0; i < message.length; i++) {
@@ -92,7 +92,19 @@ function sortUnion(type: string): string {
     return type
   }
   members.push(type.slice(start))
-  return members.sort().join(' | ')
+  const others = members.filter((member) => !isPath(member))
+  if (others.length < members.length) {
+    others.push(PATHS)
+  }
+  return others.sort().join(' | ')
+}
+
+// Route path unions list every route, so adding one would change every
+// message that quotes them. Compare the paths in a union as one placeholder.
+const PATHS = '<paths>'
+
+function isPath(member: string): boolean {
+  return member === '"."' || member === '".."' || /^"\/[^"]*"$/.test(member)
 }
 
 // Baselines written before `canonical` keep tsc's member order.
