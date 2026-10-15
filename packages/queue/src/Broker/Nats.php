@@ -500,13 +500,12 @@ class Nats implements Synchronous, Consumer, Bounded
             // own message id, so deduplication works exactly as it does on the single
             // publish, and a payload the server rejects still throws.
             // Republished whole, for the reason republishing() gives: every payload
-            // keeps its id, so the ones that did land collapse. Provisioned inside the
-            // republish, for the reason publishEnvelope() gives.
-            $acks = $this->republishing(function () use ($queue, $messages): array {
-                $this->ensure($queue);
-
-                return $this->js()->publishMany($messages);
-            });
+            // keeps its id, so the ones that did land collapse. Provisioned only when the
+            // stream is missing, for the reasons publishEnvelope() gives.
+            $acks = $this->republishing(fn (): array => $this->provisioningIfAbsent(
+                $queue,
+                fn (): array => $this->js()->publishMany($messages),
+            ));
 
             foreach ($acks as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
@@ -531,11 +530,11 @@ class Nats implements Synchronous, Consumer, Bounded
      * gave up on the ack — can only be retried by creating a second copy that
      * nothing downstream can tell from a genuine second message.
      *
-     * The queue is provisioned inside the republish, not before it. A reconnect
-     * forgets what was provisioned, so in a rolling restart the first publish after
-     * one server went away re-provisions -- and that request is what meets the next
-     * server going away. Outside the republish it threw to the caller: a lost
-     * execution log, a failed API call, a dead-lettered function run.
+     * The queue is provisioned only when the stream is missing (see
+     * provisioningIfAbsent()), and inside the republish rather than before it: a
+     * provisioning request in a rolling restart meets the next server going away,
+     * and outside the republish that threw to the caller -- a lost execution log, a
+     * failed API call, a dead-lettered function run.
      *
      * @param array<string, mixed> $envelope
      */
@@ -545,11 +544,10 @@ class Nats implements Synchronous, Consumer, Bounded
         $id = $envelope['pid'];
         $data = $this->codec->encode($envelope);
 
-        $ack = $this->republishing(function () use ($queue, $subject, $data, $id): PubAck {
-            $this->ensure($queue);
-
-            return $this->publishOnce($subject, $data, $id);
-        });
+        $ack = $this->republishing(fn (): PubAck => $this->provisioningIfAbsent(
+            $queue,
+            fn (): PubAck => $this->publishOnce($subject, $data, $id),
+        ));
 
         // Not discarded: a duplicate ack means the stream already held this id,
         // so the retry collapsed instead of double-delivering. That is the
@@ -559,6 +557,50 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($ack->duplicate) {
             ++$this->duplicates;
         }
+    }
+
+    /**
+     * Publish without provisioning first, and provision only if no stream took it.
+     *
+     * A publisher needs the stream to exist and nothing else: the durable consumer,
+     * the spare delivery and the dead-letter advisory are the consumer's, and the
+     * consumer provisions them itself on its first receive. Provisioning on every
+     * publisher's first publish cost four JetStream API requests per queue per
+     * connection (the identity read, both stream writes, the consumer write), all
+     * answered by the meta leader. A pool holds a broker per connection, and an HTTP
+     * worker that recycles rebuilds its whole pool, so in production that was most
+     * of the meta leader's API load for queues that had existed for weeks.
+     *
+     * A stream that is missing is what a 503 No Responders means on a broker that
+     * has not provisioned this queue: nothing listens on the work subject. So that
+     * answer, and only that one, provisions and publishes again. The same 503 while
+     * a stream elects a leader provisions too -- the identical write is answered
+     * cheaply once the leader is back -- and, as on a broker that has provisioned,
+     * it is otherwise left to republishing() to wait out.
+     *
+     * Not provisioning changes two things on the publish path, both still enforced
+     * by the consumer's own provisioning. A publisher no longer writes its settings
+     * over a stream that exists, and no longer runs the stream-name collision guard:
+     * a queue whose name collides with an existing queue's stream publishes into it,
+     * and the guard refuses the colliding queue's consumer at its first receive.
+     *
+     * @template T
+     * @param \Closure(): T $publish
+     * @return T
+     */
+    private function provisioningIfAbsent(Queue $queue, \Closure $publish): mixed
+    {
+        try {
+            return $publish();
+        } catch (NoRespondersException $error) {
+            if (isset($this->provisioned[$this->identity($queue)])) {
+                throw $error;
+            }
+        }
+
+        $this->ensure($queue);
+
+        return $publish();
     }
 
     /**

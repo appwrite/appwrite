@@ -658,12 +658,14 @@ final class NatsBrokerTest extends TestCase
     {
         // Dropping the namespace means two names that sanitise to the same stream would
         // silently share it; the guard turns that into a loud error instead. "c.<s>" and
-        // "c_<s>" both map to stream Q_C_<S>.
+        // "c_<s>" both map to stream Q_C_<S>. The guard runs where the queue is
+        // provisioned, which for a stream that exists is its consumer's first receive:
+        // a publisher no longer provisions a queue it can already publish to.
         $suffix = substr(md5(uniqid('', true)), 0, 6);
         $this->broker->publish(new Queue("c.{$suffix}"), ['ok' => 1]);
 
         $this->expectException(\RuntimeException::class);
-        $this->broker->publish(new Queue("c_{$suffix}"), ['ok' => 1]);
+        $this->broker->receive(new Queue("c_{$suffix}"), 1);
     }
 
     public function testCollidingQueueNamesFailAcrossInstances(): void
@@ -678,7 +680,7 @@ final class NatsBrokerTest extends TestCase
 
         $a->publish(new Queue("x.{$suffix}"), ['ok' => 1]); // stamps identity on Q_X_<S>
         try {
-            $b->publish(new Queue("x_{$suffix}"), ['ok' => 1]); // same stream, different identity, other instance
+            $b->receive(new Queue("x_{$suffix}"), 1); // same stream, different identity, other instance
             $this->fail('expected a cross-instance collision to throw');
         } catch (\RuntimeException $e) {
             $this->assertStringContainsString('already belongs', $e->getMessage());
@@ -686,6 +688,114 @@ final class NatsBrokerTest extends TestCase
             $a->close();
             $b->close();
         }
+    }
+
+    /**
+     * A publisher whose queue already exists sends no JetStream API request at all.
+     *
+     * Every pooled broker used to provision each queue on its first publish: the
+     * identity read, both stream writes and the consumer write, all answered by the
+     * meta leader. An HTTP worker that recycles rebuilds its whole pool, so a fleet
+     * recycling every few minutes kept the meta leader busy re-provisioning queues
+     * that had existed for weeks.
+     */
+    public function testAPublisherDoesNotProvisionAQueueThatExists(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        // The worker has consumed before anything is published, as a running fleet has,
+        // and its stream carries a setting the publisher below would write differently.
+        $consumer = new Nats(Connection::connect($url), maxMsgs: 1_000);
+        $this->assertSame([], $consumer->receive($queue, 1));
+
+        $requests = new \ArrayObject();
+        $publisher = new Nats(Connection::connect(new ConnectionOptions(
+            servers: $url,
+            transportFactory: static fn (): Transport => new readonly class (new TcpTransport(), $requests) implements Transport {
+                /** @param \ArrayObject<int, string> $requests */
+                public function __construct(private TcpTransport $inner, private \ArrayObject $requests)
+                {
+                }
+
+                public function connect(string $host, int $port, float $timeout): void
+                {
+                    $this->inner->connect($host, $port, $timeout);
+                }
+
+                public function write(string $data): int
+                {
+                    preg_match_all('/^H?PUB (\$JS\.API\.\S+)/m', $data, $api);
+                    foreach ($api[1] as $subject) {
+                        $this->requests[] = $subject;
+                    }
+
+                    return $this->inner->write($data);
+                }
+
+                public function read(int $maxBytes, ?float $timeout = null): string
+                {
+                    return $this->inner->read($maxBytes, $timeout);
+                }
+
+                public function readLine(?float $timeout = null): string
+                {
+                    return $this->inner->readLine($timeout);
+                }
+
+                /** @param array<string, mixed> $options */
+                public function upgradeTls(array $options): void
+                {
+                    $this->inner->upgradeTls($options);
+                }
+
+                public function isConnected(): bool
+                {
+                    return $this->inner->isConnected();
+                }
+
+                public function close(): void
+                {
+                    $this->inner->close();
+                }
+            },
+        )));
+
+        try {
+            $this->assertTrue($publisher->publish($queue, ['task' => 'a']));
+            $this->assertTrue($publisher->publishMany($queue, [['task' => 'b'], ['task' => 'c']]));
+
+            $this->assertSame([], $requests->getArrayCopy(), 'no JetStream API request for a queue that exists');
+
+            $js = Connection::connect($url)->jetStream();
+            $stream = $js->getStreamInfo('Q_' . strtoupper($queue->name));
+            $this->assertSame(3, $stream->state->messages, 'every payload stored');
+            $this->assertSame(1_000, $stream->config->maxMsgs, "the consumer's settings stand");
+
+            $received = $consumer->receive($queue, 1, 3);
+            $this->assertSame(['a', 'b', 'c'], array_column(array_map(static fn (Message $message): array => $message->getPayload(), $received), 'task'));
+        } finally {
+            $publisher->close();
+            $consumer->close();
+        }
+    }
+
+    /**
+     * The publisher still creates a queue nothing has provisioned: the publish meets
+     * no stream, provisions, and publishes again, so the first message is not lost.
+     */
+    public function testAPublisherProvisionsAQueueThatDoesNotExist(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        $this->assertTrue($this->broker->publishMany($queue, [['task' => 'a'], ['task' => 'b']]));
+
+        $js = Connection::connect($url)->jetStream();
+        $this->assertSame(2, $js->getStreamInfo($stream)->state->messages, 'both payloads stored once');
+        $this->assertSame(0, $js->getStreamInfo($stream . '_DEAD')->state->messages, 'the dead stream exists');
+        $this->assertSame(4, $js->getConsumer($stream, 'worker')->info(true)->config->maxDeliver, 'maxDeliver plus the spare delivery');
     }
 
     public function testOverlongQueueNameFailsLoud(): void
