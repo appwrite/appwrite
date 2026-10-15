@@ -1408,6 +1408,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'このパスキーではサインインできなくなります。この操作は元に戻せません。',
 
   // Zero projects
+  'Build window ended': 'ビルド期間が終了しました',
   'Build window ended.': 'ビルド期間が終了しました。',
   'Build window ends': 'ビルド期間の終了',
   'Claim into a new free organization': '新しい無料組織で引き継ぐ',
@@ -1425,6 +1426,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'メールアドレスを設定するには、このプロジェクトを引き継いでください',
   'Claim within {time} or the project is deleted.':
     '{time}以内に引き継がないと、プロジェクトは削除されます。',
+  'This project is paused and its data is kept until the claim deadline. Claim it to keep building.':
+    'このプロジェクトは一時停止中で、データは申請期限まで保持されます。引き続き開発するにはプロジェクトを申請してください。',
   'Claim your project': 'プロジェクトを引き継ぐ',
   'Could not claim the project': 'プロジェクトを引き継げませんでした',
   'Could not sign out. Try again.':

@@ -14,6 +14,7 @@ import { EducationPlanCurtain } from '@/components/global/layout/EducationPlanCu
 import { BudgetLimitProjectCurtain } from '@/components/global/layout/BudgetLimitProjectCurtain'
 import { PlanUsageLimitProjectCurtain } from '@/components/global/layout/PlanUsageLimitProjectCurtain'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
+import { ZeroExpiredCurtain } from '@/components/global/layout/ZeroExpiredCurtain'
 import { hasActiveProjectBlock } from '@/lib/project-blocks'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { BuildNotificationsProvider } from '@/components/global/providers/BuildNotificationsProvider'
@@ -56,6 +57,7 @@ import {
   registerProjectRegionFromProject,
 } from '@/lib/project-region'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 import { ProjectCliShellLayout } from '@/components/global/cli-shell/ProjectCliShellLayout'
 import {
   isHttpNotFoundError,
@@ -519,6 +521,7 @@ function ProjectLayout() {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [hidePausedCurtain, setHidePausedCurtain] = useState(false)
+  const isZero = useIsZeroAccount()
   const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
   const routeContext = Route.useRouteContext()
   const {
@@ -857,7 +860,9 @@ function ProjectLayout() {
         teamIdForBilling ? (
         <EducationPlanCurtain orgId={teamIdForBilling} />
       ) : null}
-      {isPaused && projectForPaused && (
+      {isPaused && projectForPaused && isZero ? (
+        <ZeroExpiredCurtain />
+      ) : isPaused && projectForPaused && (
         <PausedProjectCurtain
           projectId={projectForPaused.$id}
           teamId={projectForPaused.teamId}

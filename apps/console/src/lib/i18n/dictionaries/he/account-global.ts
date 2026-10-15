@@ -1409,6 +1409,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
 
   // Zero projects
+  'Build window ended': 'חלון הבנייה הסתיים',
   'Build window ended.': 'חלון הבנייה הסתיים.',
   'Build window ends': 'חלון הבנייה מסתיים',
   'Claim into a new free organization': 'העברה לארגון חינמי חדש',
@@ -1426,6 +1427,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'תבעו בעלות על הפרויקט כדי להגדיר אימייל',
   'Claim within {time} or the project is deleted.':
     'תבעו בעלות בתוך {time}, אחרת הפרויקט יימחק.',
+  'This project is paused and its data is kept until the claim deadline. Claim it to keep building.':
+    'הפרויקט מושהה והנתונים שלו נשמרים עד המועד האחרון לתביעת בעלות. תבעו בעלות כדי להמשיך לבנות.',
   'Claim your project': 'תביעת בעלות על הפרויקט',
   'Could not claim the project': 'לא ניתן היה לתבוע בעלות על הפרויקט',
   'Could not sign out. Try again.': 'לא ניתן היה להתנתק. נסו שוב.',
