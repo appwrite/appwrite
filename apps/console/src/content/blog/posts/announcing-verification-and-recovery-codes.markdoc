@@ -13,7 +13,7 @@ faqs:
   - question: "How do I verify a user's email with a code in Appwrite?"
     answer: "Call `account.createEmailVerificationOTP()` while the user is signed in. Appwrite emails the user a 6-digit code that is valid for 15 minutes. Pass the user's ID and the code to `account.updateEmailVerificationOTP()`, and Appwrite marks the email as verified. See [Verify with a code](/docs/products/auth/verify-user#verify-with-code)."
   - question: "How does password recovery with a code work in Appwrite?"
-    answer: "`account.createRecoveryOTP()` emails a 6-digit code to the email address in the request and returns a token that holds the user's ID. `account.updateRecoveryOTP()` takes that user ID, the code, and the new password. Appwrite checks the new password against password strength, password dictionary, and password history, and rejects breached passwords when that option is on. The reset doesn't create a session. See [Recover with a code](/docs/products/auth/email-password#recover-with-code)."
+    answer: "`account.createRecoveryOTP()` emails a 6-digit code to the email address in the request and returns a token that holds the user's ID. `account.updateRecoveryOTP()` takes that user ID, the code, and the new password. Appwrite rejects a new password that fails the project's password strength, password dictionary, or password history policy. When the option to reject breached passwords is on, Appwrite also rejects a breached password. The reset doesn't create a session. See [Recover with a code](/docs/products/auth/email-password#recover-with-code)."
   - question: "Should I verify emails and reset passwords with a link or a code?"
     answer: "Use a link when the user can land on a web page in your app. Use a code in mobile apps, desktop apps, and any app without a hosted page. The user types the code into your app, so you don't need a redirect URL, a reset page, or a deep link."
   - question: "What happens when someone requests a recovery code for an email address that has no account?"
@@ -21,10 +21,10 @@ faqs:
   - question: "How long does a verification or recovery code stay valid?"
     answer: "15 minutes, and each code works once. Sending a new code doesn't cancel earlier ones, so any code that hasn't expired still works. A wrong, expired, or used code fails with the `user_invalid_token` error."
   - question: "What is the security phrase on verification and recovery emails?"
-    answer: "Set `phrase` to `true` in the call that sends a code, and Appwrite adds a random phrase, such as \"Polite raccoon\", to the email and to the returned token. Your app shows the phrase, and the user checks that it matches the one in the email before they enter the code. A matching phrase tells the user that the email belongs to the request they made."
+    answer: "Set `phrase` to `true` in the call that sends a code. Appwrite adds a random phrase, such as \"Polite raccoon\", to the email and to the returned token. Your app shows the phrase, and the user checks that it matches the one in the email before they enter the code. A matching phrase tells the user that the email belongs to the request they made."
 ---
 
-Email verification and password recovery in Appwrite Auth have worked through links. The user taps the link in the email and lands on the redirect URL from the request. A page at that URL reads `userId` and `secret` from the query string and finishes the flow. On the web, that page is part of your app, but a mobile or desktop app needs a deep link or a hosted page to catch the redirect. When the link opens in a browser instead, the user finishes the flow outside the app.
+Email verification and password recovery in Appwrite Auth have worked through links. The user taps the link in the email and lands on the redirect URL that your app passed when it requested the email. A page at that URL reads `userId` and `secret` from the query string and finishes the flow. On the web, that page is part of your app. A mobile or desktop app needs a deep link or a hosted page to catch the redirect. When the link opens in a browser instead, the user finishes the flow outside the app.
 
 Appwrite Auth can also send a 6-digit code for both flows. The user reads the code in the email and types it into your app, so the flow ends in the app that started it. [Email OTP](/docs/products/auth/email-otp) sign-in uses the same pattern.
 
@@ -34,7 +34,7 @@ Appwrite Auth can also send a 6-digit code for both flows. The user reads the co
 - **6-digit codes that expire after 15 minutes.** Each code works once, and a wrong, expired, or used code fails with `user_invalid_token`.
 - **No redirect URL.** You don't need a verification page, a reset page, or a deep link.
 - **An optional security phrase.** A random phrase appears in the email and in the response, so the user can match the two.
-- **The same rules as the link flows.** Users verified with a code match `users("verified")` permissions, new passwords go through the same checks as a link reset, and the `users.*.verification.*` and `users.*.recovery.*` events fire for links and codes alike.
+- **The same rules as the link flows.** Users verified with a code match `users("verified")` permissions, and new passwords go through the same checks as a link reset. The `users.*.verification.*` and `users.*.recovery.*` events fire for links and codes alike.
 
 Verification and recovery codes are available on Appwrite Cloud and in self-hosted Appwrite 2.3 and later, through the Web, Flutter, Apple, Android, and React Native SDKs.
 
@@ -200,13 +200,13 @@ await account.updateRecoveryOTP({
 ```
 {% /multicode %}
 
-If no active user has the email address, Appwrite sends no email but still returns a token with a random user ID. The response to that first call looks the same either way, so show the user one message, such as "If an account exists for this email, a code is on its way." Confirming a code for that address fails with `user_not_found` instead of `user_invalid_token`, so show the same "invalid code" message for both errors.
+If no active user has the email address, Appwrite sends no email but still returns a token with a random user ID. The response to that first call looks the same either way. Show the user one message in both cases, such as "If an account exists for this email, a code is on its way." Confirming a code for that address fails with `user_not_found` instead of `user_invalid_token`. Show the same "invalid code" message for both errors.
 
-Appwrite checks the new password against [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), and [password history](/docs/products/auth/security#password-history), and rejects [breached passwords](/docs/products/auth/security#breached-passwords) when that option is on. If the new password fails a check, the code stays valid, and the user can try again with a different password. The reset doesn't sign the user in, so create a session with the new password afterwards.
+Appwrite rejects a new password that fails your project's [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), or [password history](/docs/products/auth/security#password-history) policy. When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite also rejects a password found in a known data breach. If the new password fails a check, the code stays valid, so the user can try again with a different password. The reset doesn't sign the user in, so create a session with the new password afterwards.
 
 # Show a security phrase
 
-Set `phrase` to `true` in either send call. Appwrite generates a random phrase, such as "Polite raccoon", and adds it to the email and to the `phrase` field of the returned token. Show the phrase next to the code input, so the user can check that the email they opened belongs to the request they made before they type the code.
+Set `phrase` to `true` in either send call. Appwrite generates a random phrase, such as "Polite raccoon", and adds it to the email and to the `phrase` field of the returned token. Show the phrase next to the code input. The user can then check that the email they opened belongs to their request before they type the code.
 
 # Get started with verification and recovery codes
 
