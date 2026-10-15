@@ -17448,9 +17448,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -17560,9 +17572,35 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "parent1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Parent 1",
+              "$collection": "parent_relationship_error_one_to_many",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "child_relationship_error_one_to_many": [
+                {
+                  "$document": {
+                    "name": "Child 1",
+                    "$id": "child1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "child_relationship_error_one_to_many"
+                  }
+                }
+              ]
             }
           }
         },
@@ -17582,7 +17620,12 @@
               }
             ]
           },
-          "expect": 0
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Restricted",
+              "message": "Cannot delete document because it has at least one related document."
+            }
+          }
         },
         {
           "op": "database.get_document",
@@ -17591,7 +17634,36 @@
             "id": "parent1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Parent 1",
+              "$sequence": "1",
+              "$id": "parent1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "parent_relationship_error_one_to_many",
+              "child_relationship_error_one_to_many": [
+                {
+                  "$document": {
+                    "name": "Child 1",
+                    "$id": "child1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "child_relationship_error_one_to_many"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -17601,7 +17673,19 @@
             "id": "child1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Child 1",
+              "$sequence": "1",
+              "$id": "child1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "child_relationship_error_one_to_many"
+            }
           }
         },
         {

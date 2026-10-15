@@ -147,19 +147,19 @@ final class Core
     {
         self::$states ??= new \WeakMap();
         if (!isset(self::$states[$s])) {
-            self::fresh();
+            self::fresh($s);
         }
         self::$current = $s;
     }
 
     /**
-     * A case starts with the library's process-wide registries as a fresh
-     * process has them (the built-in filters, no formats) plus the canonical
-     * filter fixtures: what an earlier case registered or overrode (a unit
-     * test replacing the built-in `datetime` filter) does not leak into it.
+     * A case (its session's first step) starts with the library's registries as a fresh process has them (the
+     * built-in filters, no formats) plus the canonical filter fixtures: what an earlier case registered or
+     * overrode (a unit test replacing the built-in `datetime` filter) does not leak into it.
      */
-    private static function fresh(): void
+    private static function fresh(Session $s): void
     {
+        self::state($s);
         (new \ReflectionProperty(Database::class, 'filters'))->setValue(null, []);
         (new \ReflectionProperty(Database::class, 'defaultFiltersRegistered'))->setValue(null, false);
         (new \ReflectionProperty(Structure::class, 'formats'))->setValue(null, []);

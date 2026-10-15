@@ -27,10 +27,10 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
-            }
+            "callback": {
+              "$closure": true
+            },
+            "type": "string"
           }
         },
         {
@@ -48,7 +48,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
+              "message": "Format \"structureFormatProbe\" not available for attribute type \"integer\""
             }
           }
         },
@@ -342,12 +342,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -761,12 +756,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -777,7 +767,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"code\" has invalid format. Value must be a valid string and at least 1 chars and no longer than 4 chars"
         },
         {
           "op": "object.call",
@@ -1217,12 +1207,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -1680,12 +1665,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"structureFormatProbe\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -1696,7 +1676,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"code\" has invalid format. Value must be a valid string and at least 1 chars and no longer than 4 chars"
         },
         {
           "op": "object.call",

@@ -118567,9 +118567,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'VALUES': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "VALUES",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -118591,9 +118603,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "VALUES": "Reserved:VALUES",
+              "$collection": "rkVALUES",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -118604,7 +118627,21 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "VALUES": "Reserved:VALUES",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkVALUES"
+            }
           }
         },
         {
@@ -118612,7 +118649,25 @@
           "args": {
             "collection": "rkVALUES"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "VALUES": "Reserved:VALUES",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkVALUES"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -118630,12 +118685,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "VALUES": "Reserved:VALUES",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkVALUES"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -118651,12 +118719,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "VALUES": "Reserved:VALUES",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkVALUES"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",

@@ -4989,7 +4989,7 @@
           "bind": "s243",
           "expect": {
             "$document": {
-              "name": "cached",
+              "name": "fresh",
               "$sequence": "1",
               "$id": "project",
               "$createdAt": "<now>",
@@ -5012,7 +5012,7 @@
               "name": "name"
             }
           },
-          "expect": "cached"
+          "expect": "fresh"
         }
       ]
     },
@@ -6095,11 +6095,11 @@
           "expect": {
             "$document": {
               "$id": "event",
-              "occurredAt": "2026-09-21T10:00:00.000+00:00",
+              "occurredAt": "2026-09-21 10:00:00.000",
               "$sequence": null,
               "$collection": null,
-              "$createdAt": null,
-              "$updatedAt": null
+              "$createdAt": "2026-09-21 10:00:00.000",
+              "$updatedAt": "2026-09-21 10:00:00.000"
             }
           }
         },
@@ -6114,7 +6114,7 @@
               "name": "occurredAt"
             }
           },
-          "expect": "2026-09-21T10:00:00.000+00:00"
+          "expect": "2026-09-21 10:00:00.000"
         }
       ]
     },
@@ -7059,8 +7059,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: failingEncode not found"
+              "class": "Utopia\\Database\\Exception",
+              "message": "cannot encode the probe"
             }
           }
         }

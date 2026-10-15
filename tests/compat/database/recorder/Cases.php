@@ -509,7 +509,8 @@ final class Cases
         if ($step->op === 'database.get_size_of_collection_on_disk' && str_starts_with(self::$profileName, 'mongo')) {
             return ['paths' => [''], 'reason' => 'a MongoDB collection\'s storage size depends on when WiredTiger last checkpointed it'];
         }
-        if (\in_array($step->op, ['database.get_hostname', 'database.get_connection_id'], true) || ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['hostname', 'id'], true))) {
+        if (\in_array($step->op, ['database.get_hostname', 'database.get_connection_id'], true) || ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['hostname', 'id'], true))
+            || ($step->op === 'object.call' && ($step->args['method'] ?? '') === 'getConnectionId')) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
         }
         if ($step->op === 'db.profiler' && \in_array($step->args['method'] ?? '', ['getLogs', 'getSlowQueries'], true)) {
