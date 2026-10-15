@@ -134,7 +134,7 @@ pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Obj> {
     if let Some(obj) = services::call_static(class, method, a).await? {
         return Ok(obj);
     }
-    if class.starts_with("Adapter\\")
+    if (class.starts_with("Adapter\\") || class == "Connection")
         && let Some(obj) = super::adapter::call_static(class, method, a).await?
     {
         return Ok(obj);
