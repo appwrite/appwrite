@@ -4,12 +4,12 @@ namespace Tests\E2E\Services\Databases\Queries;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Tests\E2E\Traits\InternalTableName;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
-use Utopia\Database\Validator\Authorization;
 
 /**
  * A joined collection is read exactly as listing it directly reads it (contract C6): with its collection-level
@@ -19,6 +19,8 @@ use Utopia\Database\Validator\Authorization;
  */
 trait JoinPermissions
 {
+    use InternalTableName;
+
     private static array $joinPermissionsCache = [];
     private static array $joinCursorCache = [];
 
@@ -1266,9 +1268,9 @@ trait JoinPermissions
         }
 
         $data = $this->setupJoinPermissionsFixture();
-        $readable = $this->joinTableName($data['databaseId'], $data['ordersId']);
-        $unreadable = $this->joinTableName($data['databaseId'], $data['dsOffDeniedId']);
-        $unknown = \preg_replace('/\d+$/', '999999999', $readable);
+        $readable = $this->internalTableName($data['databaseId'], $data['ordersId']);
+        $unreadable = $this->internalTableName($data['databaseId'], $data['dsOffDeniedId']);
+        $unknown = $this->missingInternalTableName($readable);
         $join = fn (string $joined): array => [
             Query::join($joined, 'ord', [Query::on('$id', 'customerId')])->toString(),
             Query::select(['name', 'ord.$id'])->toString(),
@@ -1296,7 +1298,7 @@ trait JoinPermissions
         }
 
         $data = $this->setupJoinPermissionsFixture();
-        $private = $this->joinTableName($data['databaseId'], $data['privateId']);
+        $private = $this->internalTableName($data['databaseId'], $data['privateId']);
         $join = Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString();
         $attempts = [
             'select' => [Query::select(['name', "{$private}.secret"])->toString()],
@@ -1330,7 +1332,7 @@ trait JoinPermissions
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
-        $internal = $this->joinTableName($data['databaseId'], $data['ordersId']);
+        $internal = $this->internalTableName($data['databaseId'], $data['ordersId']);
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
         $this->assertSame(201, $transaction['headers']['status-code']);
@@ -1469,9 +1471,6 @@ trait JoinPermissions
     }
 
     /**
-     * @return array{databaseId: string, customersId: string, ordersId: string, customerId: string}
-     */
-    /**
      * @return array<string, array<string, string>> Request headers of a guest, a signed-in user and an API key
      */
     private function joinCallers(): array
@@ -1524,35 +1523,8 @@ trait JoinPermissions
     }
 
     /**
-     * The internal table name a collection is stored under, which the API never exposes.
+     * @return array{databaseId: string, customersId: string, ordersId: string, customerId: string}
      */
-    private function joinTableName(string $databaseId, string $containerId): string
-    {
-        $table = '';
-        $read = function () use ($databaseId, $containerId, &$table): void {
-            global $register;
-            $authorization = new Authorization();
-            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
-
-            $authorization->skip(function () use ($factory, $databaseId, $containerId, &$table): void {
-                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
-                $database = $dbForProject->getDocument('databases', $databaseId);
-                $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $containerId);
-                $table = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-            });
-        };
-
-        if (\Swoole\Coroutine::getCid() >= 0) {
-            $read();
-        } else {
-            \Swoole\Coroutine\run($read);
-        }
-
-        $this->assertMatchesRegularExpression('/^database_\d+_collection_\d+$/', $table);
-
-        return $table;
-    }
-
     private function createCustomerWithOrder(): array
     {
         $serverHeaders = [

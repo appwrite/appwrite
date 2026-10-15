@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
+use Tests\E2E\Traits\InternalTableName;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -10,6 +11,8 @@ use Utopia\Database\Role;
 
 trait QueryJoinPermissions
 {
+    use InternalTableName;
+
     private static array $joinPermissionsCache = [];
 
     protected function isTablesDB(): bool
@@ -96,22 +99,27 @@ trait QueryJoinPermissions
 
     protected function graphqlJoin(string $query, array $variables): array
     {
-        return $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        return $this->graphqlJoinAs(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'query' => $query,
-            'variables' => $variables,
-        ]);
+        ], $this->getHeaders()), $query, $variables);
     }
 
     protected function graphqlJoinWithKey(string $query, array $variables, string $key): array
     {
-        return $this->client->call(Client::METHOD_POST, '/graphql', [
+        return $this->graphqlJoinAs([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $key,
-        ], [
+        ], $query, $variables);
+    }
+
+    /**
+     * @param array<string, string> $headers
+     */
+    protected function graphqlJoinAs(array $headers, string $query, array $variables): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
             'query' => $query,
             'variables' => $variables,
         ]);
@@ -981,6 +989,41 @@ trait QueryJoinPermissions
         }
     }
 
+    public function testJoinByInternalTableNameIsNotFound(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+        $readable = $this->internalTableName($data['databaseId'], $data['ordersId']);
+        $unreadable = $this->internalTableName($data['databaseId'], $data['dsOffDeniedId']);
+        $unknown = $this->missingInternalTableName($readable);
+        $resource = $this->isTablesDB() ? 'Table' : 'Collection';
+        $queries = fn (string $joined): array => [
+            Query::join($joined, 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::select(['name', 'ord.$id'])->toString(),
+        ];
+
+        foreach ($this->joinCallers() as $caller => $headers) {
+            $byPublicId = $this->graphqlJoinAs($headers, $this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], $queries($data['ordersId'])));
+            $this->assertArrayNotHasKey('errors', $byPublicId['body'], "{$caller}: a join by the public ID of a readable collection succeeds");
+
+            foreach ([$readable, $unreadable, $unknown] as $joined) {
+                $reads = [
+                    'list' => $this->graphqlJoinAs($headers, $this->joinListQuery(), $this->joinListVariables($data['databaseId'], $data['customersId'], $queries($joined))),
+                    'get' => $this->graphqlJoinAs($headers, $this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['customersId'], $data['aliceId'], $queries($joined))),
+                ];
+
+                foreach ($reads as $read => $result) {
+                    $this->assertArrayHasKey('errors', $result['body'], "{$caller} {$read} of {$joined}: a table name is not a public ID");
+                    $this->assertSame("{$resource} with the requested ID '{$joined}' could not be found.", $result['body']['errors'][0]['message'] ?? null, "{$caller} {$read} of {$joined}: the refusal is the same whether or not the table exists");
+                    $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
+                }
+            }
+        }
+    }
+
     public function testSelfJoinDoesNotLeakOtherRow(): void
     {
         if (!$this->getSupportForJoins()) {
@@ -1169,6 +1212,30 @@ trait QueryJoinPermissions
             'databasesListDocuments' => "Collection with the requested ID '{$collections['ordersId']}' could not be found.",
             'tablesDBListRows' => "Table with the requested ID '{$tables['ordersId']}' could not be found.",
         ], $messages, 'each field is refused with the not-found type of its own API, naming its own joined resource');
+    }
+
+    /**
+     * @return array<string, array<string, string>> Request headers of a guest, a signed-in user and an API key
+     */
+    private function joinCallers(): array
+    {
+        $guest = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        return [
+            'guest' => $guest,
+            'user' => [
+                ...$guest,
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+            ],
+            'key' => [
+                ...$guest,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+        ];
     }
 
     /**
