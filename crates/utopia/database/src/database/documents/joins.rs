@@ -77,7 +77,12 @@ impl Database {
     /// The documents validator of a collection, kept per collection, tenant,
     /// limit and definition when there are no joins
     /// (`getDocumentsValidator()`).
+    ///
+    /// A mirror uses its source's, so it reuses the source's cache.
     pub(crate) fn documents_validator(&self, collection: &Collection, joins: bool) -> Result<Arc<DocumentsValidator>> {
+        if let Some(parts) = self.inner.mirror.get() {
+            return parts.source.documents_validator(collection, joins);
+        }
         if joins {
             return self.create_documents_validator(collection).map(Arc::new);
         }
@@ -117,6 +122,9 @@ impl Database {
         queries: &[Query],
         joins: bool,
     ) -> Result<QueriesValidator> {
+        if let Some(parts) = self.inner.mirror.get() {
+            return parts.source.queries_validator(collection, queries, joins);
+        }
         if !joins
             && Narrow::accepts(queries)
             && let Some(narrow) =

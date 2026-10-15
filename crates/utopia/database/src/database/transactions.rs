@@ -128,6 +128,9 @@ impl Database {
         Fut: Future<Output = Result<T>> + Send,
         T: Send,
     {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.source.with_transaction(callback)).await;
+        }
         self.with_invalidation_scope(self.with_adapter_transaction(callback)).await
     }
 

@@ -45,6 +45,9 @@ impl Database {
     /// ([`crate::Kind::Refused`]) when the adapter does not create the
     /// column, and as the attribute validator does.
     pub async fn create_attribute(&self, collection: &str, attribute: Attribute) -> Result<Attribute> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_attribute(collection, attribute)).await;
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let attribute = Database::normalise(&attribute)?;
         let id = definition.id().to_owned();
@@ -90,6 +93,9 @@ impl Database {
     /// to create`) or one without a key (`Missing attribute key`), and as
     /// [`Database::create_attribute`] does.
     pub async fn create_attributes(&self, collection: &str, attributes: Vec<Attribute>) -> Result<Vec<Attribute>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_attributes(collection, attributes)).await;
+        }
         if attributes.is_empty() {
             return Err(Error::database("No attributes to create"));
         }
@@ -173,6 +179,9 @@ impl Database {
     /// ([`crate::Kind::Refused`]) when the adapter does not alter the
     /// column.
     pub async fn update_attribute(&self, collection: &str, key: &str, update: Update) -> Result<Attribute> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.update_attribute(collection, key, update)).await;
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let id = definition.id().to_owned();
 
@@ -349,6 +358,9 @@ impl Database {
     /// ([`crate::Kind::Dependency`]) for an indexed array, and
     /// ([`crate::Kind::Refused`]) when the adapter does not drop the column.
     pub async fn delete_attribute(&self, collection: &str, key: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.delete_attribute(collection, key)).await;
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let id = definition.id().to_owned();
         let mut attributes = definition.attributes()?.to_vec();
@@ -406,6 +418,10 @@ impl Database {
     /// ([`crate::Kind::Database`]) when the adapter fails, and
     /// ([`crate::Kind::Refused`]) when it does not rename the column.
     pub async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "renameAttribute", |db| db
+                .rename_attribute(collection, old, new));
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let id = definition.id().to_owned();
         let attributes = definition.attributes()?.to_vec();

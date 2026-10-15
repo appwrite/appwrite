@@ -28,14 +28,34 @@ impl Database {
     ///
     /// Fails as [`Database::upsert_documents`] does.
     pub async fn upsert_document(&self, collection: &str, document: Document) -> Result<Document> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.upsert_document(self, collection, document)).await;
+        }
+        self.upsert_document_tracked(collection, document, None).await
+    }
+
+    /// [`Database::upsert_document`], leaving in `tracked` the document as
+    /// PHP leaves the object it was given (see
+    /// [`Database::upsert_documents_tracked`]).
+    pub(crate) async fn upsert_document_tracked(
+        &self,
+        collection: &str,
+        document: Document,
+        tracked: Option<&mut Document>,
+    ) -> Result<Document> {
         let id = document.id().to_owned();
+        let mut slots = tracked.as_ref().map(|t| vec![(**t).clone()]);
         let mut result: Option<(Document, bool)> = None;
         {
             let mut record = |(upserted, previous): (Document, Option<Document>)| -> Result<()> {
                 result = Some((upserted, previous.is_none()));
                 Ok(())
             };
-            self.upsert(collection, vec![document], 1, Some(&mut record), None).await?;
+            let upserted = self.upsert(collection, vec![document], 1, Some(&mut record), None, slots.as_mut()).await;
+            if let (Some(tracked), Some(slot)) = (tracked, slots.and_then(|s| s.into_iter().next())) {
+                *tracked = slot;
+            }
+            upserted?;
         }
 
         let Some((result, created)) = result else {
@@ -72,9 +92,28 @@ impl Database {
         on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
         increase: Option<&str>,
     ) -> Result<i64> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.upsert_documents(self, collection, documents, batch_size, on_next, increase)).await;
+        }
+        self.upsert_documents_tracked(collection, documents, batch_size, on_next, increase, None).await
+    }
+
+    /// [`Database::upsert_documents`], leaving in `tracked` (the documents
+    /// given) each document as PHP leaves the object it was given: as
+    /// compared when it changes nothing, else as written and, once its batch
+    /// is written, as decoded.
+    pub(crate) async fn upsert_documents_tracked(
+        &self,
+        collection: &str,
+        documents: Vec<Document>,
+        batch_size: i64,
+        on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
+        increase: Option<&str>,
+        tracked: Option<&mut Vec<Document>>,
+    ) -> Result<i64> {
         let given = !documents.is_empty();
         let (created, updated) =
-            self.upsert(collection, documents, self::batch_size(batch_size)?, on_next, increase).await?;
+            self.upsert(collection, documents, self::batch_size(batch_size)?, on_next, increase, tracked).await?;
 
         let listeners = if given { self.listens(Event::DocumentsUpsert) } else { Vec::new() };
         if !listeners.is_empty() {
@@ -94,6 +133,7 @@ impl Database {
         batch_size: i64,
         on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
         increase: Option<&str>,
+        mut tracked: Option<&mut Vec<Document>>,
     ) -> Result<(i64, i64)> {
         let mut on_next = on_next;
         let adapter = self.inner.adapter.clone();
@@ -137,7 +177,9 @@ impl Database {
         let authorization = self.authorization();
 
         let mut changes: Vec<Change> = Vec::with_capacity(documents.len());
-        for document in documents {
+        // The index of the document given each change writes.
+        let mut given: Vec<usize> = Vec::with_capacity(documents.len());
+        for (index, document) in documents.into_iter().enumerate() {
             let old = existing.get(&self.upsert_key(&document)).cloned().unwrap_or_default();
 
             let mut document = self.remove_unknown_attributes(&collection, document, None);
@@ -195,6 +237,9 @@ impl Database {
 
             if !has_changes {
                 // The document is the stored one: skip it.
+                if let Some(slot) = tracked.as_deref_mut().and_then(|t| t.get_mut(index)) {
+                    *slot = document;
+                }
                 continue;
             }
 
@@ -293,6 +338,10 @@ impl Database {
             let old = self.cast_before(&collection, old)?;
             let document = self.cast_before(&collection, document)?;
 
+            if let Some(slot) = tracked.as_deref_mut().and_then(|t| t.get_mut(index)) {
+                *slot = document.clone();
+            }
+            given.push(index);
             changes.push(Change::new(old, document));
         }
 
@@ -307,7 +356,20 @@ impl Database {
             return Err(Error::duplicate("Duplicate document IDs found in the input array."));
         }
 
-        for chunk in changes.chunks(batch_size as usize) {
+        for (number, chunk) in changes.chunks(batch_size as usize).enumerate() {
+            let indexes = &given[number * batch_size as usize..number * batch_size as usize + chunk.len()];
+            let mut track = |batch: &[Document]| {
+                if batch.len() != chunk.len() {
+                    return;
+                }
+                if let Some(tracked) = tracked.as_deref_mut() {
+                    for (document, index) in batch.iter().zip(indexes) {
+                        if let Some(slot) = tracked.get_mut(*index) {
+                            *slot = document.clone();
+                        }
+                    }
+                }
+            };
             let has_operators = chunk.iter().any(|c| operator_ids.contains(&self.document_identity(&c.new)));
 
             let target: Vec<Target> = chunk.iter().map(|c| Target::Document(c.new.clone())).collect();
@@ -346,6 +408,7 @@ impl Database {
             if on_next.is_some() || has_relationships {
                 batch = adapter.get_sequences(&collection, batch).await?;
             }
+            track(&batch);
 
             for change in chunk {
                 if change.old.is_empty() {
@@ -376,6 +439,7 @@ impl Database {
                     decoded.push(self.decode(&collection, document, &[]).await?);
                 }
                 batch = decoded;
+                track(&batch);
             }
 
             let batch = self.decorate_documents(Event::DocumentsUpsert, &collection, batch).await?;

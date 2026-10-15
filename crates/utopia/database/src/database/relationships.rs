@@ -76,6 +76,9 @@ impl Database {
     /// collection's limits, and ([`crate::Kind::Refused`]) when the adapter
     /// does not create the relationship.
     pub async fn create_relationship(&self, collection: &str, relationship: Relationship) -> Result<Relationship> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_relationship(collection, relationship)).await;
+        }
         self.relationship_storage()?;
         let adapter = &self.inner.adapter;
 
@@ -282,6 +285,9 @@ impl Database {
     /// and ([`crate::Kind::Refused`]) when the adapter does not rename the
     /// relationship's columns.
     pub async fn update_relationship(&self, collection: &str, key: &str, update: Update) -> Result<Relationship> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.update_relationship(collection, key, update)).await;
+        }
         let storage = self.relationship_storage()?;
 
         let collection = self.get_collection(collection).await?;
@@ -548,6 +554,10 @@ impl Database {
     /// for a missing relationship, and ([`crate::Kind::Refused`]) when the
     /// adapter does not drop the relationship.
     pub async fn delete_relationship(&self, collection: &str, key: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "deleteRelationship", |db| db
+                .delete_relationship(collection, key));
+        }
         self.relationship_storage()?;
 
         let collection = self.silent(self.get_collection(collection)).await?;

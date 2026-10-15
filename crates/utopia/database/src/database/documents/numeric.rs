@@ -210,6 +210,10 @@ impl Database {
         value: Value,
         max: Option<Value>,
     ) -> Result<Document> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "increaseDocumentAttribute", |db| db
+                .increase_document_attribute(collection, id, attribute, value.clone(), max.clone()));
+        }
         self.step_document_attribute(collection, id, attribute, value, max, true).await
     }
 
@@ -226,6 +230,10 @@ impl Database {
         value: Value,
         min: Option<Value>,
     ) -> Result<Document> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "decreaseDocumentAttribute", |db| db
+                .decrease_document_attribute(collection, id, attribute, value.clone(), min.clone()));
+        }
         self.step_document_attribute(collection, id, attribute, value, min, false).await
     }
 

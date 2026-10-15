@@ -69,13 +69,24 @@ pub async fn call(op: &str, json: &Json, a: &Args) -> R<Obj> {
                 .map_err(|e| crate::adapter::Fault::new(format!("db.redis: {e}")))?;
             return Ok(Obj::null());
         }
-        "db.mirror"
-        | "database.on_error"
-        | "database.get_source"
-        | "database.get_destination"
-        | "database.create_upgrades"
-        | "database.await_replications" => {
-            return fault(format!("{op}: Mirror is not ported to the Rust database 8 crate (src/legacy)"));
+        "db.mirror" => {
+            let db = cx.db(json)?;
+            let Some(parts) = db.mirror else {
+                return fault("db.mirror: not a mirror");
+            };
+            let part = match a.string_or("part", "source")?.as_str() {
+                "source" => Some(parts.source.clone()),
+                "destination" => parts.destination.clone(),
+                _ => None,
+            };
+            return Ok(match part {
+                Some(part) => Obj::Value(super::codec::decode(&cx.handle_db(part))?),
+                None => Obj::null(),
+            });
+        }
+        "database.on_error" => {
+            let db = cx.db(json)?;
+            return super::mirror::on_error(&db.database, &a.string_or("name", "error")?);
         }
         "db.adapter" => {
             let db = cx.db(json)?;

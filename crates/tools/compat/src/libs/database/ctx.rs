@@ -104,6 +104,8 @@ pub struct Db {
     pub sql: Option<Arc<utopia_database::adapter::sql::Sql>>,
     /// The connection pool of a Pool database (`pool.of` shares it).
     pub pool: Option<Arc<super::open::PoolFixture>>,
+    /// The source and destination of a mirror (`db.mirror`).
+    pub mirror: Option<Arc<super::mirror::Parts>>,
 }
 
 /// A session's state.
