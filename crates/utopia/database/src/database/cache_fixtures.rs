@@ -28,7 +28,7 @@ where
         std::thread::Builder::new()
             .stack_size(64 * 1024 * 1024)
             .spawn_scoped(scope, || {
-                let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("a runtime");
+                let runtime = utopia_async::Builder::current_thread().build().expect("a runtime");
                 runtime.block_on(Box::pin(test()))
             })
             .expect("a thread")

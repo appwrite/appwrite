@@ -12,10 +12,8 @@ publish.workspace = true
 indexmap.workspace = true
 php-std.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["fs"] }
+utopia-async.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["fs", "rt", "macros"] }
 
 [package.metadata.utopia]
 category = "utilities"

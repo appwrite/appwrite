@@ -56,7 +56,7 @@ pub fn proof() -> Box<dyn Hash> {
 
 /// `proofForPassword->hash($password)`, on the blocking pool.
 pub async fn hash_password(password: String) -> Result<String> {
-    let hashed = tokio::task::spawn_blocking(move || proof().hash(password.as_bytes()))
+    let hashed = utopia_async::spawn_blocking(move || proof().hash(password.as_bytes()))
         .await
         .map_err(|e| Error::internal(e.to_string()))?
         .map_err(|e| Error::internal(e.to_string()))?;
@@ -84,7 +84,7 @@ pub async fn verify_password(user: &User, password: &str) -> Result<bool> {
     let hash = user_hash(user)?;
     let stored = user.password.clone().unwrap_or_default();
     let password = password.to_owned();
-    tokio::task::spawn_blocking(move || hash.verify(password.as_bytes(), stored.as_bytes()).unwrap_or(false))
+    utopia_async::spawn_blocking(move || hash.verify(password.as_bytes(), stored.as_bytes()).unwrap_or(false))
         .await
         .map_err(|e| Error::internal(e.to_string()))
 }
@@ -95,7 +95,7 @@ pub async fn recently_used(user: &User, history: &[String], password: &str) -> R
     let hash = user_hash(user)?;
     let candidate = password.to_owned();
     let entries = history.to_vec();
-    tokio::task::spawn_blocking(move || {
+    utopia_async::spawn_blocking(move || {
         if !(8..=256).contains(&candidate.len()) {
             return true;
         }
@@ -397,7 +397,7 @@ pub async fn mqtt_revoke(ctx: &Context, user_id: &str) {
 /// `Template::fromFile(<templates>/<name>)`.
 pub async fn template_file(ctx: &Context, name: &str) -> Result<Template> {
     let path = ctx.state.config.asset(&format!("app/config/locale/templates/{name}"));
-    let content = tokio::fs::read_to_string(&path)
+    let content = utopia_async::fs::read_to_string(&path)
         .await
         .map_err(|_| Error::internal(format!("{} view template is not readable.", path.display())))?;
     Ok(Template::new(content))

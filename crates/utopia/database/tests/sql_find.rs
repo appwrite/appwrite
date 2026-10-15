@@ -327,42 +327,42 @@ mod sql_find {
         assert!(failures.is_empty(), "{} differences:\n{}", failures.len(), failures.join("\n"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn sqlite_plain() {
         run(Engine::Sqlite, false).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn sqlite_shared() {
         run(Engine::Sqlite, true).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_plain() {
         run(Engine::Postgres, false).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_shared() {
         run(Engine::Postgres, true).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb_plain() {
         run(Engine::MariaDb, false).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb_shared() {
         run(Engine::MariaDb, true).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_plain() {
         run(Engine::MySql, false).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_shared() {
         run(Engine::MySql, true).await;
     }
@@ -519,7 +519,7 @@ mod builder_statement {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reads_compile_as_recorded() {
         for shared in [false, true] {
             check(Engine::Sqlite, "SQLite", shared).await;
@@ -736,22 +736,22 @@ mod capture {
         assert!(failures.is_empty(), "{} differences:\n{}", failures.len(), failures.join("\n"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn sqlite() {
         run(Engine::Sqlite, "sqlite").await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres() {
         run(Engine::Postgres, "postgres").await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb() {
         run(Engine::MariaDb, "mariadb").await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql() {
         run(Engine::MySql, "mysql").await;
     }

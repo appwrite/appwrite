@@ -569,7 +569,7 @@ pub trait Adapter: Send + Sync {
 /// use utopia_domains::registrar::{Contact, Mock, Purchase, RegType, Registrar};
 ///
 /// let registrar = Registrar::new(Mock::new());
-/// tokio::runtime::Runtime::new()?.block_on(async {
+/// utopia_async::Runtime::new()?.block_on(async {
 ///     let availability = registrar.available(&["my-app.com".to_owned(), "google.com".to_owned()]).await?;
 ///     assert_eq!(availability["my-app.com"], true);
 ///     assert_eq!(availability["google.com"], false);

@@ -518,7 +518,7 @@ impl Mongo {
                 }
             }
             let delay = (50_000u64 * 2u64.pow(attempt)).min(500_000);
-            tokio::time::sleep(Duration::from_micros(delay)).await;
+            utopia_async::sleep(Duration::from_micros(delay)).await;
         }
         Err(Error::database(format!("Index {id} creation timed out after {retries} retries")))
     }

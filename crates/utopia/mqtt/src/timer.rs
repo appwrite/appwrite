@@ -62,8 +62,8 @@ struct Inner {
 /// client sends) moves the id to a later bucket, so only silent clients are
 /// reaped, at most `interval` seconds late.
 ///
-/// The heartbeat runs on the tokio runtime the first id is scheduled from
-/// (feature `tokio`); without one, call [`drain`](TimingWheel::drain)
+/// The heartbeat runs on the runtime the first id is scheduled from
+/// (feature `network`); without one, call [`drain`](TimingWheel::drain)
 /// yourself.
 ///
 /// ```
@@ -142,15 +142,15 @@ impl TimingWheel {
         drain(&self.inner, now);
     }
 
-    #[cfg(feature = "tokio")]
+    #[cfg(feature = "network")]
     fn heartbeat(&self) {
-        let Ok(runtime) = tokio::runtime::Handle::try_current() else {
+        let Some(runtime) = utopia_async::Handle::current() else {
             return;
         };
         let inner = Arc::downgrade(&self.inner);
         let period = std::time::Duration::from_secs(self.interval.max(1) as u64);
         runtime.spawn(async move {
-            let mut ticker = tokio::time::interval_at(tokio::time::Instant::now() + period, period);
+            let mut ticker = utopia_async::time::interval_at(std::time::Instant::now() + period, period);
             loop {
                 ticker.tick().await;
                 let Some(inner) = inner.upgrade() else {
@@ -161,7 +161,7 @@ impl TimingWheel {
         });
     }
 
-    #[cfg(not(feature = "tokio"))]
+    #[cfg(not(feature = "network"))]
     fn heartbeat(&self) {}
 }
 

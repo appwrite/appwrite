@@ -15,7 +15,7 @@
 //! vectors or upserts.
 //!
 //! ```
-//! # tokio::runtime::Runtime::new()?.block_on(async {
+//! # utopia_async::Runtime::new()?.block_on(async {
 //! use utopia_database::Adapter;
 //! use utopia_database::adapter::memory::Memory;
 //!

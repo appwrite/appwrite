@@ -43,7 +43,7 @@ struct State {
 ///     state: "LDN".into(), country: "GB".into(), postalcode: "N1".into(), ..Contact::default()
 /// };
 /// let registrar = Registrar::new(Mock::new());
-/// tokio::runtime::Runtime::new()?.block_on(async {
+/// utopia_async::Runtime::new()?.block_on(async {
 ///     let order = registrar.purchase(&Purchase::new("my-app.com", contact)).await?;
 ///     assert!(order.starts_with("mock_"));
 ///     assert_eq!(registrar.adapter().purchased(), ["my-app.com"]);

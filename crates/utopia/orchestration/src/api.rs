@@ -5,10 +5,9 @@ use std::time::{Duration, Instant};
 
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
-use hyper_util::rt::TokioIo;
 use php_std::json::{self, Flags};
 use php_std::types::{Array, ArrayKey, KeyRef, Str, Value};
-use tokio::net::UnixStream;
+use utopia_async::net::UnixStream;
 
 use crate::{Adapter, BoxFuture, Container, Error, Io, Network, RunOptions, Settings, Stats, filter_env_key};
 
@@ -168,8 +167,9 @@ impl DockerApi {
 
     async fn connect(&self) -> Option<hyper::client::conn::http1::SendRequest<Full<Bytes>>> {
         let stream = UnixStream::connect(&self.socket).await.ok()?;
-        let (sender, connection) = hyper::client::conn::http1::handshake(TokioIo::new(stream)).await.ok()?;
-        tokio::spawn(async move {
+        let (sender, connection) =
+            hyper::client::conn::http1::handshake(utopia_async::hyper::Io::new(stream)).await.ok()?;
+        utopia_async::spawn(async move {
             let _ = connection.await;
         });
         Some(sender)
@@ -202,7 +202,7 @@ impl DockerApi {
             Some(Reply { status, body: Some(body.to_vec()) })
         };
         let reply = match timeout {
-            t if t > 0 => tokio::time::timeout(Duration::from_secs(t as u64), exchange).await.ok().flatten(),
+            t if t > 0 => utopia_async::timeout(Duration::from_secs(t as u64), exchange).await.ok().flatten(),
             _ => exchange.await,
         };
         reply.unwrap_or_else(Reply::none)
@@ -261,7 +261,7 @@ impl DockerApi {
             Ok::<(), Error>(())
         };
         match timeout {
-            t if t > 0 => match tokio::time::timeout(Duration::from_secs(t as u64), exchange).await {
+            t if t > 0 => match utopia_async::timeout(Duration::from_secs(t as u64), exchange).await {
                 Ok(result) => result?,
                 Err(_) => {
                     return Err(Error::Timeout(format!(

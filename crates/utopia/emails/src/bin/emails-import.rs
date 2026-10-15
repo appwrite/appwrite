@@ -627,7 +627,7 @@ fn main() -> ExitCode {
         stats();
         Ok(())
     });
-    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+    let runtime = match utopia_async::Builder::current_thread().build() {
         Ok(runtime) => runtime,
         Err(e) => {
             error(&e.to_string());

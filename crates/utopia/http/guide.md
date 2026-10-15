@@ -7,7 +7,7 @@ Register a route for a method and a path, and give it an action that writes the 
 ```
 use utopia_http::{Bytes, Http, Request, Response};
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.get("/hello")?.inject("response").action(async |scope| {
@@ -59,7 +59,7 @@ use serde_json::{Value, json};
 use utopia_http::{Bytes, Http, Param, Request, Response};
 use utopia_validators::Text;
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.get("/users/:userId")?
@@ -125,7 +125,7 @@ use serde_json::{Value, json};
 use utopia_http::{Bytes, Http, Param, Request, Response};
 use utopia_validators::{Range, WhiteList};
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.get("/files")?
@@ -210,7 +210,7 @@ use serde_json::{Value, json};
 use utopia_http::{Bytes, Http, Param, Request, Response};
 use utopia_validators::{Range, Text};
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.post("/users")?
@@ -278,7 +278,7 @@ Read request headers from the request, and add headers and cookies to the respon
 ```
 use utopia_http::{Bytes, Cookie, Http, Request, Response};
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.get("/session")?.inject("request").inject("response").action(async |scope| {
@@ -343,7 +343,7 @@ use utopia_http::{Bytes, Http, Request, Response};
 
 type Log = Mutex<Vec<&'static str>>;
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 let log: Arc<Log> = Arc::default();
@@ -417,7 +417,7 @@ An action fails by returning an error with a message and an HTTP code. The error
 use serde_json::json;
 use utopia_http::{Bytes, Error, Http, Request, Response};
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.get("/teams/:teamId")?.action(async |_| Err(Error::http("Team not found", 404)));
@@ -489,7 +489,7 @@ struct Greeter {
     greeting: String,
 }
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 http.resources().set("greeter", Arc::new(Greeter { greeting: "Hello".into() }));
@@ -563,7 +563,7 @@ use serde_json::{Value, json};
 use utopia_http::{Bytes, Http, Param, Request, Response};
 use utopia_validators::Text;
 
-# #[tokio::main(flavor = "current_thread")]
+# #[utopia_async::main]
 # async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut http = Http::new("UTC");
 let mut route = http

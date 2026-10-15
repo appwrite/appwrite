@@ -1,4 +1,4 @@
-NATS is a message bus: clients publish messages to subjects and subscribe to subjects (with `*` and `>` wildcards), ask for a reply and get one, and through JetStream keep messages in streams that consumers read at their own pace. This library is a NATS client for all of it: a `Connection` over TCP, TLS or WebSockets, request-reply and batched requests, headers, JetStream streams and consumers, a key-value store, an object store, and NATS micro services. Everything is async, so the examples run on a Tokio runtime; they connect to `NATS_URL` (`nats://127.0.0.1:4222` by default) and skip when nothing answers there. This guide covers the common tasks.
+NATS is a message bus: clients publish messages to subjects and subscribe to subjects (with `*` and `>` wildcards), ask for a reply and get one, and through JetStream keep messages in streams that consumers read at their own pace. This library is a NATS client for all of it: a `Connection` over TCP, TLS or WebSockets, request-reply and batched requests, headers, JetStream streams and consumers, a key-value store, an object store, and NATS micro services. Everything is async, so the examples run with `utopia_async::run`; they connect to `NATS_URL` (`nats://127.0.0.1:4222` by default) and skip when nothing answers there. This guide covers the common tasks.
 
 ## Publish and subscribe
 
@@ -8,7 +8,7 @@ NATS is a message bus: clients publish messages to subjects and subscribe to sub
 use std::time::Duration;
 use utopia_nats::{Connection, ConnectionOptions, Headers};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -52,7 +52,7 @@ A callback receives each message as the connection reads it. Callbacks cannot ho
 use std::time::Duration;
 use utopia_nats::{Connection, ConnectionOptions, Message};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -96,7 +96,7 @@ echo $connection->request('guide.math.double', '21', 2.0)->data, "\n"; // 42
 use std::time::Duration;
 use utopia_nats::{Connection, ConnectionOptions, Error, Request, RequestMany};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -154,7 +154,7 @@ The connection sends keepalive PINGs only from calls that also read, and recycle
 use std::time::Duration;
 use utopia_nats::{Connection, ConnectionOptions};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ping_interval: Duration::from_secs(20), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -190,7 +190,7 @@ use std::time::Duration;
 use utopia_nats::jetstream::{ConsumerConfig, PublishOptions, StorageType, StreamConfig};
 use utopia_nats::{Connection, ConnectionOptions};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -247,7 +247,7 @@ use utopia_nats::key_value::KeyValueConfig;
 use utopia_nats::object_store::{ObjectStore, ObjectStoreConfig};
 use utopia_nats::{Connection, ConnectionOptions, Error};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -304,7 +304,7 @@ use bytes::Bytes;
 use utopia_nats::services::Service;
 use utopia_nats::{Connection, ConnectionOptions, Error};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
     let options = ConnectionOptions { connect_timeout: Duration::from_millis(200), ..ConnectionOptions::new([url]) };
     let Ok(mut connection) = Connection::connect(options).await else { return Ok(()) };
@@ -395,7 +395,7 @@ impl Transport for Script {
     async fn close(&mut self) {}
 }
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let script = Script::default();
     let transport = script.clone();
     let options = ConnectionOptions {
@@ -433,4 +433,4 @@ var_dump(str_ends_with($transport->written, "PUB orders 2\r\nhi\r\n")); // true
 
 ## Why the protocol is implemented here
 
-The workspace already depends on `async-nats`, the NATS maintainers' client, for the queue broker. This crate does not wrap it: what the PHP client does on the wire is part of its contract, and `async-nats` does it differently. The PHP client sends `lang: php` with its own `CONNECT` fields, writes a batch of requests as one write after one inbox subscription, answers a server `PING` inline, never replays a write that may have reached the server, reports a frame cut short as a desynced connection rather than a timeout, maps each `-ERR` onto its own exception and message, and drives keepalives only from calls that read. Callers, other services and the compat tests observe all of these (byte for byte, through a scripted transport). A native implementation on tokio matches them exactly, keeps one owner per connection without a background task, and costs a few thousand lines; it also lets tests swap the transport, which `async-nats` does not allow.
+The workspace already depends on `async-nats`, the NATS maintainers' client, for the queue broker. This crate does not wrap it: what the PHP client does on the wire is part of its contract, and `async-nats` does it differently. The PHP client sends `lang: php` with its own `CONNECT` fields, writes a batch of requests as one write after one inbox subscription, answers a server `PING` inline, never replays a write that may have reached the server, reports a frame cut short as a desynced connection rather than a timeout, maps each `-ERR` onto its own exception and message, and drives keepalives only from calls that read. Callers, other services and the compat tests observe all of these (byte for byte, through a scripted transport). A native implementation on utopia-async matches them exactly, keeps one owner per connection without a background task, and costs a few thousand lines; it also lets tests swap the transport, which `async-nats` does not allow.

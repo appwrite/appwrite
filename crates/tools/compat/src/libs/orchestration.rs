@@ -345,7 +345,7 @@ async fn wait_gone(name: &str, seconds: i64) -> Result<bool, Fault> {
         if stdout.iter().all(u8::is_ascii_whitespace) {
             return Ok(true);
         }
-        tokio::time::sleep(Duration::from_millis(250)).await;
+        utopia_async::sleep(Duration::from_millis(250)).await;
         if std::time::Instant::now() >= deadline {
             return Ok(false);
         }
@@ -448,7 +448,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::ok(String::from_utf8_lossy(&stdout).trim().parse::<i64>().unwrap_or(0) > 0)
         }
         "daemon.wait" => {
-            tokio::time::sleep(Duration::from_secs_f64(a.f64("seconds")?)).await;
+            utopia_async::sleep(Duration::from_secs_f64(a.f64("seconds")?)).await;
             Outcome::ok(true)
         }
         "daemon.wait_gone" => Outcome::ok(wait_gone(a.str("name")?, a.opt_i64("seconds")?.unwrap_or(30)).await?),

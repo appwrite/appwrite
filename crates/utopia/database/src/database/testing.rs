@@ -862,9 +862,7 @@ where
     std::thread::scope(|scope| {
         std::thread::Builder::new()
             .stack_size(64 * 1024 * 1024)
-            .spawn_scoped(scope, || {
-                tokio::runtime::Builder::new_current_thread().enable_all().build().expect("a runtime").block_on(future)
-            })
+            .spawn_scoped(scope, || utopia_async::run(future))
             .expect("a thread")
             .join()
             .unwrap_or_else(|e| std::panic::resume_unwind(e))

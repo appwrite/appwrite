@@ -82,19 +82,19 @@ async fn find(queries: Vec<Query>) -> Arc<Fake> {
     fake
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn starts_with_is_anchored_at_the_start_without_flags() {
     let fake = find(vec![Query::starts_with("name", "a.b$")]).await;
     assert_eq!(conditions(&fake), Some(Bson::Array(vec![Bson::Document(doc! { "name": { "$regex": "^a\\.b\\$" } })])));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn ends_with_is_anchored_at_the_end_without_flags() {
     let fake = find(vec![Query::ends_with("name", "a.b$")]).await;
     assert_eq!(conditions(&fake), Some(Bson::Array(vec![Bson::Document(doc! { "name": { "$regex": "a\\.b\\$$" } })])));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn contains_all_keeps_the_all_operator_on_find() {
     let mut query = Query::contains_all("tags", ["a", "b"]);
     query.set_on_array(true);
@@ -106,7 +106,7 @@ async fn contains_all_keeps_the_all_operator_on_find() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn count_rethrows_driver_errors() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -117,7 +117,7 @@ async fn count_rethrows_driver_errors() {
     assert_eq!(failure.message(), "invalid pipeline");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn null_tenant_is_read_as_the_tenant_attribute() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![doc! { "_uid": "first", "_tenant": Bson::Null }]).await;
@@ -129,7 +129,7 @@ async fn null_tenant_is_read_as_the_tenant_attribute() {
     assert_eq!(documents[0].raw("$tenant"), Some(&Value::Null));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn unique_partial_filters_match_the_attribute_types() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -170,7 +170,7 @@ async fn unique_partial_filters_match_the_attribute_types() {
     assert_eq!(partial_filters(&fake), expected);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn key_index_partial_filters_require_only_that_the_leading_field_exists() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -227,7 +227,7 @@ async fn key_index_partial_filters_require_only_that_the_leading_field_exists() 
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn unique_index_on_an_integer_filters_on_the_integer_types() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -252,7 +252,7 @@ async fn unique_index_on_an_integer_filters_on_the_integer_types() {
     assert_eq!(at(&fake.args("createIndexes")[0][1], "0.unique"), Some(&Bson::Boolean(true)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn unique_index_on_an_untyped_attribute_covers_every_value_but_null() {
     let any = doc! { "$exists": true, "$type": [
         "double", "string", "object", "array", "binData", "objectId", "bool", "date", "regex",
@@ -298,7 +298,7 @@ async fn unique_index_on_an_untyped_attribute_covers_every_value_but_null() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn dotted_attributes_are_renamed_and_deleted_by_their_stored_name() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -321,7 +321,7 @@ fn dotted() -> Collection {
     collection(r#"{"$id":"records","attributes":[{"$id":"a.b","key":"a.b","type":"integer"}]}"#)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sum_escapes_dotted_attributes() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -354,7 +354,7 @@ fn field_names(value: &Bson, names: &mut Vec<String>) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn dotted_attributes_inside_groups_and_exists_are_escaped() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -388,7 +388,7 @@ async fn dotted_attributes_inside_groups_and_exists_are_escaped() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn random_order_is_rejected_as_a_query_error() {
     let fake = Fake::new();
     let adapter = query_filter_adapter(&fake, vec![]).await;
@@ -412,7 +412,7 @@ async fn filter_of(query: Query, schemaless: bool) -> Bson {
     at(&fake.args("find")[0][1], "$and.0").cloned().expect("a condition")
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn contains_on_an_array_matches_any_value() {
     let mut contains = Query::contains("genres", ["comics", "kids"]);
     contains.set_on_array(true);
@@ -424,13 +424,13 @@ async fn contains_on_an_array_matches_any_value() {
     assert_eq!(filter_of(contains_any, false).await, expected);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn not_equal_to_several_values_excludes_each_of_them() {
     let query = Query::not_equal("name", QValue::Array(values(&["a", "b"])));
     assert_eq!(filter_of(query, false).await, Bson::Document(doc! { "name": { "$nin": ["a", "b"] } }));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn dollar_prefixed_attribute_is_filtered_by_its_stored_name() {
     assert_eq!(
         filter_of(Query::equal("$meta.key", ["x"]), false).await,
@@ -438,7 +438,7 @@ async fn dollar_prefixed_attribute_is_filtered_by_its_stored_name() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn schemaless_unparsable_date_stays_a_string() {
     assert_eq!(
         filter_of(Query::equal("when", ["2026-13-45T99:99:99Z"]), true).await,
@@ -446,7 +446,7 @@ async fn schemaless_unparsable_date_stays_a_string() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn contains_on_a_string_matches_any_of_several_substrings() {
     for query in [Query::contains("name", ["Captain", "Work"]), Query::contains_any("name", ["Captain", "Work"])] {
         let filter = filter_of(query, false).await;
@@ -460,7 +460,7 @@ async fn contains_on_a_string_matches_any_of_several_substrings() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn not_contains_on_a_string_excludes_the_substring() {
     assert_eq!(
         filter_of(Query::not_contains("name", ["Captain"]), false).await,
@@ -468,7 +468,7 @@ async fn not_contains_on_a_string_excludes_the_substring() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_dollar_word_is_matched_literally() {
     let cases = [
         (Query::contains("label", ["$USD"]), "$regex", ".*\\$USD.*"),
@@ -484,7 +484,7 @@ async fn a_dollar_word_is_matched_literally() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn not_contains_on_an_array_excludes_missing_and_null_arrays() {
     let mut query = Query::not_contains("labels", ["a", "c"]);
     query.set_on_array(true);
@@ -576,7 +576,7 @@ fn assert_tenant_scope_only(fake: &Fake, operations: &[&str]) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn writes_scope_by_tenant_without_read_permission() {
     let (adapter, fake, _) = scope_adapter().await;
 
@@ -608,7 +608,7 @@ async fn writes_scope_by_tenant_without_read_permission() {
     assert_tenant_scope_only(&fake, &["update", "upsert", "delete"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn increments_scope_by_tenant_without_read_permission() {
     let (adapter, fake, _) = scope_adapter().await;
 
@@ -641,7 +641,7 @@ async fn increments_scope_by_tenant_without_read_permission() {
     assert_tenant_scope_only(&fake, &["update"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn get_document_scopes_by_tenant_without_read_permission() {
     let (adapter, fake, _) = scope_adapter().await;
 
@@ -650,7 +650,7 @@ async fn get_document_scopes_by_tenant_without_read_permission() {
     assert_eq!(scope_filters(&fake, "find"), vec![Bson::Document(doc! { "_uid": "first", "_tenant": TENANT })]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn find_filters_by_the_requested_permission() {
     let (adapter, fake, _) = scope_adapter().await;
 
@@ -664,7 +664,7 @@ async fn find_filters_by_the_requested_permission() {
     assert_eq!(at(&filters, "_permissions"), Some(&permissions("update")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn count_and_sum_filter_by_read_permission() {
     let (adapter, fake, _) = scope_adapter().await;
 
@@ -679,7 +679,7 @@ async fn count_and_sum_filter_by_read_permission() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn metadata_reads_filter_definitions_by_read_permission() {
     let (adapter, fake, _) = scope_adapter().await;
     let metadata = collection(r#"{"$id":"_metadata"}"#);
@@ -701,7 +701,7 @@ async fn metadata_reads_filter_definitions_by_read_permission() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn reads_skip_the_permission_filter_while_authorization_is_disabled() {
     let (adapter, fake, authorization) = scope_adapter().await;
 

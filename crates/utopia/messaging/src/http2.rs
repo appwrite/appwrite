@@ -9,9 +9,9 @@ use std::time::{Duration, Instant};
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::client::conn::http2::SendRequest;
-use hyper_util::rt::{TokioExecutor, TokioIo};
-use tokio::net::TcpStream;
-use tokio::sync::Mutex;
+use utopia_async::hyper::{Executor, Io};
+use utopia_async::net::TcpStream;
+use utopia_async::sync::Mutex;
 use utopia_client::{Body, Destinations, Error, Request, Response};
 
 use crate::http::{BoxFuture, Transport};
@@ -54,7 +54,9 @@ impl<D: Destinations> Http2<D> {
         let timed_out =
             || Error::Timeout(format!("Connection timed out after {} milliseconds", started.elapsed().as_millis()));
 
-        let addresses: Vec<SocketAddr> = match within(deadline, tokio::net::lookup_host((host.as_str(), port))).await {
+        let addresses: Vec<SocketAddr> = match within(deadline, utopia_async::net::lookup_host((host.as_str(), port)))
+            .await
+        {
             None => return Err(timed_out()),
             Some(Err(_)) => return Err(Error::Dns(format!("Could not resolve host: {host} (Domain name not found)"))),
             Some(Ok(found)) => found.collect(),
@@ -84,10 +86,9 @@ impl<D: Destinations> Http2<D> {
 
         let handshake = |e: hyper::Error| Error::Protocol(format!("HTTP/2 handshake failed: {e}"));
         if uri.scheme() == "http" {
-            let (send, connection) = hyper::client::conn::http2::handshake(TokioExecutor::new(), TokioIo::new(tcp))
-                .await
-                .map_err(handshake)?;
-            tokio::spawn(connection);
+            let (send, connection) =
+                hyper::client::conn::http2::handshake(Executor, Io::new(tcp)).await.map_err(handshake)?;
+            utopia_async::spawn(connection);
             return Ok(send);
         }
 
@@ -108,8 +109,8 @@ impl<D: Destinations> Http2<D> {
             Some(Ok(tls)) => tls,
         };
         let (send, connection) =
-            hyper::client::conn::http2::handshake(TokioExecutor::new(), TokioIo::new(tls)).await.map_err(handshake)?;
-        tokio::spawn(connection);
+            hyper::client::conn::http2::handshake(Executor, Io::new(tls)).await.map_err(handshake)?;
+        utopia_async::spawn(connection);
         Ok(send)
     }
 
@@ -136,7 +137,7 @@ impl<D: Destinations> Http2<D> {
             Body::Empty => Bytes::new(),
             Body::Bytes(b) => b.clone(),
             Body::File(path) => {
-                Bytes::from(tokio::fs::read(path).await.map_err(|e| Error::InvalidArgument(e.to_string()))?)
+                Bytes::from(utopia_async::fs::read(path).await.map_err(|e| Error::InvalidArgument(e.to_string()))?)
             }
         };
         let mut builder = http::Request::builder().method(request.method()).uri(request.uri().to_string());
@@ -182,7 +183,7 @@ fn effective_port(uri: &utopia_client::Uri) -> u16 {
 async fn within<F: Future>(deadline: Option<Instant>, future: F) -> Option<F::Output> {
     match deadline {
         None => Some(future.await),
-        Some(deadline) => tokio::time::timeout_at(deadline.into(), future).await.ok(),
+        Some(deadline) => utopia_async::time::timeout_at(deadline, future).await.ok(),
     }
 }
 
@@ -193,11 +194,11 @@ mod tests {
     use hyper::service::service_fn;
     use utopia_client::Anywhere;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn speaks_http2_with_prior_knowledge() {
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let (stream, _) = listener.accept().await.unwrap();
             let service = service_fn(|request: hyper::Request<hyper::body::Incoming>| async move {
                 let version = format!("{:?}", request.version());
@@ -213,8 +214,8 @@ mod tests {
                         .unwrap(),
                 )
             });
-            hyper::server::conn::http2::Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(stream), service)
+            hyper::server::conn::http2::Builder::new(Executor)
+                .serve_connection(Io::new(stream), service)
                 .await
                 .unwrap();
         });
@@ -233,9 +234,9 @@ mod tests {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn refuses_destinations_not_allowed() {
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
         let transport = Http2::new(utopia_client::PublicInternet::default(), 5, 5);
         let request = Request::new("POST", &format!("http://127.0.0.1:{port}/")).unwrap();

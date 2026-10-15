@@ -49,9 +49,7 @@ fn main() -> std::io::Result<()> {
     // database) many frames deep.
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
-        .spawn(|| {
-            tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(compat::driver::serve())
-        })?
+        .spawn(|| utopia_async::run(compat::driver::serve()))?
         .join()
         .unwrap_or_else(|e| std::panic::resume_unwind(e))
 }

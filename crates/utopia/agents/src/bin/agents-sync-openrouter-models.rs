@@ -83,7 +83,7 @@ fn main() -> ExitCode {
         .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data").to_string_lossy().into_owned());
     let key = env("OPENROUTER_API_KEY").or_else(|| env("LLM_KEY_OPENROUTER"));
 
-    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+    let runtime = match utopia_async::Builder::current_thread().build() {
         Ok(runtime) => runtime,
         Err(e) => {
             eprintln!("{e}");

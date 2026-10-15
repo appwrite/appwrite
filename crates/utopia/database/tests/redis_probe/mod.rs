@@ -148,7 +148,7 @@ pub async fn probe() -> Option<Probe> {
         let client = redis::Client::open(url.as_str())?;
         client.get_multiplexed_async_connection().await
     };
-    match tokio::time::timeout(Duration::from_secs(3), connect).await {
+    match utopia_async::timeout(Duration::from_secs(3), connect).await {
         Ok(Ok(inner)) => Some(Probe { inner, recorder: Arc::new(Recorder::default()) }),
         Ok(Err(e)) => {
             eprintln!("skipped: Redis at {url} is unreachable ({e})");

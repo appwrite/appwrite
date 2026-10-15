@@ -30,7 +30,7 @@ use crate::hook::SqlBuilder;
 use crate::value::{Array, Value};
 
 /// The connection an adapter runs on.
-pub type Connection = tokio::sync::Mutex<Pdo>;
+pub type Connection = utopia_async::sync::Mutex<Pdo>;
 
 /// The setting MariaDB's and MySQL's session timeout is configured under
 /// (`MariaDB::TIMEOUT_SETTING`).

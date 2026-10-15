@@ -15,7 +15,7 @@ use std::collections::VecDeque;
 
 use php_std::json::Flags;
 use php_std::{ArrayKey, Value};
-use tokio::io::AsyncReadExt;
+use utopia_async::io::AsyncReadExt;
 
 use crate::error::{Error, JsonMachineKind, Result};
 
@@ -179,7 +179,7 @@ fn token_type(b: u8) -> u8 {
 /// The source of a stream's bytes.
 #[derive(Debug)]
 enum Input {
-    File(tokio::fs::File),
+    File(utopia_async::fs::File),
     Bytes(Option<Vec<u8>>),
 }
 
@@ -236,7 +236,7 @@ impl Items {
     /// PHP: `Items::fromFile($path, ['decoder' => ...])`. The file is opened
     /// on the first pull, as PHP's generator opens it on the first iteration.
     pub async fn from_file(path: &str, decoder: Decoder) -> Result<Self> {
-        let file = tokio::fs::File::open(path)
+        let file = utopia_async::fs::File::open(path)
             .await
             .map_err(|e| Error::exception(format!("fopen({path}): Failed to open stream: {}", io_reason(&e)), 0))?;
         Ok(Self::with_input(Input::File(file), decoder))
@@ -448,7 +448,7 @@ mod tests {
         Ok(out)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn arrays_and_errors() {
         assert_eq!(all("[1, {\"a\": [2]}, \"x\"]").await.unwrap().len(), 3);
         assert_eq!(all("[]").await.unwrap().len(), 0);

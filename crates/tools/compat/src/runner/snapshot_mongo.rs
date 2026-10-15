@@ -23,7 +23,7 @@
 //! not `{"$numberLong": "1"}`). Index specs keep every field but `ns`.
 //! Cleanup drops the databases.
 //!
-//! The runner is synchronous and may itself run inside a Tokio runtime, so
+//! The runner is synchronous and may itself run inside a runtime, so
 //! each call runs on its own thread with its own runtime.
 
 use futures_util::TryStreamExt;
@@ -40,7 +40,7 @@ fn with_client<T: Send + 'static>(
 ) -> Result<T, String> {
     let url = url.to_owned();
     std::thread::spawn(move || {
-        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
+        let rt = utopia_async::Builder::current_thread().build().map_err(|e| e.to_string())?;
         rt.block_on(async move {
             let client = mongodb::Client::with_options(options(&url)?).map_err(|e| format!("mongo {url}: {e}"))?;
             let out = f(&client).await;

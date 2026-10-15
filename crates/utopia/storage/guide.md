@@ -9,7 +9,7 @@
 ```rust
 use utopia_storage::{Body, Device, Local};
 
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 let device = Local::new(std::env::temp_dir().join("guide-write").to_str().unwrap());
 let path = device.path("hello.txt");
 
@@ -40,7 +40,7 @@ Pass every chunk to `upload` with the same `Metadata`; the device joins the chun
 ```rust
 use utopia_storage::{Body, Device, Local, Metadata};
 
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 let device = Local::new(std::env::temp_dir().join("guide-chunks").to_str().unwrap());
 let path = device.path("video.mp4");
 let mut metadata = Metadata::default();
@@ -75,7 +75,7 @@ $device->delete($path);
 ```rust
 use utopia_storage::{Body, Device, Error, Local};
 
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 let device = Local::new(std::env::temp_dir().join("guide-lock").to_str().unwrap());
 let path = device.path("lock");
 # let _ = device.delete(&path, false).await;

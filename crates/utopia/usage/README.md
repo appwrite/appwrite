@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-usage = { git = "https://github.com/utopia-rs/usage" }
 ```
 
-Usage metrics count what tenants use: requests and bandwidth (events, which add up) and storage or users (gauges, snapshots whose latest value counts). This library writes them in batches and reads them back as rows, totals, time series and breakdowns by dimension (service, path, country, ...). It stores them in ClickHouse, where a daily rollup and per-dimension projections keep large reads cheap, or in a collection of a `utopia-database` database. Adapters are async, so the examples run them on a Tokio runtime. This guide covers the common tasks.
+Usage metrics count what tenants use: requests and bandwidth (events, which add up) and storage or users (gauges, snapshots whose latest value counts). This library writes them in batches and reads them back as rows, totals, time series and breakdowns by dimension (service, path, country, ...). It stores them in ClickHouse, where a daily rollup and per-dimension projections keep large reads cheap, or in a collection of a `utopia-database` database. Adapters are async, so the examples run them with `utopia_async::run`. This guide covers the common tasks.
 
 ## Buffer metrics and write them in batches
 
@@ -154,7 +154,7 @@ let clickhouse = Arc::new(ClickHouse::new(config)?);
 assert_eq!(clickhouse.connection_stats().request_count, 0);
 
 let usage = Usage::new(clickhouse.clone());
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let health = usage.health_check().await;
     assert_eq!(health.get(&"healthy".into()), Some(&utopia_query::Value::Bool(false)));
 });
@@ -175,7 +175,7 @@ use utopia_query::Query;
 use utopia_usage::adapter::clickhouse::{ClickHouse, Config};
 use utopia_usage::{Entry, Kind, Time, Usage, BATCH_SIZE};
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let mut config = Config::new("clickhouse");
     config.password = "password".into();
     config.shared_tables = true;

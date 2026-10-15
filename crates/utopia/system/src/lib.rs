@@ -335,7 +335,7 @@ impl Host for Machine {
 
     /// Sleeps on the async runtime's timer.
     async fn sleep(&self, seconds: u64) {
-        tokio::time::sleep(Duration::from_secs(seconds)).await;
+        utopia_async::sleep(Duration::from_secs(seconds)).await;
     }
 }
 

@@ -121,7 +121,7 @@ fn stored_ids(rows: &Rows) -> Vec<String> {
     rows.lock().unwrap().iter().map(|r| r.get_str("_uid").unwrap().to_owned()).collect()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn only_documents_with_a_new_id_are_written_and_returned() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("stored", "sequence-stored", None)]));
     let adapter = skip_adapter(&rows, false, None).await;
@@ -142,7 +142,7 @@ async fn only_documents_with_a_new_id_are_written_and_returned() {
     assert_eq!(rows.lock().unwrap()[1].get_str("name").ok(), Some("first"));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_id_stored_under_another_tenant_is_new() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("shared", "sequence-one", Some(1))]));
     let adapter = skip_adapter(&rows, true, None).await;
@@ -160,7 +160,7 @@ async fn an_id_stored_under_another_tenant_is_new() {
     assert_eq!(stored_ids(&rows), vec!["shared", "shared"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_id_differing_only_in_case_is_stored() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("Stored", "sequence-stored", None)]));
     let adapter = skip_adapter(&rows, false, None).await;
@@ -179,7 +179,7 @@ async fn an_id_differing_only_in_case_is_stored() {
     assert_eq!(stored_ids(&rows), vec!["Stored", "Fresh"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_id_the_id_collation_matches_is_not_reported_as_created() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("resume", "sequence-stored", None)]));
     let adapter = skip_adapter(&rows, false, None).await;
@@ -193,7 +193,7 @@ async fn an_id_the_id_collation_matches_is_not_reported_as_created() {
     assert_eq!(stored_ids(&rows), vec!["resume"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_document_another_writer_stores_first_is_not_reported_as_created() {
     let rows: Rows = Arc::default();
     let racing = rows.clone();
@@ -212,7 +212,7 @@ async fn a_document_another_writer_stores_first_is_not_reported_as_created() {
     assert_eq!(stored_ids(&rows), vec!["raced", "fresh"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_replayed_sequence_is_not_reported_as_created() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("stored", "sequence-stored", None)]));
     let adapter = skip_adapter(&rows, false, None).await;
@@ -230,7 +230,7 @@ async fn a_replayed_sequence_is_not_reported_as_created() {
     assert_eq!(stored_ids(&rows), vec!["stored", "moved"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_batch_of_stored_ids_writes_nothing() {
     let rows: Rows = Arc::new(Mutex::new(vec![row("stored", "sequence-stored", None)]));
     let adapter = skip_adapter(&rows, false, None).await;
@@ -267,7 +267,7 @@ fn operation(fake: &Fake, index: usize, path: &str) -> Option<Bson> {
     at(&fake.args("upsert")[0][1], &format!("{index}.{path}")).cloned()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn upsert_stamps_and_matches_the_documents_own_tenant() {
     let (adapter, fake) = upsert_adapter(true, Some(6)).await;
 
@@ -282,7 +282,7 @@ async fn upsert_stamps_and_matches_the_documents_own_tenant() {
     assert_eq!(operation(&fake, 0, "update.$set._tenant"), Some(Bson::Int32(5)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn upsert_falls_back_to_the_selected_tenant() {
     let (adapter, fake) = upsert_adapter(true, Some(3)).await;
 
@@ -292,7 +292,7 @@ async fn upsert_falls_back_to_the_selected_tenant() {
     assert_eq!(operation(&fake, 0, "update.$set._tenant"), Some(Bson::Int32(3)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn upsert_keeps_each_document_under_its_tenant() {
     let (adapter, fake) = upsert_adapter(true, None).await;
 
@@ -309,7 +309,7 @@ async fn upsert_keeps_each_document_under_its_tenant() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn upsert_without_shared_tables_stamps_no_tenant() {
     let (adapter, fake) = upsert_adapter(false, None).await;
 
@@ -362,7 +362,7 @@ fn sequence_row(id: &str, sequence: Bson, tenant: Option<i32>) -> BsonDocument {
     doc! { "_uid": id, "_id": sequence, "_tenant": tenant.map_or(Bson::Null, Bson::Int32), "name": "unprojected" }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sequences_resolve_per_tenant_for_the_same_id() {
     let rows = vec![
         sequence_row("shared", "sequence-one".into(), Some(1)),
@@ -382,7 +382,7 @@ async fn sequences_resolve_per_tenant_for_the_same_id() {
     assert_eq!(documents[1].sequence(), Some(&s("sequence-two")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn document_without_tenant_resolves_under_the_adapter_tenant() {
     let rows = vec![
         sequence_row("first", "sequence-first".into(), Some(3)),
@@ -399,7 +399,7 @@ async fn document_without_tenant_resolves_under_the_adapter_tenant() {
     assert_eq!(documents[1].sequence(), Some(&s("sequence-second")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sequence_resolves_only_within_the_document_tenant() {
     let (adapter, _) =
         sequences_adapter(true, Some(1), vec![sequence_row("shared", "sequence-other".into(), Some(2))]).await;
@@ -410,7 +410,7 @@ async fn sequence_resolves_only_within_the_document_tenant() {
     assert_eq!(documents[0].sequence(), None);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn generated_object_id_is_read_as_its_string() {
     let object_id = ObjectId::parse_str("6553f1c2a4b8e3d2f0c1a9b7").unwrap();
     let (adapter, _) =
@@ -421,7 +421,7 @@ async fn generated_object_id_is_read_as_its_string() {
     assert_eq!(documents[0].sequence(), Some(&s("6553f1c2a4b8e3d2f0c1a9b7")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn documents_with_sequences_are_not_looked_up() {
     let (adapter, fake) = sequences_adapter(false, None, vec![]).await;
 
@@ -473,7 +473,7 @@ fn user(tenant: i64, email: &str, secret: &str) -> Document {
     doc(&format!(r#"{{"$id":"alice","$tenant":{tenant},"$permissions":[],"email":"{email}","secret":"{secret}"}}"#))
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn create_document_returns_the_creating_tenants_document_for_an_id_another_tenant_holds() {
     let adapter = insert_adapter(true).await;
     let users = collection("users");
@@ -491,7 +491,7 @@ async fn create_document_returns_the_creating_tenants_document_for_an_id_another
     assert_eq!(first.get("email"), Some(&s("first@tenant")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn create_document_returns_the_created_document_without_shared_tables() {
     let adapter = insert_adapter(false).await;
 
@@ -506,7 +506,7 @@ async fn create_document_returns_the_created_document_without_shared_tables() {
 
 // ---- MongoIdentifierTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn get_document_reads_an_object_sequence_as_its_string() {
     let fake = Fake::new();
     let object_id = ObjectId::parse_str("507f1f77bcf86cd799439011").unwrap();
@@ -538,7 +538,7 @@ async fn lenient_adapter(first: Vec<BsonDocument>, next: Vec<BsonDocument>) -> M
     adapter
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn get_document_drops_a_stored_non_string_permission() {
     let adapter = lenient_adapter(vec![lenient_row("note")], vec![]).await;
 
@@ -548,7 +548,7 @@ async fn get_document_drops_a_stored_non_string_permission() {
     assert_eq!(document.permissions().unwrap(), vec!["read(\"any\")"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn find_drops_a_stored_non_string_permission_in_every_batch() {
     let adapter = lenient_adapter(vec![lenient_row("first")], vec![lenient_row("second")]).await;
 
@@ -591,7 +591,7 @@ fn cursor_row(id: &str, sequence: &str) -> BsonDocument {
     doc! { "_uid": id, "_id": sequence }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sequences_stop_paging_at_a_batch_without_a_cursor_id() {
     let (adapter, calls) = cursor_adapter(
         vec![cursor_row("first", "sequence-first")],
@@ -613,7 +613,7 @@ async fn sequences_stop_paging_at_a_batch_without_a_cursor_id() {
     assert_eq!(*calls.lock().unwrap(), vec!["getMore"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_find_keeps_its_results_when_the_open_cursor_cannot_be_killed() {
     let (adapter, calls) = cursor_adapter(vec![cursor_row("first", "sequence-first")], vec![vec![]]).await;
 
@@ -649,7 +649,7 @@ fn assert_unique(e: Error) {
     assert_eq!(e.message(), "Unique index violation");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn mongo_document_id_conflict_is_duplicate() {
     assert_duplicate(
         mongo_create_failure(error(
@@ -660,7 +660,7 @@ async fn mongo_document_id_conflict_is_duplicate() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn mongo_unique_index_conflict_with_uid_in_value_is_unique() {
     assert_unique(
         mongo_create_failure(error(
@@ -671,7 +671,7 @@ async fn mongo_unique_index_conflict_with_uid_in_value_is_unique() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn mongo_unparsable_message_is_duplicate() {
     assert_duplicate(mongo_create_failure(error("E11000 duplicate key error", 11000)).await);
 }
@@ -695,7 +695,7 @@ fn mongo_type_mismatch_is_an_invalid_operation() {
 
 // ---- BigIntegerTest (MongoDB)
 
-#[tokio::test]
+#[utopia_async::test]
 async fn mongo_rejects_unsigned_arithmetic_before_bson_coercion() {
     let fake = Fake::new();
     let adapter = Mongo::with_driver(fake.clone()).await.unwrap();
@@ -716,7 +716,7 @@ async fn mongo_rejects_unsigned_arithmetic_before_bson_coercion() {
     assert!(fake.args("query").is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn increments_add_within_the_bounds_by_a_pipeline_update() {
     let fake = Fake::new();
     let adapter = Mongo::with_driver(fake.clone()).await.unwrap();

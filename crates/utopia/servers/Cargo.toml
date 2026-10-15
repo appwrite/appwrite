@@ -16,7 +16,7 @@ utopia-di.workspace = true
 utopia-validators.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "servers"

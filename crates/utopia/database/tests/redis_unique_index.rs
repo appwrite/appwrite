@@ -84,7 +84,7 @@ fn upsert(id: &str, email: &str) -> Change {
     Change::new(Document::empty(), user(id, email))
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_update_documents_rejects_a_duplicate_unique_value() {
     let probe = probe_or_skip!();
     let adapter = users_database(&probe).await;
@@ -112,7 +112,7 @@ async fn test_update_documents_rejects_a_duplicate_unique_value() {
     assert_eq!(emails(&adapter).await, ["first@example.test", "renamed@example.test", "third@example.test"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_upsert_rejects_a_duplicate_unique_value() {
     let probe = probe_or_skip!();
     let adapter = users_database(&probe).await;
@@ -130,7 +130,7 @@ async fn test_upsert_rejects_a_duplicate_unique_value() {
     assert_eq!(emails(&adapter).await, ["first@example.test", "renamed@example.test", "third@example.test"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_batch_cannot_collide_with_itself() {
     let probe = probe_or_skip!();
     let adapter = users_database(&probe).await;
@@ -157,7 +157,7 @@ async fn test_a_batch_cannot_collide_with_itself() {
     assert_eq!(emails(&adapter).await, ["first@example.test", "second@example.test", "third@example.test"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_an_upsert_batch_reads_the_stored_documents_once_for_its_unique_checks() {
     let probe = probe_or_skip!();
     let adapter = users_database(&probe).await;
@@ -203,7 +203,7 @@ async fn test_an_upsert_batch_reads_the_stored_documents_once_for_its_unique_che
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_an_upsert_batch_checks_each_document_against_the_ones_before_it() {
     let probe = probe_or_skip!();
     let adapter = users_database(&probe).await;
@@ -235,7 +235,7 @@ async fn test_an_upsert_batch_checks_each_document_against_the_ones_before_it() 
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_tenant_per_document_checks_the_documents_tenant() {
     let probe = probe_or_skip!();
     let adapter = database(&probe, &namespace("unique_tenants")).await;
@@ -353,7 +353,7 @@ async fn forget(probe: &Probe, pattern: &str) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_dropping_a_collection_named_like_a_key_segment_keeps_other_grants() {
     let probe = probe_or_skip!();
     for shared_tables in [false, true] {
@@ -381,7 +381,7 @@ async fn test_dropping_a_collection_named_like_a_key_segment_keeps_other_grants(
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_dropping_a_collection_removes_grants_written_before_the_registry() {
     let probe = probe_or_skip!();
     for shared_tables in [false, true] {
@@ -397,7 +397,7 @@ async fn test_dropping_a_collection_removes_grants_written_before_the_registry()
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_dropping_a_collection_removes_registered_grants_its_id_index_misses() {
     let probe = probe_or_skip!();
     for shared_tables in [false, true] {
@@ -415,7 +415,7 @@ async fn test_dropping_a_collection_removes_registered_grants_its_id_index_misse
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sizing_a_collection_named_like_a_key_segment_counts_only_its_own_keys() {
     let probe = probe_or_skip!();
     probe.recorder.no_memory.store(true, Ordering::SeqCst);
@@ -435,7 +435,7 @@ async fn test_sizing_a_collection_named_like_a_key_segment_counts_only_its_own_k
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sizing_counts_grants_written_before_the_registry() {
     let probe = probe_or_skip!();
     probe.recorder.no_memory.store(true, Ordering::SeqCst);
@@ -451,7 +451,7 @@ async fn test_sizing_counts_grants_written_before_the_registry() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sizing_counts_registered_grants_its_id_index_misses() {
     let probe = probe_or_skip!();
     probe.recorder.no_memory.store(true, Ordering::SeqCst);
@@ -471,7 +471,7 @@ async fn test_sizing_counts_registered_grants_its_id_index_misses() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sizing_under_shared_tables_counts_only_the_selected_tenants_grants() {
     let probe = probe_or_skip!();
     probe.recorder.no_memory.store(true, Ordering::SeqCst);

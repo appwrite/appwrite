@@ -157,7 +157,7 @@ impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
             let remaining = deadline.saturating_duration_since(Instant::now()).as_secs_f64();
             let sleep = Self::jitter(delay).min(remaining);
             if sleep > 0.0 {
-                tokio::time::sleep(Duration::from_micros((sleep * 1_000_000.0) as u64)).await;
+                utopia_async::sleep(Duration::from_micros((sleep * 1_000_000.0) as u64)).await;
             }
             if self.try_acquire().await? {
                 return Ok(true);

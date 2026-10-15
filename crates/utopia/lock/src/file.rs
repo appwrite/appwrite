@@ -82,7 +82,7 @@ impl Lock for File {
             if remaining <= 0.0 {
                 return Ok(false);
             }
-            tokio::time::sleep(Duration::from_micros((delay.min(remaining) * 1_000_000.0) as u64)).await;
+            utopia_async::sleep(Duration::from_micros((delay.min(remaining) * 1_000_000.0) as u64)).await;
             delay = (delay * 2.0).min(0.25);
         }
     }
@@ -118,7 +118,7 @@ impl Lock for File {
 mod tests {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn two_handles_conflict() {
         let path = std::env::temp_dir().join(format!("utopia-lock-test-{}", std::process::id()));
         let path = path.to_string_lossy().into_owned();
@@ -133,7 +133,7 @@ mod tests {
         let _ = std::fs::remove_file(&path);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn missing_directory() {
         let f = File::new("/nonexistent-dir-xyz/a.lock", Mode::Exclusive);
         let e = f.try_acquire().await.unwrap_err();

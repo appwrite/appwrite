@@ -12,7 +12,7 @@
 //! callback returns.
 //!
 //! ```
-//! # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+//! # utopia_async::run(async {
 //! use std::time::Duration;
 //! use utopia_nats::{Connection, ConnectionOptions, Message};
 //!

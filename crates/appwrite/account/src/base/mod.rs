@@ -62,7 +62,7 @@ pub fn proof() -> Box<dyn Hash> {
 
 /// Hashes a password with [`proof`] on the blocking pool.
 pub async fn hash_password(password: String) -> Result<String> {
-    let hashed = tokio::task::spawn_blocking(move || proof().hash(password.as_bytes()))
+    let hashed = utopia_async::spawn_blocking(move || proof().hash(password.as_bytes()))
         .await
         .map_err(|e| Error::internal(e.to_string()))?
         .map_err(|e| Error::internal(e.to_string()))?;

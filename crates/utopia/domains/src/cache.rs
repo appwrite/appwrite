@@ -121,7 +121,7 @@ impl Store for NoStore {
 /// use utopia_domains::{Cache, MemoryStore};
 ///
 /// let cache = Cache::new(MemoryStore::new());
-/// tokio::runtime::Runtime::new()?.block_on(async {
+/// utopia_async::Runtime::new()?.block_on(async {
 ///     assert!(cache.save("example.com", &json!({"price": 12.99})).await);
 ///     assert_eq!(cache.load("example.com", 3600).await, Some(json!({"price": 12.99})));
 ///     assert!(cache.purge("example.com").await);

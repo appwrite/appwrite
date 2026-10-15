@@ -99,7 +99,7 @@ fn pattern() -> String {
 /// ```no_run
 /// use utopia_abuse::{Adapter, TimeLimit, time_limit};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// let conn = redis::Client::open("redis://127.0.0.1:6379")?.get_connection_manager().await?;
 /// let limit = TimeLimit::new("ip:{ip}", 60, 60, time_limit::Redis::new(conn))?.with_param("{ip}", "203.0.113.7");
 /// if limit.check().await?.limited {

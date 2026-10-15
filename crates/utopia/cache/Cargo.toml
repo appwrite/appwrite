@@ -11,13 +11,13 @@ publish.workspace = true
 [features]
 default = ["redis", "filesystem"]
 # Redis (redis-rs connections) and the multiplexed Redis adapter.
-redis = ["dep:redis", "tokio/net", "tokio/io-util"]
+redis = ["dep:redis"]
 # Redis Cluster (redis-rs cluster client).
 redis-cluster = ["redis", "redis/cluster-async"]
 # Memcached and Hazelcast (Memcached text protocol).
-memcached = ["tokio/net", "tokio/io-util"]
+memcached = []
 # Files under a directory.
-filesystem = ["tokio/fs"]
+filesystem = []
 
 [dependencies]
 bytes.workspace = true
@@ -32,14 +32,12 @@ rustix.workspace = true
 serde.workspace = true
 sha1.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["sync", "time", "rt"] }
+utopia-async.workspace = true
 tracing.workspace = true
 utopia-circuit-breaker.workspace = true
 utopia-pools.workspace = true
 utopia-telemetry.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }
 
 [package.metadata.utopia]
 category = "data"

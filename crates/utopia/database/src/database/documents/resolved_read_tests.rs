@@ -406,7 +406,7 @@ fn a_cached_document_past_its_time_to_live_reads_as_empty() {
             db.get_document("sessions", "session", Vec::new(), false).await.unwrap().get("owner"),
             Some(&string("ada"))
         );
-        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        utopia_async::sleep(std::time::Duration::from_secs(2)).await;
         assert!(
             db.get_document("sessions", "session", Vec::new(), false).await.unwrap().is_empty(),
             "the cached copy is past its time to live"

@@ -18,7 +18,7 @@ use crate::transform::{self, RoundRect};
 ///
 /// Every method is CPU-bound and can take tens of milliseconds on a large
 /// image: in async code, run the whole pipeline on the blocking pool
-/// (`tokio::task::spawn_blocking`).
+/// (`utopia_async::spawn_blocking`).
 ///
 /// Like ImageMagick, an image tracks a *current frame*: the first after
 /// decoding, the last after cropping an animation. Borders, rounded corners,

@@ -26,7 +26,7 @@ fn perms(p: &[&str]) -> Value {
     Value::Array(Array::from_list(p.iter().map(|s| Value::Str(Str::from(*s))).collect()))
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_upsert_removing_permissions_deletes_them_from_the_permissions_table() {
     let adapter = Sql::connect(Engine::Sqlite, "sqlite::memory:", None, None).await.unwrap();
     let profiler = Arc::new(utopia_database::Profiler::new());

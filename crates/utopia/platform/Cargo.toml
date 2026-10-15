@@ -21,7 +21,7 @@ utopia-validators.workspace = true
 
 [dev-dependencies]
 futures-util.workspace = true
-tokio = { workspace = true, features = ["rt", "macros"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "platform"

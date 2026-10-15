@@ -18,7 +18,7 @@ utopia-client = { git = "https://github.com/utopia-rs/client" }
 
 # Getting started
 
-`utopia-client` sends HTTP/1.1 requests over TCP or TLS on tokio. A `Client` wraps a transport (`Http`) with request defaults; every `with_*` returns a configured copy, so a client can be shared and specialised freely. Responses with a 4xx or 5xx status are returned, not raised: only a failure to get a response is an `Error`.
+`utopia-client` sends HTTP/1.1 requests over TCP or TLS on utopia-async. A `Client` wraps a transport (`Http`) with request defaults; every `with_*` returns a configured copy, so a client can be shared and specialised freely. Responses with a 4xx or 5xx status are returned, not raised: only a failure to get a response is an `Error`.
 
 ## Send a request
 

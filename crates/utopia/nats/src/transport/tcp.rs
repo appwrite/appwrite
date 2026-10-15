@@ -14,7 +14,7 @@ use crate::error::{Error, Result};
 ///
 /// PHP: `Utopia\NATS\Transport\TcpTransport` (and
 /// `Utopia\NATS\Transport\SwooleTransport`, its coroutine twin: every
-/// transport here is async on tokio).
+/// transport here is async on utopia-async).
 #[derive(Default)]
 pub struct TcpTransport {
     stream: Option<Stream>,

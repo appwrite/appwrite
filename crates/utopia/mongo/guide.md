@@ -8,7 +8,7 @@ A client for one MongoDB server: run commands, insert, find, update and delete d
 use utopia_mongo::bson::doc;
 use utopia_mongo::{Client, Config, Options};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = Client::new(Config::new("app", "localhost", 27017, "root", "password"))?;
     client.connect().await?;
 
@@ -64,7 +64,7 @@ Transactions need a replica set. Start a session, then either drive the transact
 use utopia_mongo::bson::doc;
 use utopia_mongo::{Client, Config, Options};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = Client::new(Config::new("app", "localhost", 27017, "root", "password"))?;
     client.connect().await?;
     let session = client.start_session(doc! {}).await?;

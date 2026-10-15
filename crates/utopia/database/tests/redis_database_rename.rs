@@ -57,7 +57,7 @@ fn set(members: &[&str]) -> Content {
     Content::Set(members)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rename_moves_every_key_and_the_grant_members() {
     let probe = probe_or_skip!();
     let keys = Keys::new();
@@ -78,7 +78,7 @@ async fn test_rename_moves_every_key_and_the_grant_members() {
     assert_eq!(snapshot(&probe, &keys.prefix()).await, expected);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_failure_part_way_moves_the_moved_keys_back() {
     let probe = probe_or_skip!();
     let keys = Keys::new();
@@ -93,7 +93,7 @@ async fn test_a_failure_part_way_moves_the_moved_keys_back() {
     assert_eq!(snapshot(&probe, &keys.prefix()).await, before);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_key_gone_part_way_moves_the_moved_keys_back() {
     let probe = probe_or_skip!();
     let keys = Keys::new();
@@ -108,7 +108,7 @@ async fn test_a_key_gone_part_way_moves_the_moved_keys_back() {
     assert_eq!(snapshot(&probe, &keys.prefix()).await, before);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_shared_tables_refuse_the_rename() {
     let probe = probe_or_skip!();
     let keys = Keys::new();

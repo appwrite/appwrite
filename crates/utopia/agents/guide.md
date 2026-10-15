@@ -29,7 +29,7 @@ impl Transport for Canned {
     }
 }
 
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 let stream = "data: {\"choices\":[{\"delta\":{\"content\":\"Appwrite is an open-source backend.\"}}]}\n\ndata: [DONE]\n\n";
 let adapter = OpenAi::new("sk-test").with_client(Arc::new(Canned(stream)));
 
@@ -110,7 +110,7 @@ use utopia_client::{Request, Response};
 #         Box::pin(async move { for c in &self.0 { sink(c.as_bytes()); } Response::new(200) })
 #     }
 # }
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 // Two text deltas, split mid-event across three chunks.
 let client = Arc::new(Chunks(vec![
     "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_",
@@ -280,7 +280,7 @@ use utopia_client::{Request, Response};
 #         Box::pin(async { Response::new(200) })
 #     }
 # }
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 let body = "{\"embeddings\":[[0.25,-0.5,0.125]],\"prompt_eval_count\":4,\"total_duration\":81000}";
 let mut agent = Agent::new(Ollama::new().with_client(Arc::new(Json(body))));
 

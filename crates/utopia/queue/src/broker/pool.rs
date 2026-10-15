@@ -3,7 +3,7 @@
 use std::sync::{Arc, Mutex};
 
 use php_std::Array;
-use tokio::sync::Semaphore;
+use utopia_async::sync::Semaphore;
 
 use super::Redis;
 use crate::connection::BoxFuture;

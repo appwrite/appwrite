@@ -18,7 +18,7 @@ use crate::{Codec, Envelope, Error, Json, Result};
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, RedisCluster};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let seeds = vec!["redis://127.0.0.1:7000".to_owned()];
 /// let connection = redis::cluster::ClusterClient::new(seeds.clone())?.get_async_connection().await?;
 /// let cache = RedisCluster::new(connection, seeds, None);

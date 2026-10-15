@@ -23,7 +23,7 @@ fn project() -> Project {
     Project { id: "6650f2b1".into(), sequence: 42, scopes: vec!["users.read".into(), "users.write".into()], team: None }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn memory_round_trips_typed_values() {
     let cache = Cache::new(Memory::new());
     assert!(cache.save_native("Projects/1", &project(), "", 0).await.unwrap());
@@ -37,7 +37,7 @@ async fn memory_round_trips_typed_values() {
     assert_eq!(cache.load_native::<Project>("projects/1", 60, "").await.unwrap(), None);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn php_values_are_misses() {
     let cache = Cache::new(Memory::new());
     cache.save("k", &Value::from(r#"{"id":"6650f2b1"}"#), "", 0).await.unwrap();
@@ -47,7 +47,7 @@ async fn php_values_are_misses() {
     assert_eq!(cache.load_native::<Project>("k", 60, "").await.unwrap(), Some(project()));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn wrappers_and_dynamic_adapters_pass_bytes_on() {
     let sharded: Arc<dyn DynAdapter> = Arc::new(Sharding::new(vec![Memory::new(), Memory::new()]).unwrap());
     let cache = Cache::from_dyn(sharded.clone());
@@ -75,7 +75,7 @@ fn unique(name: &str) -> String {
 }
 
 #[cfg(feature = "redis")]
-#[tokio::test]
+#[utopia_async::test]
 async fn redis_keeps_native_entries_beside_php_fields() {
     let Some(connection) = redis().await else { return };
     // A JSON-envelope adapter, like Appwrite's: native bytes bypass its codec.
@@ -104,7 +104,7 @@ async fn redis_keeps_native_entries_beside_php_fields() {
 }
 
 #[cfg(feature = "redis")]
-#[tokio::test]
+#[utopia_async::test]
 async fn redis_leases_guard_native_saves() {
     let Some(connection) = redis().await else { return };
     let multiplexing = {
@@ -140,7 +140,7 @@ async fn redis_leases_guard_native_saves() {
 }
 
 #[cfg(feature = "redis")]
-#[tokio::test]
+#[utopia_async::test]
 async fn redis_native_saves_fail_on_an_error_reply() {
     let Some(connection) = redis().await else { return };
     let multiplexing = {

@@ -188,7 +188,7 @@ struct Inner<A, H> {
 ///
 /// let adapter = Memory::new();
 /// let server = Server::new(adapter.clone(), Echo);
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// server.start().await;
 /// # });
 ///

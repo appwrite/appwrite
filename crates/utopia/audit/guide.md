@@ -1,4 +1,4 @@
-An audit trail records who did what to which resource, from where and when: a user updating a document, an API key deleting a bucket. This library writes those records (`Log`s) through an adapter and reads them back by user, by resource, by event and time window, or with any query. The Database adapter keeps them in a `utopia-database` collection; the ClickHouse adapter in a ClickHouse table built for analytics, with actor, project, geo, SDK and user-agent columns. Both read and write what the PHP library does, so PHP and Rust services share one trail. Adapters are async, so the examples run on a Tokio runtime.
+An audit trail records who did what to which resource, from where and when: a user updating a document, an API key deleting a bucket. This library writes those records (`Log`s) through an adapter and reads them back by user, by resource, by event and time window, or with any query. The Database adapter keeps them in a `utopia-database` collection; the ClickHouse adapter in a ClickHouse table built for analytics, with actor, project, geo, SDK and user-agent columns. Both read and write what the PHP library does, so PHP and Rust services share one trail. Adapters are async, so the examples run with `utopia_async::run`.
 
 ## Record and read logs
 
@@ -12,7 +12,7 @@ use utopia_cache::{Cache, None as NoCache};
 use utopia_database::adapter::memory::Memory;
 use utopia_database::Database;
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
     db.set_database("audit");
     db.create(None).await?;
@@ -81,7 +81,7 @@ fn log(event: &str, time: &str) -> Array {
     }
 }
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
     db.set_database("audit");
     db.create(None).await?;
@@ -150,7 +150,7 @@ use utopia_cache::{Cache, None as NoCache};
 use utopia_database::adapter::memory::Memory;
 use utopia_database::Database;
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
     db.set_database("audit");
     db.create(None).await?;
@@ -203,7 +203,7 @@ The ClickHouse adapter talks to ClickHouse's HTTP interface (port 8123 by defaul
 use utopia_audit::adapter::clickhouse::{ClickHouse, Options};
 use utopia_audit::{Audit, Page, Range};
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let options = Options { password: "clickhouse".into(), ..Options::default() };
     let mut adapter = ClickHouse::new("localhost", options)?;
     adapter.set_database("analytics")?.set_namespace("project_1")?.set_retention(Some(90))?;

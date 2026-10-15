@@ -129,8 +129,8 @@ dependencies = [
  "serde_json",
  "sha1 0.10.7",
  "sha2 0.10.9",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-auth",
  "utopia-cache",
  "utopia-client",
@@ -167,9 +167,9 @@ dependencies = [
  "serde_json",
  "sha1 0.10.7",
  "sha2 0.10.9",
- "tokio",
  "tracing",
  "utopia-abuse",
+ "utopia-async",
  "utopia-auth",
  "utopia-cache",
  "utopia-database",
@@ -197,9 +197,9 @@ dependencies = [
  "appwrite-users",
  "mimalloc",
  "serde_json",
- "tokio",
  "tracing",
  "tracing-subscriber",
+ "utopia-async",
  "utopia-http",
 ]
 
@@ -212,8 +212,8 @@ dependencies = [
  "chrono",
  "php-std",
  "serde_json",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-auth",
  "utopia-database",
  "utopia-domains",
@@ -233,8 +233,8 @@ dependencies = [
  "futures-util",
  "php-std",
  "serde_json",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-auth",
  "utopia-database",
  "utopia-emails",
@@ -703,11 +703,11 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "syn 2.0.119",
- "tokio",
  "tokio-postgres",
  "tokio-tungstenite",
  "utopia-abuse",
  "utopia-agents",
+ "utopia-async",
  "utopia-audit",
  "utopia-auth",
  "utopia-balancer",
@@ -4114,7 +4114,7 @@ dependencies = [
  "redis",
  "rustls",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4127,9 +4127,36 @@ dependencies = [
  "php-std",
  "sha1 0.10.7",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-client",
  "utopia-console",
+]
+
+[[package]]
+name = "utopia-async"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "pin-project-lite",
+ "socket2",
+ "thiserror",
+ "tokio",
+ "tower-service",
+ "utopia-async-macros",
+]
+
+[[package]]
+name = "utopia-async-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -4141,7 +4168,7 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-cache",
  "utopia-client",
  "utopia-database",
@@ -4203,8 +4230,8 @@ dependencies = [
  "serde",
  "sha1 0.10.7",
  "thiserror",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-circuit-breaker",
  "utopia-pools",
  "utopia-telemetry",
@@ -4216,7 +4243,7 @@ version = "0.1.0"
 dependencies = [
  "php-std",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-balancer",
  "utopia-client",
 ]
@@ -4230,7 +4257,7 @@ dependencies = [
  "redis",
  "sha1 0.10.7",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-telemetry",
 ]
 
@@ -4242,7 +4269,7 @@ dependencies = [
  "indexmap",
  "php-std",
  "serde_json",
- "tokio",
+ "utopia-async",
  "utopia-di",
  "utopia-servers",
  "utopia-validators",
@@ -4259,8 +4286,8 @@ dependencies = [
  "php-std",
  "rustls",
  "thiserror",
- "tokio",
  "tokio-rustls",
+ "utopia-async",
  "utopia-pools",
  "utopia-span",
  "webpki-roots 1.0.9",
@@ -4296,7 +4323,7 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-validators",
 ]
 
@@ -4318,8 +4345,8 @@ dependencies = [
  "redis",
  "rusqlite",
  "serde_json",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-cache",
  "utopia-mongo",
  "utopia-pools",
@@ -4357,8 +4384,8 @@ dependencies = [
  "php-std",
  "rustls",
  "serde_json",
- "tokio",
  "tokio-rustls",
+ "utopia-async",
  "utopia-domains",
  "utopia-telemetry",
  "utopia-validators",
@@ -4379,7 +4406,7 @@ dependencies = [
  "rustls",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-validators",
 ]
 
@@ -4399,7 +4426,7 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-cli",
  "utopia-client",
  "utopia-console",
@@ -4417,13 +4444,12 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-util",
  "indexmap",
  "php-std",
  "serde_json",
  "thiserror",
- "tokio",
  "tracing",
+ "utopia-async",
  "utopia-compression",
  "utopia-system",
  "utopia-validators",
@@ -4450,7 +4476,7 @@ dependencies = [
  "indexmap",
  "php-std",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4462,7 +4488,7 @@ dependencies = [
  "redis",
  "rustix",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4476,7 +4502,6 @@ dependencies = [
  "http",
  "http-body-util",
  "hyper",
- "hyper-util",
  "indexmap",
  "openssl",
  "php-std",
@@ -4484,8 +4509,8 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "thiserror",
- "tokio",
  "tokio-rustls",
+ "utopia-async",
  "utopia-client",
  "utopia-smtp",
  "utopia-telemetry",
@@ -4505,8 +4530,8 @@ dependencies = [
  "rustix",
  "serde_json",
  "thiserror",
- "tokio",
  "tokio-postgres",
+ "utopia-async",
  "utopia-client",
  "utopia-database",
  "utopia-query",
@@ -4527,7 +4552,7 @@ dependencies = [
  "php-std",
  "sha2 0.10.9",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4540,9 +4565,9 @@ dependencies = [
  "php-std",
  "rustls",
  "thiserror",
- "tokio",
  "tokio-rustls",
  "tokio-tungstenite",
+ "utopia-async",
  "utopia-telemetry",
 ]
 
@@ -4563,8 +4588,8 @@ dependencies = [
  "sha1 0.10.7",
  "sha2 0.10.9",
  "thiserror",
- "tokio",
  "tokio-rustls",
+ "utopia-async",
  "webpki-roots 1.0.9",
 ]
 
@@ -4584,10 +4609,9 @@ dependencies = [
  "bytes",
  "http-body-util",
  "hyper",
- "hyper-util",
  "php-std",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-console",
 ]
 
@@ -4600,7 +4624,7 @@ dependencies = [
  "php-std",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-cli",
  "utopia-http",
  "utopia-queue",
@@ -4614,7 +4638,7 @@ version = "0.1.0"
 dependencies = [
  "php-std",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-telemetry",
 ]
 
@@ -4643,7 +4667,7 @@ dependencies = [
  "serde_json",
  "sha1 0.10.7",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-dsn",
  "utopia-lock",
  "utopia-validators",
@@ -4665,7 +4689,7 @@ dependencies = [
  "php-std",
  "redis",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-telemetry",
 ]
 
@@ -4676,7 +4700,7 @@ dependencies = [
  "indexmap",
  "serde_json",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-di",
  "utopia-validators",
 ]
@@ -4690,8 +4714,8 @@ dependencies = [
  "php-std",
  "rustls",
  "thiserror",
- "tokio",
  "tokio-rustls",
+ "utopia-async",
  "webpki-roots 1.0.9",
 ]
 
@@ -4708,7 +4732,7 @@ dependencies = [
  "php-std",
  "rustls",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4734,7 +4758,7 @@ dependencies = [
  "rustix",
  "sha2 0.10.9",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-telemetry",
  "utopia-validators",
 ]
@@ -4747,7 +4771,7 @@ dependencies = [
  "php-std",
  "rustix",
  "thiserror",
- "tokio",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4762,8 +4786,8 @@ dependencies = [
  "php-std",
  "rustls",
  "thiserror",
- "tokio",
  "tower-service",
+ "utopia-async",
 ]
 
 [[package]]
@@ -4777,7 +4801,7 @@ dependencies = [
  "md-5 0.10.6",
  "php-std",
  "sha2 0.10.9",
- "tokio",
+ "utopia-async",
  "utopia-client",
  "utopia-database",
  "utopia-query",
@@ -4816,7 +4840,7 @@ dependencies = [
  "sha1 0.10.7",
  "sha2 0.10.9",
  "thiserror",
- "tokio",
+ "utopia-async",
  "utopia-cache",
  "utopia-client",
  "utopia-console",
@@ -4833,8 +4857,8 @@ dependencies = [
  "indexmap",
  "php-std",
  "thiserror",
- "tokio",
  "tokio-tungstenite",
+ "utopia-async",
 ]
 
 [[package]]

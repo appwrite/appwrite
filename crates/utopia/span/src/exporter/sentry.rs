@@ -135,7 +135,7 @@ const HANDLED_HTTP_KEYS: [&str; 4] = ["http.url", "http.method", "http.query", "
 ///
 /// PHP: `Utopia\Span\Exporter\Sentry`. It sends with a PSR-18 client and
 /// waits for the reply; here the default [`HttpTransport`] sends in the
-/// background on the tokio runtime.
+/// background on the current runtime.
 ///
 /// ```
 /// use std::sync::{Arc, Mutex};
@@ -580,15 +580,14 @@ mod http {
     use http_body_util::{BodyExt, Full};
     use hyper_rustls::HttpsConnector;
     use hyper_util::client::legacy::Client;
-    use hyper_util::client::legacy::connect::HttpConnector;
-    use hyper_util::rt::TokioExecutor;
+    use utopia_async::hyper::{Connector, Executor};
 
     use super::{Request, Transport};
 
-    type HyperClient = Client<HttpsConnector<HttpConnector>, Full<Bytes>>;
+    type HyperClient = Client<HttpsConnector<Connector>, Full<Bytes>>;
 
     /// Sends envelopes over HTTP/1.1 (TLS with the WebPKI roots) in the
-    /// background: on the current tokio runtime, or on a thread of its own
+    /// background: on the current runtime, or on a thread of its own
     /// outside one. Failures are written to standard error. The whole
     /// exchange times out after one second, the connection after half a
     /// second.
@@ -610,7 +609,7 @@ mod http {
         fn client(&self) -> Option<HyperClient> {
             self.client
                 .get_or_init(|| {
-                    let mut http = HttpConnector::new();
+                    let mut http = Connector::new();
                     http.set_connect_timeout(Some(Duration::from_millis(500)));
                     http.enforce_http(false);
                     let https = hyper_rustls::HttpsConnectorBuilder::new()
@@ -619,7 +618,7 @@ mod http {
                         .https_or_http()
                         .enable_http1()
                         .wrap_connector(http);
-                    Some(Client::builder(TokioExecutor::new()).build(https))
+                    Some(Client::builder(Executor).build(https))
                 })
                 .clone()
         }
@@ -647,20 +646,20 @@ mod http {
                 return;
             };
             let job = async move {
-                let result = tokio::time::timeout(Duration::from_secs(1), exchange(client, request)).await;
+                let result = utopia_async::timeout(Duration::from_secs(1), exchange(client, request)).await;
                 match result {
                     Ok(Ok(())) => {}
                     Ok(Err(message)) => eprintln!("Sentry exporter: {message}"),
                     Err(_) => eprintln!("Sentry exporter: Operation timed out after 1000 milliseconds"),
                 }
             };
-            match tokio::runtime::Handle::try_current() {
-                Ok(runtime) => {
+            match utopia_async::Handle::current() {
+                Some(runtime) => {
                     runtime.spawn(job);
                 }
-                Err(_) => {
+                None => {
                     std::thread::spawn(move || {
-                        if let Ok(runtime) = tokio::runtime::Builder::new_current_thread().enable_all().build() {
+                        if let Ok(runtime) = utopia_async::Builder::current_thread().build() {
                             runtime.block_on(job);
                         }
                     });

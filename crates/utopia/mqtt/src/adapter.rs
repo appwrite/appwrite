@@ -33,7 +33,7 @@ pub trait Outbound: Send + Sync {
     fn close(&self, connection: i64) -> Result<(), Error>;
 }
 
-/// An MQTT transport: [`Tokio`](crate::Tokio) on the network,
+/// An MQTT transport: [`Network`](crate::Network) on the network,
 /// [`Memory`](crate::Memory) in process. [`Server`](crate::Server) drives
 /// one.
 ///

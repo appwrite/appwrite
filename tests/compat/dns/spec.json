@@ -1,6 +1,6 @@
 {
   "lib": "dns",
-  "description": "utopia-php/dns: the DNS message codec (headers, names with compression, questions, records), zones and zone files, the zone resolver, the Memory and Proxy resolvers, the PROXY protocol, the server over the Native and Swoole adapters (Rust: Tokio) on UDP, TCP and DNS over HTTPS, the client, the recursive lookup and the Name, CAA and DNS validators. Servers run on local ports; no public resolver is ever queried.",
+  "description": "utopia-php/dns: the DNS message codec (headers, names with compression, questions, records), zones and zone files, the zone resolver, the Memory and Proxy resolvers, the PROXY protocol, the server over the Native and Swoole adapters (Rust: Network) on UDP, TCP and DNS over HTTPS, the client, the recursive lookup and the Name, CAA and DNS validators. Servers run on local ports; no public resolver is ever queried.",
   "complete": true,
   "php": {
     "src": [
@@ -678,7 +678,7 @@
       ]
     },
     "adapter.new": {
-      "doc": "new Native(transports), new Swoole(transports), new Swoole\\Http(..., cert, key): the constructors' checks (Rust: Tokio::new, Http::new)",
+      "doc": "new Native(transports), new Swoole(transports), new Swoole\\Http(..., cert, key): the constructors' checks (Rust: Network::new, Http::new)",
       "covers": [
         "Utopia\\DNS\\Adapter\\Native::__construct",
         "Utopia\\DNS\\Adapter\\Swoole::__construct",
@@ -686,7 +686,7 @@
       ]
     },
     "server.run": {
-      "doc": "starts fixture servers (tests/compat/dns/fixtures/server.php: Native or Swoole adapter, UDP, TCP, PROXY-protocol TCP and HTTP transports, a resolver of Fixture.php, a seed; Rust: the Tokio adapter in the driver) on local ports, runs steps (query, raw, doh, recursive, proxy, validate, errors, workers, telemetry, sleep) and stops them",
+      "doc": "starts fixture servers (tests/compat/dns/fixtures/server.php: Native or Swoole adapter, UDP, TCP, PROXY-protocol TCP and HTTP transports, a resolver of Fixture.php, a seed; Rust: the Network adapter in the driver) on local ports, runs steps (query, raw, doh, recursive, proxy, validate, errors, workers, telemetry, sleep) and stops them",
       "covers": [
         "Utopia\\DNS\\Server::__construct",
         "Utopia\\DNS\\Server::error",
@@ -712,7 +712,7 @@
       ]
     },
     "peer.serve": {
-      "doc": "interop: serves the fixture zones where the other runtime's client reaches them, and names the runtime (Rust: a Tokio server on `dns-rust-server`, kept until the session resets; PHP: tests/compat/dns/services.sh runs its server, `dns-php-server`)"
+      "doc": "interop: serves the fixture zones where the other runtime's client reaches them, and names the runtime (Rust: a Network server on `dns-rust-server`, kept until the session resets; PHP: tests/compat/dns/services.sh runs its server, `dns-php-server`)"
     },
     "peer.run": {
       "doc": "interop: server.run's steps against the server of the runtime `peer.serve` named, at `dns-<runtime>-server` (UDP and TCP on its port, HTTP on the next, PROXY-protocol TCP on the one after)"
@@ -1658,7 +1658,7 @@
     }
   },
   "waivers": {
-    "Utopia\\DNS\\Adapter\\Native\\Tcp::bind": "Native select-loop plumbing (socket_create/bind/listen): the Tokio TCP transport binds in Tokio::bind; serving behaviour is compared by server.run",
+    "Utopia\\DNS\\Adapter\\Native\\Tcp::bind": "Native select-loop plumbing (socket_create/bind/listen): the Network TCP transport binds in Network::bind; serving behaviour is compared by server.run",
     "Utopia\\DNS\\Adapter\\Native\\Tcp::getSockets": "Native select-loop plumbing: the sockets select() watches",
     "Utopia\\DNS\\Adapter\\Native\\Tcp::onReadable": "Native select-loop plumbing: reading a socket select() reported; framing, PROXY headers and limits are compared by server.run",
     "Utopia\\DNS\\Adapter\\Native\\Tcp::tick": "Native select-loop plumbing: idle connections are closed by a read timeout in Rust; compared by server.run",
@@ -1717,12 +1717,12 @@
     {
       "symbol": "Utopia\\DNS\\Adapter\\Swoole::__construct",
       "php": "Swoole starts `workers` worker processes (each calls the worker start callbacks with its id) and closes TCP connections idle for `idleTimeout` with its heartbeat; Swoole\\Tcp frames with package_max_length 65537 and dispatches a zero-length frame instead of closing the connection.",
-      "reason": "The Tokio adapter runs every transport in one runtime, calls worker start callbacks once with id 0, and follows Native\\Tcp's limits (a zero-length frame closes the connection); the cases compare Swoole on what both PHP adapters agree on."
+      "reason": "The Network adapter runs every transport in one runtime, calls worker start callbacks once with id 0, and follows Native\\Tcp's limits (a zero-length frame closes the connection); the cases compare Swoole on what both PHP adapters agree on."
     },
     {
       "symbol": "Utopia\\DNS\\Adapter\\Native\\Udp::onReadable",
       "php": "Native reads datagrams into 4096 bytes: a larger query is cut.",
-      "reason": "The Tokio UDP transport reads up to 65535 bytes, as Swoole does."
+      "reason": "The Network UDP transport reads up to 65535 bytes, as Swoole does."
     },
     {
       "symbol": "Utopia\\DNS\\Client::query",

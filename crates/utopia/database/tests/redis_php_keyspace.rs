@@ -70,7 +70,7 @@ fn permissions(list: &[&str]) -> Json {
     json!(list)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_the_keyspace_is_the_one_php_writes() {
     let probe = probe_or_skip!();
     let ns = namespace("oracle_rs");

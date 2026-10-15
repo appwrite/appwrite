@@ -16,7 +16,7 @@ use std::panic::AssertUnwindSafe;
 
 use futures_util::FutureExt as _;
 use serde_json::{Map, Value, json};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use utopia_async::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 use crate::adapter::{Fault, OpResult, Outcome, Session};
 use crate::libs;
@@ -110,8 +110,8 @@ pub fn php_umask() {
 
 /// Serves requests until stdin closes.
 pub async fn serve() -> std::io::Result<()> {
-    let mut lines = BufReader::new(tokio::io::stdin()).lines();
-    let mut stdout = tokio::io::stdout();
+    let mut lines = BufReader::new(utopia_async::io::stdin()).lines();
+    let mut stdout = utopia_async::io::stdout();
     let mut session = Session::default();
     while let Some(line) = lines.next_line().await? {
         if line.trim().is_empty() {
@@ -136,7 +136,7 @@ pub async fn serve() -> std::io::Result<()> {
 mod tests {
     use super::*;
 
-    #[tokio::test(flavor = "current_thread")]
+    #[utopia_async::test]
     async fn hello_lists_every_library() {
         let mut s = Session::default();
         let Ok(Outcome::Ok(v)) = handle(&json!({"op": "$hello"}), &mut s).await else { panic!() };
@@ -144,7 +144,7 @@ mod tests {
         assert!(v["libs"].get("validators").is_some());
     }
 
-    #[tokio::test(flavor = "current_thread")]
+    #[utopia_async::test]
     async fn unknown_operations_are_faults() {
         let mut s = Session::default();
         let r = handle(&json!({"lib": "validators", "op": "nope"}), &mut s).await;

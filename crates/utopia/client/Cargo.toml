@@ -16,15 +16,13 @@ getrandom.workspace = true
 php-std.workspace = true
 rustls.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["net", "time", "io-util", "fs", "sync"] }
+utopia-async.workspace = true
 tokio-rustls.workspace = true
 utopia-pools.workspace = true
 utopia-span.workspace = true
 webpki-roots.workspace = true
 zstd.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "io-util"] }
 
 [package.metadata.utopia]
 category = "transport"

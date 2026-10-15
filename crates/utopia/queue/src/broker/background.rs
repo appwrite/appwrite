@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant};
 
 use php_std::Array;
-use tokio::sync::{Mutex, mpsc};
-use tokio::task::JoinHandle;
+use utopia_async::JoinHandle;
+use utopia_async::sync::{Mutex, mpsc};
 
 use crate::connection::BoxFuture;
 use crate::contract::{AsyncPublisher, Publisher};
@@ -138,12 +138,12 @@ impl<P: Publisher + 'static> Background<P> {
         self.capacity - self.sender.capacity()
     }
 
-    /// Spawns the reader tasks. Must run inside a tokio runtime.
+    /// Spawns the reader tasks. Must run inside a runtime.
     pub fn start(&self) -> Result<()> {
         if self.started.load(Ordering::SeqCst) {
             return Ok(());
         }
-        let Ok(handle) = tokio::runtime::Handle::try_current() else {
+        let Some(handle) = utopia_async::Handle::current() else {
             return Err(Error::Runtime("Background publisher must be started inside a coroutine runtime.".into()));
         };
         self.started.store(true, Ordering::SeqCst);
@@ -163,7 +163,7 @@ impl<P: Publisher + 'static> Background<P> {
             return;
         }
         while self.active.load(Ordering::SeqCst) > 0 {
-            tokio::time::sleep(Duration::from_millis(1)).await;
+            utopia_async::sleep(Duration::from_millis(1)).await;
         }
         let readers = std::mem::take(&mut *self.readers.lock().unwrap_or_else(|e| e.into_inner()));
         for _ in 0..readers.len() {
@@ -203,7 +203,7 @@ async fn read<P: Publisher>(
             if now >= deadline {
                 break;
             }
-            let next = tokio::time::timeout(deadline - now, async { receiver.lock().await.recv().await }).await;
+            let next = utopia_async::timeout(deadline - now, async { receiver.lock().await.recv().await }).await;
             match next {
                 Err(_) | Ok(None) => break,
                 Ok(Some(Task::Stop)) => {

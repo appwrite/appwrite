@@ -396,22 +396,22 @@ async fn parity(engine: Engine) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn ddl_parity_sqlite() {
     parity(Engine::Sqlite).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn ddl_parity_postgres() {
     parity(Engine::Postgres).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn ddl_parity_mariadb() {
     parity(Engine::MariaDb).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn ddl_parity_mysql() {
     parity(Engine::MySql).await;
 }
@@ -545,22 +545,22 @@ async fn metadata_parity(engine: Engine) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn metadata_parity_sqlite() {
     metadata_parity(Engine::Sqlite).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn metadata_parity_postgres() {
     metadata_parity(Engine::Postgres).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn metadata_parity_mariadb() {
     metadata_parity(Engine::MariaDb).await;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn metadata_parity_mysql() {
     metadata_parity(Engine::MySql).await;
 }
@@ -667,7 +667,7 @@ mod postgres_column_rewrite_test {
     use super::env::env;
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_datetime_rewrite_casts_the_column_itself() {
         let Some(e) = env(Engine::Postgres, "l3c_rewrite_1", false, Default::default()).await else { return };
         e.adapter.create_collection("events", &[Attribute::datetime("at")], &[]).await.unwrap();
@@ -681,7 +681,7 @@ mod postgres_column_rewrite_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_renamed_datetime_rewrite_casts_the_renamed_column() {
         let Some(e) = env(Engine::Postgres, "l3c_rewrite_2", false, Default::default()).await else { return };
         e.adapter.create_collection("events", &[Attribute::datetime("at")], &[]).await.unwrap();
@@ -706,7 +706,7 @@ mod postgres_collection_index_test {
     use super::env::env;
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_collection_index_on_an_object_path_indexes_the_json_path() {
         for (shared, db) in [(false, "l3c_objpath_1"), (true, "l3c_objpath_2")] {
             let tenant = if shared { 7.into() } else { Default::default() };
@@ -755,7 +755,7 @@ mod spatial_column_definition_test {
         ]
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_batch_and_single_creation_emit_the_same_spatial_columns() {
         let cases = [
             (Engine::MariaDb, ["`location` POINT NOT NULL", "`route` LINESTRING NULL", "`area` POLYGON NOT NULL"]),
@@ -794,7 +794,7 @@ mod spatial_column_definition_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_defines_spatial_columns_alike_on_every_path() {
         let Some(e) = env(Engine::MariaDb, "l3c_spatialpaths", false, Default::default()).await else { return };
         let columns = ["`location` POINT NOT NULL", "`route` LINESTRING NULL", "`area` POLYGON NOT NULL"];
@@ -819,7 +819,7 @@ mod spatial_column_definition_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_my_sql_declares_required_spatial_columns_not_null_on_collection_and_update_paths() {
         let Some(e) = env(Engine::MySql, "l3c_spatialnotnull", false, Default::default()).await else { return };
         let columns = [
@@ -874,7 +874,7 @@ mod sql_child_side_relationship_rename_test {
     const ENGINES: [(Engine, &str); 2] =
         [(Engine::MariaDb, "l3c_childrename_m"), (Engine::Postgres, "l3c_childrename_p")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_rename_touches_the_column_the_side_stores() {
         use RelationshipSide::{Child, Parent};
         use RelationshipType::{ManyToOne, OneToMany};
@@ -910,7 +910,7 @@ mod sql_child_side_relationship_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_rename_of_a_column_the_side_does_not_store_sends_nothing() {
         use RelationshipSide::{Child, Parent};
         use RelationshipType::{ManyToOne, OneToMany};
@@ -988,7 +988,7 @@ mod spatial_codec_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_geometry_is_encoded_as_well_known_text() {
         for adapter in adapters().await {
             for (kind, value, text) in geometries() {
@@ -997,7 +997,7 @@ mod spatial_codec_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_encoded_geometry_decodes_to_its_coordinates() {
         for adapter in adapters().await {
             for (kind, value, _) in geometries() {
@@ -1016,7 +1016,7 @@ mod spatial_codec_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_invalid_geometry_is_refused() {
         for adapter in adapters().await {
             let error = adapter.encode(&v("[1]"), ColumnType::Point).unwrap_err();
@@ -1024,7 +1024,7 @@ mod spatial_codec_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_non_spatial_type_is_refused() {
         for adapter in adapters().await {
             let error = adapter.decode(b"POINT(1 2)", ColumnType::String).unwrap_err();
@@ -1038,7 +1038,7 @@ mod add_table_column_test {
     use super::*;
     use utopia_database::adapter::sql::pdo::Pdo;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_vector_on_my_sql_table_throws_database_exception() {
         let adapter = Sql::new(Engine::MariaDb, Pdo::connect("sqlite::memory:", None, None).await.unwrap());
         adapter.set_database("database");
@@ -1076,7 +1076,7 @@ mod column_rename_test {
         format!("ALTER TABLE {} ALTER COLUMN \"years\" TYPE INTEGER", e.table("users"))
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_rename_adopts_a_column_another_tenant_already_renamed() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p1", &["years"]).await else { return };
         assert!(e.adapter.rename_attribute("users", "age", "years").await.unwrap());
@@ -1086,7 +1086,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_rename_runs_while_the_old_column_exists() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p2", &["age"]).await else { return };
         assert!(e.adapter.rename_attribute("users", "age", "years").await.unwrap());
@@ -1097,7 +1097,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_rename_refuses_a_target_that_exists_beside_the_old_column() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p3", &["age", "years"]).await else { return };
         let error = e.adapter.rename_attribute("users", "age", "years").await.unwrap_err();
@@ -1107,7 +1107,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_rename_of_a_missing_column_is_not_found() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p4", &[]).await else { return };
         let error = e.adapter.rename_attribute("users", "age", "years").await.unwrap_err();
@@ -1117,7 +1117,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_update_attribute_adopts_a_column_another_tenant_already_renamed() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p5", &["years"]).await else { return };
         assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap());
@@ -1128,7 +1128,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_update_attribute_renames_while_the_old_column_exists() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p6", &["age"]).await else { return };
         assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap());
@@ -1140,7 +1140,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_update_attribute_refuses_a_target_that_exists_beside_the_old_column() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p7", &["age", "years"]).await else { return };
         let error =
@@ -1150,7 +1150,7 @@ mod column_rename_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_reads_no_catalog_without_a_rename() {
         let Some(e) = users(Engine::Postgres, "l3c_colrename_p8", &["age"]).await else { return };
         assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("age").required(true)).await.unwrap());
@@ -1160,7 +1160,7 @@ mod column_rename_test {
 
     const MARIADB: [(Engine, &str); 2] = [(Engine::MariaDb, "l3c_colrename_m"), (Engine::MySql, "l3c_colrename_y")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_rename_adopts_a_column_another_tenant_already_renamed() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["years"]).await else { continue };
@@ -1172,7 +1172,7 @@ mod column_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_rename_runs_while_the_old_column_exists() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["age"]).await else { continue };
@@ -1184,7 +1184,7 @@ mod column_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_update_attribute_adopts_a_column_another_tenant_already_renamed() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["years"]).await else { continue };
@@ -1198,7 +1198,7 @@ mod column_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_update_attribute_changes_the_column_while_the_old_one_exists() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["age"]).await else { continue };
@@ -1214,7 +1214,7 @@ mod column_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_reads_no_catalog_without_a_rename() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["age"]).await else { continue };
@@ -1275,7 +1275,7 @@ mod postgres_rename_index_test {
         )
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_index_the_schema_has_is_renamed() {
         let Some(e) = adapter("l3c_pgri_1", false, &["namespace__users_byAge"], &[]).await else { return };
         assert!(e.adapter.rename_index("users", "byAge", "byYears").await.unwrap());
@@ -1283,7 +1283,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_index_the_schema_does_not_have_is_not_renamed() {
         let Some(e) = adapter("l3c_pgri_2", false, &[], &[]).await else { return };
         assert!(!e.adapter.rename_index("users", "byAge", "byYears").await.unwrap());
@@ -1291,7 +1291,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_index_the_schema_already_renamed_is_reported_renamed() {
         let Some(e) = adapter("l3c_pgri_3", false, &["namespace__users_byYears"], &[]).await else { return };
         assert!(e.adapter.rename_index("users", "byAge", "byYears").await.unwrap());
@@ -1299,7 +1299,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_rename_the_tenants_own_index() {
         let Some(e) =
             adapter("l3c_pgri_4", true, &["namespace_1_users_byAge", "namespace_2_users_byAge"], &[Some(1), Some(2)])
@@ -1313,7 +1313,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_leave_an_index_another_tenant_created_to_its_owner() {
         let Some(e) = adapter("l3c_pgri_5", true, &["namespace_1_users_byAge"], &[Some(1), Some(2)]).await else {
             return;
@@ -1324,7 +1324,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_complete_a_rename_another_tenant_already_made() {
         let Some(e) = adapter("l3c_pgri_6", true, &["namespace_1_users_byYears"], &[Some(1), Some(2)]).await else {
             return;
@@ -1334,7 +1334,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_report_a_rename_no_tenants_index_backs() {
         let Some(e) = adapter("l3c_pgri_7", true, &["namespace_1_users_byName"], &[Some(1), Some(2)]).await else {
             return;
@@ -1344,7 +1344,7 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_report_a_rename_only_a_non_creating_tenants_index_backs() {
         let Some(e) = adapter("l3c_pgri_8", true, &["namespace_1_users_byAge"], &[Some(2), Some(1)]).await else {
             return;
@@ -1354,14 +1354,14 @@ mod postgres_rename_index_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_complete_a_rename_from_the_index_a_tenantless_creator_made() {
         let Some(e) = adapter("l3c_pgri_9", true, &["namespace__users_byAge"], &[None, Some(2)]).await else { return };
         assert!(e.adapter.rename_index("users", "byAge", "byYears").await.unwrap());
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_report_a_rename_of_a_collection_with_no_definition_only_from_the_tenants_index() {
         let Some(e) = adapter("l3c_pgri_10", true, &["namespace__users_byAge"], &[]).await else { return };
         assert!(!e.adapter.rename_index("users", "byAge", "byYears").await.unwrap());
@@ -1382,7 +1382,7 @@ mod maria_db_create_collection_cleanup_test {
         format!("CREATE TABLE `{db}`.`namespace_books_perms`")
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_permissions_table_that_fails_drops_the_collection_table() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1405,7 +1405,7 @@ mod maria_db_create_collection_cleanup_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_cleanup_that_fails_keeps_the_original_error_and_logs_the_cleanup_failure() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1424,7 +1424,7 @@ mod maria_db_create_collection_cleanup_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_permissions_table_that_already_exists_keeps_both_tables() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1437,7 +1437,7 @@ mod maria_db_create_collection_cleanup_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_collection_table_that_fails_drops_nothing() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1468,7 +1468,7 @@ mod postgres_create_collection_cleanup_test {
         vec![Index::key("title_index", ["title"], vec![], vec![]).unwrap()]
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_declared_index_that_fails_drops_both_tables_and_reaches_the_caller() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_1", false, Default::default()).await else { return };
         e.fail(DECLARED_INDEX, "42703", 7, "ERROR:  column \"title\" does not exist");
@@ -1486,7 +1486,7 @@ mod postgres_create_collection_cleanup_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_cleanup_that_fails_keeps_the_original_error_and_logs_the_cleanup_failure() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_2", false, Default::default()).await else { return };
         e.fail(DECLARED_INDEX, "42703", 7, "ERROR:  column \"title\" does not exist");
@@ -1498,7 +1498,7 @@ mod postgres_create_collection_cleanup_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_declared_index_that_already_exists_keeps_both_tables() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_3", false, Default::default()).await else { return };
         e.fail(DECLARED_INDEX, "42P07", 7, "ERROR:  relation \"namespace__books_title_index\" already exists");
@@ -1512,7 +1512,7 @@ mod postgres_create_collection_cleanup_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_spatial_index_with_orders_drops_both_tables_and_reaches_the_caller() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_4", false, Default::default()).await else { return };
         let error = e
@@ -1538,7 +1538,7 @@ mod postgres_create_collection_cleanup_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_table_that_fails_to_be_created_drops_nothing() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_5", false, Default::default()).await else { return };
         e.fail(
@@ -1570,7 +1570,7 @@ mod sqlite_create_collection_cleanup_test {
         statement.fetch_all_column(0).unwrap().iter().map(utopia_database::value::to_text).collect()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_declared_index_that_fails_leaves_no_table_and_the_collection_can_be_created_again() {
         let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
         let failure = e
@@ -1601,7 +1601,7 @@ mod sqlite_create_collection_cleanup_test {
         assert_eq!(tables(&e).await, ["namespace_books", "namespace_books_perms"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_collection_that_already_exists_keeps_its_tables() {
         let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
         e.adapter.create_collection("books", &[Attribute::string("title", 64)], &[]).await.unwrap();
@@ -1617,7 +1617,7 @@ mod postgres_collection_size_test {
     use super::env::env;
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_the_size_adds_the_collection_and_its_permissions_table() {
         let Some(e) = env(Engine::Postgres, "l3c_pgsize_1", false, Default::default()).await else { return };
         e.adapter.create_collection("books", &[Attribute::string("title", 64)], &[]).await.unwrap();
@@ -1637,7 +1637,7 @@ mod postgres_collection_size_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_failed_size_read_is_a_database_error() {
         let Some(e) = env(Engine::Postgres, "l3c_pgsize_2", false, Default::default()).await else { return };
         for size in [e.adapter.size_of_collection_on_disk("books").await, e.adapter.size_of_collection("books").await] {
@@ -1663,7 +1663,7 @@ mod maria_db_delete_collection_test {
 
     const ENGINES: [(Engine, &str); 2] = [(Engine::MariaDb, "l3c_mdelete_m"), (Engine::MySql, "l3c_mdelete_y")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_drops_both_tables_in_one_statement() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1678,7 +1678,7 @@ mod maria_db_delete_collection_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_drops_the_permissions_table_when_the_main_table_is_gone() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1749,7 +1749,7 @@ mod maria_db_schema_test {
 
     const ENGINES: [(Engine, &str); 2] = [(Engine::MariaDb, "l3c_mschema_m"), (Engine::MySql, "l3c_mschema_y")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_collection_adds_columns_only_for_relationship_sides_that_store_a_key() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -1766,7 +1766,7 @@ mod maria_db_schema_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_collection_refuses_a_spatial_index_with_orders_where_the_engine_cannot_order_it() {
         let Some(e) = env(Engine::MySql, "l3c_mschema_spatial_y", false, Default::default()).await else { return };
         let error = e
@@ -1786,7 +1786,7 @@ mod maria_db_schema_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_collection_keeps_a_spatial_index_order_where_the_engine_supports_it() {
         let Some(e) = env(Engine::MariaDb, "l3c_mschema_spatial_m", false, Default::default()).await else { return };
         let _ = e
@@ -1823,7 +1823,7 @@ mod maria_db_schema_test {
         Some(e)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_index_refuses_a_type_the_engine_does_not_create() {
         for (engine, db) in ENGINES {
             let Some(e) = with_collection(engine, db).await else { continue };
@@ -1847,7 +1847,7 @@ mod maria_db_schema_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_index_creates_a_key_index() {
         for (engine, db) in ENGINES {
             let Some(e) = with_collection(engine, db).await else { continue };
@@ -1862,7 +1862,7 @@ mod maria_db_schema_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_index_on_a_collection_without_a_definition_is_not_found() {
         for (engine, db) in ENGINES {
             let Some(e) = with_collection(engine, db).await else { continue };
@@ -1884,7 +1884,7 @@ mod postgres_schema_test {
     use super::*;
     use utopia_query::schema::{ColumnType, IndexType};
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_collection_adds_columns_only_for_relationship_sides_that_store_a_key() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_1", false, Default::default()).await else { return };
         e.adapter.create_collection("books", &books_with_relationships(), &[]).await.unwrap();
@@ -1899,7 +1899,7 @@ mod postgres_schema_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_create_index_refuses_a_type_the_engine_does_not_create() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_2", false, Default::default()).await else { return };
         let index = Index {
@@ -1916,7 +1916,7 @@ mod postgres_schema_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_nested_object_index_path_with_an_invalid_segment_is_refused() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_3", false, Default::default()).await else { return };
         for (path, segment) in [
@@ -1941,7 +1941,7 @@ mod postgres_schema_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_nested_object_index_path_is_indexed_as_text() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_4", false, Default::default()).await else { return };
         e.adapter.create_collection("books", &[Attribute::object("meta")], &[]).await.unwrap();
@@ -1961,7 +1961,7 @@ mod postgres_schema_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_updating_an_array_attribute_keeps_its_column_jsonb() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_5", false, Default::default()).await else { return };
         e.adapter.create_collection("books", &[Attribute::string("tags", 64).array(true)], &[]).await.unwrap();
@@ -1978,7 +1978,7 @@ mod index_column_order_test {
     use super::*;
     use utopia_query::schema::ColumnType;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_collection_index_keeps_attribute_order() {
         let cases = [
             (Engine::MariaDb, false, "INDEX `tagsfirst` (`tags`(255), `status`, `name`(16) DESC)"),
@@ -2016,7 +2016,7 @@ mod index_column_order_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_object_path_keeps_its_position() {
         for shared in [false, true] {
             let tenant = if shared { 7.into() } else { Default::default() };
@@ -2057,7 +2057,7 @@ mod index_column_order_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_repeated_column_keeps_its_own_length_and_order() {
         if let Some(e) = env(Engine::MariaDb, "l3c_order_3", false, Default::default()).await {
             let _ = e
@@ -2106,7 +2106,7 @@ mod index_column_order_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_operator_class_follows_every_column() {
         let Some(e) = env(Engine::Postgres, "l3c_order_5", false, Default::default()).await else { return };
         e.adapter
@@ -2143,7 +2143,7 @@ mod maria_db_varchar_column_test {
 
     const ENGINES: [(Engine, &str); 2] = [(Engine::MariaDb, "l3c_mvarchar_m"), (Engine::MySql, "l3c_mvarchar_y")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_attribute_is_a_varchar_column_of_its_size() {
         for (engine, db) in ENGINES {
             for size in [1, 64, 16381] {
@@ -2159,7 +2159,7 @@ mod maria_db_varchar_column_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_collection_column_outside_its_sizes_is_refused() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { return };
@@ -2189,7 +2189,7 @@ mod sql_varchar_attribute_test {
     const ENGINES: [(Engine, &str); 3] =
         [(Engine::MariaDb, "l3c_varchar_m"), (Engine::MySql, "l3c_varchar_y"), (Engine::Postgres, "l3c_varchar_p")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_attribute_outside_its_sizes_is_refused_as_a_collection_column_is() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -2227,7 +2227,7 @@ mod sql_varchar_attribute_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_attribute_within_its_sizes_is_added() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -2266,7 +2266,7 @@ mod schema_introspection_test {
         columns.into_iter().map(|c| (c.name.clone(), c)).collect()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sqlite_reads_its_columns_back_as_typed_columns() {
         let e = sqlite().await;
         e.adapter.create_attribute("people", &Attribute::string("name", 64)).await.unwrap();
@@ -2281,7 +2281,7 @@ mod schema_introspection_test {
         assert!(!columns[storage::UID].nullable);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sqlite_reads_its_indexes_back_as_typed_indexes() {
         let e = sqlite().await;
         e.adapter.create_attribute("people", &Attribute::string("name", 64)).await.unwrap();
@@ -2325,7 +2325,7 @@ mod schema_introspection_test {
         assert_eq!(indexes["search"].kind, IndexType::Fulltext);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_engine_only_column_is_read_back_without_becoming_an_attribute() {
         let e = sqlite().await;
         e.raw("ALTER TABLE `namespace_people` ADD COLUMN `legacy` TINYINT(4)").await;
@@ -2340,7 +2340,7 @@ mod schema_introspection_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_reads_the_catalog_into_typed_columns_and_indexes() {
         for (engine, db) in [(Engine::MariaDb, "l3c_introspect_m"), (Engine::MySql, "l3c_introspect_y")] {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
@@ -2401,7 +2401,7 @@ mod schema_introspection_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_reads_the_catalog_into_typed_columns_and_indexes() {
         let Some(e) = env(Engine::Postgres, "l3c_introspect_p", true, 2.into()).await else { return };
         let table = e.table("people");
@@ -2466,7 +2466,7 @@ mod schema_introspection_test {
         e.drop().await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_postgres_reports_a_fulltext_index_as_the_key_it_stores() {
         use utopia_database::adapter::sql::pdo::Pdo;
         let postgres = Sql::new(Engine::Postgres, Pdo::connect("sqlite::memory:", None, None).await.unwrap());
@@ -2483,7 +2483,7 @@ mod big_integer_test {
     use super::*;
     use utopia_database::adapter::sql::pdo::Pdo;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sql_column_types_map_big_integer_and_legacy_metadata() {
         let mariadb = Sql::new(Engine::MariaDb, Pdo::connect("sqlite::memory:", None, None).await.unwrap());
         let postgres = Sql::new(Engine::Postgres, Pdo::connect("sqlite::memory:", None, None).await.unwrap());
@@ -2507,7 +2507,7 @@ mod big_integer_test {
         assert_eq!(postgres.column_type(&legacy).unwrap().as_deref(), Some("BIGINT"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sqlite_reads_back_the_big_integer_column_type_it_declares() {
         let e = super::env::env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
         e.adapter.create_collection("ledger", &[Attribute::big_integer("total")], &[]).await.unwrap();
@@ -2530,7 +2530,7 @@ mod timeouts_feature_test {
         Sql::new(engine, Pdo::connect("sqlite::memory:", None, None).await.unwrap())
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_event_timeout_overrides_the_global_one_until_it_is_cleared() {
         let adapter = adapter(Engine::MariaDb).await;
         Timeouts::set_timeout(&adapter, 1_000, Event::All).unwrap();
@@ -2542,7 +2542,7 @@ mod timeouts_feature_test {
         assert_eq!(Timeouts::timeout(&adapter, Event::DocumentFind), 1_000);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_clearing_the_global_timeout_clears_every_event() {
         let adapter = adapter(Engine::MariaDb).await;
         Timeouts::set_timeout(&adapter, 1_000, Event::All).unwrap();
@@ -2552,7 +2552,7 @@ mod timeouts_feature_test {
         assert_eq!(Timeouts::timeout(&adapter, Event::DocumentFind), 0);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_adapter_without_timeouts_has_no_timeout_until_one_is_set() {
         let adapter = adapter(Engine::MariaDb).await;
         assert_eq!(Timeouts::timeout(&adapter, Event::All), 0);
@@ -2562,7 +2562,7 @@ mod timeouts_feature_test {
     const NON_POSITIVE: [(i64, Event); 4] =
         [(0, Event::All), (-1, Event::All), (0, Event::DocumentFind), (-250, Event::DocumentFind)];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_non_positive_timeout_is_rejected() {
         for engine in [Engine::MariaDb, Engine::MySql] {
             for (milliseconds, event) in NON_POSITIVE {
@@ -2575,7 +2575,7 @@ mod timeouts_feature_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_rejected_timeout_keeps_the_one_set_before() {
         for engine in [Engine::MariaDb, Engine::MySql] {
             for (milliseconds, event) in NON_POSITIVE {
@@ -2598,7 +2598,7 @@ mod hostname_test {
     use super::*;
     use utopia_database::adapter::Connection;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_adapter_without_a_hostname_returns_an_empty_one() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         assert_eq!(Connection::hostname(&adapter).await.unwrap(), "");
@@ -2614,7 +2614,7 @@ mod adapter_database_rename_test {
     use super::*;
     use utopia_database::adapter::sql::pdo::Pdo;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_refuse_the_rename() {
         for engine in [Engine::MariaDb, Engine::MySql, Engine::Postgres] {
             let adapter = Sql::new(engine, Pdo::connect("sqlite::memory:", None, None).await.unwrap());
@@ -2624,7 +2624,7 @@ mod adapter_database_rename_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_maria_db_moves_every_table_and_drops_the_old_database() {
         let Some(e) = env(Engine::MariaDb, "l3c_dbrename", false, Default::default()).await else { return };
         e.adapter.create_collection("authors", &[], &[]).await.unwrap();
@@ -2657,7 +2657,7 @@ mod sqlite_schema_test {
     use super::env::env;
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_string_column_grows_into_the_type_its_size_needs() {
         for (size, kind) in [(16381, "VARCHAR(16381)"), (16382, "TEXT"), (65536, "MEDIUMTEXT"), (16777216, "LONGTEXT")]
         {
@@ -2667,7 +2667,7 @@ mod sqlite_schema_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_column_outside_its_sizes_is_refused() {
         for (size, message) in [
             (0, "VARCHAR size 0 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
@@ -2685,14 +2685,14 @@ mod sqlite_schema_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_varchar_column_within_its_sizes_is_created() {
         let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
         assert!(e.adapter.create_collection("codes", &[Attribute::varchar("code", 16381)], &[]).await.unwrap());
         assert_eq!(sqlite_column_type(&e, "codes", "code").await.as_deref(), Some("VARCHAR(16381)"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_spatial_column_is_untyped() {
         let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
         assert!(e.adapter.create_collection("places", &[Attribute::point("position")], &[]).await.unwrap());
@@ -2728,7 +2728,7 @@ mod sqlite_tenant_index_test {
             .collect()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_deleting_an_index_drops_it_for_a_tenant_outside_the_identifier_alphabet() {
         let e = database("acme.1").await;
         e.adapter
@@ -2740,7 +2740,7 @@ mod sqlite_tenant_index_test {
         assert!(indexes(&e).await.is_empty(), "The index deleteIndex() reported as dropped must be gone");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_creating_an_index_that_already_exists_is_a_no_op() {
         let e = database("acme.1").await;
         let index = Index::key("email", ["email"], vec![], vec![]).unwrap();
@@ -2749,7 +2749,7 @@ mod sqlite_tenant_index_test {
         assert_eq!(indexes(&e).await, ["namespace_acme1_profiles_email"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_tenant_cannot_break_out_of_the_index_identifier() {
         let e = database("a`b").await;
         e.adapter
@@ -2767,7 +2767,7 @@ mod sqlite_shared_fulltext_test {
     use super::env::env;
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_string_tenants_fulltext_table_and_triggers_are_scoped_to_it() {
         let e = env(Engine::Sqlite, "main", true, utopia_database::value::string("o'brien")).await.unwrap();
         e.adapter
@@ -2886,7 +2886,7 @@ mod sqlite_child_side_relationship_test {
         e
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_one_to_many_key_renamed_from_the_child_side_renames_its_column() {
         let e = setup().await;
         let relationship = Relationship::one_to_many("books").key("books").two_way(true).two_way_key("author");
@@ -2916,7 +2916,7 @@ mod sqlite_child_side_relationship_test {
         assert_eq!(ids(&e, &books, vec![Query::equal("writer", ["herbert"])]).await.unwrap(), ["dune"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_many_to_one_two_way_key_renamed_from_the_child_side_renames_the_parent_column() {
         let e = setup().await;
         let relationship = Relationship::many_to_one("authors").key("author").two_way(true).two_way_key("books");
@@ -3000,7 +3000,7 @@ mod sqlite_many_to_many_relationship_rename_test {
             .unwrap();
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_one_way_two_way_key_rename_keeps_existing_and_new_relations() {
         let e = setup().await;
         rename(&e, false, relationship::Update { two_way_key: Some("works".into()), ..Default::default() }).await;
@@ -3012,7 +3012,7 @@ mod sqlite_many_to_many_relationship_rename_test {
         assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_one_way_key_rename_keeps_existing_and_new_relations() {
         let e = setup().await;
         rename(&e, false, relationship::Update { key: Some("writers".into()), ..Default::default() }).await;
@@ -3022,7 +3022,7 @@ mod sqlite_many_to_many_relationship_rename_test {
         assert_eq!(authors(&e, keys, "emma").await, ["austen"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_one_way_rename_of_both_keys_keeps_existing_and_new_relations() {
         let e = setup().await;
         rename(
@@ -3041,7 +3041,7 @@ mod sqlite_many_to_many_relationship_rename_test {
         assert_eq!(authors(&e, keys, "emma").await, ["austen"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_two_way_two_way_key_rename_keeps_both_sides_related() {
         let e = setup().await;
         rename(&e, true, relationship::Update { two_way_key: Some("works".into()), ..Default::default() }).await;
@@ -3054,7 +3054,7 @@ mod sqlite_many_to_many_relationship_rename_test {
         assert_eq!(works, ["dune", "emma"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_two_way_key_rename_from_the_child_side_keeps_both_sides_related() {
         let e = setup().await;
         let relationship = Relationship::many_to_many("books").key("books").two_way(true).two_way_key("authors");
@@ -3133,7 +3133,7 @@ mod sqlite_schema_indexes_test {
         (name.to_owned(), IndexType::Fulltext, vec![column.to_owned()])
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_fulltext_indexes_are_listed_under_their_ids() {
         for shared in [false, true] {
             let e = database(shared).await;
@@ -3148,7 +3148,7 @@ mod sqlite_schema_indexes_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_deleting_one_of_two_fulltext_indexes_keeps_the_other() {
         for shared in [false, true] {
             let e = database(shared).await;
@@ -3170,7 +3170,7 @@ mod sqlite_schema_indexes_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_indexes_are_listed_under_their_ids() {
         for shared in [false, true] {
             let e = database(shared).await;
@@ -3188,7 +3188,7 @@ mod sqlite_schema_indexes_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_shared_tables_list_every_tenants_index_once_and_prefer_their_own() {
         let e = database(true).await;
         let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
@@ -3213,7 +3213,7 @@ mod sqlite_schema_indexes_test {
         assert_eq!(second.get("lookup"), Some(&(IndexType::Unique, tenant_and("body"))));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_an_orphan_index_is_listed_for_reconciliation() {
         let e = database(false).await;
         e.adapter
@@ -3232,7 +3232,7 @@ mod sqlite_schema_indexes_test {
         assert_eq!(indexes(&e).await.get("lookup"), Some(&(IndexType::Unique, vec!["body".to_owned()])));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_renaming_an_index_the_schema_no_longer_has_rebuilds_it_under_the_new_name() {
         for shared in [false, true] {
             let e = database(shared).await;
@@ -3262,7 +3262,7 @@ mod sqlite_digit_leading_namespace_test {
     use super::*;
     use utopia_database::value::string;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_document_security_reads_work_under_the_names() {
         for (schema, namespace) in [("digit_leading", "ns1"), ("1db", "1ns"), ("-db", "-ns")] {
             let adapter = connect(Engine::Sqlite).await.unwrap();
@@ -3340,14 +3340,14 @@ mod sqlite_schema_documents_test {
             .collect()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_renaming_an_index_the_metadata_lacks_returns_false() {
         let e = setup().await;
         assert!(!e.adapter.rename_index("notes", "missing", "renamed").await.unwrap());
         assert_eq!(index_names(&e).await, ["namespace__notes_title_index"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_renaming_an_index_of_an_unknown_collection_is_not_found() {
         let e = setup().await;
         let error = e.adapter.rename_index("missing", "title_index", "renamed").await.unwrap_err();
@@ -3355,14 +3355,14 @@ mod sqlite_schema_documents_test {
         assert_eq!(error.message(), "Collection not found");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_renaming_a_stored_index_renames_it() {
         let e = setup().await;
         assert!(e.adapter.rename_index("notes", "title_index", "renamed").await.unwrap());
         assert_eq!(index_names(&e).await, ["namespace__notes_renamed"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_long_string_is_stored_whole() {
         let e = setup().await;
         let articles = collection("articles", vec![Attribute::string("body", 20_000_000)], vec![], false);
@@ -3377,7 +3377,7 @@ mod sqlite_schema_documents_test {
         assert_eq!(super::documents::attribute(&e, &articles, "long", "body").await, string(value.as_str()));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_spatial_column_keeps_its_wkt_as_text() {
         let e = setup().await;
         let places = collection("places", vec![Attribute::point("position")], vec![], false);
@@ -3401,7 +3401,7 @@ mod sqlite_tenant_index_documents_test {
     use super::*;
     use utopia_database::value::string;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_deleted_unique_index_stops_rejecting_duplicates() {
         let e = env(Engine::Sqlite, "main", true, string("acme.1")).await.unwrap();
         let profiles = collection("profiles", vec![Attribute::string("email", 64)], vec![], false);
@@ -3495,7 +3495,7 @@ mod sqlite_shared_fulltext_documents_test {
             .await
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_string_tenants_fulltext_index_sees_only_its_own_rows() {
         let e = setup().await;
         for tenant in TENANTS {
@@ -3508,7 +3508,7 @@ mod sqlite_shared_fulltext_documents_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_another_tenants_writes_leave_the_index_alone() {
         let e = setup().await;
         e.adapter.set_tenant(string(TENANTS[1]));

@@ -34,7 +34,7 @@ fn title() -> (Vec<Attribute>, Vec<Index>) {
     (vec![Attribute::string("title", 64)], vec![Index::key("title", ["title"], vec![], vec![]).unwrap()])
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_existing_shared_collection_gets_its_indexes_and_is_reported_as_existing() {
     let cases = [
         (error("Collection Exists", 48), "orders", true),
@@ -59,7 +59,7 @@ async fn an_existing_shared_collection_gets_its_indexes_and_is_reported_as_exist
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_existing_collection_is_duplicate_outside_shared_tables() {
     for failure in [error("Collection Exists", 48), error("Collection Exists", 0), error(SERVER_EXISTS, 48)] {
         let (adapter, fake) = create_adapter(failure.clone(), false).await;
@@ -73,7 +73,7 @@ async fn an_existing_collection_is_duplicate_outside_shared_tables() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn other_errors_are_rethrown() {
     let failure = error("not authorized on utopiaTests to execute command", 13);
     let (adapter, _) = create_adapter(failure.clone(), true).await;
@@ -97,7 +97,7 @@ async fn index_failing_adapter(failure: utopia_mongo::Error, failing_call: i64) 
     adapter
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_failure_creating_the_internal_indexes_is_mapped() {
     let failure = error("operation exceeded time limit", 50);
 
@@ -108,7 +108,7 @@ async fn a_failure_creating_the_internal_indexes_is_mapped() {
     assert_eq!(thrown.previous(), Some(&utopia_database::adapter::mongo::from_client(failure)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_conflict_creating_the_declared_indexes_is_an_index_error() {
     let failure = error("Index with name: title already exists with different options", 85);
     let (attributes, indexes) = title();
@@ -171,7 +171,7 @@ async fn dropped_after_a_failed_create(
     fake.args("dropCollection").into_iter().map(|a| a[0].clone()).collect()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_collection_whose_indexes_are_not_created_is_dropped() {
     for (name, create_indexes, indexes) in indexes_not_created() {
         assert_eq!(
@@ -182,7 +182,7 @@ async fn a_collection_whose_indexes_are_not_created_is_dropped() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_shared_collection_whose_indexes_are_not_created_is_kept() {
     for (name, create_indexes, indexes) in indexes_not_created() {
         assert!(
@@ -192,7 +192,7 @@ async fn a_shared_collection_whose_indexes_are_not_created_is_kept() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_collection_created_in_a_transaction_is_left_to_its_abort() {
     for (name, create_indexes, indexes) in indexes_not_created() {
         assert!(
@@ -216,7 +216,7 @@ fn timed_out() -> utopia_mongo::Error {
     utopia_mongo::Error::Engine { class: "RuntimeException", message: "the listing timed out".into() }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_listing_that_fails_once_is_retried_until_the_index_is_ready() {
     let listings = Arc::new(AtomicI64::new(0));
     let count = listings.clone();
@@ -233,7 +233,7 @@ async fn a_listing_that_fails_once_is_retried_until_the_index_is_ready() {
     assert_eq!(listings.load(Ordering::Relaxed), 2);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_listing_that_keeps_failing_times_out_with_its_last_error() {
     let listings = Arc::new(AtomicI64::new(0));
     let count = listings.clone();
@@ -261,22 +261,22 @@ async fn listing_adapter(databases: &[&str]) -> Mongo {
     Mongo::with_driver(fake).await.unwrap()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_listed_database_exists() {
     assert!(listing_adapter(&["admin", "library"]).await.exists("library").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_unlisted_database_does_not_exist() {
     assert!(!listing_adapter(&["admin", "library"]).await.exists("archive").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn no_database_exists_on_an_empty_server() {
     assert!(!listing_adapter(&[]).await.exists("library").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn the_name_is_filtered_before_lookup() {
     assert!(listing_adapter(&["library"]).await.exists("lib.rary").await.unwrap());
 }
@@ -371,7 +371,7 @@ fn expected(databases: &[(&str, &[&str])]) -> Vec<(String, Vec<String>)> {
     databases.iter().map(|(d, cs)| ((*d).to_owned(), cs.iter().map(|c| (*c).to_owned()).collect())).collect()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn rename_moves_every_collection_and_drops_the_old_database() {
     let (adapter, server) = rename_adapter(&[("library", &["authors", "books", "system.views"])]).await;
 
@@ -380,7 +380,7 @@ async fn rename_moves_every_collection_and_drops_the_old_database() {
     assert_eq!(databases(&server), expected(&[("archive", &["authors", "books"])]));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_failure_part_way_moves_the_moved_collections_back() {
     let (adapter, server) = rename_adapter(&[("library", &["authors", "books", "loans"])]).await;
     *server.fail_on.lock().unwrap() = Some("library.loans".into());
@@ -391,7 +391,7 @@ async fn a_failure_part_way_moves_the_moved_collections_back() {
     assert_eq!(databases(&server), expected(&[("library", &["authors", "books", "loans"])]));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_paged_listing_is_refused_before_anything_moves() {
     let (adapter, server) = rename_adapter(&[("library", &["authors", "books"])]).await;
     server.cursor.store(42, Ordering::Relaxed);
@@ -406,7 +406,7 @@ async fn a_paged_listing_is_refused_before_anything_moves() {
     assert_eq!(databases(&server), expected(&[("library", &["authors", "books"])]));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn shared_tables_refuse_the_rename_before_anything_moves() {
     let (adapter, server) = rename_adapter(&[("library", &["books"])]).await;
     adapter.set_shared_tables(true);
@@ -417,7 +417,7 @@ async fn shared_tables_refuse_the_rename_before_anything_moves() {
     assert_eq!(databases(&server), expected(&[("library", &["books"])]));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn collection_exists_asks_the_named_database() {
     let (adapter, _) = rename_adapter(&[("library", &["ns_books"]), ("archive", &[])]).await;
     adapter.set_namespace("ns");
@@ -426,7 +426,7 @@ async fn collection_exists_asks_the_named_database() {
     assert!(!adapter.collection_exists("archive", "books").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_shared_collection_already_in_the_adapters_database_is_not_created_again() {
     let (adapter, server) = rename_adapter(&[("library", &["ns_books"]), ("archive", &[])]).await;
     adapter.set_namespace("ns");
@@ -464,7 +464,7 @@ async fn names_adapter() -> (Mongo, Arc<Fake>) {
     (adapter, fake)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn collection_with_period_in_its_id_exists_after_creation() {
     let (adapter, _) = names_adapter().await;
 
@@ -473,7 +473,7 @@ async fn collection_with_period_in_its_id_exists_after_creation() {
     assert!(adapter.collection_exists("app", "audit.logs").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn collection_with_nul_byte_in_its_id_exists_after_creation() {
     let (adapter, _) = names_adapter().await;
 
@@ -482,7 +482,7 @@ async fn collection_with_nul_byte_in_its_id_exists_after_creation() {
     assert!(adapter.collection_exists("app", "audit\0logs").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn collection_that_was_never_created_does_not_exist() {
     let (adapter, _) = names_adapter().await;
 
@@ -491,7 +491,7 @@ async fn collection_that_was_never_created_does_not_exist() {
     assert!(!adapter.collection_exists("app", "audit.events").await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn delete_drops_the_database_that_set_database_selects() {
     let (adapter, fake) = names_adapter().await;
     adapter.set_database("tenant.data\0");
@@ -503,7 +503,7 @@ async fn delete_drops_the_database_that_set_database_selects() {
     assert_eq!(dropped, vec![Bson::String("tenantdata".into())]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn delete_keeps_an_already_valid_database_name() {
     let (adapter, fake) = names_adapter().await;
 

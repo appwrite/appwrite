@@ -265,7 +265,7 @@ async fn run(adapter: &Memory, authorization: &Arc<Authorization>, op: &str, a: 
     })
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_matches_php() {
     check(include_str!("fixtures/memory_scenario.json"), include_str!("fixtures/memory_expected.txt")).await;
 }
@@ -273,7 +273,7 @@ async fn test_memory_matches_php() {
 /// Uniqueness across updates and renames, permissions moved by renames and
 /// batch updates, tenant per document, big-integer increments, ordering and
 /// cursors over mixed types.
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_matches_php_on_writes_permissions_and_tenants() {
     check(include_str!("fixtures/memory_scenario2.json"), include_str!("fixtures/memory_expected2.txt")).await;
 }

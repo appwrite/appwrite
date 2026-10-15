@@ -129,7 +129,7 @@ docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
 
 What the Rust implementation does differently, and why it is cheaper per request:
 
-1. **No per-request bootstrap.** One process per container, a multi-threaded tokio runtime and a fixed memory footprint. The Rust binary is about 10 MB, in a distroless image of about 30 MB.
+1. **No per-request bootstrap.** One process per container, a multi-threaded runtime (utopia-async on its Tokio adapter) and a fixed memory footprint. The Rust binary is about 10 MB, in a distroless image of about 30 MB.
 2. **The same database work as PHP, without PHP's runtime.** Every read and write goes through `utopia-database` (the full conversion of utopia-php/database), configured as `Appwrite\Database\Factory` configures PHP's: the same statements, the same filters (`app/init/database/filters.php`, with PHP's signatures), sub-queries and permission checks, and the document cache PHP shares. A document PHP cached is read by Rust from the same Redis field, and the other way round; each runtime's writes purge the other's entries.
 3. **Pooled connections.** Each request gets `Pool` adapter handles over per-server pools of PostgreSQL connections (de-duplicated by server), as PHP's `Pool` adapter does; a call holds a connection only for its statements.
 4. **Project lookups.** The project document comes from the shared document cache; an in-process map keyed by that entry's generation skips reading and decoding it while nothing purged it.

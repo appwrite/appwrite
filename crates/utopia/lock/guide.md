@@ -1,4 +1,4 @@
-A lock lets one piece of work use a shared resource while others wait or back off. This library gives every lock the same three moves (acquire, release, and run a section under the lock) and four kinds of lock: `Mutex` and `Semaphore` within one process, `File` across processes on one host, and `Distributed` across hosts through Redis. The locks are async, so the examples run them on a Tokio runtime. This guide covers the common tasks.
+A lock lets one piece of work use a shared resource while others wait or back off. This library gives every lock the same three moves (acquire, release, and run a section under the lock) and four kinds of lock: `Mutex` and `Semaphore` within one process, `File` across processes on one host, and `Distributed` across hosts through Redis. The locks are async, so the examples run them with `utopia_async::run`. This guide covers the common tasks.
 
 ## Run code under a lock
 
@@ -9,7 +9,7 @@ use utopia_lock::{Lock, Mutex, Wait};
 
 let mutex = Mutex::new();
 
-let total = tokio::runtime::Runtime::new()?.block_on(async {
+let total = utopia_async::Runtime::new()?.block_on(async {
     mutex.with_lock(Wait::Forever, async { 2 + 3 }).await
 })?;
 
@@ -39,7 +39,7 @@ use utopia_lock::{Lock, Mutex};
 
 let mutex = Mutex::new();
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     assert!(mutex.try_acquire().await?);
     assert!(!mutex.try_acquire().await?);
 
@@ -82,7 +82,7 @@ assert_eq!(Wait::from_secs_f64(-1.0), Wait::Forever);
 
 let mutex = Mutex::new();
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     assert!(mutex.acquire(Wait::None).await?);
     // Someone holds it, so this gives up after 50 milliseconds.
     assert!(!mutex.acquire(Wait::For(Duration::from_millis(50))).await?);
@@ -115,7 +115,7 @@ use utopia_lock::{Error, Lock, Mutex, Wait};
 
 let mutex = Mutex::new();
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     mutex.try_acquire().await?;
 
     let wait = Wait::For(Duration::from_millis(10));
@@ -163,13 +163,13 @@ let task = || {
     semaphore.with_lock(Wait::Forever, async move {
         let now = live.fetch_add(1, Ordering::SeqCst) + 1;
         peak.fetch_max(now, Ordering::SeqCst);
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        utopia_async::sleep(Duration::from_millis(10)).await;
         live.fetch_sub(1, Ordering::SeqCst);
     })
 };
 
-tokio::runtime::Runtime::new()?.block_on(async {
-    let (a, b, c, d) = tokio::join!(task(), task(), task(), task());
+utopia_async::Runtime::new()?.block_on(async {
+    let (a, b, c, d) = utopia_async::join!(task(), task(), task(), task());
     a.and(b).and(c).and(d)
 })?;
 
@@ -217,7 +217,7 @@ let path = path.to_string_lossy();
 let first = File::new(path.as_ref(), Mode::Exclusive);
 let second = File::new(path.as_ref(), Mode::Exclusive);
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     assert!(first.try_acquire().await?);
     assert!(!second.try_acquire().await?);
 
@@ -259,7 +259,7 @@ let reader = File::new(path.as_ref(), Mode::Shared);
 let another = File::new(path.as_ref(), Mode::Shared);
 let writer = File::new(path.as_ref(), Mode::Exclusive);
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     assert!(reader.try_acquire().await?);
     assert!(another.try_acquire().await?);
     assert!(!writer.try_acquire().await?);
@@ -299,7 +299,7 @@ A `Distributed` lock writes a random token to a Redis key with a time to live, s
 ```no_run
 use utopia_lock::{Distributed, Lock};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = redis::Client::open("redis://localhost:6379")?;
     let conn = client.get_connection_manager().await?;
 

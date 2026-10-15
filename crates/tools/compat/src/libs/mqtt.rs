@@ -1,6 +1,6 @@
 //! Compat adapter for `mqtt`: maps `tests/compat/mqtt/spec.json` operations
 //! onto `utopia-mqtt`: the codec, the store, connections, brokers on the
-//! in-process `Memory` adapter, and E2E and interop runs against the `Tokio`
+//! in-process `Memory` adapter, and E2E and interop runs against the `Network`
 //! adapter serving the handlers of `tests/compat/mqtt/server.php`.
 
 use std::collections::HashMap;
@@ -12,10 +12,10 @@ use std::time::Duration;
 use futures_util::{SinkExt, StreamExt};
 use indexmap::IndexMap;
 use serde_json::{Value, json};
-use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+use utopia_async::net::TcpStream;
 use utopia_mqtt::adapter::{Adapter as _, Outbound as _, TimerHook};
 use utopia_mqtt::client::{Client, Options};
 use utopia_mqtt::memory::Operation;
@@ -27,7 +27,7 @@ use utopia_mqtt::server::{AuthReply, ConnectReply, Subscriber};
 use utopia_mqtt::spec::{v3, v5};
 use utopia_mqtt::wire::{self, Length};
 use utopia_mqtt::{
-    Connection, Error, Handler, Memory, NoTimer, Properties, Property, Server, Store, Timer, TimingWheel, Tokio,
+    Connection, Error, Handler, Memory, Network, NoTimer, Properties, Property, Server, Store, Timer, TimingWheel,
     Transport, Value as PropertyValue,
 };
 use utopia_telemetry::{Kind as Metric, MemoryTelemetry, Number};
@@ -1469,7 +1469,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             if !a.array("transports")?.is_empty() {
                 return Err(Fault::new("swoole.new only constructs without transports"));
             }
-            match Tokio::new(Vec::new(), 1, None) {
+            match Network::new(Vec::new(), 1, None) {
                 Ok(_) => Outcome::Ok(Value::Null),
                 Err(e) => err(&e),
             }
@@ -1553,7 +1553,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "broker.stop" => {
             if let Some(handle) = a.value("broker")?.get("broker") {
-                session.get::<Tokio>(handle)?.shutdown().map_err(|e| Fault::new(e.to_string()))?;
+                session.get::<Network>(handle)?.shutdown().map_err(|e| Fault::new(e.to_string()))?;
             }
             Outcome::Ok(Value::Null)
         }
@@ -1643,8 +1643,8 @@ fn matches(filter: &[u8], topic: &[u8]) -> bool {
     f.len() == t.len()
 }
 
-/// The handlers of server.php, on the Tokio adapter.
-fn fixture(adapter: &Tokio, packet: &[u8], fd: i64, state: &Mutex<Fixture>) -> Result<(), Error> {
+/// The handlers of server.php, on the Network adapter.
+fn fixture(adapter: &Network, packet: &[u8], fd: i64, state: &Mutex<Fixture>) -> Result<(), Error> {
     let packet = Packet::parse(packet)?;
     let body = packet.body;
     let level_of = |fd: i64| state.lock().unwrap_or_else(|e| e.into_inner()).protocol.get(&fd).copied();
@@ -1776,12 +1776,12 @@ fn transports(host: &str) -> Vec<Transport> {
     transports
 }
 
-/// Starts a Server with the Recorder handler on the Tokio adapter, its
+/// Starts a Server with the Recorder handler on the Network adapter, its
 /// keep-alives on a timing wheel draining every second (server.php's broker
 /// mode), and waits until it listens.
-async fn start_broker(host: &str) -> Result<Tokio, Fault> {
+async fn start_broker(host: &str) -> Result<Network, Fault> {
     let wheel: Arc<dyn Timer> = Arc::new(TimingWheel::new(1, 1.0, None));
-    let adapter = Tokio::new(transports(host), 1, Some(wheel)).map_err(|e| Fault::new(e.to_string()))?;
+    let adapter = Network::new(transports(host), 1, Some(wheel)).map_err(|e| Fault::new(e.to_string()))?;
     let stopping = adapter.clone();
     let recorder = Recorder {
         shutdown: Some(Arc::new(move || {
@@ -1790,18 +1790,18 @@ async fn start_broker(host: &str) -> Result<Tokio, Fault> {
         ..Recorder::new(Log::default())
     };
     let server = Server::new(adapter.clone(), recorder);
-    tokio::spawn(async move { server.start().await });
-    tokio::time::timeout(Duration::from_secs(5), adapter.listening())
+    utopia_async::spawn(async move { server.start().await });
+    utopia_async::timeout(Duration::from_secs(5), adapter.listening())
         .await
         .map_err(|_| Fault::new("the broker did not start"))?;
     Ok(adapter)
 }
 
-/// Starts the fixture on the Tokio adapter, listening on `host` (TCP,
+/// Starts the fixture on the Network adapter, listening on `host` (TCP,
 /// WebSocket, and TLS when services.sh wrote the certificate), and waits until
 /// it listens.
-async fn start_fixture(host: &str) -> Result<Tokio, Fault> {
-    let adapter = Tokio::new(transports(host), 1, None).map_err(|e| Fault::new(e.to_string()))?;
+async fn start_fixture(host: &str) -> Result<Network, Fault> {
+    let adapter = Network::new(transports(host), 1, None).map_err(|e| Fault::new(e.to_string()))?;
     let state = Arc::new(Mutex::new(Fixture::default()));
     let (receiving, closing) = (state.clone(), state);
     let sender = adapter.clone();
@@ -1814,8 +1814,8 @@ async fn start_fixture(host: &str) -> Result<Tokio, Fault> {
         Ok(())
     }));
     let running = adapter.clone();
-    tokio::spawn(async move { running.start().await });
-    tokio::time::timeout(Duration::from_secs(5), adapter.listening())
+    utopia_async::spawn(async move { running.start().await });
+    utopia_async::timeout(Duration::from_secs(5), adapter.listening())
         .await
         .map_err(|_| Fault::new("the fixture broker did not start"))?;
     Ok(adapter)
@@ -1903,7 +1903,13 @@ async fn run_step(
                     .headers_mut()
                     .insert("Sec-WebSocket-Protocol", protocol.parse().map_err(|_| Fault::new("a header value"))?);
             }
-            match tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await {
+            let handshake = async {
+                let stream = TcpStream::connect(endpoint.as_str()).await?;
+                tokio_tungstenite::client_async_tls_with_config(request, stream, None, None)
+                    .await
+                    .map_err(std::io::Error::other)
+            };
+            match utopia_async::timeout(Duration::from_secs(5), handshake).await {
                 Ok(Ok((socket, response))) => {
                     let protocol = response
                         .headers()
@@ -1930,7 +1936,7 @@ async fn run_step(
                     buffer.drain(..first.len());
                     break Ok(bytes_value(&first));
                 }
-                match tokio::time::timeout(Duration::from_secs(5), socket.next()).await {
+                match utopia_async::timeout(Duration::from_secs(5), socket.next()).await {
                     Ok(Some(Ok(Message::Binary(data)))) => buffer.extend_from_slice(&data),
                     Ok(Some(Ok(Message::Text(text)))) => buffer.extend_from_slice(text.as_bytes()),
                     Ok(Some(Ok(_))) => {}
@@ -1945,7 +1951,7 @@ async fn run_step(
             Ok(Value::Null)
         }
         "sleep" => {
-            tokio::time::sleep(Duration::from_millis(name.as_u64().unwrap_or(0))).await;
+            utopia_async::sleep(Duration::from_millis(name.as_u64().unwrap_or(0))).await;
             Ok(Value::Null)
         }
         other => return Err(Fault::new(format!("unknown step {other}"))),

@@ -25,7 +25,7 @@ impl Transform for Recorder {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sqlite_connection() {
     let adapter = sqlite().await;
     assert!(utopia_database::adapter::Connection::ping(&adapter).await.unwrap());
@@ -35,7 +35,7 @@ async fn sqlite_connection() {
     assert_eq!(utopia_database::adapter::Connection::hostname(&adapter).await.unwrap(), "");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sqlite_transactions_nest_as_savepoints() {
     let adapter = sqlite().await;
     let statements = Arc::new(Mutex::new(Vec::new()));
@@ -50,7 +50,7 @@ async fn sqlite_transactions_nest_as_savepoints() {
     assert!(statements.lock().unwrap().is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn statements_carry_metadata_comments() {
     let adapter = sqlite().await;
     let statements = Arc::new(Mutex::new(Vec::new()));
@@ -83,7 +83,7 @@ async fn server(engine: Engine, dsn: &str) -> Option<Sql> {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn servers_create_rename_and_delete_databases() {
     for (engine, dsn) in SERVERS {
         let Some(adapter) = server(engine, dsn).await else { continue };
@@ -105,7 +105,7 @@ async fn servers_create_rename_and_delete_databases() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn servers_nest_transactions() {
     for (engine, dsn) in SERVERS {
         let Some(adapter) = server(engine, dsn).await else { continue };

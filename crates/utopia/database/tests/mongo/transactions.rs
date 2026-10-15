@@ -63,7 +63,7 @@ async fn attempt(adapter: &Mongo, failure: &Error) -> (Error, i64) {
     (thrown, attempts.load(Ordering::Relaxed))
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn deterministic_failure_runs_once() {
     for (name, failure) in deterministic_failures() {
         let (adapter, fake) = replica_set_adapter(true).await;
@@ -78,7 +78,7 @@ async fn deterministic_failure_runs_once() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn transient_failure_runs_every_attempt() {
     for (name, failure) in transient_failures() {
         let (adapter, fake) = replica_set_adapter(true).await;
@@ -92,7 +92,7 @@ async fn transient_failure_runs_every_attempt() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_write_conflict_runs_until_its_retries_for_write_conflicts_run_out() {
     let (adapter, _) = replica_set_adapter(true).await;
     let failure = from_client(error("WriteConflict", 112));
@@ -104,7 +104,7 @@ async fn a_write_conflict_runs_until_its_retries_for_write_conflicts_run_out() {
     assert!(!adapter.in_transaction());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn transient_failure_succeeds_when_it_runs_again() {
     let (adapter, fake) = replica_set_adapter(true).await;
     let attempts = AtomicI64::new(0);
@@ -127,7 +127,7 @@ async fn transient_failure_succeeds_when_it_runs_again() {
 /// A standalone server has no transactions, so the callback runs once and
 /// nothing is retried: a caller that retries on its own must not take a
 /// transient failure for one the transaction already retried.
-#[tokio::test]
+#[utopia_async::test]
 async fn a_standalone_server_retries_nothing() {
     let (adapter, _) = replica_set_adapter(false).await;
     let failure = Error::contention("Write conflict");
@@ -142,7 +142,7 @@ async fn a_standalone_server_retries_nothing() {
 
 /// Without savepoints a nested call runs inside the caller's transaction,
 /// so only the outermost call decides.
-#[tokio::test]
+#[utopia_async::test]
 async fn deterministic_failure_in_a_nested_call_runs_once() {
     let (adapter, fake) = replica_set_adapter(true).await;
     let failure = Error::structure("Invalid document structure");
@@ -294,7 +294,7 @@ fn stored(server: &Shared) -> Vec<&'static str> {
     server.lock().unwrap().stored.clone()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_unknown_commit_result_that_applied_is_retried_without_running_the_callback_again() {
     let unknown = [
         primary_stepped_down(),
@@ -321,7 +321,7 @@ async fn an_unknown_commit_result_that_applied_is_retried_without_running_the_ca
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_commit_that_drops_the_connection_throws_unconfirmed_without_running_the_callback_again() {
     let disconnects = [
         (
@@ -350,7 +350,7 @@ async fn a_commit_that_drops_the_connection_throws_unconfirmed_without_running_t
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_commit_that_stays_unconfirmed_throws_without_running_the_callback_again() {
     let unknown = primary_stepped_down();
     let (adapter, server) =
@@ -375,7 +375,7 @@ async fn a_commit_that_stays_unconfirmed_throws_without_running_the_callback_aga
     assert!(!adapter.in_transaction());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_commit_time_limit_is_retried_then_throws_unconfirmed() {
     let expired = error("E50 MaxTimeMSExpired: operation exceeded time limit", 50);
     let (adapter, server) = commit_adapter(vec![], Some(expired.clone())).await;
@@ -394,7 +394,7 @@ fn aborted_commits() -> Vec<utopia_mongo::Error> {
     vec![no_such_transaction(), error("E112 WriteConflict: write conflict during plan execution", 112)]
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_first_commit_the_server_reports_aborted_runs_the_callback_again() {
     for failure in aborted_commits() {
         let (adapter, server) =
@@ -412,7 +412,7 @@ async fn a_first_commit_the_server_reports_aborted_runs_the_callback_again() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_retried_commit_that_reports_the_transaction_aborted_runs_the_callback_again() {
     for failure in aborted_commits() {
         let (adapter, server) = commit_adapter(
@@ -437,7 +437,7 @@ async fn a_retried_commit_that_reports_the_transaction_aborted_runs_the_callback
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_labelled_transient_transaction_error_at_commit_runs_the_callback_again() {
     let (adapter, server) = commit_adapter(
         vec![
@@ -455,7 +455,7 @@ async fn a_labelled_transient_transaction_error_at_commit_runs_the_callback_agai
     assert!(!adapter.in_transaction());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_unsent_commit_runs_the_callback_again() {
     let (adapter, server) = commit_adapter(
         vec![
@@ -473,7 +473,7 @@ async fn an_unsent_commit_runs_the_callback_again() {
     assert!(!adapter.in_transaction());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_commit_retry_that_was_never_sent_is_sent_again() {
     let (adapter, server) = commit_adapter(
         vec![

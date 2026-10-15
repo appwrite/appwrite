@@ -9,8 +9,8 @@ use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::client::conn::http1::{self, SendRequest};
 use hyper_rustls::HttpsConnector;
-use hyper_util::client::legacy::connect::HttpConnector;
 use tower_service::Service;
+use utopia_async::hyper::Connector;
 
 use crate::{BoxFuture, Error};
 
@@ -188,14 +188,14 @@ impl HttpTransport {
     }
 
     async fn connect(&self) -> Result<Sender, Error> {
-        let mut http = HttpConnector::new();
+        let mut http = Connector::new();
         http.enforce_http(false);
         http.set_nodelay(true);
         http.set_keepalive(Some(Duration::from_secs(60)));
         http.set_connect_timeout(Some(self.timeout.max(Duration::from_millis(500))));
         http.set_send_buffer_size(Some(self.socket_buffer_size));
         http.set_recv_buffer_size(Some(self.socket_buffer_size));
-        let mut https: HttpsConnector<HttpConnector> = hyper_rustls::HttpsConnectorBuilder::new()
+        let mut https: HttpsConnector<Connector> = hyper_rustls::HttpsConnectorBuilder::new()
             .with_provider_and_webpki_roots(rustls::crypto::ring::default_provider())
             .map_err(|e| Error::Telemetry(format!("TLS setup failed: {e}")))?
             .https_or_http()
@@ -203,7 +203,7 @@ impl HttpTransport {
             .wrap_connector(http);
         let stream = https.call(self.url.clone()).await.map_err(|e| connection_failed(&*e))?;
         let (sender, connection) = http1::handshake(stream).await.map_err(|e| connection_failed(&e))?;
-        tokio::spawn(connection);
+        utopia_async::spawn(connection);
         Ok(sender)
     }
 
@@ -226,7 +226,7 @@ impl HttpTransport {
             let body = response.into_body().collect().await?.to_bytes();
             Ok::<_, hyper::Error>((status, body))
         };
-        match tokio::time::timeout(self.timeout, exchange).await {
+        match utopia_async::timeout(self.timeout, exchange).await {
             Err(_) => {
                 Err(Failure::Final(Error::Telemetry("OTLP connection failed: Operation timed out (code: 110)".into())))
             }
@@ -337,7 +337,7 @@ mod tests {
         assert_eq!(t.url.to_string(), "https://otel.example.com:443/v1/metrics?foo=bar");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn refuses_to_send_after_shutdown() {
         let t = HttpTransport::new("http://localhost:4318/v1/metrics").unwrap();
         assert!(t.shutdown());

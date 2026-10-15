@@ -12,7 +12,7 @@ use mongodb::options::{
     AuthMechanism, ClientOptions, Credential, ReadConcern as DriverReadConcern, ServerAddress, SessionOptions, Tls,
     TlsOptions, TransactionOptions,
 };
-use tokio::sync::Mutex;
+use utopia_async::sync::Mutex;
 
 use crate::error::{Error, Result};
 
@@ -632,7 +632,7 @@ impl Client {
         // does after the replies to its SCRAM commands. Server selection
         // gives up within the budget (unsent); the reply gets one more
         // budget, so a refused dial never races the receive timeout.
-        let hello = tokio::time::timeout(budget * 2, driver.database("admin").run_command(doc! { "ping": 1 })).await;
+        let hello = utopia_async::timeout(budget * 2, driver.database("admin").run_command(doc! { "ping": 1 })).await;
         match hello {
             Ok(Ok(reply)) => self.update_causal_consistency(&reply),
             Ok(Err(e)) => {
@@ -763,9 +763,9 @@ impl Client {
             Some(handle) => {
                 let mut guard = handle.lock().await;
                 let run = database.run_command(command).session(&mut *guard);
-                tokio::time::timeout(timeout, run).await
+                utopia_async::timeout(timeout, run).await
             }
-            None => tokio::time::timeout(timeout, database.run_command(command)).await,
+            None => utopia_async::timeout(timeout, database.run_command(command)).await,
         };
         let reply = match outcome {
             Ok(Ok(reply)) => reply,
@@ -1542,7 +1542,7 @@ impl Client {
         let delay = options.get("retryDelayMs").filter(|v| set(Some(v))).map_or(100, integer);
         let pause = || async move {
             if delay > 0 {
-                tokio::time::sleep(Duration::from_millis(delay as u64)).await;
+                utopia_async::sleep(Duration::from_millis(delay as u64)).await;
             }
         };
         let mut attempt = 0;

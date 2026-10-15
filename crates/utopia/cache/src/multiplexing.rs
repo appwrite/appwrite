@@ -7,10 +7,10 @@ use std::time::{Duration, Instant};
 
 use indexmap::IndexMap;
 use php_std::types::Value;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
-use tokio::sync::{Notify, oneshot};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpStream;
+use utopia_async::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use utopia_async::sync::{Notify, oneshot};
 
 use crate::adapter::{Adapter, Fields, blank, coerce, empty, field, now};
 use crate::lease::{self, Transport, is_reserved};
@@ -68,7 +68,7 @@ type Waiter = oneshot::Sender<Result<Reply>>;
 /// callers waiting for replies in wire order, and when the reader last made
 /// progress.
 struct Connection {
-    writer: tokio::sync::Mutex<OwnedWriteHalf>,
+    writer: utopia_async::sync::Mutex<OwnedWriteHalf>,
     pending: Mutex<VecDeque<Waiter>>,
     progress: Mutex<Instant>,
     closed: Notify,
@@ -147,7 +147,7 @@ impl Shared {
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Multiplexing, MultiplexingOptions};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = Multiplexing::connect(MultiplexingOptions::new("localhost", 6379)).await?;
 /// cache.save("docs:user:2", &Value::from("Ada"), "", 0).await?;
 /// assert_eq!(cache.load("docs:user:2", 60, "").await?, Some(Value::from("Ada")));
@@ -177,7 +177,7 @@ pub struct Multiplexing<K = Json> {
     grace_ms: i64,
     shared: Arc<Shared>,
     /// Serialises reconnects.
-    connecting: tokio::sync::Mutex<()>,
+    connecting: utopia_async::sync::Mutex<()>,
 }
 
 impl Multiplexing<Json> {
@@ -214,7 +214,7 @@ impl<K: Codec> Multiplexing<K> {
                 depth: Mutex::new(None),
                 telemetry: Mutex::new(Arc::new(NoTelemetry)),
             }),
-            connecting: tokio::sync::Mutex::new(()),
+            connecting: utopia_async::sync::Mutex::new(()),
         };
         adapter.open().await?;
         Ok(adapter)
@@ -243,7 +243,7 @@ impl<K: Codec> Multiplexing<K> {
     async fn open(&self) -> Result<()> {
         let o = &self.options;
         let timeout = Duration::from_secs_f64(o.timeout);
-        let stream = match tokio::time::timeout(timeout, TcpStream::connect((o.host.as_str(), o.port))).await {
+        let stream = match utopia_async::timeout(timeout, TcpStream::connect((o.host.as_str(), o.port))).await {
             Ok(Ok(stream)) => stream,
             Ok(Err(e)) => return Err(Error::Connection(format!("Failed to connect to Redis: {e}"))),
             Err(_) => return Err(Error::Connection("Failed to connect to Redis: Connection timed out".into())),
@@ -271,13 +271,13 @@ impl<K: Codec> Multiplexing<K> {
             }
         }
         let connection = Arc::new(Connection {
-            writer: tokio::sync::Mutex::new(writer),
+            writer: utopia_async::sync::Mutex::new(writer),
             pending: Mutex::new(VecDeque::new()),
             progress: Mutex::new(Instant::now()),
             closed: Notify::new(),
         });
         *self.shared.current.lock().unwrap_or_else(|e| e.into_inner()) = Some(connection.clone());
-        tokio::spawn(read(self.shared.clone(), connection, reader, buffer));
+        utopia_async::spawn(read(self.shared.clone(), connection, reader, buffer));
         Ok(())
     }
 
@@ -329,7 +329,7 @@ impl<K: Codec> Multiplexing<K> {
             return Err(error);
         }
         let read_timeout = Duration::from_secs_f64(self.options.read_timeout);
-        match tokio::time::timeout(read_timeout, receiver).await {
+        match utopia_async::timeout(read_timeout, receiver).await {
             Ok(Ok(result)) => resp::unwrap(result?),
             Ok(Err(_)) => Err(Error::Connection("Redis connection closed".into())),
             Err(_) => {
@@ -365,7 +365,7 @@ async fn handshake(
             return resp::unwrap(reply);
         }
         let mut chunk = [0u8; 4096];
-        match tokio::time::timeout(timeout, reader.read(&mut chunk)).await {
+        match utopia_async::timeout(timeout, reader.read(&mut chunk)).await {
             Ok(Ok(n)) if n > 0 => buffer.extend_from_slice(&chunk[..n]),
             _ => return Err(Error::Connection("Timed out waiting for Redis response".into())),
         }
@@ -408,7 +408,7 @@ async fn read(shared: Arc<Shared>, connection: Arc<Connection>, mut reader: Owne
                 }
             }
         }
-        tokio::select! {
+        utopia_async::select! {
             read = reader.read(&mut chunk) => match read {
                 Ok(n) if n > 0 => {
                     connection.record_progress();

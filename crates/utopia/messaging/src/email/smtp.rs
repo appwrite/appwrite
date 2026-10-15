@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use tokio::sync::Mutex;
+use utopia_async::sync::Mutex;
 use utopia_smtp::auth::{Login, Plain};
 use utopia_smtp::{Client, Encryption, Outcome, TcpTransport, Timeouts, Tls};
 

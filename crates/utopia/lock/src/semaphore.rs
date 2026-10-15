@@ -8,7 +8,7 @@ use crate::{Error, Lock, Wait};
 /// At most `permits` holders at a time, within one process.
 pub struct Semaphore {
     permits: usize,
-    inner: tokio::sync::Semaphore,
+    inner: utopia_async::sync::Semaphore,
     /// Permits handed out and not yet released; makes [`Lock::release`] idempotent.
     held: AtomicUsize,
 }
@@ -24,7 +24,7 @@ impl Semaphore {
             return Err(Error::InvalidArgument("Permits must be at least 1".into()));
         }
         let permits = permits as usize;
-        Ok(Self { permits, inner: tokio::sync::Semaphore::new(permits), held: AtomicUsize::new(0) })
+        Ok(Self { permits, inner: utopia_async::sync::Semaphore::new(permits), held: AtomicUsize::new(0) })
     }
 
     /// The number of holders allowed at a time.
@@ -32,7 +32,7 @@ impl Semaphore {
         self.permits
     }
 
-    fn take(&self, permit: tokio::sync::SemaphorePermit<'_>) -> bool {
+    fn take(&self, permit: utopia_async::sync::SemaphorePermit<'_>) -> bool {
         permit.forget();
         self.held.fetch_add(1, Ordering::AcqRel);
         true
@@ -41,7 +41,7 @@ impl Semaphore {
     async fn acquire_inner(&self, wait: Wait) -> bool {
         match wait {
             Wait::None => self.inner.try_acquire().map(|p| self.take(p)).unwrap_or(false),
-            Wait::For(d) => match tokio::time::timeout(d, self.inner.acquire()).await {
+            Wait::For(d) => match utopia_async::timeout(d, self.inner.acquire()).await {
                 Ok(Ok(p)) => self.take(p),
                 _ => false,
             },
@@ -93,7 +93,7 @@ impl Default for Mutex {
 impl Mutex {
     /// An unlocked mutex.
     pub fn new() -> Self {
-        Self(Semaphore { permits: 1, inner: tokio::sync::Semaphore::new(1), held: AtomicUsize::new(0) })
+        Self(Semaphore { permits: 1, inner: utopia_async::sync::Semaphore::new(1), held: AtomicUsize::new(0) })
     }
 }
 
@@ -128,7 +128,7 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mutex_excludes_and_release_is_idempotent() {
         let m = Mutex::new();
         assert!(m.try_acquire().await.unwrap());
@@ -139,7 +139,7 @@ mod tests {
         assert!(!m.try_acquire().await.unwrap(), "a double release must not add a permit");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn semaphore_caps_concurrency() {
         let s = Arc::new(Semaphore::new(3).unwrap());
         let live = Arc::new(AtomicUsize::new(0));
@@ -147,11 +147,11 @@ mod tests {
         let tasks: Vec<_> = (0..10)
             .map(|_| {
                 let (s, live, max) = (s.clone(), live.clone(), max.clone());
-                tokio::spawn(async move {
+                utopia_async::spawn(async move {
                     s.with_lock(Wait::Forever, async {
                         let now = live.fetch_add(1, Ordering::SeqCst) + 1;
                         max.fetch_max(now, Ordering::SeqCst);
-                        tokio::time::sleep(Duration::from_millis(5)).await;
+                        utopia_async::sleep(Duration::from_millis(5)).await;
                         live.fetch_sub(1, Ordering::SeqCst);
                     })
                     .await

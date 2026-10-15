@@ -1001,7 +1001,7 @@
     {
       "symbol": "Utopia\\Mongo\\Client::__construct",
       "php": "`$useCoroutine` picks Swoole's coroutine or blocking socket client, and `$tlsOptions` are Swoole `ssl_*` socket options.",
-      "reason": "The driver is async on tokio, so there is no client to pick; TLS settings are the driver's TlsOptions (Config::tls_options). Config::address dials another address than host:port (a forwarded port) while host() reports the configured host, which the cases use to reach the server from the host while reporting PHP's host name."
+      "reason": "The driver is async (on Tokio, the engine of utopia-async), so there is no client to pick; TLS settings are the driver's TlsOptions (Config::tls_options). Config::address dials another address than host:port (a forwarded port) while host() reports the configured host, which the cases use to reach the server from the host while reporting PHP's host name."
     },
     {
       "symbol": "Utopia\\Mongo\\Client::query",

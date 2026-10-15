@@ -1,6 +1,6 @@
 {
   "lib": "websocket",
-  "description": "utopia-php/websocket: a WebSocket server over adapters (Swoole, Workerman; Rust: Tokio, Memory) with hooks and error stages, and a WebSocket client.",
+  "description": "utopia-php/websocket: a WebSocket server over adapters (Swoole, Workerman; Rust: Network, Memory) with hooks and error stages, and a WebSocket client.",
   "complete": true,
   "php": {
     "src": [
@@ -275,7 +275,7 @@
       "doc": "what the client's hooks and its scripted connection recorded, oldest first"
     },
     "swoole.config": {
-      "doc": "new Swoole('127.0.0.1', 0, send_timeout?) with the setters given, in a separate process (Swoole allows one server per process): the settings start() passes to Swoole (Rust: Tokio::config)",
+      "doc": "new Swoole('127.0.0.1', 0, send_timeout?) with the setters given, in a separate process (Swoole allows one server per process): the settings start() passes to Swoole (Rust: Network::config)",
       "covers": [
         "Utopia\\WebSocket\\Adapter\\Swoole::__construct",
         "Utopia\\WebSocket\\Adapter\\Swoole::setPackageMaxLength",
@@ -284,7 +284,7 @@
       ]
     },
     "e2e.run": {
-      "doc": "starts tests/compat/websocket/server.php (the E2E fixture) on the Swoole adapter (Rust: the same handlers on Tokio) and runs steps against it with clients: connect, send, receive, close, connected, http, batch, wait_batches, drain, slow (raw socket with a 1 KiB receive buffer), probe, drop",
+      "doc": "starts tests/compat/websocket/server.php (the E2E fixture) on the Swoole adapter (Rust: the same handlers on Network) and runs steps against it with clients: connect, send, receive, close, connected, http, batch, wait_batches, drain, slow (raw socket with a 1 KiB receive buffer), probe, drop",
       "covers": [
         "Utopia\\WebSocket\\Adapter\\Swoole::start",
         "Utopia\\WebSocket\\Adapter\\Swoole::shutdown",
@@ -501,14 +501,14 @@
     }
   },
   "waivers": {
-    "Utopia\\WebSocket\\Adapter\\Swoole::getNative": "PHP runtime plumbing: returns the Swoole\\WebSocket\\Server object (the fixture uses it to set a Swoole port option); Rust exposes what callers read from it as Tokio::config, Tokio::local_addr and Tokio::connections",
-    "Utopia\\WebSocket\\Adapter\\Workerman::*": "PHP runtime plumbing: the Workerman server adapter (workerman/workerman is not installed in the PHP runtime, and pcntl worker processes have no Rust counterpart). Its behaviour (serving WebSockets, fan-out send, close, onRequest routing, no-op packageMaxLength and compression setters) is converted in the Tokio adapter and exercised by the e2e.run cases"
+    "Utopia\\WebSocket\\Adapter\\Swoole::getNative": "PHP runtime plumbing: returns the Swoole\\WebSocket\\Server object (the fixture uses it to set a Swoole port option); Rust exposes what callers read from it as Network::config, Network::local_addr and Network::connections",
+    "Utopia\\WebSocket\\Adapter\\Workerman::*": "PHP runtime plumbing: the Workerman server adapter (workerman/workerman is not installed in the PHP runtime, and pcntl worker processes have no Rust counterpart). Its behaviour (serving WebSockets, fan-out send, close, onRequest routing, no-op packageMaxLength and compression setters) is converted in the Network adapter and exercised by the e2e.run cases"
   },
   "tests_waived": {},
   "quirks": [
     {
       "symbol": "Utopia\\WebSocket\\Adapter\\Swoole::close",
-      "description": "The close code is ignored: Swoole's close($fd) writes the queued output and ends the TCP connection without a WebSocket close frame, so a client sees the connection end (Swoole's client: one empty receive, then no connection) rather than a close with the code. The Tokio adapter does the same.",
+      "description": "The close code is ignored: Swoole's close($fd) writes the queued output and ends the TCP connection without a WebSocket close frame, so a client sees the connection end (Swoole's client: one empty receive, then no connection) rather than a close with the code. The Network adapter does the same.",
       "case": "AdapterTest.json#a client closed by the server (no close frame): receive returns the last message, then nothing, then the client closes"
     },
     {

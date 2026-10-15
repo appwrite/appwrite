@@ -24,12 +24,11 @@ use hmac::{Hmac, Mac};
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::HttpsConnector;
 use hyper_util::client::legacy::Client;
-use hyper_util::client::legacy::connect::HttpConnector;
-use hyper_util::rt::TokioExecutor;
 use md5::Md5;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use sha2::Sha256;
+use utopia_async::hyper::{Connector, Executor};
 
 use crate::{Error, ErrorType, Result};
 
@@ -75,7 +74,7 @@ enum Answer {
 pub struct Remote {
     endpoint: String,
     secret: String,
-    client: Client<HttpsConnector<HttpConnector>, Full<Bytes>>,
+    client: Client<HttpsConnector<Connector>, Full<Bytes>>,
     cache: Mutex<HashMap<String, (Instant, Answer)>>,
 }
 
@@ -114,7 +113,7 @@ fn parse_range(body: &str) -> HashMap<String, i64> {
 
 impl Remote {
     fn new(endpoint: String, secret: String) -> std::result::Result<Self, String> {
-        let mut http = HttpConnector::new();
+        let mut http = Connector::new();
         http.set_connect_timeout(Some(CONNECT_TIMEOUT));
         http.set_nodelay(true);
         http.enforce_http(false);
@@ -124,7 +123,7 @@ impl Remote {
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
-        let client = Client::builder(TokioExecutor::new()).pool_max_idle_per_host(8).build(https);
+        let client = Client::builder(Executor).pool_max_idle_per_host(8).build(https);
         Ok(Self { endpoint, secret, client, cache: Mutex::new(HashMap::new()) })
     }
 
@@ -161,7 +160,7 @@ impl Remote {
             }
             Ok(response.into_body().collect().await.map_err(|_| unavailable())?.to_bytes())
         };
-        tokio::time::timeout(REQUEST_TIMEOUT, exchange).await.map_err(|_| unavailable())?
+        utopia_async::timeout(REQUEST_TIMEOUT, exchange).await.map_err(|_| unavailable())?
     }
 
     /// `HIBP::isPwned`.

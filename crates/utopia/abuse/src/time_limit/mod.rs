@@ -68,7 +68,7 @@ pub struct Rule {
 /// ```
 /// use utopia_abuse::{TimeLimit, time_limit};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let limit = TimeLimit::new("login:{email}", 5, 60, time_limit::None)?.with_param("{email}", "ada@example.com");
 ///
 /// // Windows are aligned on minutes: this one resets at the next minute.

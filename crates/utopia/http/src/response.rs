@@ -339,8 +339,8 @@ pub(crate) struct Head {
 /// Where a streamed response goes as it is sent (the server's connection).
 #[derive(Debug)]
 pub(crate) struct Stream {
-    pub head: Option<tokio::sync::oneshot::Sender<Head>>,
-    pub body: Option<tokio::sync::mpsc::UnboundedSender<Bytes>>,
+    pub head: Option<utopia_async::sync::oneshot::Sender<Head>>,
+    pub body: Option<utopia_async::sync::mpsc::UnboundedSender<Bytes>>,
 }
 
 /// A hyper response body: a buffer, or the frames a streamed response sends.

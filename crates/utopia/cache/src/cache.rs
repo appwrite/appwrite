@@ -37,7 +37,7 @@ const DURATION_BUCKETS: [f64; 9] = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 
 /// use php_std::types::Value;
 /// use utopia_cache::{Cache, Memory};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = Cache::new(Memory::new());
 /// assert!(cache.save("Planet", &Value::from("Earth"), "", 0).await?);
 /// assert_eq!(cache.load("PLANET", 60, "").await?, Some(Value::from("Earth")));
@@ -225,7 +225,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// ```
     /// use utopia_cache::{Cache, Memory};
     ///
-    /// # tokio::runtime::Runtime::new()?.block_on(async {
+    /// # utopia_async::Runtime::new()?.block_on(async {
     /// let cache = Cache::new(Memory::new());
     /// let events = vec!["users.*.create".to_owned()];
     /// assert!(cache.save_native("project:1:events", &events, "", 0).await?);
@@ -394,7 +394,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// ```
     /// use utopia_cache::{Cache, Memory};
     ///
-    /// # tokio::runtime::Runtime::new()?.block_on(async {
+    /// # utopia_async::Runtime::new()?.block_on(async {
     /// let cache = Cache::new(Memory::new());
     /// let purges = cache
     ///     .record_purges(async {

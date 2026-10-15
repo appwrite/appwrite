@@ -29,7 +29,7 @@
 //! ```
 //!
 //! Compressing is CPU work that grows with the input: in async code, run
-//! large inputs on the blocking pool (`tokio::task::spawn_blocking`) so they
+//! large inputs on the blocking pool (`utopia_async::spawn_blocking`) so they
 //! do not hold up a runtime thread.
 //!
 //! ## Cargo features

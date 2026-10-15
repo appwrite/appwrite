@@ -148,7 +148,7 @@ async fn cluster_keys(conn: &mut redis::cluster_async::ClusterConnection) -> Res
 /// ```no_run
 /// use utopia_abuse::{Adapter, TokenBucket, token_bucket};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// let conn = redis::Client::open("redis://127.0.0.1:6379")?.get_connection_manager().await?;
 /// let limit = TokenBucket::new("ip:{ip}", 10, 1.0, token_bucket::Redis::new(conn))?;
 /// let verdict = limit.with_param("{ip}", "203.0.113.7").check().await?;

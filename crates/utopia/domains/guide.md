@@ -1,4 +1,4 @@
-A domain name such as `blog.example.co.uk` has a structure DNS alone does not tell you: `co.uk` is a public suffix (anyone can register under it), `example` is the registered name, and `blog` is a subdomain. This library reads that structure from the Public Suffix List, validates user input with it, and talks to domain registrars to check availability, quote prices and buy, renew or transfer domains. Registrar calls are async, so those examples run on a Tokio runtime. This guide covers the common tasks.
+A domain name such as `blog.example.co.uk` has a structure DNS alone does not tell you: `co.uk` is a public suffix (anyone can register under it), `example` is the registered name, and `blog` is a subdomain. This library reads that structure from the Public Suffix List, validates user input with it, and talks to domain registrars to check availability, quote prices and buy, renew or transfer domains. Registrar calls are async, so those examples run with `utopia_async::run`. This guide covers the common tasks.
 
 ## Split a domain into its parts
 
@@ -106,7 +106,7 @@ use utopia_domains::registrar::{Mock, RegType, Registrar};
 
 let registrar = Registrar::new(Mock::new());
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let availability = registrar.available(&["my-shop.com".to_owned(), "google.com".to_owned()]).await?;
     assert!(availability["my-shop.com"]);
     assert!(!availability["google.com"]);
@@ -154,7 +154,7 @@ let contact = Contact {
 };
 let registrar = Registrar::new(Mock::new());
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let order = registrar.purchase(&Purchase::new("ada-lovelace.com", contact.clone())).await?;
     assert!(order.starts_with("mock_"));
 
@@ -196,7 +196,7 @@ use utopia_domains::{Cache, MemoryStore};
 let cache = Cache::new(MemoryStore::new());
 let registrar = Registrar::with_config(Mock::new(), Config { cache: Some(cache.clone()), ..Config::default() });
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     registrar.price("my-shop.com", 1, RegType::New, 3600).await?;
     let cached = cache.load("my-shop.com", 3600).await.expect("the price is cached");
     assert_eq!(cached["price"], 12.99);
@@ -243,7 +243,7 @@ impl Transport for Replay {
 let replay = Arc::new(Replay::default());
 let registrar = Registrar::new(NameCom::new("user", "token", "https://api.dev.name.com", Some(replay.clone())));
 
-let code = tokio::runtime::Runtime::new()?.block_on(registrar.auth_code("example.com"))?;
+let code = utopia_async::Runtime::new()?.block_on(registrar.auth_code("example.com"))?;
 assert_eq!(code, "secret");
 assert_eq!(*replay.0.lock().unwrap(), ["https://api.dev.name.com/core/v1/domains/example.com:getAuthCode"]);
 # Ok::<(), Box<dyn std::error::Error>>(())

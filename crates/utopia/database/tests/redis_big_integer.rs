@@ -57,7 +57,7 @@ fn same(actual: &Value, expected: &Value, case: &str) {
     assert!(actual.strict_eq(expected), "{case}: expected {expected:?}, got {actual:?}");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_and_redis_operators_leave_values_unchanged_when_bounds_are_crossed() {
     let redis = operators();
     let n = |i: i64| Some(Number::from(i));
@@ -86,7 +86,7 @@ async fn test_memory_and_redis_operators_leave_values_unchanged_when_bounds_are_
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_and_redis_reject_unbounded_invalid_powers() {
     let redis = operators();
     let e = redis.apply_operator(&Value::Float(0.0), &Operator::power(-1, None)).unwrap_err();
@@ -94,7 +94,7 @@ async fn test_memory_and_redis_reject_unbounded_invalid_powers() {
     assert_eq!(e.message(), "Value out of range");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_and_redis_honour_a_float_bound_on_the_exact_big_integer_path() {
     let redis = operators();
     let cases: Vec<(&str, Value, Operator, Value)> = vec![
@@ -153,7 +153,7 @@ async fn test_memory_and_redis_honour_a_float_bound_on_the_exact_big_integer_pat
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_and_redis_refuse_a_fractional_bound_on_the_exact_big_integer_path() {
     let redis = operators();
     let cases: Vec<(&str, Operator, &str)> = vec![
@@ -181,7 +181,7 @@ async fn test_memory_and_redis_refuse_a_fractional_bound_on_the_exact_big_intege
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_redis_operator_preserves_unsigned_integer_strings() {
     let redis = operators();
     same(
@@ -201,7 +201,7 @@ async fn test_redis_operator_preserves_unsigned_integer_strings() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_redis_keeps_the_stored_value_where_an_operator_cannot_apply() {
     let redis = operators();
     same(
@@ -219,7 +219,7 @@ async fn test_redis_keeps_the_stored_value_where_an_operator_cannot_apply() {
     assert_eq!(e.message(), "Value out of range");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_redis_keeps_an_unparsable_date() {
     let redis = operators();
     same(&redis.apply_operator(&s("not-a-date"), &Operator::date_add_days(1)).unwrap(), &s("not-a-date"), "add");
@@ -228,7 +228,7 @@ async fn test_redis_keeps_an_unparsable_date() {
 
 /// `BigIntegerSpellingTest::testRedisSchemaRecordsPersistTheBigintSpelling`:
 /// the attribute records of the meta hash spell a big integer `bigint`.
-#[tokio::test]
+#[utopia_async::test]
 async fn test_redis_schema_records_persist_the_bigint_spelling() {
     let probe = probe_or_skip!();
     let ns = namespace("bigint_spelling");
@@ -264,7 +264,7 @@ async fn test_redis_schema_records_persist_the_bigint_spelling() {
 /// `fixtures/redis_operators_php.json`, as PHP's `applyOperator()` answers
 /// them (`var_export()` of the result, or the class and message thrown);
 /// regenerate the fixture with `fixtures/redis_operators_php.php`.
-#[tokio::test]
+#[utopia_async::test]
 async fn test_redis_operators_answer_as_php() {
     let redis = operators();
     let cases: Vec<serde_json::Value> =

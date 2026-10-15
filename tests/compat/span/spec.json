@@ -823,7 +823,7 @@
     {
       "symbol": "Utopia\\Span\\Exporter\\Sentry::export",
       "php": "contexts.runtime reports PHP's version and SAPI, sdk.version the Composer version; the request is sent synchronously with a 1 s timeout and failures go to error_log()",
-      "reason": "Rust reports its own runtime (masked in cases); the default HttpTransport sends in the background on tokio with the same timeouts and writes failures to stderr"
+      "reason": "Rust reports its own runtime (masked in cases); the default HttpTransport sends in the background on the current runtime with the same timeouts and writes failures to stderr"
     },
     {
       "symbol": "Utopia\\Span\\Span::finish",

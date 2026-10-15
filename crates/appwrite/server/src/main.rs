@@ -53,16 +53,15 @@ fn serve() {
 
     let workers =
         appwrite_core::config::env_int("_APP_RUST_WORKERS", appwrite_core::config::cpus() as i64).max(1) as usize;
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(workers)
-        .max_blocking_threads((workers * 4).max(8))
+    let runtime = utopia_async::Builder::multi_thread()
+        .threads(workers)
+        .blocking_threads((workers * 4).max(8))
         // A database write nests deeply (a transaction, its bulk deletes,
         // their callbacks' writes, each through the hooks): 2 MiB overflows
         // in debug builds on `DELETE /v1/account`.
-        .thread_stack_size(8 * 1024 * 1024)
-        .enable_all()
+        .stack_size(8 * 1024 * 1024)
         .build()
-        .expect("tokio runtime");
+        .expect("async runtime");
 
     runtime.block_on(async move {
         let config = Config::from_env();
@@ -91,11 +90,11 @@ fn serve() {
 }
 
 async fn shutdown_signal() {
-    use tokio::signal::unix::{SignalKind, signal};
-    let mut term = signal(SignalKind::terminate()).expect("SIGTERM handler");
-    tokio::select! {
+    use utopia_async::signal::{Kind, Signal};
+    let mut term = Signal::new(Kind::Terminate).expect("SIGTERM handler");
+    utopia_async::select! {
         _ = term.recv() => {}
-        _ = tokio::signal::ctrl_c() => {}
+        _ = utopia_async::signal::ctrl_c() => {}
     }
     tracing::info!("shutdown signal received");
 }

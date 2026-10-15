@@ -751,7 +751,7 @@ impl Client for Canned {
 
 async fn wait_until(timestamp: i64) {
     while php_std::datetime::time() < timestamp {
-        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        utopia_async::sleep(std::time::Duration::from_millis(1)).await;
     }
 }
 

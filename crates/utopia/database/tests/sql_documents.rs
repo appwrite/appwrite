@@ -580,49 +580,49 @@ mod parity {
     }
 
     #[cfg(feature = "sqlite")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn sqlite() {
         scenario(Engine::Sqlite, false).await;
     }
 
     #[cfg(feature = "sqlite")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn sqlite_shared() {
         scenario(Engine::Sqlite, true).await;
     }
 
     #[cfg(feature = "mariadb")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb() {
         scenario(Engine::MariaDb, false).await;
     }
 
     #[cfg(feature = "mariadb")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb_shared() {
         scenario(Engine::MariaDb, true).await;
     }
 
     #[cfg(feature = "mysql")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql() {
         scenario(Engine::MySql, false).await;
     }
 
     #[cfg(feature = "mysql")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_shared() {
         scenario(Engine::MySql, true).await;
     }
 
     #[cfg(feature = "postgres")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres() {
         scenario(Engine::Postgres, false).await;
     }
 
     #[cfg(feature = "postgres")]
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_shared() {
         scenario(Engine::Postgres, true).await;
     }
@@ -787,7 +787,7 @@ use support::{Col, collection, decoded, document, engine_error, fx};
 mod sqlite_insert_statement {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn create_document_runs_one_insert_per_table_and_no_select() {
         for shared in [false, true] {
             let fx = fx(Engine::Sqlite, "insert_statement", shared).await.unwrap();
@@ -811,7 +811,7 @@ mod sqlite_insert_statement {
 mod sql_operator_binding {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn upsert_binds_operators_to_database_statement() {
         let fx = fx(Engine::Sqlite, "operators", false).await.unwrap();
         fx.create_table("scores", &[("value", Col::Int)]).await;
@@ -834,7 +834,7 @@ mod sql_operator_binding {
 mod sqlite_for_update_document {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn for_update_read_on_raw_sqlite_pdo_does_not_treat_column_indexes_as_attributes() {
         let fx = fx(Engine::Sqlite, "for_update", false).await.unwrap();
         fx.create_table("migrations", &[("status", Col::Str), ("stage", Col::Str)]).await;
@@ -865,7 +865,7 @@ mod sqlite_for_update_document {
 mod sqlite_prepare {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn wrapper_backed_collection_and_document_statements_execute() {
         let fx = fx(Engine::Sqlite, "prepare", false).await.unwrap();
         fx.create_table("movies", &[]).await;
@@ -896,17 +896,17 @@ mod sqlite_operator_behavior {
         fx.attribute(&operators, id, "value").await.to_double()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn inclusive_increment_bound_applies_exact_maximum() {
         assert_eq!(applied("increment", 5.0, Operator::increment(5, Some(10.into()))).await, 10.0);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn power_above_maximum_leaves_value_unchanged() {
         assert_eq!(applied("power", 5.0, Operator::power(3, Some(100.into()))).await, 5.0);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn fractional_power_below_maximum_is_applied() {
         assert_eq!(applied("root", 100.0, Operator::power(0.5, Some(50.into()))).await, 10.0);
     }
@@ -926,7 +926,7 @@ mod sql_get_document {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn applies_typed_read_transform_on_fast_and_builder_paths() {
         let fx = fx(Engine::Sqlite, "transform", false).await.unwrap();
         fx.create_table("collection", &[("title", Col::Str)]).await;
@@ -956,12 +956,12 @@ mod sql_get_document {
         assert_eq!(error.previous().map(|p| p.kind()), Some(utopia_database::Kind::Pdo));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn translates_execute_timeout() {
         assert_timeout("bdocs_get_timeout_fast", vec![]).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn translates_builder_timeout() {
         assert_timeout("bdocs_get_timeout_builder", vec![Query::select(["title"])]).await;
     }
@@ -982,7 +982,7 @@ mod locked_document_read {
         Some(fx)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_locked_read_selects_the_document_for_update() {
         for (engine, db, select) in [
             (
@@ -1011,7 +1011,7 @@ mod locked_document_read {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_shared_table_read_keeps_the_tenant_filter() {
         let cases = [
             (
@@ -1107,7 +1107,7 @@ mod upsert_new_document_parity {
         )
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_new_document_gets_what_an_existing_document_with_the_same_value_gets() {
         let cases: Vec<(&str, Operator, serde_json::Value)> = vec![
             ("count", Operator::increment(3, Some(10.into())), serde_json::json!(10)),
@@ -1198,7 +1198,7 @@ mod upsert_new_document_operator {
         fx
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_operator_on_a_new_document_applies_to_the_default() {
         let cases: Vec<(&str, Operator, Value)> = vec![
             ("due", Operator::date_add_days(1), s("2026-02-01 12:30:00.000")),
@@ -1221,7 +1221,7 @@ mod upsert_new_document_operator {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn days_added_to_a_new_document_match_the_days_added_to_an_existing_one() {
         let fx = tasks_fx().await;
         let c = tasks();
@@ -1239,7 +1239,7 @@ mod upsert_new_document_operator {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_operator_only_a_later_document_of_the_batch_carries_is_applied() {
         let fx = tasks_fx().await;
         let c = tasks();
@@ -1258,7 +1258,7 @@ mod upsert_new_document_operator {
         assert_eq!(fx.attribute(&c, "toggled", "active").await, s("0"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_empty_batch_writes_nothing() {
         let fx = tasks_fx().await;
         let c = tasks();
@@ -1268,7 +1268,7 @@ mod upsert_new_document_operator {
         assert!(fx.stored("tasks", "_uid").await.is_empty());
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_upsert_that_breaks_a_unique_index_is_a_unique_violation() {
         let fx = fx(Engine::Sqlite, "upsert_operators", false).await.unwrap();
         fx.create_table("accounts", &[("email", Col::Str)]).await;
@@ -1287,7 +1287,7 @@ mod upsert_new_document_operator {
         assert!(fx.adapter.get_document(&c, "second", vec![], false).await.unwrap().is_empty());
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn now_set_on_a_new_document_is_the_time_of_the_write() {
         let fx = tasks_fx().await;
         let c = tasks();
@@ -1327,7 +1327,7 @@ mod upsert_document {
         (fx.attribute(c, id, "title").await, fx.attribute(c, id, "views").await)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn upsert_document_inserts_a_document_nothing_stored_yet() {
         let (fx, c) = counters().await;
         let written =
@@ -1338,7 +1338,7 @@ mod upsert_document {
         assert_eq!(stored(&fx, &c, "one").await, (s("first"), s("1")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn upsert_document_replaces_the_stored_document() {
         let (fx, c) = counters().await;
         Upserts::upsert_document(&fx.adapter, &c, Change::new(Document::empty(), counter("one", "first", 1)))
@@ -1352,7 +1352,7 @@ mod upsert_document {
         assert_eq!(fx.stored("counters", "_uid").await.len(), 1);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn upsert_documents_writes_every_change_in_order() {
         let (fx, c) = counters().await;
         let written = Upserts::upsert_documents(
@@ -1372,7 +1372,7 @@ mod upsert_document {
         assert!(Upserts::upsert_documents(&fx.adapter, &c, vec![], None).await.unwrap().is_empty());
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_increase_adds_the_value_to_the_stored_one() {
         let (fx, c) = counters().await;
         for views in [2, 3] {
@@ -1388,7 +1388,7 @@ mod upsert_document {
         assert_eq!(stored(&fx, &c, "one").await, (s("first"), s("5")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn without_an_increase_the_value_is_replaced() {
         let (fx, c) = counters().await;
         for views in [2, 3] {
@@ -1434,7 +1434,7 @@ mod sqlite_upsert_array_operator_limit {
         .await
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_oversized_array_operand_is_refused_and_leaves_the_array() {
         let size = utopia_database::operator::MAX_ARRAY_OPERATOR_SIZE + 1;
         let operand = || (1..=size as i64).map(Value::Int).collect::<Vec<_>>();
@@ -1459,7 +1459,7 @@ mod sqlite_upsert_array_operator_limit {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_array_operand_at_the_limit_is_applied() {
         let (fx, c) = lists().await;
         let nines = vec![Value::Int(9); utopia_database::operator::MAX_ARRAY_OPERATOR_SIZE];
@@ -1487,7 +1487,7 @@ mod sqlite_upsert_integer_overflow {
         (fx, c)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_operator_that_overflows_a_new_document_is_refused() {
         for (attribute, operator) in [
             ("high", Operator::increment(10, None)),
@@ -1502,14 +1502,14 @@ mod sqlite_upsert_integer_overflow {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_operator_within_the_range_is_stored() {
         let (fx, c) = counters().await;
         upsert_new(&fx, &c, "created", vec![("high", op(Operator::increment(5, None)))]).await.unwrap();
         assert_eq!(fx.attribute(&c, "created", "high").await, s(&i64::MAX.to_string()));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_string_that_spells_a_large_number_is_not_refused() {
         let (fx, c) = counters().await;
         upsert_new(&fx, &c, "created", vec![("digits", op(Operator::string_concat("0")))]).await.unwrap();
@@ -1521,7 +1521,7 @@ mod sqlite_upsert_integer_overflow {
 mod sqlite_upsert_array_remove {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_upsert_of_an_existing_document_removes_the_element_as_an_update_does() {
         let ints = |v: &[i64]| list(v.iter().copied().map(Value::Int).collect());
         let floats = |v: &[f64]| list(v.iter().copied().map(Value::Float).collect());
@@ -1574,7 +1574,7 @@ mod sqlite_power_operator {
         (fx, c)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn power_with_a_non_numeric_exponent_is_refused_and_leaves_the_value() {
         for exponent in [s("two"), Value::Bool(true), list(vec![Value::Int(2)])] {
             let (fx, c) = scores().await;
@@ -1590,7 +1590,7 @@ mod sqlite_power_operator {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn power_with_a_numeric_exponent_raises_the_value() {
         let (fx, c) = scores().await;
         let current = fx.adapter.get_document(&c, "first", vec![], false).await.unwrap();
@@ -1607,7 +1607,7 @@ mod sqlite_power_operator {
 mod power_numeric_text {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_numeric_text_exponent_is_applied_and_non_numeric_text_refused() {
         let fx = fx(Engine::Sqlite, "power_text", false).await.unwrap();
         fx.create_table("items", &[("count", Col::Int), ("ratio", Col::Double)]).await;
@@ -1638,7 +1638,7 @@ mod power_numeric_text {
         assert_eq!(fx.attribute(&c, "first", "count").await, s("9"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_numeric_text_exponent_is_sent_as_a_number() {
         for (engine, db) in [
             (Engine::MariaDb, "bdocs_power_text_m"),
@@ -1670,7 +1670,7 @@ mod power_numeric_text {
 mod operator_limit_exactness {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_whole_number_float_limit_is_compared_exactly() {
         let cases: Vec<(&str, Operator, Value)> = vec![
             ("high", Operator::increment(20, Some(9.0e18.into())), Value::Int(8999999999999999990)),
@@ -1727,7 +1727,7 @@ mod operator_limit_exactness {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_whole_number_float_limit_is_bound_as_an_integer() {
         for (engine, db) in [
             (Engine::MariaDb, "bdocs_limits_m"),
@@ -1785,7 +1785,7 @@ mod sql_array_writes {
         (fx, c)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn created_documents_keep_their_arrays() {
         let (fx, c) = items().await;
         fx.adapter
@@ -1808,7 +1808,7 @@ mod sql_array_writes {
         assert_eq!(fx.stored("items", "numbers").await, vec![s("[7,8]"), s("[]")]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn updated_documents_store_arrays_as_json_and_booleans_as_integers() {
         let (fx, c) = items().await;
         fx.adapter
@@ -1841,7 +1841,7 @@ mod sql_array_writes {
         assert_eq!(fx.stored("items", "active").await, vec![s("1"); 2]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_update_with_nothing_to_set_changes_nothing() {
         let (fx, c) = items().await;
         fx.adapter.create_document(&c, document("first", vec![("tags", strings(&["kept"]))])).await.unwrap();
@@ -1850,7 +1850,7 @@ mod sql_array_writes {
         assert_eq!(fx.stored("items", "tags").await, vec![s("[\"kept\"]")]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_array_operator_on_a_new_document_applies_to_the_default() {
         let cases: Vec<(&str, Operator, serde_json::Value)> = vec![
             ("numbers", Operator::array_unique(), serde_json::json!(["1", "2", "3"])),
@@ -1874,7 +1874,7 @@ mod sql_array_writes {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_nested_operand_matches_no_element_of_a_new_document() {
         let (fx, c) = items().await;
         upsert_new(&fx, &c, "created", vec![("numbers", op(Operator::array_intersect([list(vec![Value::Int(2)])])))])
@@ -1968,7 +1968,7 @@ mod sql_delete_failure {
         assert_eq!(root(error).kind(), utopia_database::Kind::Runtime);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_failing_write_hook_fails_the_delete_and_keeps_the_document() {
         let (fx, c) = notes().await;
         let error = utopia_database::adapter::with_transaction(&fx.adapter, || fx.adapter.delete_document(&c, "first"))
@@ -1978,7 +1978,7 @@ mod sql_delete_failure {
         assert_eq!(fx.stored("notes", "_uid").await, vec![s("first"), s("second")]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_failing_write_hook_fails_the_bulk_delete_and_keeps_the_documents() {
         let (fx, c) = notes().await;
         let error = utopia_database::adapter::with_transaction(&fx.adapter, || {
@@ -2000,7 +2000,7 @@ mod sql_raw_statement {
         utopia_query::Array::from_list(values.iter().map(utopia_database::value::to_query).collect())
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_raw_read_on_a_missing_table_is_not_found() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         let error = RawQuery::raw_query(&adapter, "SELECT * FROM missing_table", values(&[])).await.unwrap_err();
@@ -2008,7 +2008,7 @@ mod sql_raw_statement {
         assert_eq!(error.message(), "Collection not found");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_raw_write_on_a_missing_table_is_not_found() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         let error = RawQuery::raw_mutation(&adapter, "UPDATE missing_table SET value = ?", values(&[Value::Int(1)]))
@@ -2018,7 +2018,7 @@ mod sql_raw_statement {
         assert_eq!(error.message(), "Collection not found");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn raw_statements_read_and_write_an_existing_table() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         adapter.pdo().lock().await.exec("CREATE TABLE present (value INTEGER)").await.unwrap();
@@ -2059,7 +2059,7 @@ mod sqlite_statement_preparation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_transform_error_reaches_the_caller_unchanged() {
         let fx = fx(Engine::Sqlite, "preparation", false).await.unwrap();
         fx.create_table("notes", &[("body", Col::Str)]).await;
@@ -2094,7 +2094,7 @@ mod mariadb_create_document {
         ])
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_write_hook_failure_other_than_an_orphaned_permission_is_mapped_and_not_retried() {
         let Some((fx, c)) = notes("bdocs_create_hook").await else { return };
         let hook =
@@ -2108,7 +2108,7 @@ mod mariadb_create_document {
         assert_eq!(fx.statements().len(), 1);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_orphaned_permission_is_cleared_and_the_write_hook_retried() {
         let Some((fx, c)) = notes("bdocs_create_orphan").await else { return };
         let hook =
@@ -2129,7 +2129,7 @@ mod mariadb_create_document {
 mod mariadb_update_documents_binding {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_bulk_update_binds_booleans_as_integers_and_arrays_as_json() {
         let Some(fx) = fx(Engine::MariaDb, "bdocs_update_binding", false).await else { return };
         fx.create_table("items", &[("active", Col::Bool), ("archived", Col::Bool), ("tags", Col::Json)]).await;
@@ -2165,7 +2165,7 @@ mod mariadb_upsert_new_document {
 
     const UNSIGNED_DEFAULT: &str = "18446744073709551610";
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_unsigned_operator_on_a_new_document_is_computed_exactly() {
         let cases: Vec<(Operator, Value)> = vec![
             (Operator::increment(3, None), s("18446744073709551613")),
@@ -2203,7 +2203,7 @@ mod power_operator_statements {
     const ENGINES: [(Engine, &str); 3] =
         [(Engine::MariaDb, "bdocs_power_m"), (Engine::MySql, "bdocs_power_y"), (Engine::Postgres, "bdocs_power_p")];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn power_with_a_non_numeric_exponent_is_refused_before_a_statement_is_sent() {
         for (engine, db) in ENGINES {
             let Some(fx) = fx(engine, db, false).await else { continue };
@@ -2228,7 +2228,7 @@ mod power_operator_statements {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn power_with_a_numeric_exponent_is_sent_as_power() {
         for (engine, db) in ENGINES {
             if engine == Engine::Postgres {
@@ -2278,7 +2278,7 @@ mod mariadb_geometry_write {
         list(pairs.iter().map(|(x, y)| point(Value::Int(*x), Value::Int(*y))).collect())
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_geometry_array_is_written_as_well_known_text() {
         let cases = vec![
             ("location", point(Value::Float(1.5), Value::Int(-2)), "POINT(1.5 -2)"),
@@ -2300,7 +2300,7 @@ mod mariadb_geometry_write {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_malformed_geometry_array_is_refused_before_a_statement_is_sent() {
         let mut keyed = Array::new();
         keyed.set(ArrayKey::normalize(Str::from("x")), Value::Int(1));
@@ -2416,7 +2416,7 @@ mod spatial_binding {
         wrapped(fx.statements())
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn string_columns_are_bound_as_text_and_spatial_columns_wrapped() {
         for (engine, db) in [
             (Engine::MariaDb, "bdocs_spatial_m"),
@@ -2484,7 +2484,7 @@ mod ignore_duplicates_statement {
         fx.statements().into_iter().map(|(q, _)| q.trim().to_owned()).collect()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mariadb_learns_the_inserted_rows_from_returning() {
         let Some(fx) = notes(Engine::MariaDb, "bdocs_ignore_m", false, Value::Null).await else { return };
         assert_eq!(create(&fx, &[STORED, FRESH], None).await, [FRESH]);
@@ -2494,14 +2494,14 @@ mod ignore_duplicates_statement {
         assert!(sent[0].ends_with(" RETURNING `_uid`"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_repeated_id_is_sent_only_once() {
         let Some(fx) = notes(Engine::MariaDb, "bdocs_ignore_once", false, Value::Null).await else { return };
         assert_eq!(create(&fx, &[FRESH, FRESH], None).await, [FRESH]);
         assert!(!sent(&fx)[0].contains("), ("));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_inserts_only_the_ids_it_found_unstored_without_locking() {
         let Some(fx) = notes(Engine::MySql, "bdocs_ignore_y", false, Value::Null).await else { return };
         assert_eq!(create(&fx, &[STORED, FRESH], None).await, [FRESH]);
@@ -2514,7 +2514,7 @@ mod ignore_duplicates_statement {
         assert!(!sent[1].contains("RETURNING"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_does_not_report_a_document_the_insert_skipped() {
         let Some(fx) = notes(Engine::MySql, "bdocs_ignore_skip", false, Value::Null).await else { return };
         let table = fx.table("notes");
@@ -2529,7 +2529,7 @@ mod ignore_duplicates_statement {
         assert!(sent[2].starts_with("SELECT `_uid`, `_permissions` FROM"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_skips_only_a_stored_id_so_another_unique_collision_fails() {
         let Some(fx) = notes(Engine::Postgres, "bdocs_ignore_p", false, Value::Null).await else { return };
         assert_eq!(create(&fx, &[STORED, FRESH], None).await, [FRESH]);
@@ -2539,7 +2539,7 @@ mod ignore_duplicates_statement {
         assert!(sent[0].ends_with(" ON CONFLICT (\"_uid\") DO NOTHING RETURNING \"_uid\""));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_names_the_tenant_in_the_conflict_target_under_shared_tables() {
         let Some(fx) = notes(Engine::Postgres, "bdocs_ignore_ps", true, Value::Int(7)).await else { return };
         assert_eq!(create(&fx, &[STORED, FRESH], Some(7)).await, [FRESH]);
@@ -2548,7 +2548,7 @@ mod ignore_duplicates_statement {
         );
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_document_without_a_tenant_is_matched_under_the_adapters_tenant() {
         let Some(fx) = notes(Engine::Postgres, "bdocs_ignore_pt", true, Value::Int(7)).await else { return };
         assert_eq!(create(&fx, &[FRESH], None).await, [FRESH]);
@@ -2560,7 +2560,7 @@ mod ignore_duplicates_statement {
 mod float_binding {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_write_binds_a_float_as_php_writes_it() {
         let Some(fx) = fx(Engine::MariaDb, "bdocs_float", false).await else { return };
         fx.create_table("numbers", &[("f", Col::Double)]).await;
@@ -2585,7 +2585,7 @@ mod postgres_statement {
     use super::*;
     use utopia_database::adapter::Timeouts;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn non_positive_timeout_is_rejected() {
         let Some(adapter) = connect(Engine::Postgres).await else { return };
         for (milliseconds, event) in [
@@ -2601,7 +2601,7 @@ mod postgres_statement {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_out_of_range_write_is_a_limit_error() {
         let Some(fx) = fx(Engine::Postgres, "bdocs_pg_limit", false).await else { return };
         fx.create_table("scores", &[("value", Col::Int)]).await;
@@ -2644,14 +2644,14 @@ mod mariadb_statement_event {
         utopia_database::value::to_text(rows[0].get("t").unwrap())
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_statement_without_an_event_runs_under_the_baseline_timeout() {
         let Some(adapter) = connect(Engine::MariaDb).await else { return };
         adapter.set_timeout(50, utopia_database::Event::CollectionRead).unwrap();
         assert_eq!(session_timeout(&adapter).await, "0.000000");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_statement_with_an_event_runs_under_that_events_timeout_and_restores_the_baseline() {
         let Some(adapter) = connect(Engine::MariaDb).await else { return };
         adapter.set_timeout(50, utopia_database::Event::CollectionRead).unwrap();
@@ -2679,7 +2679,7 @@ mod sql_timeout_scope {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn document_statements_use_exact_batch_events() {
         let fx = fx(Engine::Sqlite, "namespace", false).await.unwrap();
         fx.create_table("movies", &[("score", Col::Int), ("label", Col::Str)]).await;
@@ -2744,13 +2744,13 @@ mod sqlite_user_functions {
         assert!(row.get_str("misses_pattern").unwrap().loose_eq(&Value::Int(0)));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn registers_regexp() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         assert_regexp(&adapter).await;
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reconnect_registers_regexp_on_replacement_connection() {
         let adapter = connect(Engine::Sqlite).await.unwrap();
         assert_regexp(&adapter).await;
@@ -2801,7 +2801,7 @@ mod sql_get_document_joins {
         assert!(!flat.replace("( ", "(").contains("FROM (SELECT *"), "{sql}");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn join_skips_fast_path() {
         let join = Query::left_join("orders", "j0", vec![on()]).unwrap();
         let Some(sql) = captured(Engine::MySql, "bdocs_join_fast", join).await else { return };
@@ -2810,7 +2810,7 @@ mod sql_get_document_joins {
         assert_join_projection(&sql, '`', "j0");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn join_without_select_leaves_joined_internals_out() {
         let join = Query::left_join("orders", "j0", vec![on()]).unwrap();
         let Some(sql) = captured(Engine::MySql, "bdocs_join_left", join).await else { return };
@@ -2818,14 +2818,14 @@ mod sql_get_document_joins {
         assert!(sql.contains("LEFT JOIN"));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn join_alias_without_select_leaves_joined_internals_out() {
         let join = Query::join("orders", "rev", vec![on()]).unwrap();
         let Some(sql) = captured(Engine::MySql, "bdocs_join_alias", join).await else { return };
         assert_join_projection(&sql, '`', "rev");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn get_document_full_outer_join_uses_left_join_on_postgres() {
         let join = Query::full_outer_join("orders", "j0", vec![on()]).unwrap();
         let Some(sql) = captured(Engine::Postgres, "bdocs_join_full", join).await else { return };
@@ -2835,7 +2835,7 @@ mod sql_get_document_joins {
         assert_join_projection(&sql, '"', "j0");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_join_cannot_lock_the_document() {
         let fx = fx(Engine::Sqlite, "join_lock", false).await.unwrap();
         let c = collection("collection", vec![]);
@@ -2856,7 +2856,7 @@ mod sqlite_regex {
     const NAMES: [&str; 6] = ["abc", "axc", "abcd", "ABC", "a.c", "xabc"];
     const PATTERN: &str = "^a.c$";
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn regex_matches_through_the_user_function() {
         let fx = fx(Engine::Sqlite, "regex", false).await.unwrap();
         without_authorization(&fx.adapter);
@@ -2877,7 +2877,7 @@ mod sqlite_regex {
 mod sql_array_writes_contains {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn created_documents_are_found_by_an_element_of_their_array() {
         let fx = fx(Engine::Sqlite, "array_writes", false).await.unwrap();
         without_authorization(&fx.adapter);
@@ -2913,7 +2913,7 @@ mod sql_array_writes_contains {
 mod float_binding_find {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_find_binds_a_float_in_fixed_point() {
         let Some(fx) = fx(Engine::MariaDb, "bdocs_float_find", false).await else { return };
         without_authorization(&fx.adapter);

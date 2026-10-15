@@ -1253,7 +1253,7 @@ where
             return Err(action);
         }
         if attempt < RETRIES {
-            tokio::time::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
+            utopia_async::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
             continue;
         }
         return Err(rollback.unwrap_or(action));
@@ -1309,12 +1309,12 @@ where
             let base = conflict_wait.as_micros() as u64;
             let micros = base + u64::from(u32::from_le_bytes(bytes)) % (3 * base + 1);
             let wait = micros * u64::from((attempt + 1).min(5));
-            tokio::time::sleep(std::time::Duration::from_micros(wait)).await;
+            utopia_async::sleep(std::time::Duration::from_micros(wait)).await;
             attempt += 1;
             continue;
         }
         if attempt < RETRIES {
-            tokio::time::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
+            utopia_async::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
             attempt += 1;
             continue;
         }

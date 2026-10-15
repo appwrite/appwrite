@@ -114,7 +114,7 @@ pub struct RequestMany {
 /// and [`Connection::tick`].
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// use utopia_nats::{Connection, ConnectionOptions};
 ///
 /// # let url = std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into());
@@ -1233,7 +1233,7 @@ impl Connection {
                     );
                     let jitter: f64 = rand::rng().random();
                     let wait = backoff + jitter * self.options.reconnect_jitter.as_secs_f64();
-                    tokio::time::sleep(Duration::from_secs_f64(wait.max(0.0))).await;
+                    utopia_async::sleep(Duration::from_secs_f64(wait.max(0.0))).await;
                 }
                 for url in self.server_pool.clone() {
                     match self.reconnect_to(&url).await {

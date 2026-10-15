@@ -43,7 +43,7 @@ pub type ErrorHandler = Box<dyn Fn(&Error) + Send + Sync>;
 /// use utopia_dns::resolver::Memory;
 /// use utopia_dns::{Handler, Protocol, Server, Zone};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+/// # utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 /// let zone = Zone::new(
 ///     "example.test",
 ///     vec![Record::new("www.example.test", Record::TYPE_A).with_ttl(60).with_rdata("192.0.2.1")],

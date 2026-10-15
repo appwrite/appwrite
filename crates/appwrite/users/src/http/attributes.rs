@@ -163,7 +163,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
     if limit > 0 {
         let candidate = password.clone();
         let entries = history.clone();
-        let reused = tokio::task::spawn_blocking(move || {
+        let reused = utopia_async::spawn_blocking(move || {
             if !(8..=256).contains(&candidate.len()) {
                 return true;
             }

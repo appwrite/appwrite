@@ -34,7 +34,7 @@ fn encode(document: &Document) -> String {
     php_std::json::encode(&utopia_database::value::to_plain(&Value::Array(document.array_copy())), flags, 512).unwrap()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_finds_answer_as_php() {
     let probe = probe_or_skip!();
     let fixture: Json = serde_json::from_str(include_str!("fixtures/redis_queries_php.json")).unwrap();

@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-migration = { git = "https://github.com/utopia-rs/migration" }
 ```
 
-A migration moves resources (users, databases, tables, rows, buckets, files, functions, messaging, sites) from one service into another. A `Source` exports them: Appwrite (through its API or straight from a project database), Supabase, NHost, Firebase, or a CSV or JSON file. A `Destination` imports them: Appwrite, a CSV or JSON file, or a local backup. A `Transfer` connects the two, keeps every resource it has seen in a `Cache`, and counts them by status. Sources and destinations are async, so the examples run them on a Tokio runtime. This guide covers the common tasks.
+A migration moves resources (users, databases, tables, rows, buckets, files, functions, messaging, sites) from one service into another. A `Source` exports them: Appwrite (through its API or straight from a project database), Supabase, NHost, Firebase, or a CSV or JSON file. A `Destination` imports them: Appwrite, a CSV or JSON file, or a local backup. A `Transfer` connects the two, keeps every resource it has seen in a `Cache`, and counts them by status. Sources and destinations are async, so the examples run them with `utopia_async::run`. This guide covers the common tasks.
 
 ## Stream a large JSON export
 
@@ -26,7 +26,7 @@ A migration moves resources (users, databases, tables, rows, buckets, files, fun
 use php_std::Value;
 use utopia_migration::json_machine::{Decoder, Items};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let json = r#"[{"$id": "ada", "age": 36}, {"$id": "alan", "age": 41}]"#;
     let mut items = Items::from_bytes(json, Decoder::Ext { assoc: true });
     let mut ids = Vec::new();
@@ -61,7 +61,7 @@ let dir = std::env::temp_dir().join(format!("utopia-migration-guide-{}", std::pr
 std::fs::create_dir_all(&dir)?;
 std::fs::write(dir.join("people.json"), r#"[{"$id": "ada", "name": "Ada", "age": 36}, {"$id": "alan", "name": "Alan", "age": 41}]"#)?;
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let device: Arc<dyn Device> = Arc::new(Local::new(dir.to_str().unwrap_or_default()));
     let source = Json::new("people:people", dir.join("people.json").to_string_lossy(), device.clone());
     let destination =
@@ -93,7 +93,7 @@ let dir = std::env::temp_dir().join(format!("utopia-migration-counters-{}", std:
 std::fs::create_dir_all(&dir)?;
 std::fs::write(dir.join("in.json"), r#"[{"$id": "a", "n": 1}, {"$id": "b", "n": 2}, {"$id": "c", "n": 3}]"#)?;
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let device: Arc<dyn Device> = Arc::new(Local::new(dir.to_str().unwrap_or_default()));
     let source = Json::new("db:numbers", dir.join("in.json").to_string_lossy(), device.clone());
     let destination = JsonDestination::new(device, "db:numbers", "out", "numbers", Vec::new()).await?;
