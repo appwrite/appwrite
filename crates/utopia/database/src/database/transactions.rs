@@ -124,8 +124,9 @@ impl Database {
     /// caches of what it wrote are invalidated once it ends.
     pub async fn with_transaction<T, F, Fut>(&self, callback: F) -> Result<T>
     where
-        F: FnMut() -> Fut,
-        Fut: Future<Output = Result<T>>,
+        F: FnMut() -> Fut + Send,
+        Fut: Future<Output = Result<T>> + Send,
+        T: Send,
     {
         self.with_invalidation_scope(self.with_adapter_transaction(callback)).await
     }
@@ -140,8 +141,9 @@ impl Database {
         mut callback: F,
     ) -> Result<T>
     where
-        F: FnMut() -> Fut,
-        Fut: Future<Output = Result<T>>,
+        F: FnMut() -> Fut + Send,
+        Fut: Future<Output = Result<T>> + Send,
+        T: Send,
     {
         self.with_invalidation_scope(self.with_adapter_transaction(|| {
             let blocked = self.block_mutation(event, data);
@@ -220,8 +222,9 @@ impl Database {
     /// (`withAdapterTransaction()`).
     async fn with_adapter_transaction<T, F, Fut>(&self, mut callback: F) -> Result<T>
     where
-        F: FnMut() -> Fut,
-        Fut: Future<Output = Result<T>>,
+        F: FnMut() -> Fut + Send,
+        Fut: Future<Output = Result<T>> + Send,
+        T: Send,
     {
         let context = self.context();
         let queued = context.as_ref().map_or(0, |c| c.state().document_purge_events.len());
