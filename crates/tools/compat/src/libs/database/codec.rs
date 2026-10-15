@@ -281,6 +281,10 @@ fn key_text(k: KeyRef<'_>) -> String {
 fn decode_bson(json: &Json) -> D<Value> {
     let bad = || Fault::new(format!("unsupported $bson value: {json}"));
     let o = json.as_object().ok_or_else(bad)?;
+    // A `MongoDB\BSON\Int64`: the extension reads it back as an int.
+    if let Some(Json::String(n)) = o.get("$numberLong") {
+        return Ok(Value::Int(n.parse().map_err(|_| bad())?));
+    }
     if let Some(date) = o.get("$date") {
         let ms = date.get("$numberLong").and_then(Json::as_str).and_then(|s| s.parse().ok()).ok_or_else(bad)?;
         return Ok(Value::from(BsonValue::UtcDateTime(ms)));
