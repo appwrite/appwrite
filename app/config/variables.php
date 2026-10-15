@@ -45,15 +45,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_MEMORY_LIMIT',
-                'description' => 'PHP memory limit applied to every Appwrite process (API, workers, and CLI tasks). By default, set to \'512M\'. Realtime keeps every WebSocket connection in memory and storage buffers request bodies while writing them, so memory-heavy processes can exhaust this; raise it for deployments with many concurrent Realtime connections or large _APP_STORAGE_LIMIT uploads. Accepts any value PHP\'s memory_limit ini directive accepts (e.g. \'1024M\', \'2G\'); \'-1\' disables the limit entirely.',
-                'introduction' => '2.4.0',
-                'default' => '512M',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS',
                 'description' => 'Comma-separated list of project IDs that get increased API rate limits. Every endpoint rate limit is multiplied by 100 for the listed projects. By default, empty, so all projects use the standard rate limits.',
                 'introduction' => '1.9.7',
@@ -454,6 +445,15 @@ return [
                 'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.5.1',
+                'default' => '512M',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
