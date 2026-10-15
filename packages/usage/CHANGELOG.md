@@ -17,6 +17,13 @@
   reviewed. Adapters inherit a `migrate()` that runs `setup()`; the ClickHouse
   adapter overrides it.
 
+### Fixed
+
+- `Accumulator::flush()` writes at most 1,000 entries per `addBatch()` call
+  and drops each batch from the buffer as soon as it is written. Before, it
+  handed the whole buffer to one `addBatch()` call, which inserts in chunks,
+  so when a later chunk failed the next flush wrote the earlier chunks again.
+
 ### Breaking
 
 - Requires PHP 8.5 and utopia-php/database 8. The Docker test image builds
