@@ -13,6 +13,7 @@ use crate::bench::Bench;
 
 pub mod abuse;
 pub mod agents;
+pub mod audit;
 pub mod auth;
 pub mod balancer;
 pub mod bus;
@@ -36,6 +37,7 @@ pub mod image;
 pub mod locale;
 pub mod lock;
 pub mod messaging;
+pub mod migration;
 pub mod mongo;
 pub mod mqtt;
 pub mod nats;
@@ -54,6 +56,7 @@ pub mod span;
 pub mod storage;
 pub mod system;
 pub mod telemetry;
+pub mod usage;
 pub mod user_agent;
 pub mod validators;
 pub mod vcs;
@@ -63,6 +66,7 @@ pub mod websocket;
 pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
     ("agents", agents::OPS),
+    ("audit", audit::OPS),
     ("auth", auth::OPS),
     ("balancer", balancer::OPS),
     ("bus", bus::OPS),
@@ -84,6 +88,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("http", http::OPS),
     ("image", image::OPS),
     ("locale", locale::OPS),
+    ("migration", migration::OPS),
     ("mongo", mongo::OPS),
     ("lock", lock::OPS),
     ("messaging", messaging::OPS),
@@ -104,6 +109,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("storage", storage::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
+    ("usage", usage::OPS),
     ("user-agent", user_agent::OPS),
     ("validators", validators::OPS),
     ("vcs", vcs::OPS),
@@ -115,6 +121,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
     match lib {
         "abuse" => abuse::call(op, args, session).await,
         "agents" => agents::call(op, args, session).await,
+        "audit" => audit::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
         "balancer" => balancer::call(op, args, session).await,
         "bus" => bus::call(op, args, session).await,
@@ -136,6 +143,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "http" => http::call(op, args, session).await,
         "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
+        "migration" => migration::call(op, args, session).await,
         "mongo" => mongo::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "messaging" => messaging::call(op, args, session).await,
@@ -156,6 +164,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "storage" => storage::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
+        "usage" => usage::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
         "vcs" => vcs::call(op, args, session).await,
@@ -169,6 +178,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
         "abuse" => abuse::BENCHES,
         "agents" => agents::BENCHES,
+        "audit" => audit::BENCHES,
         "auth" => auth::BENCHES,
         "balancer" => balancer::BENCHES,
         "bus" => bus::BENCHES,
@@ -190,6 +200,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "http" => http::BENCHES,
         "image" => image::BENCHES,
         "locale" => locale::BENCHES,
+        "migration" => migration::BENCHES,
         "mongo" => mongo::BENCHES,
         "lock" => lock::BENCHES,
         "messaging" => messaging::BENCHES,
@@ -210,6 +221,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "storage" => storage::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
+        "usage" => usage::BENCHES,
         "user-agent" => user_agent::BENCHES,
         "validators" => validators::BENCHES,
         "vcs" => vcs::BENCHES,
@@ -223,6 +235,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
     match lib {
         "abuse" => abuse::bench(name, session).await,
         "agents" => agents::bench(name, session).await,
+        "audit" => audit::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "balancer" => balancer::bench(name, session).await,
         "bus" => bus::bench(name, session).await,
@@ -244,6 +257,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "http" => http::bench(name, session).await,
         "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
+        "migration" => migration::bench(name, session).await,
         "mongo" => mongo::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "messaging" => messaging::bench(name, session).await,
@@ -264,6 +278,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "storage" => storage::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
+        "usage" => usage::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,
         "validators" => validators::bench(name, session).await,
         "vcs" => vcs::bench(name, session).await,

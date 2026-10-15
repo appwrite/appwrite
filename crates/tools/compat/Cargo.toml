@@ -56,6 +56,7 @@ mongodb.workspace = true
 php-std.workspace = true
 utopia-abuse = { workspace = true, features = ["redis-cluster"] }
 utopia-agents.workspace = true
+utopia-audit.workspace = true
 utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
@@ -78,6 +79,7 @@ utopia-locale.workspace = true
 utopia-mongo.workspace = true
 utopia-lock.workspace = true
 utopia-messaging.workspace = true
+utopia-migration.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true
 utopia-mqtt.workspace = true
@@ -102,3 +104,4 @@ utopia-servers.workspace = true
 utopia-orchestration.workspace = true
 utopia-cdn.workspace = true
 utopia-query.workspace = true
+utopia-usage.workspace = true
