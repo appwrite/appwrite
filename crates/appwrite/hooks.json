@@ -8,7 +8,7 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
       "rust": {
         "status": "partial",
-        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet.",
+        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet. The user's `accessedAt` is written before the action, as in PHP, so an action that writes the user returns it (proved on `PATCH /v1/account/status`).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
@@ -23,7 +23,7 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
         "status": "done",
-        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused).",
+        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn abuse" }
         ]
@@ -254,7 +254,7 @@
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
       "rust": {
         "status": "done",
-        "note": "`createMembership` (`auth.type` `invites`, groups `api`, `teams`, `auth`) runs it in `bin/compat appwrite diff` under every identity (invites enabled, as on the twins); the refusal of a disabled method is the shared code path the other `auth.type` values take.",
+        "note": "`createMembership` (`auth.type` `invites`, groups `api`, `teams`, `auth`) and `createPhoneVerification` (`auth.type` `phone`) run it in `bin/compat appwrite diff` under every identity (both methods enabled, as on the twins); the refusal of a disabled method is the shared code path the other `auth.type` values take.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn auth_methods" }
         ]

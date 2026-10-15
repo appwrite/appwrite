@@ -34,6 +34,11 @@ pub struct EventState {
     pub payload: Option<Bytes>,
     /// Extra delete messages to publish.
     pub deletes: Vec<Value>,
+    /// Payload keys realtime leaves out (`setPayload($payload, sensitive: [...])`).
+    pub sensitive: Vec<&'static str>,
+    /// The event's user, when the action sets one (`$queueForEvents->setUser()`):
+    /// its message payload. `None` keeps the request's.
+    pub actor: Option<Value>,
     /// Messages for other worker queues (`(queue, message)`: mails, SMS),
     /// published after the created users' events, as PHP's listeners send
     /// those before the action's own publishers.

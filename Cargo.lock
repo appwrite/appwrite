@@ -114,6 +114,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "appwrite-account"
+version = "0.1.0"
+dependencies = [
+ "appwrite-core",
+ "async-trait",
+ "bytes",
+ "php-std",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "utopia-auth",
+ "utopia-cache",
+ "utopia-database",
+ "utopia-domains",
+ "utopia-emails",
+ "utopia-http",
+ "utopia-system",
+ "utopia-validators",
+]
+
+[[package]]
 name = "appwrite-core"
 version = "0.1.0"
 dependencies = [
@@ -159,6 +180,7 @@ dependencies = [
 name = "appwrite-server"
 version = "0.1.0"
 dependencies = [
+ "appwrite-account",
  "appwrite-core",
  "appwrite-teams",
  "appwrite-users",

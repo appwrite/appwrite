@@ -12,6 +12,7 @@ name = "appwrite-rust"
 path = "src/main.rs"
 
 [dependencies]
+appwrite-account.workspace = true
 appwrite-core.workspace = true
 appwrite-users.workspace = true
 appwrite-teams.workspace = true

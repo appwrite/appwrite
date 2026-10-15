@@ -48,6 +48,8 @@ struct Job {
     privileged: bool,
     params: Vec<(String, String)>,
     payload: Bytes,
+    /// Payload keys left out of realtime messages.
+    sensitive: Vec<&'static str>,
     created_users: Vec<(String, Bytes)>,
     /// An API key's disabled metrics: suffixes of the metric keys left out.
     disabled_metrics: Vec<String>,
@@ -148,10 +150,12 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
     };
     // PHP's events carry the `user` resource's context: empty for a project
     // or an organization key, the account for an account key.
-    let actor = match (&ctx.key, ctx.roles_user()) {
-        (Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
-        (Some(_), _) | (None, None) => event::empty_user(),
-        (None, Some(u)) => u.message_payload(),
+    // An action may name the event's user itself (`setUser()`).
+    let actor = match (&ctx.events.actor, &ctx.key, ctx.roles_user()) {
+        (Some(actor), _, _) => actor.clone(),
+        (None, Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
+        (None, Some(_), _) | (None, None, None) => event::empty_user(),
+        (None, None, Some(u)) => u.message_payload(),
     };
     // The `session` group's session limit: the user of the session created.
     let session_user = if ctx.route.has_group("session") && status.is_success() {
@@ -186,6 +190,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         privileged: roles::is_privileged(&ctx.roles),
         params: ctx.events.params,
         payload,
+        sensitive: ctx.events.sensitive,
         created_users,
         functions_changed: listened.functions,
         session_user,
@@ -296,7 +301,16 @@ impl Job {
         let payload = raw(&self.payload);
         let user_id = self.params.iter().find(|(k, _)| k == "userId").map(|(_, v)| v.as_str());
         if !self.project.is_console() {
-            self.realtime(events, user_id, &payload).await;
+            if self.sensitive.is_empty() {
+                self.realtime(events, user_id, &payload).await;
+            } else {
+                // `Realtime::getRealtimePayload()`: the sensitive keys left out.
+                let mut trimmed: serde_json::Map<String, Value> =
+                    serde_json::from_slice(&self.payload).unwrap_or_default();
+                trimmed.retain(|k, _| !self.sensitive.contains(&k.as_str()));
+                let bytes = Bytes::from(crate::json::to_vec(&Value::Object(trimmed)));
+                self.realtime(events, user_id, &raw(&bytes)).await;
+            }
         }
         let function_events = self.function_events().await;
         if events.iter().any(|e| function_events.contains(e)) {

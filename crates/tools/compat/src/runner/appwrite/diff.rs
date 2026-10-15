@@ -213,7 +213,34 @@ struct Twin {
     /// An ephemeral key (a JWT the API signs) whose usage leaves metrics out.
     ephemeral: String,
     keys: OwnedKeys,
+    /// The Account routes' own users (see [`ROUTE_USERS`]): user, session, JWT.
+    accounts: Vec<(String, String, String)>,
+    /// Values the Account routes' bodies name (`{recovery-secret}`, ...).
+    vars: Vec<(String, String)>,
 }
+
+impl Twin {
+    /// The session and JWT a route's client identities use: its own user's
+    /// ([`ROUTE_USERS`]), else `u1`'s.
+    fn credentials(&self, route: &Route) -> (&str, &str) {
+        let user = ROUTE_USERS.iter().find(|(name, _)| *name == route.name).map(|(_, u)| *u);
+        match user.and_then(|u| self.accounts.iter().find(|(id, _, _)| id == u)) {
+            Some((_, session, jwt)) => (session, jwt),
+            None => (&self.session, &self.jwt),
+        }
+    }
+}
+
+/// Account routes that change their user for good (block, delete, verify):
+/// their session and JWT identities are a user of their own.
+const ROUTE_USERS: &[(&str, &str)] =
+    &[("account.status.update", "a3"), ("account.delete", "a4"), ("account.verifications.phone.create", "a5")];
+
+/// The users the Account routes act on besides `u1` and `u2`: `a3`..`a5`
+/// (see [`ROUTE_USERS`]), `a6` (its recoveries are confirmed) and `a7`
+/// (a mock number: its phone verification has a known code).
+const ACCOUNT_USERS: &[(&str, Option<&str>)] =
+    &[("a3", None), ("a4", None), ("a5", Some("+15555550105")), ("a6", None), ("a7", Some("+15555550107"))];
 
 /// The console session and organization the twins are created in.
 struct Console {
@@ -416,6 +443,7 @@ async fn twin(
     }
     let session = post("/users/u1/sessions", json!({})).await?["secret"].as_str().unwrap_or_default().to_owned();
     let jwt = post("/users/u1/jwts", json!({})).await?["jwt"].as_str().unwrap_or_default().to_owned();
+    let (accounts, vars) = seed_accounts(api, stack, console, &project, &server, &session).await?;
     let sequence = db
         .query_one("SELECT _id::text FROM appwrite._console_projects WHERE _uid = $1", &[&project])
         .await
@@ -534,7 +562,77 @@ async fn twin(
         jwt,
         ephemeral,
         keys,
+        accounts,
+        vars,
     })
+}
+
+/// Seeds what the Account routes need, through PHP: the users of
+/// [`ACCOUNT_USERS`] with a session and a JWT each, a mock number for `a7`
+/// and its phone verification (code `123456`), `a6`'s recoveries (their
+/// secrets are the `{recovery-secret}` and `{recovery-otp}` body values), and
+/// two push targets of `u1`'s session (`pt1`, `pt2`).
+async fn seed_accounts(
+    api: &Api,
+    stack: &Stack,
+    console: &Console,
+    project: &str,
+    server: &[(String, String)],
+    session: &str,
+) -> Result<(Vec<(String, String, String)>, Vec<(String, String)>), String> {
+    let php = &stack.php;
+    let send = |method: &'static str, path: String, headers: Vec<(String, String)>, body: Value| async move {
+        let url = format!("{php}{path}");
+        let r = api.send(method, &url, &headers, Some(&body)).await?;
+        if r.status >= 300 {
+            return Err(format!("{method} {url}: {} {}", r.status, r.body));
+        }
+        Ok(r.body)
+    };
+    let mock = json!({"numbers": [{"phone": "+15555550107", "otp": "123456"}]});
+    send("PATCH", format!("/projects/{project}/auth/mock-numbers"), console.headers.clone(), mock).await?;
+    let mut accounts = Vec::new();
+    for (id, phone) in ACCOUNT_USERS {
+        let mut body = json!({"userId": id, "email": format!("{id}@example.com"), "password": "password-1234",
+            "name": format!("User {id}")});
+        if let Some(phone) = phone {
+            body["phone"] = json!(phone);
+        }
+        send("POST", "/users".into(), server.to_vec(), body).await?;
+        let session = send("POST", format!("/users/{id}/sessions"), server.to_vec(), json!({})).await?["secret"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        let jwt = send("POST", format!("/users/{id}/jwts"), server.to_vec(), json!({})).await?["jwt"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+        accounts.push(((*id).to_owned(), session, jwt));
+    }
+    let client = |session: &str| {
+        vec![
+            ("x-appwrite-project".to_owned(), project.to_owned()),
+            ("x-appwrite-session".to_owned(), session.to_owned()),
+        ]
+    };
+    let a7 = accounts.iter().find(|(id, _, _)| id == "a7").map(|(_, s, _)| s.clone()).unwrap_or_default();
+    send("POST", "/account/verifications/phone".into(), client(&a7), json!({})).await?;
+    let recovery = json!({"email": "a6@example.com", "url": "http://localhost/recover"});
+    let secret = send("POST", "/account/recovery".into(), server.to_vec(), recovery).await?["secret"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    let otp = send("POST", "/account/recovery/otp".into(), server.to_vec(), json!({"email": "a6@example.com"})).await?
+        ["secret"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    for target in ["pt1", "pt2"] {
+        let body = json!({"targetId": target, "identifier": format!("push-{target}")});
+        send("POST", "/account/targets/push".into(), client(session), body).await?;
+    }
+    let vars = vec![("{recovery-secret}".to_owned(), secret), ("{recovery-otp}".to_owned(), otp)];
+    Ok((accounts, vars))
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -634,6 +732,147 @@ const ROUTES: &[Route] = &[
     // Sessions: the database listener counts them in usage.
     Route { name: "users.sessions.create", method: "POST", path: "/users/u2/sessions", body: None },
     Route { name: "users.sessions.delete", method: "DELETE", path: "/users/u2/sessions", body: None },
+    // Account: client routes act as `u1` (or their own user, `ROUTE_USERS`).
+    Route { name: "account.get", method: "GET", path: "/account", body: None },
+    Route { name: "account.prefs.get", method: "GET", path: "/account/prefs", body: None },
+    Route {
+        name: "account.prefs.update",
+        method: "PATCH",
+        path: "/account/prefs",
+        body: Some(r#"{"prefs":{"theme":"dark","n":{n}}}"#),
+    },
+    Route { name: "account.name.update", method: "PATCH", path: "/account/name", body: Some(r#"{"name":"Name {n}"}"#) },
+    Route { name: "account.name.invalid", method: "PATCH", path: "/account/name", body: Some(r#"{"name":""}"#) },
+    Route {
+        name: "account.password.update",
+        method: "PATCH",
+        path: "/account/password",
+        body: Some(r#"{"password":"password-1234","oldPassword":"password-1234"}"#),
+    },
+    Route {
+        name: "account.password.wrong",
+        method: "PATCH",
+        path: "/account/password",
+        body: Some(r#"{"password":"password-5678","oldPassword":"not-the-password"}"#),
+    },
+    Route {
+        name: "account.email.update",
+        method: "PATCH",
+        path: "/account/email",
+        body: Some(r#"{"email":"U1-{n}@Example.com","password":"password-1234"}"#),
+    },
+    Route {
+        name: "account.email.taken",
+        method: "PATCH",
+        path: "/account/email",
+        body: Some(r#"{"email":"u2@example.com","password":"password-1234"}"#),
+    },
+    Route {
+        name: "account.phone.update",
+        method: "PATCH",
+        path: "/account/phone",
+        body: Some(r#"{"phone":"+1555200{n}","password":"password-1234"}"#),
+    },
+    Route { name: "account.identities.list", method: "GET", path: "/account/identities", body: None },
+    Route {
+        name: "account.identities.delete.missing",
+        method: "DELETE",
+        path: "/account/identities/missing",
+        body: None,
+    },
+    Route {
+        name: "account.targets.push.create",
+        method: "POST",
+        path: "/account/targets/push",
+        body: Some(r#"{"targetId":"t{n}","identifier":"push-{n}"}"#),
+    },
+    Route {
+        name: "account.targets.push.update",
+        method: "PUT",
+        path: "/account/targets/pt1/push",
+        body: Some(r#"{"identifier":"push-pt1-{n}"}"#),
+    },
+    Route { name: "account.targets.push.delete", method: "DELETE", path: "/account/targets/pt2/push", body: None },
+    Route {
+        name: "account.targets.push.delete.missing",
+        method: "DELETE",
+        path: "/account/targets/missing/push",
+        body: None,
+    },
+    Route {
+        name: "account.recovery.create",
+        method: "POST",
+        path: "/account/recovery",
+        body: Some(r#"{"email":"A6@example.com","url":"http://localhost/recover?from=mail"}"#),
+    },
+    Route {
+        name: "account.recovery.unknown",
+        method: "POST",
+        path: "/account/recovery",
+        body: Some(r#"{"email":"nobody@example.com","url":"http://localhost/recover"}"#),
+    },
+    Route {
+        name: "account.recovery.redirect.invalid",
+        method: "POST",
+        path: "/account/recovery",
+        body: Some(r#"{"email":"a6@example.com","url":"https://evil.example/recover"}"#),
+    },
+    Route {
+        name: "account.recovery.update",
+        method: "PUT",
+        path: "/account/recovery",
+        body: Some(r#"{"userId":"a6","secret":"{recovery-secret}","password":"password-5678"}"#),
+    },
+    Route {
+        name: "account.recovery.otp.create",
+        method: "POST",
+        path: "/account/recovery/otp",
+        body: Some(r#"{"email":"a6@example.com"}"#),
+    },
+    Route {
+        name: "account.recovery.otp.update",
+        method: "PUT",
+        path: "/account/recovery/otp",
+        body: Some(r#"{"userId":"a6","secret":"{recovery-otp}","password":"password-9012"}"#),
+    },
+    Route {
+        name: "account.verifications.email.create",
+        method: "POST",
+        path: "/account/verifications/email",
+        body: Some(r#"{"url":"http://localhost/verify"}"#),
+    },
+    Route {
+        name: "account.verifications.email.update",
+        method: "PUT",
+        path: "/account/verifications/email",
+        body: Some(r#"{"userId":"u1","secret":"not-the-secret"}"#),
+    },
+    Route {
+        name: "account.verifications.email.otp.create",
+        method: "POST",
+        path: "/account/verifications/email/otp",
+        body: Some(r#"{}"#),
+    },
+    Route {
+        name: "account.verifications.email.otp.update",
+        method: "PUT",
+        path: "/account/verifications/email/otp",
+        body: Some(r#"{"userId":"missing","secret":"000000"}"#),
+    },
+    Route {
+        name: "account.verifications.phone.create",
+        method: "POST",
+        path: "/account/verifications/phone",
+        body: Some(r#"{}"#),
+    },
+    Route {
+        name: "account.verifications.phone.update",
+        method: "PUT",
+        path: "/account/verifications/phone",
+        body: Some(r#"{"userId":"a7","secret":"123456"}"#),
+    },
+    Route { name: "account.status.update", method: "PATCH", path: "/account/status", body: None },
+    Route { name: "account.delete", method: "DELETE", path: "/account", body: None },
     // Teams. A client creating a team joins it as its owner.
     Route {
         name: "teams.create",
@@ -805,7 +1044,11 @@ fn request(
     let route = scenario.route;
     let n = scenario.n.to_string();
     let path = route.path.replace("{n}", &n);
-    let body = route.body.map(|b| serde_json::from_str(&b.replace("{n}", &n)).unwrap_or(Value::Null));
+    let body = route.body.map(|b| {
+        let b = twin.vars.iter().fold(b.replace("{n}", &n), |b, (name, value)| b.replace(name.as_str(), value));
+        serde_json::from_str(&b).unwrap_or(Value::Null)
+    });
+    let (session, jwt) = twin.credentials(route);
     let mut headers: Vec<(String, String)> = Vec::new();
     let keys = &twin.keys;
     let project = |h: &mut Vec<(String, String)>, id: &str| h.push(("x-appwrite-project".into(), id.into()));
@@ -829,11 +1072,11 @@ fn request(
         }
         Identity::Session => {
             project(&mut headers, &twin.project);
-            headers.push(("x-appwrite-session".into(), twin.session.clone()));
+            headers.push(("x-appwrite-session".into(), session.to_owned()));
         }
         Identity::Jwt => {
             project(&mut headers, &twin.project);
-            headers.push(("x-appwrite-jwt".into(), twin.jwt.clone()));
+            headers.push(("x-appwrite-jwt".into(), jwt.to_owned()));
         }
         Identity::InvalidJwt => {
             project(&mut headers, &twin.project);
@@ -866,7 +1109,7 @@ fn request(
             project(&mut headers, &twin.project);
             headers.push(("x-appwrite-key".into(), keys.account.clone()));
             headers.push(("x-appwrite-user".into(), keys.user.clone()));
-            headers.push(("x-appwrite-session".into(), twin.session.clone()));
+            headers.push(("x-appwrite-session".into(), session.to_owned()));
         }
         Identity::OrganizationKey => {
             project(&mut headers, &twin.project);
@@ -1115,6 +1358,12 @@ impl Normalizer {
             (other.project.clone(), "{other-project}".to_owned()),
             (twin.session.clone(), "{session}".to_owned()),
             (twin.jwt.clone(), "{jwt}".to_owned()),
+        ];
+        for (user, session, jwt) in &twin.accounts {
+            fixed.push((session.clone(), format!("{{session-{user}}}")));
+            fixed.push((jwt.clone(), format!("{{jwt-{user}}}")));
+        }
+        fixed.extend([
             (twin.project.clone(), "{project}".to_owned()),
             (twin.prefix.clone(), "_{seq}_".to_owned()),
             (twin.prefix.trim_end_matches('_').to_owned(), "_{seq}".to_owned()),
@@ -1122,7 +1371,7 @@ impl Normalizer {
             (format!("project:{}:", twin.prefix.trim_matches('_')), "project:{seq}:".to_owned()),
             // Shared tables: the tenant in cache keys (`<cache>::<tenant>:collection:...`).
             (format!("::{}:", twin.prefix.trim_matches('_')), "::{seq}:".to_owned()),
-        ];
+        ]);
         // The account's and the organization's keys, by ID, and the locks
         // named after them and their owner's sequence (which may equal the
         // project's on one twin and not the other).
@@ -1162,6 +1411,10 @@ impl Normalizer {
         }
         if let Some(shape) = hash_shape(&out).or_else(|| envelope_shape(&out)).or_else(|| session_shape(&out)) {
             return shape;
+        }
+        // A token link's expiry (`expire=<urlencoded datetime>`) is a time.
+        if out.contains("expire=") {
+            out = query_datetime(&out);
         }
         // A session store inside a longer string (a cookie, the
         // `X-Fallback-Cookies` JSON), and a cookie's expiry time.
@@ -1218,8 +1471,8 @@ impl Normalizer {
                     continue;
                 }
                 let token = &out[i..i + run];
-                if generated(token) == Some("id") {
-                    result.push_str(&self.number(token.to_owned(), "id"));
+                if let Some(kind @ ("id" | "secret")) = generated(token) {
+                    result.push_str(&self.number(token.to_owned(), kind));
                 } else {
                     result.push_str(token);
                 }
@@ -1277,6 +1530,12 @@ impl Normalizer {
                                     Value::String("{account-seq}".into())
                                 }
                                 ("timestamp", Value::Number(_)) => Value::String("{timestamp}".into()),
+                                (k, Value::String(code)) if one_time_code(k, x) => {
+                                    Value::String(self.number(code.clone(), "otp"))
+                                }
+                                (k, Value::String(hash)) if secret_hash(k, x) => {
+                                    Value::String(self.number(hash.clone(), "secret-hash"))
+                                }
                                 // The response's size counts the `X-Debug-Speed`
                                 // header, a time whose digits vary.
                                 ("value", Value::Number(_))
@@ -1372,12 +1631,50 @@ fn envelope_shape(s: &str) -> Option<String> {
     ))
 }
 
+/// `expire=<value>` query parameters whose value is an urlencoded datetime
+/// (`2026-10-14T22%3A...`), as `expire={datetime}`.
+fn query_datetime(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(at) = rest.find("expire=") {
+        let (head, tail) = rest.split_at(at + "expire=".len());
+        out.push_str(head);
+        let end = tail.find(['&', '#', '"', ' ']).unwrap_or(tail.len());
+        let value = &tail[..end];
+        let datetime = value.len() >= 10 && value[..4].bytes().all(|b| b.is_ascii_digit()) && &value[4..5] == "-";
+        out.push_str(if datetime { "{datetime}" } else { value });
+        rest = &tail[end..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// One-time codes (`proofForCode->generate()`: six digits) under the keys
+/// that carry them: a token's `secret`, a mail's `otp` and an SMS's `content`.
+fn one_time_code(key: &str, value: &Value) -> bool {
+    matches!(key, "secret" | "otp" | "content")
+        && value.as_str().is_some_and(|s| s.len() == 6 && s.bytes().all(|b| b.is_ascii_digit()))
+}
+
+/// A stored session or token secret (`proofForToken->hash()`: SHA-256 hex
+/// of a random secret), under `secret` (the deletes worker's user document).
+fn secret_hash(key: &str, value: &Value) -> bool {
+    key == "secret"
+        && value
+            .as_str()
+            .is_some_and(|s| s.len() == 64 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
+}
+
 /// What kind of generated value `s` is, if it is one: an ID from
 /// `ID::unique()` (20 hexadecimal characters), a `uniqid('', true)`, or a
 /// datetime.
 fn generated(s: &str) -> Option<&'static str> {
     if s.len() == 20 && s.bytes().all(|b| b.is_ascii_hexdigit()) {
         return Some("id");
+    }
+    // A token secret (`proofForToken->generate()`: 256 lowercase hex).
+    if s.len() == 256 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) {
+        return Some("secret");
     }
     if let Some((hex, digits)) = s.split_once('.')
         && (13..=14).contains(&hex.len())
@@ -1413,6 +1710,33 @@ const MASKED_ERROR_FIELDS: &[(&str, &str)] = &[
     ("line", "the runtime's source line (development only)"),
     ("trace", "the runtime's stack (development only)"),
 ];
+
+/// The placeholders of a twin's own names: a side effect that names none of
+/// them is another run's.
+const OWN_PLACEHOLDERS: &[&str] = &[
+    "{project}",
+    "_{seq}_",
+    "::{seq}:",
+    "project:{seq}:",
+    "platform:{seq}:",
+    "{account-seq}",
+    "{team-seq}",
+    "key-id}",
+    "{other-project}",
+];
+
+/// Whether a normalized text still names a twin project (a run stamp of ten
+/// digits then `p` or `r`): the twins of this run are placeholders by then,
+/// so it is another run's.
+fn names_another_twin(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    bytes.windows(12).enumerate().any(|(i, w)| {
+        w[..10].iter().all(u8::is_ascii_digit)
+            && matches!(w[10], b'p' | b'r')
+            && !w[11].is_ascii_alphanumeric()
+            && (i == 0 || !bytes[i - 1].is_ascii_digit())
+    })
+}
 
 /// One runtime's record of a scenario.
 async fn record(
@@ -1486,6 +1810,16 @@ async fn record(
             }
         }
     }
+    // Several runs can share the stack: the PHP container also serves other
+    // twins' requests while this one runs. What this request did names its
+    // twin (its project, tables or keys); the rest is another run's, and is
+    // left out before generated values are numbered.
+    let own = |item: &Value| {
+        let text = Normalizer::new(twin, other).value(item).to_string();
+        OWN_PLACEHOLDERS.iter().any(|p| text.contains(p)) && !names_another_twin(&text)
+    };
+    effects.retain(own);
+    purges.retain(own);
     let mut normalizer = Normalizer::new(twin, other);
     let raw = json!({
         "status": reply.status,
@@ -1605,6 +1939,12 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
                 }
                 r
             };
+            // `COMPAT_DIFF_SHOW=<text>`: print both records of the scenarios
+            // whose id contains it, to read what was compared.
+            if std::env::var("COMPAT_DIFF_SHOW").is_ok_and(|s| scenario.id.contains(&s)) {
+                eprintln!("SHOW php  {}: {}", scenario.id, compared(&a));
+                eprintln!("SHOW rust {}: {}", scenario.id, compared(&b));
+            }
             match first_difference(&compared(&a), &compared(&b), "") {
                 None => {
                     passed += 1;

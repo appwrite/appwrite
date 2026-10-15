@@ -288,6 +288,8 @@ pub struct Token {
     pub user_id: String,
     pub secret: Option<String>,
     pub expire: Option<NaiveDateTime>,
+    /// `phrase`: set on the token a response returns, never stored.
+    pub phrase: Option<String>,
 }
 
 impl From<&Document> for Token {
@@ -298,6 +300,7 @@ impl From<&Document> for Token {
             user_id: d.string_or_empty("userId"),
             secret: d.string("secret"),
             expire: d.datetime("expire"),
+            phrase: d.string("phrase"),
         }
     }
 }
