@@ -277,10 +277,14 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-            $rootDirectory = \rtrim($rootDirectory, '/');
-            $rootDirectory = \ltrim($rootDirectory, '.');
-            $rootDirectory = \ltrim($rootDirectory, '/');
+            $providerRootDirectory = $resource->getAttribute('providerRootDirectory', '');
+            $providerRootDirectory = \rtrim($providerRootDirectory, '/');
+            $providerRootDirectory = \ltrim($providerRootDirectory, '.');
+            $providerRootDirectory = \ltrim($providerRootDirectory, '/');
+            if (\in_array('..', \explode('/', $providerRootDirectory), true)) {
+                throw new BuildException('Invalid root directory');
+            }
+            $rootDirectory = $providerRootDirectory;
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -339,6 +343,9 @@ class Builds extends Action
             $templateRootDirectory = \rtrim($templateRootDirectory, '/');
             $templateRootDirectory = \ltrim($templateRootDirectory, '.');
             $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+            if (\in_array('..', \explode('/', $templateRootDirectory), true)) {
+                throw new BuildException('Invalid root directory');
+            }
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -419,7 +426,7 @@ class Builds extends Action
                 $cloneOwner,
                 $cloneRepository,
                 $ref,
-                $resource->getAttribute('providerRootDirectory', ''),
+                $providerRootDirectory,
             );
 
             Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);

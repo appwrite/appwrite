@@ -504,13 +504,7 @@ abstract class Action extends DatabasesAction
         $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
         $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
-        $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
-            \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            )
-        );
+        $relationships = \array_keys(Attribute::relationships($collection));
 
         foreach ($documents as $document) {
             $document->removeAttribute('$collection');
