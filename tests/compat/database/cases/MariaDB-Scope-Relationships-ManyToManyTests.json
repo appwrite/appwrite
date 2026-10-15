@@ -6342,9 +6342,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for '_1_2': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tounaments",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tounaments",
+              "twoWayKey": "groups",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -6447,9 +6456,100 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tounaments\""
+            "$document": {
+              "$id": "group1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Group 1",
+              "$collection": "groups",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "tounaments": [
+                {
+                  "$document": {
+                    "name": "Tounament 1",
+                    "$id": "tounament1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "tounaments",
+                    "prizes": [
+                      {
+                        "$document": {
+                          "name": "Prize 1",
+                          "$id": "prize1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Prize 2",
+                          "$id": "prize2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Tounament 2",
+                    "$id": "tounament2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "tounaments",
+                    "prizes": [
+                      {
+                        "$document": {
+                          "name": "Prize 3",
+                          "$id": "prize3",
+                          "$sequence": "3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Prize 4",
+                          "$id": "prize4",
+                          "$sequence": "4",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           }
         },
@@ -6460,7 +6560,101 @@
             "id": "group1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Group 1",
+              "$sequence": "1",
+              "$id": "group1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "groups",
+              "tounaments": [
+                {
+                  "$document": {
+                    "name": "Tounament 1",
+                    "$id": "tounament1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "tounaments",
+                    "prizes": [
+                      {
+                        "$document": {
+                          "name": "Prize 1",
+                          "$id": "prize1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Prize 2",
+                          "$id": "prize2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Tounament 2",
+                    "$id": "tounament2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "tounaments",
+                    "prizes": [
+                      {
+                        "$document": {
+                          "name": "Prize 3",
+                          "$id": "prize3",
+                          "$sequence": "3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Prize 4",
+                          "$id": "prize4",
+                          "$sequence": "4",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "prizes"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         }
       ]

@@ -3206,9 +3206,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "metarelchilddf899073",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "child",
+              "twoWayKey": "metarelparentdf88dabe",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -3260,7 +3269,20 @@
                   }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_child",
+                    "key": "_index_child",
+                    "type": "unique",
+                    "attributes": [
+                      "child"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
               "documentSecurity": false,
               "$sequence": "1",
               "$id": "metarelparentdf88dabe",
@@ -3300,9 +3322,31 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "linked",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "linked",
+              "$collection": "metarelparentdf88dabe",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchilddf899073"
+                }
+              }
             }
           }
         },
@@ -3313,7 +3357,32 @@
             "id": "linked"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "linked",
+              "$sequence": "2",
+              "$id": "linked",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "metarelparentdf88dabe",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchilddf899073"
+                }
+              }
+            }
           }
         }
       ]

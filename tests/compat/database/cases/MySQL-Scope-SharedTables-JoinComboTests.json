@@ -36412,9 +36412,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'mainId': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "mainId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -37378,9 +37390,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "peer-a",
+              "mainId": "hm1",
+              "label": "alpha-one",
+              "score": 11,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_peer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "secret": null
             }
           }
         },
@@ -37401,9 +37424,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "peer-b",
+              "mainId": "hm2",
+              "label": "beta-key",
+              "score": 22,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_peer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "secret": null
             }
           }
         },
@@ -37424,9 +37458,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "peer-c",
+              "mainId": "hm1",
+              "label": "alpha-two",
+              "score": 33,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_peer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "secret": null
             }
           }
         },
@@ -37448,9 +37493,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "peer-hidden",
+              "mainId": "hm1",
+              "label": "combo-hard-alpha",
+              "score": 8686,
+              "secret": "combo-hard-alpha",
+              "$permissions": [
+                "read(\"user:combo-hard-hidden\")"
+              ],
+              "$collection": "jh_peer",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
             }
           }
         },

@@ -3451,9 +3451,29 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "p1",
+              "name": "parent",
+              "$collection": "parents_u0000000000000000209",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "1",
+              "related": [
+                {
+                  "$document": {
+                    "name": "child",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "children_u0000000000000000210"
+                  }
+                }
+              ]
             }
           }
         },
@@ -3628,7 +3648,7 @@
             "collection": "parents_u0000000000000000209",
             "id": "p1"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.get_document",
@@ -3637,17 +3657,7 @@
             "id": "c1"
           },
           "expect": {
-            "$document": {
-              "name": "child",
-              "$sequence": "1",
-              "$id": "c1",
-              "$tenant": "999",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$collection": "children_u0000000000000000210",
-              "back": []
-            }
+            "$document": {}
           }
         }
       ]

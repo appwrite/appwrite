@@ -18201,9 +18201,49 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "electronics",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Electronics",
+              "$collection": "categories_u000000000298",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "products": [
+                {
+                  "$document": {
+                    "name": "Laptop",
+                    "price": 999.99,
+                    "$id": "product1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "products_u000000000297"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Mouse",
+                    "price": 25.5,
+                    "$id": "product2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "products_u000000000297"
+                  }
+                }
+              ]
             }
           }
         },
@@ -18214,7 +18254,33 @@
             "id": "product1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Laptop",
+              "price": 999.99,
+              "$sequence": "1",
+              "$id": "product1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "products_u000000000297",
+              "category": {
+                "$document": {
+                  "name": "Electronics",
+                  "$id": "electronics",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "categories_u000000000298"
+                }
+              }
+            }
           }
         },
         {
@@ -18237,7 +18303,18 @@
               ],
               "$collection": "products_u000000000297",
               "category": {
-                "$document": {}
+                "$document": {
+                  "name": "Electronics",
+                  "$id": "electronics",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "categories_u000000000298"
+                }
               }
             }
           }
@@ -18264,12 +18341,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Relationship",
-              "message": "Invalid relationship value. Must be either a document ID or a document, array given."
-            }
-          }
+          "expect": 2
         },
         {
           "op": "database.get_document",
@@ -18278,7 +18350,33 @@
             "id": "product1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Laptop",
+              "price": 50.0,
+              "$sequence": "1",
+              "$id": "product1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "products_u000000000297",
+              "category": {
+                "$document": {
+                  "name": "Electronics",
+                  "$id": "electronics",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "categories_u000000000298"
+                }
+              }
+            }
           }
         },
         {
@@ -18290,7 +18388,7 @@
           "expect": {
             "$document": {
               "name": "Mouse",
-              "price": 25.5,
+              "price": 50.0,
               "$sequence": "2",
               "$id": "product2",
               "$createdAt": "<now>",
@@ -18301,7 +18399,18 @@
               ],
               "$collection": "products_u000000000297",
               "category": {
-                "$document": {}
+                "$document": {
+                  "name": "Electronics",
+                  "$id": "electronics",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "categories_u000000000298"
+                }
               }
             }
           }
@@ -18313,7 +18422,50 @@
             "id": "electronics"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Electronics",
+              "$sequence": "1",
+              "$id": "electronics",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "categories_u000000000298",
+              "products": [
+                {
+                  "$document": {
+                    "name": "Laptop",
+                    "price": 50.0,
+                    "$id": "product1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "products_u000000000297"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Mouse",
+                    "price": 50.0,
+                    "$id": "product2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "products_u000000000297"
+                  }
+                }
+              ]
+            }
           }
         },
         {

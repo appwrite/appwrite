@@ -26982,9 +26982,111 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'link_rule_related_u000000000127': Failed to execute transaction: the transaction was lost before it could commit"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "link_rule_parents_u000000000126",
+                        "name": "link_rule_parents_u000000000126",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "create(\"any\")",
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "link_rule_related_u000000000127",
+                        "name": "link_rule_related_u000000000127",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"users\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "link_rule_related_u000000000127",
+                        "type": {
+                          "$enum": "RelationshipType::OneToOne"
+                        },
+                        "twoWay": true,
+                        "key": "related",
+                        "twoWayKey": "back",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::SetNull"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "stored",
+                        "name": "Stored",
+                        "$permissions": [],
+                        "$collection": "link_rule_related_u000000000127",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -27017,16 +27119,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -27071,8 +27166,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"related\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
             }
           }
         },
@@ -27093,9 +27188,40 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "result": {
+              "$document": {
+                "name": "Stored",
+                "$sequence": "1",
+                "$id": "stored",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "link_rule_related_u000000000127",
+                "back": null
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Stored",
+                        "$sequence": "1",
+                        "$id": "stored",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "link_rule_related_u000000000127",
+                        "back": null
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -27154,9 +27280,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    null
+                  ]
+                }
+              ]
             }
           }
         },

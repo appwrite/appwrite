@@ -25427,9 +25427,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -25612,9 +25624,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "author1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Alice",
+              "age": 30,
+              "$collection": "authorsFilter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "posts": []
             }
           }
         },
@@ -25635,9 +25657,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "author2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Bob",
+              "age": 25,
+              "$collection": "authorsFilter",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "posts": []
             }
           }
         },
@@ -25672,7 +25704,19 @@
               "$updatedAt": "<now>",
               "$sequence": "1",
               "author": {
-                "$document": {}
+                "$document": {
+                  "name": "Alice",
+                  "age": 30,
+                  "$id": "author1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "authorsFilter"
+                }
               }
             }
           }
@@ -25708,7 +25752,19 @@
               "$updatedAt": "<now>",
               "$sequence": "2",
               "author": {
-                "$document": {}
+                "$document": {
+                  "name": "Alice",
+                  "age": 30,
+                  "$id": "author1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "authorsFilter"
+                }
               }
             }
           }
@@ -25744,7 +25800,19 @@
               "$updatedAt": "<now>",
               "$sequence": "3",
               "author": {
-                "$document": {}
+                "$document": {
+                  "name": "Bob",
+                  "age": 25,
+                  "$id": "author2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "authorsFilter"
+                }
               }
             }
           }
@@ -25765,7 +25833,68 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Alice Post 1",
+                "published": true,
+                "$id": "post1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "author": {
+                  "$document": {
+                    "name": "Alice",
+                    "age": 30,
+                    "$id": "author1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "authorsFilter"
+                  }
+                },
+                "$collection": "postsFilter"
+              }
+            },
+            {
+              "$document": {
+                "title": "Alice Post 2",
+                "published": true,
+                "$id": "post2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "author": {
+                  "$document": {
+                    "name": "Alice",
+                    "age": 30,
+                    "$id": "author1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "authorsFilter"
+                  }
+                },
+                "$collection": "postsFilter"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -25783,7 +25912,38 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Bob Post",
+                "published": true,
+                "$id": "post3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "author": {
+                  "$document": {
+                    "name": "Bob",
+                    "age": 25,
+                    "$id": "author2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "authorsFilter"
+                  }
+                },
+                "$collection": "postsFilter"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -25801,7 +25961,87 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "age": 30,
+                "$id": "author1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "posts": [
+                  {
+                    "$document": {
+                      "title": "Alice Post 1",
+                      "published": true,
+                      "$id": "post1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "postsFilter"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "title": "Alice Post 2",
+                      "published": true,
+                      "$id": "post2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "postsFilter"
+                    }
+                  }
+                ],
+                "$collection": "authorsFilter"
+              }
+            },
+            {
+              "$document": {
+                "name": "Bob",
+                "age": 25,
+                "$id": "author2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "posts": [
+                  {
+                    "$document": {
+                      "title": "Bob Post",
+                      "published": true,
+                      "$id": "post3",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "postsFilter"
+                    }
+                  }
+                ],
+                "$collection": "authorsFilter"
+              }
+            }
+          ]
         },
         {
           "op": "database.delete_collection",

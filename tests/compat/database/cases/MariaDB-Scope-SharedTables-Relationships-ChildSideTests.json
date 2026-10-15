@@ -3906,9 +3906,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_back': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "children_u0000000000000000212",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "related",
+              "twoWayKey": "back",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -3951,9 +3960,29 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"related\""
+            "$document": {
+              "$id": "p1",
+              "name": "parent",
+              "$collection": "parents_u0000000000000000211",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "1",
+              "related": [
+                {
+                  "$document": {
+                    "name": "child",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "children_u0000000000000000212"
+                  }
+                }
+              ]
             }
           }
         },
@@ -3979,6 +4008,29 @@
                     "format": null,
                     "formatOptions": [],
                     "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "related",
+                    "key": "related",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "children_u0000000000000000212",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "back",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
                   }
                 }
               ],
@@ -4023,9 +4075,45 @@
                     "formatOptions": [],
                     "filters": []
                   }
+                },
+                {
+                  "$document": {
+                    "$id": "back",
+                    "key": "back",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "parents_u0000000000000000211",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "related",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_back",
+                    "key": "_index_back",
+                    "type": "key",
+                    "attributes": [
+                      "back"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
               "documentSecurity": false,
               "$sequence": "2",
               "$id": "children_u0000000000000000212",
@@ -4049,12 +4137,7 @@
             "collection": "children_u0000000000000000212",
             "key": "back"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Relationship not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.get_collection",
@@ -4149,7 +4232,16 @@
             "id": "p1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "parent",
+              "$sequence": "1",
+              "$id": "p1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "parents_u0000000000000000211"
+            }
           }
         },
         {
@@ -4214,7 +4306,16 @@
             "id": "p1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "parent",
+              "$sequence": "1",
+              "$id": "p1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "parents_u0000000000000000211"
+            }
           }
         },
         {

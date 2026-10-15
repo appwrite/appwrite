@@ -82517,9 +82517,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'authorId': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "authorId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -82770,9 +82782,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "b1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "a1",
+              "pages": 11,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "1"
             }
           }
         },
@@ -82792,9 +82813,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "b2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "shared",
+              "pages": 12,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "2"
             }
           }
         },
@@ -82814,9 +82844,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "b3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "legacy",
+              "pages": 13,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "3"
             }
           }
         },
@@ -83056,9 +83095,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "b1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "a1",
+              "pages": 21,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "2",
+              "$sequence": "4"
             }
           }
         },
@@ -83078,9 +83126,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "b2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "a2",
+              "pages": 22,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "2",
+              "$sequence": "5"
             }
           }
         },
@@ -83169,9 +83226,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "orphan",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "authorId": "a1",
+              "pages": 99,
+              "$collection": "jtn_books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "3",
+              "$sequence": "6"
             }
           }
         },
@@ -83306,7 +83372,7 @@
                     {
                       "$builder": true
                     },
-                    0,
+                    1,
                     {
                       "$builder": true
                     },
@@ -83363,12 +83429,22 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 11,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.count",
@@ -83397,12 +83473,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
+          "expect": 1
         },
         {
           "op": "database.sum",
@@ -83432,12 +83503,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
+          "expect": 11
         },
         {
           "op": "database.set_tenant",
@@ -83485,12 +83551,36 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 21,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 22,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.count",
@@ -83519,12 +83609,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
+          "expect": 2
         },
         {
           "op": "database.sum",
@@ -83554,12 +83639,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
+          "expect": 43
         },
         {
           "op": "database.set_tenant",
@@ -83609,9 +83689,17 @@
             ]
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "name": "one-a1",
+              "book.pages": 11,
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jtn_authors"
             }
           }
         },
@@ -83638,1399 +83726,6 @@
                       }
                     }
                   ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "legacy",
-            "queries": [
-              {
-                "$query": {
-                  "method": "join",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 2
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "a1",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "shared",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "legacy",
-            "queries": [
-              {
-                "$query": {
-                  "method": "leftJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 2
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "a1",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "shared",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "legacy",
-            "queries": [
-              {
-                "$query": {
-                  "method": "rightJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 2
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "a1",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "shared",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "legacy",
-            "queries": [
-              {
-                "$query": {
-                  "method": "fullOuterJoin",
-                  "attribute": "jtn_books",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "$id",
-                          "=",
-                          "authorId"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": []
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": 0
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": 0
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 2
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              },
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "name",
-                    "book.pages"
-                  ]
-                }
-              }
-            ]
-          },
-          "expect": []
-        },
-        {
-          "op": "database.count",
-          "args": {
-            "collection": "jtn_authors",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": 0
-        },
-        {
-          "op": "database.sum",
-          "args": {
-            "collection": "jtn_authors",
-            "attribute": "book.pages",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
-                  "alias": "book"
-                }
-              }
-            ]
-          },
-          "expect": 0
-        },
-        {
-          "op": "database.set_tenant",
-          "args": {
-            "tenant": 1
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "jtn_authors",
-            "id": "a1",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jtn_books",
-                  "values": [],
                   "alias": "book"
                 }
               },
@@ -85048,6 +83743,1726 @@
           },
           "expect": {
             "$document": {}
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "legacy",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 11,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a2",
+                "book.pages": null,
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 11
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 21,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 22,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-shared",
+                "book.pages": null,
+                "$id": "shared",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 43
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "a1",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "one-a1",
+              "book.pages": 11,
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jtn_authors"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "shared",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "legacy",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": null,
+                "book.pages": 12,
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "book.pages": 13,
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 11,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 36
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 21,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 22,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 43
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "a1",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "one-a1",
+              "book.pages": 11,
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jtn_authors"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "shared",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "legacy",
+            "queries": [
+              {
+                "$query": {
+                  "method": "rightJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": null,
+                "book.pages": 12,
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "book.pages": 13,
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 11,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a2",
+                "book.pages": null,
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 4
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 36
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 21,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 22,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-shared",
+                "book.pages": null,
+                "$id": "shared",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 43
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "a1",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "one-a1",
+              "book.pages": 11,
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jtn_authors"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "shared",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "legacy",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "jtn_books",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "authorId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 11,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 12,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a1",
+                "book.pages": 13,
+                "$id": "a1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a2",
+                "book.pages": 11,
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a2",
+                "book.pages": 12,
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "one-a2",
+                "book.pages": 13,
+                "$id": "a2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 72
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 2
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 21,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a1",
+                "book.pages": 22,
+                "$id": "a1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 21,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-a2",
+                "book.pages": 22,
+                "$id": "a2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-shared",
+                "book.pages": 21,
+                "$id": "shared",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "two-shared",
+                "book.pages": 22,
+                "$id": "shared",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jtn_authors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "jtn_authors",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "jtn_authors",
+            "attribute": "book.pages",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              }
+            ]
+          },
+          "expect": 129
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "jtn_authors",
+            "id": "a1",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crossJoin",
+                  "attribute": "jtn_books",
+                  "values": [],
+                  "alias": "book"
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name",
+                    "book.pages"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "one-a1",
+              "book.pages": 11,
+              "$sequence": "1",
+              "$id": "a1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jtn_authors"
+            }
           }
         },
         {

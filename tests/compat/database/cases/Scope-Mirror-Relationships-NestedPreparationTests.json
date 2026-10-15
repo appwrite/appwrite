@@ -320,10 +320,40 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'u0000000000000000262': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "u0000000000000000262",
+              "name": "u0000000000000000262",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -490,9 +520,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Related collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "u0000000000000000262",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "profile",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -670,12 +709,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"profile\""
-            }
-          }
+          "expect": 1
         },
         {
           "op": "db.log",
@@ -684,6 +718,12 @@
             {
               "nested": [
                 "u0000000000000000261",
+                "marker"
+              ]
+            },
+            {
+              "nested": [
+                "u0000000000000000262",
                 "marker"
               ]
             }
@@ -711,9 +751,40 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"profile\""
+            "$document": {
+              "$id": "upserted",
+              "name": "upserted",
+              "$collection": "u0000000000000000259",
+              "$updatedAt": "<now>",
+              "$createdAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3",
+              "children": [
+                {
+                  "$document": {
+                    "name": "upserted child",
+                    "$id": "<uniqid>",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "u0000000000000000260",
+                    "tags": []
+                  }
+                }
+              ],
+              "owner": null,
+              "profile": {
+                "$document": {
+                  "name": "upserted profile",
+                  "$id": "<uniqid>",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000262"
+                }
+              }
             }
           }
         },
@@ -724,6 +795,12 @@
             {
               "nested": [
                 "u0000000000000000260",
+                "marker"
+              ]
+            },
+            {
+              "nested": [
+                "u0000000000000000262",
                 "marker"
               ]
             }
@@ -816,6 +893,7 @@
                       "$updatedAt": "<now>",
                       "$permissions": [],
                       "owner": null,
+                      "profile": null,
                       "$collection": "u0000000000000000259"
                     }
                   },
@@ -859,6 +937,7 @@
                               "$updatedAt": "<now>",
                               "$permissions": [],
                               "owner": null,
+                              "profile": null,
                               "$collection": "u0000000000000000259"
                             }
                           },
@@ -901,6 +980,7 @@
               "$permissions": [],
               "$collection": "u0000000000000000259",
               "owner": null,
+              "profile": null,
               "children": [
                 {
                   "$document": {
@@ -1069,6 +1149,7 @@
                   "$updatedAt": "<now>",
                   "$permissions": [],
                   "owner": null,
+                  "profile": null,
                   "$collection": "u0000000000000000259"
                 }
               },
@@ -1095,7 +1176,38 @@
             "id": "batched"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "batched",
+              "$sequence": "2",
+              "$id": "batched",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "u0000000000000000259",
+              "owner": {
+                "$document": {
+                  "name": "batched owner",
+                  "$id": "<uniqid>",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000261"
+                }
+              },
+              "profile": {
+                "$document": {
+                  "name": "batched profile",
+                  "$id": "<uniqid>",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000262"
+                }
+              },
+              "children": []
+            }
           }
         },
         {
@@ -1125,13 +1237,87 @@
             }
           },
           "expect": {
-            "result": [],
+            "result": [
+              {
+                "$document": {
+                  "name": "batched owner",
+                  "$id": "<uniqid>",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "parents": [
+                    {
+                      "$document": {
+                        "name": "batched",
+                        "$id": "batched",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "profile": {
+                          "$document": {
+                            "name": "batched profile",
+                            "$id": "<uniqid>",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "u0000000000000000262"
+                          }
+                        },
+                        "$collection": "u0000000000000000259",
+                        "children": []
+                      }
+                    }
+                  ],
+                  "$collection": "u0000000000000000261"
+                }
+              }
+            ],
             "calls": {
               "callback": [
                 {
                   "args": [],
                   "steps": [
-                    []
+                    [
+                      {
+                        "$document": {
+                          "name": "batched owner",
+                          "$id": "<uniqid>",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "parents": [
+                            {
+                              "$document": {
+                                "name": "batched",
+                                "$id": "batched",
+                                "$sequence": "2",
+                                "$createdAt": "<now>",
+                                "$updatedAt": "<now>",
+                                "$permissions": [],
+                                "profile": {
+                                  "$document": {
+                                    "name": "batched profile",
+                                    "$id": "<uniqid>",
+                                    "$sequence": "1",
+                                    "$createdAt": "<now>",
+                                    "$updatedAt": "<now>",
+                                    "$permissions": [],
+                                    "$collection": "u0000000000000000262"
+                                  }
+                                },
+                                "$collection": "u0000000000000000259",
+                                "children": []
+                              }
+                            }
+                          ],
+                          "$collection": "u0000000000000000261"
+                        }
+                      }
+                    ]
                   ]
                 }
               ]
@@ -1165,9 +1351,86 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "result": [
+              {
+                "$document": {
+                  "name": "batched profile",
+                  "$id": "<uniqid>",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "parent": {
+                    "$document": {
+                      "name": "batched",
+                      "$id": "batched",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "owner": {
+                        "$document": {
+                          "name": "batched owner",
+                          "$id": "<uniqid>",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "u0000000000000000261"
+                        }
+                      },
+                      "$collection": "u0000000000000000259",
+                      "children": []
+                    }
+                  },
+                  "$collection": "u0000000000000000262"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "batched profile",
+                          "$id": "<uniqid>",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "parent": {
+                            "$document": {
+                              "name": "batched",
+                              "$id": "batched",
+                              "$sequence": "2",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "owner": {
+                                "$document": {
+                                  "name": "batched owner",
+                                  "$id": "<uniqid>",
+                                  "$sequence": "1",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "u0000000000000000261"
+                                }
+                              },
+                              "$collection": "u0000000000000000259",
+                              "children": []
+                            }
+                          },
+                          "$collection": "u0000000000000000262"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
             }
           }
         },
@@ -1178,7 +1441,41 @@
             "id": "upserted"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "upserted",
+              "$sequence": "3",
+              "$id": "upserted",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "u0000000000000000259",
+              "owner": null,
+              "profile": {
+                "$document": {
+                  "name": "upserted profile",
+                  "$id": "<uniqid>",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000262"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "name": "upserted child",
+                    "$id": "<uniqid>",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "u0000000000000000260",
+                    "tags": []
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -1208,13 +1505,85 @@
             }
           },
           "expect": {
-            "result": [],
+            "result": [
+              {
+                "$document": {
+                  "name": "upserted child",
+                  "$id": "<uniqid>",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "parent": {
+                    "$document": {
+                      "name": "upserted",
+                      "$id": "upserted",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "owner": null,
+                      "profile": {
+                        "$document": {
+                          "name": "upserted profile",
+                          "$id": "<uniqid>",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "u0000000000000000262"
+                        }
+                      },
+                      "$collection": "u0000000000000000259"
+                    }
+                  },
+                  "tags": [],
+                  "$collection": "u0000000000000000260"
+                }
+              }
+            ],
             "calls": {
               "callback": [
                 {
                   "args": [],
                   "steps": [
-                    []
+                    [
+                      {
+                        "$document": {
+                          "name": "upserted child",
+                          "$id": "<uniqid>",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "parent": {
+                            "$document": {
+                              "name": "upserted",
+                              "$id": "upserted",
+                              "$sequence": "3",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "owner": null,
+                              "profile": {
+                                "$document": {
+                                  "name": "upserted profile",
+                                  "$id": "<uniqid>",
+                                  "$sequence": "2",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "u0000000000000000262"
+                                }
+                              },
+                              "$collection": "u0000000000000000259"
+                            }
+                          },
+                          "tags": [],
+                          "$collection": "u0000000000000000260"
+                        }
+                      }
+                    ]
                   ]
                 }
               ]
@@ -1248,9 +1617,90 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "result": [
+              {
+                "$document": {
+                  "name": "upserted profile",
+                  "$id": "<uniqid>",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "parent": {
+                    "$document": {
+                      "name": "upserted",
+                      "$id": "upserted",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "owner": null,
+                      "$collection": "u0000000000000000259",
+                      "children": [
+                        {
+                          "$document": {
+                            "name": "upserted child",
+                            "$id": "<uniqid>",
+                            "$sequence": "2",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "u0000000000000000260"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "$collection": "u0000000000000000262"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "upserted profile",
+                          "$id": "<uniqid>",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "parent": {
+                            "$document": {
+                              "name": "upserted",
+                              "$id": "upserted",
+                              "$sequence": "3",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "owner": null,
+                              "$collection": "u0000000000000000259",
+                              "children": [
+                                {
+                                  "$document": {
+                                    "name": "upserted child",
+                                    "$id": "<uniqid>",
+                                    "$sequence": "2",
+                                    "$createdAt": "<now>",
+                                    "$updatedAt": "<now>",
+                                    "$permissions": [],
+                                    "$collection": "u0000000000000000260"
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "$collection": "u0000000000000000262"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
             }
           }
         },
@@ -1286,7 +1736,7 @@
                 "$document": {
                   "name": "upserted owner",
                   "$id": "<uniqid>",
-                  "$sequence": "1",
+                  "$sequence": "2",
                   "$createdAt": "<now>",
                   "$updatedAt": "<now>",
                   "$permissions": [],
@@ -1295,10 +1745,11 @@
                       "$document": {
                         "name": "upserted in bulk",
                         "$id": "upserted in bulk",
-                        "$sequence": "2",
+                        "$sequence": "4",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$permissions": [],
+                        "profile": null,
                         "$collection": "u0000000000000000259",
                         "children": []
                       }
@@ -1318,7 +1769,7 @@
                         "$document": {
                           "name": "upserted owner",
                           "$id": "<uniqid>",
-                          "$sequence": "1",
+                          "$sequence": "2",
                           "$createdAt": "<now>",
                           "$updatedAt": "<now>",
                           "$permissions": [],
@@ -1327,10 +1778,11 @@
                               "$document": {
                                 "name": "upserted in bulk",
                                 "$id": "upserted in bulk",
-                                "$sequence": "2",
+                                "$sequence": "4",
                                 "$createdAt": "<now>",
                                 "$updatedAt": "<now>",
                                 "$permissions": [],
+                                "profile": null,
                                 "$collection": "u0000000000000000259",
                                 "children": []
                               }
@@ -1355,7 +1807,7 @@
           "expect": {
             "$document": {
               "name": "upserted in bulk",
-              "$sequence": "2",
+              "$sequence": "4",
               "$id": "upserted in bulk",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -1365,13 +1817,14 @@
                 "$document": {
                   "name": "upserted owner",
                   "$id": "<uniqid>",
-                  "$sequence": "1",
+                  "$sequence": "2",
                   "$createdAt": "<now>",
                   "$updatedAt": "<now>",
                   "$permissions": [],
                   "$collection": "u0000000000000000261"
                 }
               },
+              "profile": null,
               "children": []
             }
           }
@@ -1461,9 +1914,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "result": {
+              "$document": {}
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {}
+                    }
+                  ]
+                }
+              ]
             }
           }
         },

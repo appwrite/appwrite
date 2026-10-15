@@ -4075,9 +4075,34 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "name": "Country 1 Updated",
+              "$sequence": "2",
+              "$id": "country1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "country",
+              "city": {
+                "$document": {
+                  "code": "LON",
+                  "name": "London",
+                  "$id": "city1",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "city"
+                }
+              }
             }
           }
         },
@@ -4089,7 +4114,7 @@
           },
           "expect": {
             "$document": {
-              "name": "England",
+              "name": "Country 1 Updated",
               "$sequence": "2",
               "$id": "country1",
               "$createdAt": "<now>",

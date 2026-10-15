@@ -338,9 +338,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'attribute3': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "attribute3",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -365,9 +379,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$value": "Index",
+            "fields": {
+              "key": "index3",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Spatial"
+              },
+              "attributes": [
+                "attribute3"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
             }
           }
         },
@@ -452,6 +475,18 @@
                     "type": "spatial",
                     "attributes": [
                       "attribute2"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index3",
+                    "key": "index3",
+                    "type": "spatial",
+                    "attributes": [
+                      "attribute3"
                     ],
                     "lengths": [],
                     "orders": []

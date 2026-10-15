@@ -16641,9 +16641,65 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "u0000000000000000101",
+              "$permissions": [
+                "read(\"user:random\")",
+                "update(\"user:random\")",
+                "delete(\"user:random\")"
+              ],
+              "test": "lorem",
+              "$collection": "csParent_u000000000082",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "oneToOne": {
+                "$document": {
+                  "test": "lorem ipsum",
+                  "$id": "u0000000000000000102",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:random\")",
+                    "update(\"user:random\")",
+                    "delete(\"user:random\")"
+                  ],
+                  "$collection": "csO2O_u000000000083"
+                }
+              },
+              "oneToMany": [
+                {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000103",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000084"
+                  }
+                },
+                {
+                  "$document": {
+                    "test": "dolor",
+                    "$id": "u0000000000000000104",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:torsten\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000084"
+                  }
+                }
+              ]
             }
           }
         },
@@ -16668,7 +16724,70 @@
           "args": {
             "collection": "csParent_u000000000082"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "test": "lorem",
+                "$id": "u0000000000000000101",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:random\")",
+                  "update(\"user:random\")",
+                  "delete(\"user:random\")"
+                ],
+                "oneToOne": {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000102",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2O_u000000000083"
+                  }
+                },
+                "oneToMany": [
+                  {
+                    "$document": {
+                      "test": "lorem ipsum",
+                      "$id": "u0000000000000000103",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:random\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000084"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "test": "dolor",
+                      "$id": "u0000000000000000104",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:torsten\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000084"
+                    }
+                  }
+                ],
+                "$collection": "csParent_u000000000082"
+              }
+            }
+          ]
         },
         {
           "op": "db.authorization.clean_roles",
@@ -16691,7 +16810,55 @@
           "args": {
             "collection": "csParent_u000000000082"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "test": "lorem",
+                "$id": "u0000000000000000101",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:random\")",
+                  "update(\"user:random\")",
+                  "delete(\"user:random\")"
+                ],
+                "oneToOne": {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000102",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2O_u000000000083"
+                  }
+                },
+                "oneToMany": [
+                  {
+                    "$document": {
+                      "test": "lorem ipsum",
+                      "$id": "u0000000000000000103",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:random\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000084"
+                    }
+                  }
+                ],
+                "$collection": "csParent_u000000000082"
+              }
+            }
+          ]
         },
         {
           "op": "db.authorization.clean_roles",

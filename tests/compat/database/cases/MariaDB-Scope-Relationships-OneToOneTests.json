@@ -7094,9 +7094,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -7294,9 +7306,57 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "teacher1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Teacher 1",
+              "$collection": "teachers",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "classroom": {
+                "$document": {
+                  "name": "Classroom 1",
+                  "$id": "classroom1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "classrooms",
+                  "children": [
+                    {
+                      "$document": {
+                        "name": "Child 1",
+                        "$id": "child1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "children"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Child 2",
+                        "$id": "child2",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "children"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         },
@@ -7307,7 +7367,58 @@
             "id": "teacher1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Teacher 1",
+              "$sequence": "1",
+              "$id": "teacher1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "teachers",
+              "classroom": {
+                "$document": {
+                  "name": "Classroom 1",
+                  "$id": "classroom1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "classrooms",
+                  "children": [
+                    {
+                      "$document": {
+                        "name": "Child 1",
+                        "$id": "child1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "children"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Child 2",
+                        "$id": "child2",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "children"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         {
@@ -7339,9 +7450,42 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "child3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Child 3",
+              "$collection": "children",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "classroom": {
+                "$document": {
+                  "name": "Classroom 2",
+                  "$id": "classroom2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "teacher": {
+                    "$document": {
+                      "name": "Teacher 2",
+                      "$id": "teacher2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "$collection": "teachers"
+                    }
+                  },
+                  "$collection": "classrooms"
+                }
+              }
             }
           }
         },
@@ -7352,7 +7496,43 @@
             "id": "child3"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Child 3",
+              "$sequence": "3",
+              "$id": "child3",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "children",
+              "classroom": {
+                "$document": {
+                  "name": "Classroom 2",
+                  "$id": "classroom2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "teacher": {
+                    "$document": {
+                      "name": "Teacher 2",
+                      "$id": "teacher2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")"
+                      ],
+                      "$collection": "teachers"
+                    }
+                  },
+                  "$collection": "classrooms"
+                }
+              }
+            }
           }
         }
       ]

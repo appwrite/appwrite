@@ -16051,9 +16051,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "bulk_delete_library_o2m",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bulk_delete_library_o2m",
+              "twoWayKey": "bulk_delete_person_o2m",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -16096,9 +16105,55 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"bulk_delete_library_o2m\""
+            "$document": {
+              "$id": "person1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Person 1",
+              "$collection": "bulk_delete_person_o2m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
             }
           }
         },
@@ -16109,7 +16164,56 @@
             "id": "person1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Person 1",
+              "$sequence": "1",
+              "$id": "person1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "bulk_delete_person_o2m",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -16117,14 +16221,19 @@
           "args": {
             "collection": "bulk_delete_person_o2m"
           },
-          "expect": 0
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Restricted",
+              "message": "Cannot delete document because it has at least one related document."
+            }
+          }
         },
         {
           "op": "database.delete_documents",
           "args": {
             "collection": "bulk_delete_library_o2m"
           },
-          "expect": 0
+          "expect": 2
         },
         {
           "op": "database.find",
@@ -16138,7 +16247,7 @@
           "args": {
             "collection": "bulk_delete_person_o2m"
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "database.find",
@@ -16165,9 +16274,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Relationship not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "bulk_delete_library_o2m",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bulk_delete_library_o2m",
+              "twoWayKey": "bulk_delete_person_o2m",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -16210,9 +16328,55 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"bulk_delete_library_o2m\""
+            "$document": {
+              "$id": "person1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Person 1",
+              "$collection": "bulk_delete_person_o2m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "4",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
             }
           }
         },
@@ -16223,7 +16387,56 @@
             "id": "person1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Person 1",
+              "$sequence": "2",
+              "$id": "person1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "bulk_delete_person_o2m",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "4",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -16231,7 +16444,7 @@
           "args": {
             "collection": "bulk_delete_library_o2m"
           },
-          "expect": 0
+          "expect": 2
         },
         {
           "op": "database.find",
@@ -16247,7 +16460,21 @@
             "id": "person1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Person 1",
+              "$sequence": "2",
+              "$id": "person1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "bulk_delete_person_o2m",
+              "bulk_delete_library_o2m": []
+            }
           }
         },
         {
@@ -16255,7 +16482,7 @@
           "args": {
             "collection": "bulk_delete_person_o2m"
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "database.find",
@@ -16282,9 +16509,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Relationship not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "bulk_delete_library_o2m",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "bulk_delete_library_o2m",
+              "twoWayKey": "bulk_delete_person_o2m",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -16327,9 +16563,55 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"bulk_delete_library_o2m\""
+            "$document": {
+              "$id": "person1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Person 1",
+              "$collection": "bulk_delete_person_o2m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "5",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "6",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
             }
           }
         },
@@ -16340,7 +16622,56 @@
             "id": "person1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Person 1",
+              "$sequence": "3",
+              "$id": "person1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "bulk_delete_person_o2m",
+              "bulk_delete_library_o2m": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "area": "Area 1",
+                    "$id": "library1",
+                    "$sequence": "5",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Library 2",
+                    "area": "Area 2",
+                    "$id": "library2",
+                    "$sequence": "6",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "bulk_delete_library_o2m"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -16348,7 +16679,7 @@
           "args": {
             "collection": "bulk_delete_library_o2m"
           },
-          "expect": 0
+          "expect": 2
         },
         {
           "op": "database.find",
@@ -16364,7 +16695,21 @@
             "id": "person1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Person 1",
+              "$sequence": "3",
+              "$id": "person1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "bulk_delete_person_o2m",
+              "bulk_delete_library_o2m": []
+            }
           }
         }
       ]

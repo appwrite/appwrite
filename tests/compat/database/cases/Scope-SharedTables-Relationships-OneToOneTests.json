@@ -16371,12 +16371,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
-            }
-          }
+          "expect": 1
         },
         {
           "op": "database.get_document",
@@ -16398,22 +16393,7 @@
                 "delete(\"any\")"
               ],
               "$collection": "oto_select_parent",
-              "child": {
-                "$document": {
-                  "name": "Child",
-                  "$id": "child1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")",
-                    "delete(\"any\")"
-                  ],
-                  "$collection": "oto_select_child"
-                }
-              }
+              "child": null
             }
           }
         },

@@ -2732,9 +2732,80 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "bulk_doc_2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "counter": 20,
+              "score": 3.0,
+              "multiplier": 2.0,
+              "divisor": 100.0,
+              "remainder": 14,
+              "power_val": 3.0,
+              "title": "Title 2",
+              "content": "old content 2",
+              "tags": [
+                "tag_2",
+                "common"
+              ],
+              "categories": [
+                "cat_2",
+                "test"
+              ],
+              "items": [
+                "item_2",
+                "shared",
+                "item_2"
+              ],
+              "duplicates": [
+                "a",
+                "b",
+                "a",
+                "c",
+                "b",
+                "d"
+              ],
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "intersect_items": [
+                "a",
+                "b",
+                "c",
+                "d"
+              ],
+              "diff_items": [
+                "x",
+                "y",
+                "z",
+                "w"
+              ],
+              "filter_numbers": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "active": true,
+              "last_update": "<now>",
+              "next_update": "<now>",
+              "$collection": "test_all_operators_bulk",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "now_field": null
             }
           }
         },
@@ -97132,9 +97203,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'date': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "date",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -97154,9 +97239,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "date_boundary_doc",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "date": "2023-12-31T23:59:59.000+00:00",
+              "$collection": "test_date_boundaries",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -97180,7 +97273,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2024-01-01T23:59:59.000+00:00",
+              "$id": "date_boundary_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97195,7 +97299,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2024-02-28T12:00:00.000+00:00",
+              "$sequence": "1",
+              "$id": "date_boundary_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97218,7 +97333,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2024-02-29T12:00:00.000+00:00",
+              "$id": "date_boundary_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97233,7 +97359,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2023-02-28T12:00:00.000+00:00",
+              "$sequence": "1",
+              "$id": "date_boundary_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97256,7 +97393,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2023-03-01T12:00:00.000+00:00",
+              "$id": "date_boundary_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97271,7 +97419,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2023-01-01T00:00:00.000+00:00",
+              "$sequence": "1",
+              "$id": "date_boundary_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {
@@ -97294,7 +97453,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "date": "2024-01-01T00:00:00.000+00:00",
+              "$id": "date_boundary_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_date_boundaries"
+            }
           }
         },
         {

@@ -6702,9 +6702,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "cities_",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "city",
+              "twoWayKey": "stops",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -6734,7 +6743,8 @@
               "$collection": "cities_",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "1"
+              "$sequence": "1",
+              "stops": []
             }
           }
         },
@@ -6759,9 +6769,35 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "s1",
+              "name": "Stop 1",
+              "coord": [
+                20.0,
+                20.0
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "stops_",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "city": {
+                "$document": {
+                  "name": "City 1",
+                  "$id": "c1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "cities_"
+                }
+              }
             }
           }
         },
@@ -6786,9 +6822,35 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "s2",
+              "name": "Stop 2",
+              "coord": [
+                20.2,
+                20.2
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "stops_",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "city": {
+                "$document": {
+                  "name": "City 1",
+                  "$id": "c1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "cities_"
+                }
+              }
             }
           }
         },
@@ -6815,7 +6877,72 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 1",
+                "coord": [
+                  20.0,
+                  20.0
+                ],
+                "$id": "s1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            },
+            {
+              "$document": {
+                "name": "Stop 2",
+                "coord": [
+                  20.2,
+                  20.2
+                ],
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -6840,7 +6967,40 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 1",
+                "coord": [
+                  20.0,
+                  20.0
+                ],
+                "$id": "s1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -6865,7 +7025,40 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 2",
+                "coord": [
+                  20.2,
+                  20.2
+                ],
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -6890,7 +7083,40 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 2",
+                "coord": [
+                  20.2,
+                  20.2
+                ],
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -6940,7 +7166,40 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 1",
+                "coord": [
+                  20.0,
+                  20.0
+                ],
+                "$id": "s1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -6965,7 +7224,40 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Stop 2",
+                "coord": [
+                  20.2,
+                  20.2
+                ],
+                "$id": "s2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "city": {
+                  "$document": {
+                    "name": "City 1",
+                    "$id": "c1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "cities_"
+                  }
+                },
+                "$collection": "stops_"
+              }
+            }
+          ]
         },
         {
           "op": "database.get_document",
@@ -6984,7 +7276,45 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$collection": "cities_"
+              "$collection": "cities_",
+              "stops": [
+                {
+                  "$document": {
+                    "name": "Stop 1",
+                    "coord": [
+                      20.0,
+                      20.0
+                    ],
+                    "$id": "s1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "stops_"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Stop 2",
+                    "coord": [
+                      20.2,
+                      20.2
+                    ],
+                    "$id": "s2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "stops_"
+                  }
+                }
+              ]
             }
           }
         },
@@ -6993,12 +7323,7 @@
           "args": {
             "collection": "stops_"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.delete_collection",

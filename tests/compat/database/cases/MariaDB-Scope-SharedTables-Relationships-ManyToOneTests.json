@@ -7796,9 +7796,61 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "book1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Book 1",
+              "$collection": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "entrant": {
+                "$document": {
+                  "name": "Entrant 1",
+                  "$id": "entrant1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "entrants",
+                  "rooms": [
+                    {
+                      "$document": {
+                        "name": "Class 1",
+                        "$id": "class1",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "rooms"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Class 2",
+                        "$id": "class2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "rooms"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         },
@@ -7809,7 +7861,62 @@
             "id": "book1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Book 1",
+              "$sequence": "1",
+              "$id": "book1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "books",
+              "entrant": {
+                "$document": {
+                  "name": "Entrant 1",
+                  "$id": "entrant1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "entrants",
+                  "rooms": [
+                    {
+                      "$document": {
+                        "name": "Class 1",
+                        "$id": "class1",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "rooms"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Class 2",
+                        "$id": "class2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "rooms"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       ]

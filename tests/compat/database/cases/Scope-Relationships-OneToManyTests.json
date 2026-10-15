@@ -18449,9 +18449,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_author': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "books_u000000000300",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "books",
+              "twoWayKey": "author",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -18482,9 +18491,34 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"books\""
+            "$document": {
+              "$id": "author1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "John Doe",
+              "bio": "A great author",
+              "$collection": "authors_u000000000299",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "books": [
+                {
+                  "$document": {
+                    "title": "First Book",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                }
+              ]
             }
           }
         },
@@ -18514,7 +18548,7 @@
               "$collection": "books_u000000000300",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "1"
+              "$sequence": "2"
             }
           }
         },
@@ -18525,7 +18559,35 @@
             "id": "author1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "John Doe",
+              "bio": "A great author",
+              "$sequence": "1",
+              "$id": "author1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "authors_u000000000299",
+              "books": [
+                {
+                  "$document": {
+                    "title": "First Book",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -18549,7 +18611,49 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "John Doe",
+              "bio": "A great author",
+              "$sequence": "1",
+              "$id": "author1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "authors_u000000000299",
+              "books": [
+                {
+                  "$document": {
+                    "title": "First Book",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Second Book",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -18559,7 +18663,49 @@
             "id": "author1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "John Doe",
+              "bio": "A great author",
+              "$sequence": "1",
+              "$id": "author1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "authors_u000000000299",
+              "books": [
+                {
+                  "$document": {
+                    "title": "First Book",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Second Book",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "books_u000000000300"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -18569,7 +18715,33 @@
             "id": "book1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "First Book",
+              "$sequence": "1",
+              "$id": "book1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "books_u000000000300",
+              "author": {
+                "$document": {
+                  "name": "John Doe",
+                  "bio": "A great author",
+                  "$id": "author1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "authors_u000000000299"
+                }
+              }
+            }
           }
         },
         {
@@ -18581,7 +18753,7 @@
           "expect": {
             "$document": {
               "title": "Second Book",
-              "$sequence": "1",
+              "$sequence": "2",
               "$id": "book2",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -18589,7 +18761,22 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$collection": "books_u000000000300"
+              "$collection": "books_u000000000300",
+              "author": {
+                "$document": {
+                  "name": "John Doe",
+                  "bio": "A great author",
+                  "$id": "author1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "authors_u000000000299"
+                }
+              }
             }
           }
         },

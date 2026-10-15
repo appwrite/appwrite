@@ -33502,9 +33502,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'body': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -34189,9 +34201,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Index",
-              "message": "Invalid index attribute \"body\" not found"
+            "$value": "Index",
+            "fields": {
+              "key": "idx_jh_meta_body",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
             }
           }
         },
@@ -34310,9 +34331,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-10",
+              "mainId": "hm1",
+              "score": 10,
+              "secret": "visible",
+              "label": "visible-ten",
+              "body": "hard-needle visible",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -34335,9 +34367,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-313",
+              "mainId": "hm1",
+              "score": 313,
+              "secret": "visible-313",
+              "label": "visible-high",
+              "body": "other text",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -34360,9 +34403,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-20",
+              "mainId": "hm2",
+              "score": 20,
+              "secret": "visible-20",
+              "label": "visible-m2",
+              "body": "m2 text",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
             }
           }
         },
@@ -34385,9 +34439,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-15",
+              "mainId": "hm3",
+              "score": 15,
+              "secret": "visible-15",
+              "label": "visible-third",
+              "body": "third text",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
             }
           }
         },
@@ -34410,9 +34475,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-secret",
+              "mainId": "hm1",
+              "score": 8686,
+              "secret": "combo-hard-alpha",
+              "label": "hidden-label",
+              "body": "hidden-search",
+              "$permissions": [
+                "read(\"user:combo-hard-hidden\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5"
             }
           }
         },
@@ -34435,9 +34511,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"body\""
+            "$document": {
+              "$id": "hm-meta-orphan",
+              "mainId": "missing",
+              "score": 42,
+              "secret": "orphan-visible",
+              "label": "orphan",
+              "body": "orphan text",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
             }
           }
         },
@@ -34873,7 +34960,22 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Main",
+                "meta.score": 10,
+                "$id": "hm1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jh_m"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
