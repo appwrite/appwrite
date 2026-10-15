@@ -307,7 +307,12 @@ final readonly class Aggregation
         $attribute = $query->getAttribute();
         $alias = $attribute === '*' || $attribute === '' ? $method : $method . '_' . $attribute;
 
-        return \substr((string) \preg_replace('/[^A-Za-z0-9_]/', '_', $alias), 0, AggregateValidator::MAX_ALIAS_LENGTH);
+        $sanitized = '';
+        foreach (\str_split($alias) as $character) {
+            $sanitized .= \ctype_alnum($character) || $character === '_' ? $character : '_';
+        }
+
+        return \substr($sanitized, 0, AggregateValidator::MAX_ALIAS_LENGTH);
     }
 
     /**
