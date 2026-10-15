@@ -133,7 +133,7 @@ class Create extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($session, Response::MODEL_SESSION);

@@ -300,7 +300,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $queueForEvents
         ->setParam('userId', $user->getId())
         ->setParam('sessionId', $session->getId())
-        ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
+        ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -742,7 +742,7 @@ Http::delete('/v1/account/sessions')
                 // Use current session for events.
                 $currentSession = $session;
                 $queueForEvents
-                    ->setPayload($response->output($session, Response::MODEL_SESSION));
+                    ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
                 $publisherForDeletes->enqueue(new DeleteMessage(
                     project: $queueForEvents->getProject(),
@@ -894,7 +894,7 @@ Http::delete('/v1/account/sessions/:sessionId')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION));
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
             $publisherForDeletes->enqueue(new DeleteMessage(
                 project: $queueForEvents->getProject(),
@@ -1011,7 +1011,7 @@ Http::patch('/v1/account/sessions/:sessionId')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1207,7 +1207,7 @@ Http::post('/v1/account/sessions/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret'])
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -1380,7 +1380,7 @@ Http::post('/v1/account/sessions/anonymous')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret'])
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -2343,7 +2343,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $queueForEvents
                 ->setParam('userId', $user->getId())
                 ->setParam('sessionId', $session->getId())
-                ->setPayload($response->output($session, Response::MODEL_SESSION))
+                ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
             ;
 
             // TODO: Remove this deprecated workaround - support only token

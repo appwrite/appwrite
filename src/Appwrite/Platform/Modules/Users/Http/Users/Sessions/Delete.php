@@ -88,7 +88,7 @@ class Delete extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $sessionId)
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->noContent();
     }
