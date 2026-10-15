@@ -156,20 +156,12 @@ final class FileTest extends TestCase
 
         if ($pid === 0) {
             $child = new File($this->path);
-            $acquired = $child->tryAcquire();
-            file_put_contents($ready, $acquired ? '1' : '0');
-
-            $waited = 0.0;
-            while ($waited < 5.0 && file_get_contents($started) !== '1') {
+            file_put_contents($ready, $child->tryAcquire() ? '1' : '0');
+            while (file_get_contents($started) !== '1') {
                 usleep(10_000);
-                $waited += 0.01;
             }
-
-            if ($acquired) {
-                usleep(300_000);
-                $child->release();
-            }
-
+            usleep(300_000);
+            $child->release();
             exit(0);
         }
 
@@ -179,41 +171,18 @@ final class FileTest extends TestCase
                 usleep(10_000);
             }
 
-            $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire the lock');
+            $this->assertSame('1', file_get_contents($ready), 'Child failed to acquire');
 
             $parent = new File($this->path);
             $start = microtime(true);
             file_put_contents($started, '1');
-            $this->assertTrue($parent->acquire(-1.0), 'Negative timeout must wait until the lock is released');
-            $elapsed = microtime(true) - $start;
-            $this->assertGreaterThanOrEqual(0.25, $elapsed, 'Acquire must have blocked until the holder released');
-            $parent->release();
+            $this->assertTrue($parent->acquire(-1.0));
+            $this->assertGreaterThanOrEqual(0.25, microtime(true) - $start);
         } finally {
             file_put_contents($started, '1');
-            $this->reapChild($pid);
+            pcntl_waitpid($pid, $status);
             @unlink($ready);
             @unlink($started);
-        }
-    }
-
-
-    private function reapChild(int $pid): void
-    {
-        // Bounded, portable reaping without ext-posix. Every child operation is
-        // bounded: non-blocking flock attempts, a bounded wait for the started
-        // signal, and a 300ms hold, so the child always exits on its own. If it
-        // somehow outlives the poll window, leave it to be reaped when the test
-        // process exits rather than blocking the suite on an unbounded wait.
-        $deadline = microtime(true) + 7.0;
-
-        while (microtime(true) < $deadline) {
-            $result = pcntl_waitpid($pid, $status, WNOHANG);
-
-            if ($result === $pid || $result === -1) {
-                return;
-            }
-
-            usleep(10_000);
         }
     }
 }
