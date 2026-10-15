@@ -158,7 +158,8 @@ impl Query {
         let Some(epoch) = self.epoch(&key, collection, scope.writer_timeout).await? else {
             return Ok(None);
         };
-        let field = md5_serialized(&assoc(vec![("queries", queries.clone()), ("context", Value::Str(Str::from(context)))]));
+        let field =
+            md5_serialized(&assoc(vec![("queries", queries.clone()), ("context", Value::Str(Str::from(context)))]));
         // hexdec() of 8 hex digits always fits an integer.
         let slot = i64::from_str_radix(&field[..8], 16).unwrap_or(0) % self.slots;
         Ok(Some(Entry { key, collection: collection.to_owned(), field, epoch, slot: slot.to_string() }))

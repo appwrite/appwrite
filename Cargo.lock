@@ -4306,6 +4306,7 @@ dependencies = [
  "futures-util",
  "getrandom 0.3.4",
  "hex",
+ "indexmap",
  "md-5 0.10.6",
  "mysql_async",
  "php-std",

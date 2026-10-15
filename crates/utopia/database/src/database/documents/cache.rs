@@ -180,7 +180,11 @@ impl Database {
         if let Some(c) = &context {
             let mut state = c.state();
             ContextState::put(&mut state.document_cache_mutations, collection_key.to_owned(), token);
-            ContextState::put(&mut state.document_cache_definitions, collection_key.to_owned(), definition_key.to_owned());
+            ContextState::put(
+                &mut state.document_cache_definitions,
+                collection_key.to_owned(),
+                definition_key.to_owned(),
+            );
             return Ok(true);
         }
         self.activate_document_cache_epoch(collection_key, &token, definition_key).await?;
@@ -191,7 +195,12 @@ impl Database {
     /// that carried the previous epoch, so readers refill it with the
     /// tombstone (`blockDocumentCacheEpoch()`). `false` when the owner
     /// cannot be registered on a cache that holds no epoch.
-    async fn block_document_cache_epoch(&self, collection_key: &str, token: &str, definition_key: &str) -> Result<bool> {
+    async fn block_document_cache_epoch(
+        &self,
+        collection_key: &str,
+        token: &str,
+        definition_key: &str,
+    ) -> Result<bool> {
         let cache = self.cache();
         let epoch_key = format!("{collection_key}#epoch");
         if !Owners::new(cache.clone()).register(collection_key, token).await? {
@@ -239,7 +248,12 @@ impl Database {
     /// Replaces this write's tombstone with a fresh epoch once no other
     /// write to the collection is in flight; writes older than the writer
     /// timeout no longer count as in flight (`activateDocumentCacheEpoch()`).
-    async fn activate_document_cache_epoch(&self, collection_key: &str, token: &str, definition_key: &str) -> Result<()> {
+    async fn activate_document_cache_epoch(
+        &self,
+        collection_key: &str,
+        token: &str,
+        definition_key: &str,
+    ) -> Result<()> {
         let cache = self.cache();
         let registration = Owners::new(cache.clone()).find(collection_key, token).await?;
         let owner = cache.load(&registration.key, TTL, &registration.field).await?;
@@ -266,8 +280,8 @@ impl Database {
         let loaded = cache.load(&epoch_key, PERMANENT, "").await?;
         let epoch = string(&loaded);
         let blocked = epoch.as_deref().is_some_and(|e| e.starts_with(BLOCKED_PREFIX));
-        let ours = blocked
-            && epoch.as_deref().is_some_and(|e| e.starts_with(&format!("{BLOCKED_PREFIX}{token}{SEPARATOR}")));
+        let ours =
+            blocked && epoch.as_deref().is_some_and(|e| e.starts_with(&format!("{BLOCKED_PREFIX}{token}{SEPARATOR}")));
 
         if started == finished {
             if !blocked || ours {
@@ -312,7 +326,12 @@ impl Database {
     /// Publishes a fresh epoch carrying the started generation
     /// (`publishDocumentCacheEpoch()`): until the next write starts, it is
     /// current even while writes judged abandoned still count as unfinished.
-    async fn publish_document_cache_epoch(&self, collection_key: &str, started: &str, definition_key: &str) -> Result<()> {
+    async fn publish_document_cache_epoch(
+        &self,
+        collection_key: &str,
+        started: &str,
+        definition_key: &str,
+    ) -> Result<()> {
         let epoch_key = format!("{collection_key}#epoch");
         let epoch = format!("{ACTIVE_PREFIX}{}{SEPARATOR}{started}", random_hex());
         if !self.cache().save(&epoch_key, &text(&epoch), "", 0).await? {
@@ -673,3 +692,7 @@ fn contains_document(value: &Value) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+#[path = "cache_tests.rs"]
+mod tests;

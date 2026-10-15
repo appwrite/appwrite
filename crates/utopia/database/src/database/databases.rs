@@ -65,8 +65,11 @@ impl Database {
         if adapter.shared_tables() {
             return Err(Error::database("Cannot rename a database while shared tables are enabled"));
         }
-        let collections =
-            if adapter.exists(database).await? { self.in_database(database, self.collection_ids()).await? } else { Vec::new() };
+        let collections = if adapter.exists(database).await? {
+            self.in_database(database, self.collection_ids()).await?
+        } else {
+            Vec::new()
+        };
         if !adapter.update(database, new).await? {
             return Err(Error::refused(format!("Failed to rename database '{database}' to '{new}'")));
         }

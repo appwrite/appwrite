@@ -184,14 +184,16 @@ pub(crate) fn extract_collections(event: Event, target: &Target) -> Vec<String> 
     let mut collections = Vec::new();
     match target {
         Target::Document(document) => {
-            let collection = if matches!(event, Event::CollectionCreate | Event::CollectionUpdate | Event::CollectionDelete)
-            {
-                document.id()
-            } else if document.collection() == crate::database::METADATA {
-                document.id()
-            } else {
-                document.collection()
-            };
+            // A collection event's document is a definition, as is any
+            // document of the metadata collection.
+            let collection =
+                if matches!(event, Event::CollectionCreate | Event::CollectionUpdate | Event::CollectionDelete)
+                    || document.collection() == crate::database::METADATA
+                {
+                    document.id()
+                } else {
+                    document.collection()
+                };
             if !collection.is_empty() {
                 collections.push(collection.to_owned());
             }

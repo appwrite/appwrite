@@ -20,6 +20,11 @@ mod invalidator;
 mod owners;
 mod query;
 
+#[cfg(test)]
+pub(crate) mod testing;
+#[cfg(test)]
+mod tests;
+
 pub use invalidator::Invalidator;
 pub use owners::Owners;
 pub use query::Query;
