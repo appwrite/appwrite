@@ -30,6 +30,44 @@ type Diagnostic = {
   message: string
 }
 
+const SEPARATOR = ' | '
+
+function literalAt(text: string, start: number): string | null {
+  if (text[start] !== '"') {
+    return null
+  }
+  const end = text.indexOf('"', start + 1)
+  return end === -1 ? null : text.slice(start, end + 1)
+}
+
+// tsc prints a union in the order its members were first created, which shifts
+// when unrelated code mentions one of them, so compare literal unions sorted.
+function sortUnions(message: string): string {
+  let result = ''
+  let index = 0
+  while (index < message.length) {
+    const first = literalAt(message, index)
+    if (first === null) {
+      result += message[index]
+      index++
+      continue
+    }
+    const members = [first]
+    let end = index + first.length
+    while (message.startsWith(SEPARATOR, end)) {
+      const next = literalAt(message, end + SEPARATOR.length)
+      if (next === null) {
+        break
+      }
+      members.push(next)
+      end += SEPARATOR.length + next.length
+    }
+    result += members.sort().join(SEPARATOR)
+    index = end
+  }
+  return result
+}
+
 // `src/a.tsx(12,5): error TS2339: Property 'x'...` -> `src/a.tsx`, `TS2339: Property 'x'...`
 function parse(line: string): Diagnostic | null {
   const start = line.indexOf(MARKER)
@@ -37,7 +75,9 @@ function parse(line: string): Diagnostic | null {
     return null
   }
   // Messages can quote absolute module paths, which differ between machines.
-  const message = line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, '')
+  const message = sortUnions(
+    line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, ''),
+  )
   if (start === 0) {
     return { file: GLOBAL, message }
   }
@@ -78,6 +118,19 @@ function group(diagnostics: Diagnostic[]): Baseline {
     baseline[file][message] = (baseline[file][message] ?? 0) + 1
   }
   return baseline
+}
+
+// Baselines written before unions were sorted still match.
+function normalize(baseline: Baseline): Baseline {
+  const result: Baseline = {}
+  for (const [file, messages] of Object.entries(baseline)) {
+    result[file] = {}
+    for (const [message, count] of Object.entries(messages)) {
+      const key = sortUnions(message)
+      result[file][key] = (result[file][key] ?? 0) + count
+    }
+  }
+  return result
 }
 
 const sorted = (baseline: Baseline): Baseline =>
@@ -143,7 +196,8 @@ function against(baseline: Baseline): string[] {
     console.log(`No baseline at ${ref}, nothing to compare against.`)
     return []
   }
-  return compare(JSON.parse(result.stdout.toString()), baseline).added
+  return compare(normalize(JSON.parse(result.stdout.toString())), baseline)
+    .added
 }
 
 async function main() {
@@ -157,7 +211,7 @@ async function main() {
     return
   }
 
-  const baseline: Baseline = await Bun.file(BASELINE).json()
+  const baseline = normalize(await Bun.file(BASELINE).json())
   const { added, fixed } = compare(baseline, current)
   const grown = against(baseline)
 
