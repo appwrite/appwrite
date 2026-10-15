@@ -171,6 +171,12 @@ macro_rules! forward_statement {
 }
 
 impl SqlBuilder {
+    /// The refusal a call returning the builder kept for the next statement,
+    /// taken: PHP throws it from that call (`requireUnbound()`).
+    pub fn take_refusal(&mut self) -> Option<utopia_query::Error> {
+        each_builder!(&mut *self, b => b.take_refusal())
+    }
+
     forward! {
         /// `from($table, $alias)`: on a scoped builder, a collection id.
         fn from(&mut self, table: &str, alias: &str);
@@ -211,9 +217,6 @@ impl SqlBuilder {
         fn set(&mut self, row: utopia_query::Array);
         /// `scope($scope)`: fails once the builder read a collection.
         fn scope(&mut self, scope: Arc<dyn Scope>);
-        /// `from($table, $alias)`, failing at once (as PHP throws) when a
-        /// bound builder is given another collection or alias.
-        fn from_checked(&mut self, table: &str, alias: &str);
         /// `fromTable($table, $alias)`: fails once the builder read a collection.
         fn from_table(&mut self, table: &str, alias: &str);
         /// `addHook($hook)`.

@@ -510,12 +510,15 @@ mod scopes {
     }
 
     #[test]
-    fn from_checked_refuses_another_alias_at_once() {
+    fn a_refusal_is_taken_from_the_call_that_made_it() {
         let (mut b, _) = scoped();
-        b.from_checked("users", "").unwrap();
-        let error = database_error(b.from_checked("users", "u").err().unwrap());
+        b.from("users", "");
+        assert!(b.take_refusal().is_none());
+        b.from("users", "u");
+        let error = database_error(b.take_refusal().unwrap());
         assert_eq!(error.message(), "The builder reads collection 'users', not 'users' as 'u': start another builder");
-        assert!(b.from_checked("users", "").is_ok(), "the same collection and alias keep the binding");
+        b.from("users", "");
+        assert!(b.take_refusal().is_none(), "the same collection and alias keep the binding");
         b.build().unwrap();
     }
 
