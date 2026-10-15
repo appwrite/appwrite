@@ -10,12 +10,11 @@ use std::sync::Arc;
 use utopia_audit::{Audit, Page, Range, adapter};
 use utopia_cache::{Cache, None as NoCache};
 use utopia_database::adapter::memory::Memory;
-use utopia_database::{Authorization, Database};
+use utopia_database::Database;
 
 tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
-    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))), Vec::new());
-    db.set_authorization(Arc::new(Authorization::new()));
-    db.set_database("audit")?;
+    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
+    db.set_database("audit");
     db.create(None).await?;
 
     let audit = Audit::new(adapter::Database::new(db));
@@ -69,7 +68,7 @@ use php_std::{Array, Value};
 use utopia_audit::{Audit, DateTime, Page, Range, adapter};
 use utopia_cache::{Cache, None as NoCache};
 use utopia_database::adapter::memory::Memory;
-use utopia_database::{Authorization, Database};
+use utopia_database::Database;
 
 fn log(event: &str, time: &str) -> Array {
     let json = serde_json::json!({
@@ -83,9 +82,8 @@ fn log(event: &str, time: &str) -> Array {
 }
 
 tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
-    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))), Vec::new());
-    db.set_authorization(Arc::new(Authorization::new()));
-    db.set_database("audit")?;
+    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
+    db.set_database("audit");
     db.create(None).await?;
     let audit = Audit::new(adapter::Database::new(db));
     audit.setup().await?;
@@ -150,12 +148,11 @@ use std::sync::Arc;
 use utopia_audit::{Audit, Query, adapter, query};
 use utopia_cache::{Cache, None as NoCache};
 use utopia_database::adapter::memory::Memory;
-use utopia_database::{Authorization, Database};
+use utopia_database::Database;
 
 tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
-    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))), Vec::new());
-    db.set_authorization(Arc::new(Authorization::new()));
-    db.set_database("audit")?;
+    let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
+    db.set_database("audit");
     db.create(None).await?;
     let audit = Audit::new(adapter::Database::new(db));
     audit.setup().await?;
@@ -257,7 +254,7 @@ echo $document['resourceType'], ' ', $document['resourceId'], ' ', $document['re
 
 ## How it is built
 
-`Audit<A>` is generic over its `Adapter`, so calls dispatch statically; `Audit<Box<dyn Adapter>>` (or `Arc`, or `&A`) takes one chosen at run time. Implement `Adapter` to keep logs anywhere else. The SQL adapters share their schema through `schema::Sql`: attribute and index definitions (as PHP's arrays with `to_array`), and the column definition of each backend.
+`Audit<A>` is generic over its `Adapter`, so calls dispatch statically; `Audit<Box<dyn Adapter>>` (or `Arc`, or `&A`) takes one chosen at run time. Implement `Adapter` to keep logs anywhere else. The SQL adapters share their schema through `schema::Sql`: attribute and index definitions (utopia-database's `Attribute` and `Index` models, as PHP's database 8 schema), and the column definition of each backend.
 
 The ClickHouse adapter is generic over its transport, any `utopia_client::Adapter`: the default is a `utopia_client::Client` over `Http`, with PHP's 30 second timeout, redirects followed and connections reused. It builds its statements with `utopia-query`'s ClickHouse builder and schema, with typed `{paramN:Type}` parameters sent as multipart form fields (`utopia_client::multipart`), and inserts batches as `JSONEachRow` bodies, byte for byte as PHP sends them.
 

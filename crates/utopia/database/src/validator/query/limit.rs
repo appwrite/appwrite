@@ -2,29 +2,27 @@
 //!
 //! PHP: `Utopia\Database\Validator\Query\Limit`.
 
-use php_std::value::Number;
-use utopia_validators::{Numeric, Range, Type, Validator as _};
+use utopia_query::{Method, Value as QValue};
+use utopia_validators::{Numeric, Range};
 
-use crate::query::{Method, Query};
-use crate::validator::query::base::{INVALID_QUERY, MethodType, query_validator};
-use crate::validator::{Message, accepts};
+use crate::validator::Message;
+use crate::validator::query::base::{INVALID_QUERY, MethodType, query_of, query_validator, rejection};
 use crate::value::Value;
 
-/// A `limit` query whose value is a number between 1 and `max_limit`.
+/// A `limit` query whose value is a number from 1 to `max_limit`.
 ///
 /// ```
-/// use utopia_database::query::{Method, Query};
+/// use utopia_database::Query;
 /// use utopia_database::validator::query::limit::Limit;
-/// use utopia_database::value::Value;
 ///
 /// let limit = Limit::new(100);
-/// assert!(limit.check(&Query::new(Method::Limit, "", vec![Value::Int(25)])));
-/// assert!(!limit.check(&Query::new(Method::Limit, "", vec![Value::Int(101)])));
+/// assert!(limit.check(&Query::limit(100)));
+/// assert!(!limit.check(&Query::limit(0)));
 /// assert_eq!(limit.description(), "Invalid limit: Value must be a valid range between 1 and 100");
 /// ```
 ///
 /// PHP: `Utopia\Database\Validator\Query\Limit` (`new Limit($maxLimit)`).
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Limit {
     max_limit: i64,
     message: Message,
@@ -33,14 +31,14 @@ pub struct Limit {
 impl Default for Limit {
     /// `new Limit()`: up to `PHP_INT_MAX`.
     fn default() -> Self {
-        Self::new(i64::MAX)
+        Limit::new(i64::MAX)
     }
 }
 
 impl Limit {
     /// `new Limit($maxLimit)`.
     pub fn new(max_limit: i64) -> Self {
-        Self { max_limit, message: Message::new(INVALID_QUERY) }
+        Limit { max_limit, message: Message::new(INVALID_QUERY) }
     }
 
     /// `getDescription()`.
@@ -48,20 +46,24 @@ impl Limit {
         self.message.get()
     }
 
+    /// `isValid($value)`: anything but a query is refused.
+    pub fn is_valid(&self, value: &Value) -> bool {
+        query_of(value).is_some_and(|q| self.check(q))
+    }
+
     /// `isValid($query)`.
-    pub fn check(&self, query: &Query) -> bool {
-        if query.method() != &Method::Limit {
-            self.message.set(format!("Invalid query method: {}", query.method()));
+    pub fn check(&self, query: &utopia_query::Query) -> bool {
+        if query.method() != Method::Limit {
+            self.message.set(format!("Invalid query method: {}", query.method().as_str()));
             return false;
         }
-        let limit = query.value().unwrap_or(&Value::Null);
-        if !accepts(&Numeric, limit) {
-            self.message.set(format!("Invalid limit: {}", Numeric.description()));
+        let limit = query.value().unwrap_or(&QValue::Null);
+        if let Some(message) = rejection(&Numeric, limit) {
+            self.message.set(format!("Invalid limit: {message}"));
             return false;
         }
-        let range = Range::with_format(Number::Int(1), Number::Int(self.max_limit), Type::Integer);
-        if !accepts(&range, limit) {
-            self.message.set(format!("Invalid limit: {}", range.description()));
+        if let Some(message) = rejection(&Range::new(1, self.max_limit), limit) {
+            self.message.set(format!("Invalid limit: {message}"));
             return false;
         }
         true

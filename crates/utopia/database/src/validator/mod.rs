@@ -9,25 +9,28 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Validator\Attribute` | [`attribute::Attribute`] |
-//! | `Validator\BigInt` | [`big_int::BigInt`] |
+//! | `Validator\AttributeDefinition` | [`attribute_definition::AttributeDefinition`] |
+//! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
+//! | `Validator\BigInt` | [`big_int::BigInt`], [`big_int::Integer`], [`big_int::Operand`] |
 //! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
-//! | `Validator\Datetime` | [`datetime::Datetime`] |
-//! | `Validator\Index` | [`index::Index`] |
+//! | `Validator\Datetime` | [`datetime::Datetime`], [`datetime::Precision`] |
+//! | `Validator\IndexDefinition` | [`index_definition::IndexDefinition`] |
 //! | `Validator\IndexDependency` | [`index_dependency::IndexDependency`] |
-//! | `Validator\IndexedQueries` | [`indexed_queries::IndexedQueries`] |
 //! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
-//! | `Validator\ObjectValidator` | [`object::ObjectValidator`] |
+//! | `Validator\ObjectPath` | [`object_path::ObjectPath`] |
+//! | `Validator\ObjectValue` | [`object_value::ObjectValue`] |
 //! | `Validator\Operator` | [`operator::Operator`] |
 //! | `Validator\PartialStructure` | [`partial_structure::PartialStructure`] |
 //! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
-//! | `Validator\Queries` | [`queries::Queries`] |
-//! | `Validator\Queries\Document`, `Queries\Documents` | [`queries::document::Document`], [`queries::documents::Documents`] |
-//! | `Validator\Query\Base` | [`query::base::QueryValidator`], [`query::base::MethodType`] |
-//! | `Validator\Query\{Cursor, Filter, Limit, Offset, Order, Select}` | [`query::cursor::Cursor`], [`query::filter::Filter`], [`query::limit::Limit`], [`query::offset::Offset`], [`query::order::Order`], [`query::select::Select`] |
+//! | `Validator\Queries\Base` | [`queries::base::Queries`] (lists of [`queries::base::QueryEntry`]) |
+//! | `Validator\Queries\Document`, `Documents`, `Indexed`, `Narrow` | [`queries::document::Document`], [`queries::documents::Documents`], [`queries::indexed::Indexed`], [`queries::narrow::Narrow`] |
+//! | `Validator\Query\Base` | [`query::base::QueryValidator`] (trait), [`query::base::MethodType`] (`METHOD_TYPE_*`) |
+//! | `Validator\Query\Aggregate`, `Cursor`, `Distinct`, `Filter` | [`query::aggregate::Aggregate`], [`query::cursor::Cursor`], [`query::distinct::Distinct`], [`query::filter::Filter`] |
+//! | `Validator\Query\GroupBy`, `Having`, `Join`, `Limit`, `Offset`, `Order`, `Select` | [`query::group_by::GroupBy`], [`query::having::Having`], [`query::join::Join`], [`query::limit::Limit`], [`query::offset::Offset`], [`query::order::Order`], [`query::select::Select`] |
+//! | `Validator\Query\Joined\Collection`, `Joined\Attributes` | [`query::joined::collection::Collection`] (with [`query::joined::collection::Definition`]), [`query::joined::attributes::Joins`] |
 //! | `Validator\Sequence` | [`sequence::Sequence`] |
 //! | `Validator\Spatial` | [`spatial::Spatial`] |
-//! | `Validator\Structure` (and its format registry) | [`structure::Structure`], [`structure::formats`] |
+//! | `Validator\Structure` (formats: `addFormat`, `hasFormat`, `getFormat`, `removeFormat`) | [`structure::Structure`], [`structure::formats`] |
 //! | `Validator\Vector` | [`vector::Vector`] |
 //!
 //! # State
@@ -37,23 +40,25 @@
 //! lock, so a validator is `Sync`): [`utopia_validators::Validator::description`]
 //! and each validator's inherent `description()` read it after `is_valid`.
 
+#![allow(dead_code)] // helpers of the validators still being ported
+
 use std::borrow::Cow;
 use std::sync::Mutex;
 
 use crate::document::Document;
 use crate::value::{ArrayKey, Str, Value};
 
-pub mod attribute;
+pub mod attribute_definition;
 pub mod authorization;
 pub mod big_int;
 pub mod byte_length;
 pub mod datetime;
-pub mod index;
+pub mod index_definition;
 pub mod index_dependency;
-pub mod indexed_queries;
 pub mod key;
 pub mod label;
-pub mod object;
+pub mod object_path;
+pub mod object_value;
 pub mod operator;
 pub mod partial_structure;
 pub mod permissions;

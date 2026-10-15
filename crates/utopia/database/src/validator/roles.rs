@@ -2,7 +2,7 @@
 //!
 //! PHP: `Utopia\Database\Validator\Roles`.
 
-use crate::helpers::role::{Role, RoleName, falsy};
+use crate::role::{Role, RoleName, falsy};
 use crate::validator::Message;
 use crate::validator::key::Key;
 use crate::validator::label::Label;

@@ -1,7 +1,8 @@
 //! Passkeys (authenticators of type `passkey`).
 
-use utopia_database::query::Grouped;
-use utopia_database::{Database, Document, Query, Value};
+use utopia_database::PermissionType;
+use utopia_database::query::ParsedQuery;
+use utopia_database::{Document, Query, Value};
 use utopia_http::Response;
 use utopia_validators::Text;
 
@@ -36,7 +37,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let mut queries = ctx.queries(&collections::PASSKEYS)?;
     let include_total = ctx.optional_bool("total", true)?;
     let user = base::user_or_404(ctx, &user_id, &[]).await?;
-    queries.push(Query::equal("userInternalId", [documents::internal_id(user.sequence)]));
+    queries.push(Query::equal("userInternalId", [user.sequence.to_string()]));
     queries.push(Query::equal("type", [PASSKEY]));
     queries.push(Query::equal("verified", [true]));
     let db = ctx.db()?;
@@ -50,8 +51,8 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         }
         base::set_cursor(&mut queries, cursor);
     }
-    let Grouped { filters, .. } = Query::group_by_type(&queries);
-    let passkeys = db.find("authenticators", queries, Database::PERMISSION_READ).await?;
+    let ParsedQuery { filters, .. } = Query::group_by_type(&queries)?;
+    let passkeys = db.find("authenticators", queries, PermissionType::Read).await?;
     let total = if include_total { db.count("authenticators", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     let passkeys: Vec<Authenticator> = documents::all(&passkeys);
     Ok(ctx.ok(&PasskeyListModel { total, passkeys: &passkeys }))
@@ -75,9 +76,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     owned(ctx, &user, &passkey_id, true).await?;
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("name", Value::from(name.as_str()));
+    updates.put("name", Value::from(name.as_str()));
     let updated = db.update_document("authenticators", &passkey_id, updates).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.ok(&PasskeyModel { passkey: &Authenticator::from(&updated) }))
 }
 
@@ -89,6 +90,6 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     owned(ctx, &user, &passkey_id, false).await?;
     let db = ctx.db()?;
     db.delete_document("authenticators", &passkey_id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.no_content())
 }

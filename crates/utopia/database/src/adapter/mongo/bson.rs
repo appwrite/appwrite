@@ -17,7 +17,7 @@ fn key(k: KeyRef<'_>) -> Result<String> {
         KeyRef::Int(i) => Ok(i.to_string()),
         KeyRef::Str(s) => String::from_utf8(s.to_vec()).map_err(|_| {
             Error::new(
-                Kind::Database,
+                Kind::MongoUnexpectedValue,
                 format!("Detected invalid UTF-8 for field path \"\": {}", String::from_utf8_lossy(s)),
             )
         }),
@@ -73,19 +73,6 @@ pub(crate) fn value(v: &Value) -> Result<Bson> {
     })
 }
 
-/// `(string) $value`, with the BSON objects' `__toString()`: an ObjectId's
-/// hex, a UTCDateTime's milliseconds, a Regex as `/pattern/flags`.
-pub(crate) fn php_string(value: &Value) -> Str {
-    match value {
-        Value::Ext(Ext::Bson(b)) => Str::from(match &**b {
-            BsonValue::ObjectId(bytes) => hex::encode(bytes),
-            BsonValue::UtcDateTime(ms) => ms.to_string(),
-            BsonValue::Regex { pattern, flags } => format!("/{pattern}/{flags}"),
-        }),
-        other => other.to_php_string().unwrap_or(Str::EMPTY),
-    }
-}
-
 /// A BSON value as PHP decodes it: documents are `stdClass`, arrays
 /// lists, every integer a PHP integer (utopia-php/mongo unwraps `Int64`).
 pub(crate) fn decode(b: &Bson) -> Value {
@@ -138,16 +125,4 @@ pub(crate) fn to_array(value: &Value) -> Array {
             (k.to_owned(), v)
         })
         .collect()
-}
-
-/// The adapter's `convertStdClassToArray()`: every non-empty `stdClass`
-/// in `value` as an array (empty ones kept), recursively through arrays.
-pub(crate) fn std_class_to_array(value: Value) -> Value {
-    match value {
-        Value::Object(a) if a.is_empty() => Value::Object(a),
-        Value::Object(a) | Value::Array(a) => {
-            Value::Array(a.into_iter().map(|(k, v)| (k, std_class_to_array(v))).collect())
-        }
-        other => other,
-    }
 }

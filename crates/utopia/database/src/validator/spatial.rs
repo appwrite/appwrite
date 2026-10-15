@@ -2,9 +2,9 @@
 //!
 //! PHP: `Utopia\Database\Validator\Spatial`.
 
-use crate::database::Database;
 use crate::validator::{Message, is_numeric, nth};
 use crate::value::{Array, Value};
+use utopia_query::schema::ColumnType;
 
 /// A geometry of one spatial type: `null`, a WKT string (`POINT(...)`,
 /// `LINESTRING(...)`, `POLYGON(...)`), or coordinates as arrays: a point
@@ -94,11 +94,11 @@ impl Spatial {
     }
 
     fn check(&self, value: &Array) -> Result<(), String> {
-        match self.spatial_type.as_str() {
-            Database::VAR_POINT => point(value),
-            Database::VAR_LINESTRING => linestring(value),
-            Database::VAR_POLYGON => polygon(value),
-            other => Err(format!("Unknown spatial type: {other}")),
+        match ColumnType::try_from_value(&self.spatial_type) {
+            Some(ColumnType::Point) => point(value),
+            Some(ColumnType::Linestring) => linestring(value),
+            Some(ColumnType::Polygon) => polygon(value),
+            _ => Err(format!("Unknown spatial type: {}", self.spatial_type)),
         }
     }
 

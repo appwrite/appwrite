@@ -2,25 +2,29 @@
 //! (`Appwrite\Utopia\Database\Validator\Queries\*`) and the project
 //! collections of `app/config/collections`.
 
-use utopia_database::validator::queries::Queries;
+use std::sync::Arc;
+
+use utopia_database::validator::queries::base::Queries;
 use utopia_database::validator::query::cursor::Cursor;
 use utopia_database::validator::query::filter::{Filter, FilterOptions};
 use utopia_database::validator::query::limit::Limit;
 use utopia_database::validator::query::offset::Offset;
 use utopia_database::validator::query::order::Order;
-use utopia_database::{Database, Document, Value};
+use utopia_database::{Attribute, Document, Value};
+use utopia_query::schema::ColumnType;
 
 use super::QUERY_MAX_VALUES;
 
 /// The attributes a list endpoint may filter and order on: `(key, type,
 /// array)`, as the collection config declares them.
 pub struct Schema {
-    pub attributes: &'static [(&'static str, &'static str, bool)],
+    pub attributes: &'static [(&'static str, ColumnType, bool)],
 }
 
-const STRING: &str = Database::VAR_STRING;
-const BOOLEAN: &str = Database::VAR_BOOLEAN;
-const DATETIME: &str = Database::VAR_DATETIME;
+const STRING: ColumnType = ColumnType::String;
+const BOOLEAN: ColumnType = ColumnType::Boolean;
+const DATETIME: ColumnType = ColumnType::Datetime;
+const INTEGER: ColumnType = ColumnType::Integer;
 
 /// `Queries\Users`.
 pub const USERS: Schema = Schema {
@@ -42,7 +46,7 @@ pub const USERS: Schema = Schema {
 
 /// `Queries\Teams` (`billingPlan` is allowed, but not an attribute of the
 /// project's `teams`).
-pub const TEAMS: Schema = Schema { attributes: &[("name", STRING, false), ("total", Database::VAR_INTEGER, false)] };
+pub const TEAMS: Schema = Schema { attributes: &[("name", STRING, false), ("total", INTEGER, false)] };
 
 /// `Queries\Targets`.
 pub const TARGETS: Schema = Schema {
@@ -81,32 +85,39 @@ pub const IDENTITIES: Schema = Schema {
 pub const PASSKEYS: Schema = Schema { attributes: &[("name", STRING, false), ("accessedAt", DATETIME, false)] };
 
 /// The internal attributes `Queries\Base` adds.
-const INTERNAL: [(&str, &str); 4] =
-    [("$id", STRING), ("$createdAt", DATETIME), ("$updatedAt", DATETIME), ("$sequence", Database::VAR_INTEGER)];
+const INTERNAL: [(&str, ColumnType); 4] =
+    [("$id", STRING), ("$createdAt", DATETIME), ("$updatedAt", DATETIME), ("$sequence", INTEGER)];
 
-fn attribute(key: &str, kind: &str, array: bool) -> Document {
-    Document::from_pairs([("key", Value::from(key)), ("type", Value::from(kind)), ("array", Value::Bool(array))])
-        .unwrap_or_default()
+/// The attribute of a `['key' => ..., 'type' => ..., 'array' => ...]`
+/// document.
+fn attribute(key: &str, kind: ColumnType, array: bool) -> Attribute {
+    let document = Document::from_pairs([
+        ("key", Value::from(key)),
+        ("type", Value::from(kind.as_str())),
+        ("array", Value::Bool(array)),
+    ])
+    .unwrap_or_default();
+    Attribute::from_document(&document).unwrap_or_else(|_| Attribute::string(key, 0))
 }
 
 impl Schema {
     /// `new Queries\Base($collection, $allowedAttributes)`.
     pub fn validator(&self) -> Queries {
-        let mut attributes: Vec<Document> =
-            self.attributes.iter().map(|(key, kind, array)| attribute(key, kind, *array)).collect();
-        attributes.extend(INTERNAL.iter().map(|(key, kind)| attribute(key, kind, false)));
+        let mut attributes: Vec<Attribute> =
+            self.attributes.iter().map(|(key, kind, array)| attribute(key, *kind, *array)).collect();
+        attributes.extend(INTERNAL.iter().map(|(key, kind)| attribute(key, *kind, false)));
         let filter = Filter::with_options(
             &attributes,
-            Database::VAR_INTEGER,
+            INTEGER.as_str(),
             FilterOptions { max_values_count: QUERY_MAX_VALUES, ..FilterOptions::default() },
         );
         Queries::new(
             vec![
-                Box::new(Limit::default()),
-                Box::new(Offset::default()),
-                Box::new(Cursor::default()),
-                Box::new(filter),
-                Box::new(Order::new(&attributes, true)),
+                Arc::new(Limit::default()),
+                Arc::new(Offset::default()),
+                Arc::new(Cursor::default()),
+                Arc::new(filter),
+                Arc::new(Order::new(&attributes, true, true)),
             ],
             0,
         )

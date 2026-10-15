@@ -2,7 +2,7 @@
 //!
 //! PHP: `Utopia\Database\Validator\Key`.
 
-use crate::database::Database;
+use crate::database;
 use crate::value::Value;
 
 /// A key: 1 to `max_length` characters among `a-z`, `A-Z`, `0-9`, `.`,
@@ -30,7 +30,7 @@ pub struct Key {
 impl Default for Key {
     /// `new Key()`: no internal keys, at most 36 characters.
     fn default() -> Self {
-        Self::new(false, Database::MAX_UID_DEFAULT_LENGTH)
+        Self::new(false, database::MAX_UID_DEFAULT_LENGTH)
     }
 }
 

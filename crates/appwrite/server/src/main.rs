@@ -56,6 +56,10 @@ fn serve() {
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers)
         .max_blocking_threads((workers * 4).max(8))
+        // A database write nests deeply (a transaction, its bulk deletes,
+        // their callbacks' writes, each through the hooks): 2 MiB overflows
+        // in debug builds on `DELETE /v1/account`.
+        .thread_stack_size(8 * 1024 * 1024)
         .enable_all()
         .build()
         .expect("tokio runtime");

@@ -6,6 +6,7 @@
 use std::sync::Arc;
 
 use serde_json::{Map, Value as Json, json};
+use utopia_database::value::to_query;
 use utopia_migration::cache::Cache;
 use utopia_migration::destination::Destination;
 use utopia_migration::destinations::appwrite::{Appwrite as AppwriteDestination, Options as AppwriteOptions};
@@ -33,6 +34,7 @@ use crate::bench::Bench;
 pub mod codec;
 pub mod mocks;
 pub mod resources;
+mod schemaless;
 
 use codec::{decode, decode_array, encode, entries, error, exception, summary, warning};
 use mocks::{MockDestination, MockSource};
@@ -949,29 +951,57 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             Outcome::Ok(json!({ "resourceId": rid, "resourceChildId": child }))
         }
         "db.new" => {
-            let adapter = Arc::new(utopia_database::adapter::memory::Memory::new());
-            utopia_database::Adapter::set_support_for_attributes(
-                &*adapter,
-                !a.opt_bool("schemaless")?.unwrap_or(false),
-            );
+            // A schemaless adapter is one without defined attributes.
+            let adapter: Arc<dyn utopia_database::Adapter> = if a.opt_bool("schemaless")?.unwrap_or(false) {
+                Arc::new(schemaless::Schemaless::new())
+            } else {
+                Arc::new(utopia_database::adapter::memory::Memory::new())
+            };
             let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::Memory::new())));
-            let db = utopia_database::Database::new(adapter, cache, Vec::new());
-            db.set_database("appwrite").map_err(db_fault)?;
-            db.set_namespace("_project").map_err(db_fault)?;
+            let db = utopia_database::Database::new(adapter, cache);
+            db.set_database("appwrite");
+            db.set_namespace("_project");
             db.authorization().disable();
             db.create(None).await.map_err(db_fault)?;
             Outcome::Ok(s.handle(db))
         }
         "db.collection" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
-            let docs = |k: &str| -> Result<Vec<utopia_database::Document>, Fault> {
+            let arrays = |k: &str| -> Result<Vec<utopia_database::Array>, Fault> {
                 match args.get(k) {
-                    Some(Json::Array(items)) => items.iter().map(document).collect(),
+                    Some(Json::Array(items)) => items.iter().map(|d| Ok(document(d)?.into_array())).collect(),
                     _ => Ok(Vec::new()),
                 }
             };
-            match db.create_collection(a.str("id")?, docs("attributes")?, docs("indexes")?, None, true).await {
-                Ok(c) => Outcome::Ok(Json::Bool(!c.is_empty())),
+            let created = async {
+                let attributes = arrays("attributes")?
+                    .iter()
+                    .map(utopia_database::Attribute::from_array)
+                    .collect::<utopia_database::Result<Vec<_>>>();
+                let indexes = arrays("indexes")?
+                    .iter()
+                    .map(utopia_database::Index::from_array)
+                    .collect::<utopia_database::Result<Vec<_>>>();
+                let id = a.str("id")?;
+                let collection = attributes.and_then(|attributes| {
+                    utopia_database::Collection::create(
+                        id,
+                        "",
+                        attributes,
+                        indexes?,
+                        None,
+                        true,
+                        utopia_database::Array::new(),
+                    )
+                });
+                Ok::<_, Fault>(match collection {
+                    Ok(c) => db.create_collection(c).await,
+                    Err(e) => Err(e),
+                })
+            }
+            .await?;
+            match created {
+                Ok(c) => Outcome::Ok(Json::Bool(!c.document().is_empty())),
                 Err(e) => db_error(e),
             }
         }
@@ -998,12 +1028,14 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
         "db.add_format" => {
             // AppwriteColumnOverwriteTest: Structure::addFormat($name, fn () => new Text(0), $type).
+            let kind = utopia_query::schema::ColumnType::try_from_value(a.str("type")?)
+                .ok_or_else(|| Fault::new("unknown column type"))?;
             utopia_database::validator::structure::formats::add(
                 a.str("name")?,
-                Arc::new(|_: &utopia_database::Document| {
+                Arc::new(|_: &utopia_database::Array| {
                     Box::new(utopia_validators::Text::new(0)) as Box<dyn utopia_validators::Validator>
                 }),
-                a.str("type")?,
+                kind,
             );
             Outcome::Ok(Json::Null)
         }
@@ -1087,10 +1119,11 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                         )),
                         "equal" => {
                             let values = match decode(&v[1])? {
-                                php_std::Value::Array(a) => {
-                                    a.values().cloned().map(utopia_database::value::from_plain).collect::<Vec<_>>()
-                                }
-                                x => vec![utopia_database::value::from_plain(x)],
+                                php_std::Value::Array(a) => a
+                                    .values()
+                                    .map(|v| to_query(&utopia_database::value::from_plain(v.clone())))
+                                    .collect::<Vec<_>>(),
+                                x => vec![to_query(&utopia_database::value::from_plain(x))],
                             };
                             ReaderQuery::Database(utopia_database::Query::equal(
                                 v[0].as_str().unwrap_or_default(),
@@ -1378,7 +1411,14 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         "db.find" => {
             let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
             let limit = a.opt_i64("limit")?.unwrap_or(100);
-            match db.find(a.str("collection")?, vec![utopia_database::Query::limit(limit)], "read").await {
+            match db
+                .find(
+                    a.str("collection")?,
+                    vec![utopia_database::Query::limit(limit)],
+                    utopia_database::PermissionType::Read,
+                )
+                .await
+            {
                 Ok(docs) => Outcome::Ok(Json::Array(docs.iter().map(plain).collect())),
                 Err(e) => db_error(e),
             }
@@ -1414,7 +1454,7 @@ fn document(json: &Json) -> Result<utopia_database::Document, Fault> {
 
 /// `$document->getArrayCopy()`.
 fn plain(d: &utopia_database::Document) -> Json {
-    encode(&utopia_database::value::to_plain(&utopia_database::Value::Array(d.array_copy(&[], &[]))))
+    encode(&utopia_database::value::to_plain(&utopia_database::Value::Array(d.array_copy())))
 }
 
 /// A sink that hands batches straight to a callback (`Source::run()` called
@@ -1472,13 +1512,18 @@ impl utopia_database::database::Filter for SubQuery {
         _value: utopia_database::Value,
         document: &utopia_database::Document,
         database: &utopia_database::Database,
+        _attribute: &str,
     ) -> utopia_database::Result<utopia_database::Value> {
-        use utopia_database::{Query, Value};
+        use utopia_database::value::to_query;
+        use utopia_database::{PermissionType, Query, Value};
         let sequence = document.sequence().cloned().unwrap_or(Value::Null);
         let database_id = document.get("databaseInternalId").cloned().unwrap_or(Value::Null);
-        let queries =
-            vec![Query::equal("collectionInternalId", [sequence]), Query::equal("databaseInternalId", [database_id])];
-        let found = database.authorization().skip(|| database.find(self.collection, queries, "read")).await?;
+        let queries = vec![
+            Query::equal("collectionInternalId", [to_query(&sequence)]),
+            Query::equal("databaseInternalId", [to_query(&database_id)]),
+        ];
+        let found =
+            database.authorization().skip(database.find(self.collection, queries, PermissionType::Read)).await?;
         Ok(Value::Array(utopia_database::Array::from_list(
             found.into_iter().map(|d| Value::Ext(utopia_database::value::Ext::Document(Box::new(d)))).collect(),
         )))

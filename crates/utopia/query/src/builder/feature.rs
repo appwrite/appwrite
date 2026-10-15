@@ -911,6 +911,7 @@ impl<D: Upsert> Builder<D> {
     ///
     /// PHP: `upsert()`.
     pub fn upsert(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::upsert(self)
     }
 }
@@ -920,6 +921,7 @@ impl<D: UpsertSelect> Builder<D> {
     ///
     /// PHP: `upsertSelect()`.
     pub fn upsert_select(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::upsert_select(self)
     }
 }
@@ -929,6 +931,7 @@ impl<D: InsertOrIgnore> Builder<D> {
     ///
     /// PHP: `insertOrIgnore()`.
     pub fn insert_or_ignore(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::insert_or_ignore(self)
     }
 }

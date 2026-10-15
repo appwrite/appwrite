@@ -1,99 +1,40 @@
 //! Databases, collections, attributes, relationship fields and indexes.
 //!
-//! PHP: `Memory::create`, `exists`, `list`, `delete`, `createCollection`,
-//! `deleteCollection`, `createAttribute(s)`, `updateAttribute`,
-//! `deleteAttribute`, `renameAttribute`, `createRelationship`,
-//! `updateRelationship`, `deleteRelationship` (with
+//! PHP: `Memory::create`, `update`, `exists`, `collectionExists`, `list`,
+//! `delete`, `createCollection`, `deleteCollection`, `createAttribute(s)`,
+//! `updateAttribute`, `deleteAttribute`, `renameAttribute`,
+//! `createRelationship`, `updateRelationship`, `deleteRelationship` (with
 //! `registerRelationshipField`, `renameDocumentField`, `dropDocumentField`,
 //! `resolveJunctionCollection`), `renameIndex`, `createIndex`,
-//! `deleteIndex`, `getSizeOfCollection`.
+//! `deleteIndex`, `getSizeOfCollection`, `attributeEntry`, `indexEntry`.
+
+use utopia_query::schema::{ColumnType, IndexType};
 
 use super::store::{self, k, key_of, key_value, s};
 use super::{Ctx, Store, filter};
-use crate::database::Database;
+use crate::attribute::Attribute;
+use crate::database::METADATA;
 use crate::document::Document;
-use crate::error::{Error, Kind, Result};
+use crate::error::{Error, Result};
+use crate::index::Index;
+use crate::relationship::{Relationship, RelationshipSide, RelationshipType, Update};
 use crate::value::{Array, ArrayKey, Str, Value};
+
+/// The five tables of the store a collection has an entry in, by position
+/// (data, permissions, by document, by permission, unique hashes).
+const TABLES: usize = 5;
 
 impl Store {
     /// `key($collection)`: `<database>.<namespace>_<collection>`.
-    pub(super) fn key(ctx: &Ctx, collection: &str) -> ArrayKey {
+    pub(crate) fn key(ctx: &Ctx, collection: &str) -> ArrayKey {
         k(&format!("{}.{}_{}", ctx.database, ctx.namespace, filter(collection)))
     }
 
     /// Whether the collection exists (`isset($this->data[$key])`).
-    pub(super) fn has(&self, key: &ArrayKey) -> bool {
+    pub(crate) fn has(&self, key: &ArrayKey) -> bool {
         store::isset(&self.data, std::slice::from_ref(key))
     }
 
-    /// `create($name)`.
-    pub(super) fn create(&mut self, ctx: &Ctx, name: &str) {
-        let name = k(name);
-        if !store::isset(&self.databases, std::slice::from_ref(&name)) {
-            self.databases.set(name.clone(), Value::Array(Array::new()));
-            self.journal(ctx, move |s: &mut Store| {
-                s.databases.remove(&name);
-            });
-        }
-    }
-
-    /// `exists($database, $collection)`.
-    pub(super) fn exists(&self, database: &str, collection: Option<&str>) -> bool {
-        let database = k(database);
-        match collection {
-            None => store::isset(&self.databases, &[database]),
-            Some(c) => {
-                store::isset(&self.databases, std::slice::from_ref(&database))
-                    && store::isset(&self.databases, &[database, k(&filter(c))])
-            }
-        }
-    }
-
-    /// `list()`: a document `['name' => ...]` per database.
-    pub(super) fn list(&self) -> Result<Vec<Document>> {
-        self.databases.keys().map(|name| Document::from_pairs([("name", key_value(name))])).collect()
-    }
-
-    /// `delete($name)`: the database and every collection it owns.
-    pub(super) fn delete(&mut self, ctx: &Ctx, name: &str) {
-        let name = k(name);
-        let Some(Value::Array(entry)) = self.databases.get(&name).cloned() else { return };
-        let mut saved: Vec<(ArrayKey, [Option<Value>; 5])> = Vec::new();
-        for key in entry.values() {
-            let key = key_of(key);
-            let slot = [
-                self.data.get(&key).cloned(),
-                self.permissions.get(&key).cloned(),
-                self.by_document.get(&key).cloned(),
-                self.by_permission.get(&key).cloned(),
-                self.hashes.get(&key).cloned(),
-            ];
-            for table in [
-                &mut self.data,
-                &mut self.permissions,
-                &mut self.by_document,
-                &mut self.by_permission,
-                &mut self.hashes,
-            ] {
-                table.remove(&key);
-            }
-            saved.push((key, slot));
-        }
-        self.databases.remove(&name);
-        self.journal(ctx, move |s: &mut Store| {
-            s.databases.set(name, Value::Array(entry));
-            for table in 0..5 {
-                for (key, slot) in &saved {
-                    if let Some(v) = &slot[table] {
-                        s.table(table).set(key.clone(), v.clone());
-                    }
-                }
-            }
-        });
-    }
-
-    /// The tables of the store by position (data, permissions, by document,
-    /// by permission, hashes).
     fn table(&mut self, i: usize) -> &mut Array {
         match i {
             0 => &mut self.data,
@@ -104,13 +45,135 @@ impl Store {
         }
     }
 
-    /// `createCollection($name, $attributes, $indexes)`.
-    pub(super) fn create_collection(
+    fn table_ref(&self, i: usize) -> &Array {
+        match i {
+            0 => &self.data,
+            1 => &self.permissions,
+            2 => &self.by_document,
+            3 => &self.by_permission,
+            _ => &self.hashes,
+        }
+    }
+
+    /// `create($name)`.
+    pub(crate) fn create(&mut self, ctx: &Ctx, name: &str) {
+        let name = k(name);
+        if !store::isset(&self.databases, std::slice::from_ref(&name)) {
+            self.databases.set(name.clone(), Value::Array(Array::new()));
+            self.journal(ctx, move |s: &mut Store| {
+                s.databases.remove(&name);
+            });
+        }
+    }
+
+    /// `moveCollection($from, $to)`: every table's entry moved.
+    fn move_collection(&mut self, from: &Value, to: &Value) {
+        if from.strict_eq(to) {
+            return;
+        }
+        let (from, to) = (key_of(from), key_of(to));
+        for i in 0..TABLES {
+            let table = self.table(i);
+            if let Some(v) = table.get(&from).cloned() {
+                table.set(to.clone(), v);
+                table.remove(&from);
+            }
+        }
+    }
+
+    /// `update($name, $new)`: the database renamed, its collections' storage
+    /// keys with it.
+    pub(crate) fn update(&mut self, ctx: &Ctx, name: &str, new: &str) -> Result<bool> {
+        if ctx.shared {
+            return Err(Error::database("Cannot rename a database while shared tables are enabled"));
+        }
+        let (name_key, new_key) = (k(name), k(new));
+        if !store::isset(&self.databases, std::slice::from_ref(&name_key)) {
+            return Err(Error::not_found("Database not found"));
+        }
+        if store::isset(&self.databases, std::slice::from_ref(&new_key)) {
+            return Err(Error::duplicate("Database already exists"));
+        }
+        let previous = match self.databases.get(&name_key) {
+            Some(Value::Array(a)) => a.clone(),
+            _ => Array::new(),
+        };
+        let prefix = format!("{name}.");
+        let mut moved = Array::new();
+        for (slot, collection_key) in previous.iter() {
+            let text = collection_key.to_php_string().map(|s| s.as_bytes().to_vec()).unwrap_or_default();
+            let target = match text.strip_prefix(prefix.as_bytes()) {
+                Some(rest) => {
+                    let mut t = new.as_bytes().to_vec();
+                    t.push(b'.');
+                    t.extend_from_slice(rest);
+                    Value::Str(Str::from(t))
+                }
+                None => collection_key.clone(),
+            };
+            self.move_collection(collection_key, &target);
+            moved.set(slot.to_owned(), target);
+        }
+        self.databases.remove(&name_key);
+        self.databases.set(new_key.clone(), Value::Array(moved.clone()));
+        self.journal(ctx, move |s: &mut Store| {
+            for (slot, collection_key) in previous.iter() {
+                let from = moved.get(&slot.to_owned()).cloned().unwrap_or(Value::Null);
+                s.move_collection(&from, collection_key);
+            }
+            s.databases.remove(&new_key);
+            s.databases.set(name_key, Value::Array(previous));
+        });
+        Ok(true)
+    }
+
+    /// `exists($database)`.
+    pub(crate) fn exists(&self, database: &str) -> bool {
+        store::isset(&self.databases, &[k(database)])
+    }
+
+    /// `collectionExists($database, $collection)`.
+    pub(crate) fn collection_exists(&self, database: &str, collection: &str) -> bool {
+        store::isset(&self.databases, &[k(database), k(&filter(collection))])
+    }
+
+    /// `list()`: a document `['name' => ...]` per database.
+    pub(crate) fn list(&self) -> Result<Vec<Document>> {
+        self.databases.keys().map(|name| Document::from_pairs([("name", key_value(name))])).collect()
+    }
+
+    /// `delete($name)`: the database and every collection it owns.
+    pub(crate) fn delete(&mut self, ctx: &Ctx, name: &str) {
+        let name = k(name);
+        let Some(Value::Array(entry)) = self.databases.get(&name).cloned() else { return };
+        let mut saved: Vec<Vec<(ArrayKey, Value)>> = vec![Vec::new(); TABLES];
+        for key in entry.values() {
+            let key = key_of(key);
+            for (i, slot) in saved.iter_mut().enumerate() {
+                if let Some(v) = self.table_ref(i).get(&key).filter(|v| !matches!(v, Value::Null)) {
+                    slot.push((key.clone(), v.clone()));
+                }
+                self.table(i).remove(&key);
+            }
+        }
+        self.databases.remove(&name);
+        self.journal(ctx, move |s: &mut Store| {
+            s.databases.set(name, Value::Array(entry));
+            for (i, slot) in saved.into_iter().enumerate() {
+                for (key, value) in slot {
+                    s.table(i).set(key, value);
+                }
+            }
+        });
+    }
+
+    /// `createCollection($collection, $attributes, $indexes)`.
+    pub(crate) fn create_collection(
         &mut self,
         ctx: &Ctx,
         name: &str,
-        attributes: &[Document],
-        indexes: &[Document],
+        attributes: &[Attribute],
+        indexes: &[Index],
     ) -> Result<bool> {
         let key = Self::key(ctx, name);
         if self.has(&key) {
@@ -134,53 +197,34 @@ impl Store {
             store::set(&mut self.databases, &[d, s.clone()], key_value(key.as_ref()));
             slot = Some(s);
         }
-        let attr = |d: &Document, name: &str, default: Value| d.get(name).cloned().unwrap_or(default);
         for attribute in attributes {
-            let mut definition = Array::new();
-            definition.set(k("type"), attr(attribute, "type", Value::Null));
-            definition.set(k("size"), attr(attribute, "size", Value::Int(0)));
-            definition.set(k("signed"), attr(attribute, "signed", Value::Bool(true)));
-            definition.set(k("array"), attr(attribute, "array", Value::Bool(false)));
-            definition.set(k("required"), attr(attribute, "required", Value::Bool(false)));
             store::set(
                 &mut self.data,
-                &[key.clone(), k("attributes"), k(&filter(attribute.id()))],
-                Value::Array(definition),
+                &[key.clone(), k("attributes"), k(&filter(&attribute.key))],
+                attribute_entry(attribute),
             );
         }
         for index in indexes {
-            let mut definition = Array::new();
-            definition.set(k("type"), attr(index, "type", Value::Null));
-            definition.set(k("attributes"), attr(index, "attributes", Value::Array(Array::new())));
-            definition.set(k("lengths"), attr(index, "lengths", Value::Array(Array::new())));
-            definition.set(k("orders"), attr(index, "orders", Value::Array(Array::new())));
-            store::set(&mut self.data, &[key.clone(), k("indexes"), k(&filter(index.id()))], Value::Array(definition));
+            store::set(&mut self.data, &[key.clone(), k("indexes"), k(&filter(&index.key))], index_entry(index));
         }
         self.journal(ctx, move |s: &mut Store| {
-            for table in 0..5 {
-                s.table(table).remove(&key);
+            for i in 0..TABLES {
+                s.table(i).remove(&key);
             }
-            if !database.is_empty()
-                && let Some(slot) = slot
-            {
+            if let Some(slot) = slot {
                 store::unset(&mut s.databases, &[k(&database), slot]);
             }
         });
         Ok(true)
     }
 
-    /// `deleteCollection($id)`.
-    pub(super) fn delete_collection(&mut self, ctx: &Ctx, id: &str) {
+    /// `deleteCollection($collection)`.
+    pub(crate) fn delete_collection(&mut self, ctx: &Ctx, id: &str) {
         let key = Self::key(ctx, id);
-        let saved: [Option<Value>; 5] = [
-            self.data.get(&key).cloned(),
-            self.permissions.get(&key).cloned(),
-            self.by_document.get(&key).cloned(),
-            self.by_permission.get(&key).cloned(),
-            self.hashes.get(&key).cloned(),
-        ];
-        for table in 0..5 {
-            self.table(table).remove(&key);
+        let saved: Vec<Option<Value>> =
+            (0..TABLES).map(|i| self.table_ref(i).get(&key).cloned().filter(|v| !matches!(v, Value::Null))).collect();
+        for i in 0..TABLES {
+            self.table(i).remove(&key);
         }
         let filtered = k(&filter(id));
         let mut slots: Vec<(ArrayKey, Value)> = Vec::new();
@@ -196,28 +240,15 @@ impl Store {
             }
         }
         self.journal(ctx, move |s: &mut Store| {
-            for (table, value) in saved.into_iter().enumerate() {
-                if let Some(v) = value
-                    && !matches!(v, Value::Null)
-                {
-                    s.table(table).set(key.clone(), v);
+            for (i, value) in saved.into_iter().enumerate() {
+                if let Some(v) = value {
+                    s.table(i).set(key.clone(), v);
                 }
             }
             for (name, value) in slots {
                 store::set(&mut s.databases, &[name, filtered.clone()], value);
             }
         });
-    }
-
-    /// The definition array an attribute is stored as.
-    fn definition(kind: &str, size: i64, signed: bool, array: bool, required: bool) -> Value {
-        let mut d = Array::new();
-        d.set(k("type"), s(kind));
-        d.set(k("size"), Value::Int(size));
-        d.set(k("signed"), Value::Bool(signed));
-        d.set(k("array"), Value::Bool(array));
-        d.set(k("required"), Value::Bool(required));
-        Value::Array(d)
     }
 
     /// Stores an attribute definition, journaling the previous one.
@@ -231,79 +262,41 @@ impl Store {
         });
     }
 
-    /// `createAttribute(...)`.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn create_attribute(
+    /// `createAttribute($collection, $attribute)`.
+    pub(crate) fn create_attribute(&mut self, ctx: &Ctx, collection: &str, attribute: &Attribute) -> Result<bool> {
+        let key = Self::key(ctx, collection);
+        if !self.has(&key) {
+            return Err(Error::not_found("Collection not found"));
+        }
+        self.put_attribute(ctx, &key, k(&filter(&attribute.key)), attribute_entry(attribute));
+        Ok(true)
+    }
+
+    /// `updateAttribute($collection, $key, $attribute)`: renames first when
+    /// the key changes.
+    pub(crate) fn update_attribute(
         &mut self,
         ctx: &Ctx,
         collection: &str,
         id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        required: bool,
+        attribute: &Attribute,
     ) -> Result<bool> {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
         }
-        self.put_attribute(ctx, &key, k(&filter(id)), Self::definition(kind, size, signed, array, required));
+        let mut target = filter(id);
+        if attribute.key != id {
+            self.rename_attribute(ctx, collection, &target, &attribute.key)?;
+            target = filter(&attribute.key);
+        }
+        self.put_attribute(ctx, &key, k(&target), attribute_entry(attribute));
         Ok(true)
     }
 
-    /// `createAttributes($collection, $attributes)`: one at a time.
-    pub(super) fn create_attributes(&mut self, ctx: &Ctx, collection: &str, attributes: &[Array]) -> Result<bool> {
-        for attribute in attributes {
-            let get = |name: &str| attribute.get_str(name).filter(|v| !matches!(v, Value::Null));
-            let text = |v: Option<&Value>| v.map(crate::value::to_text).unwrap_or_default();
-            self.create_attribute(
-                ctx,
-                collection,
-                &text(attribute.get_str("$id")),
-                &text(attribute.get_str("type")),
-                get("size").map(super::operators::to_long).unwrap_or(0),
-                get("signed").map(Value::truthy).unwrap_or(true),
-                get("array").map(Value::truthy).unwrap_or(false),
-                get("required").map(Value::truthy).unwrap_or(false),
-            )?;
-        }
-        Ok(true)
-    }
-
-    /// `updateAttribute(...)`: renames first when the key changes.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn update_attribute(
-        &mut self,
-        ctx: &Ctx,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        new_key: Option<&str>,
-        required: bool,
-    ) -> Result<bool> {
-        let key = Self::key(ctx, collection);
-        if !self.has(&key) {
-            return Err(Error::not_found("Collection not found"));
-        }
-        let mut id = filter(id);
-        if let Some(new_key) = new_key
-            && !(new_key.is_empty() || new_key == "0")
-            && new_key != id
-        {
-            self.rename_attribute(ctx, collection, &id, new_key)?;
-            id = filter(new_key);
-        }
-        self.put_attribute(ctx, &key, k(&id), Self::definition(kind, size, signed, array, required));
-        Ok(true)
-    }
-
-    /// `deleteAttribute($collection, $id)`: the attribute, its values, and
+    /// `deleteAttribute($collection, $key)`: the attribute, its values, and
     /// its place in the indexes.
-    pub(super) fn delete_attribute(&mut self, ctx: &Ctx, collection: &str, id: &str) -> bool {
+    pub(crate) fn delete_attribute(&mut self, ctx: &Ctx, collection: &str, id: &str) -> bool {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return true;
@@ -333,32 +326,32 @@ impl Store {
         for index_id in index_ids {
             let path = [key.clone(), k("indexes"), index_id.clone()];
             let Some(Value::Array(index)) = store::get(&self.data, &path).cloned() else { continue };
-            let attributes = match index.get_str("attributes") {
+            let field = |name: &str| match index.get_str(name) {
                 Some(Value::Array(a)) => a.clone(),
                 _ => Array::new(),
             };
+            let (attributes, index_lengths, index_orders) = (field("attributes"), field("lengths"), field("orders"));
             let mut filtered = Array::new();
             let mut lengths = Array::new();
             let mut orders = Array::new();
             let mut touched = false;
             for (i, attribute) in attributes.iter() {
-                if filter(&crate::value::to_text(attribute)) == id {
+                let Value::Str(name) = attribute else { continue };
+                if filter(&String::from_utf8_lossy(name.as_bytes())) == id {
                     touched = true;
                     continue;
                 }
                 let _ = filtered.push(attribute.clone());
-                if let Some(l) = store::get(&index, &[k("lengths"), i.to_owned()]).filter(|v| !matches!(v, Value::Null))
-                {
+                if let Some(l) = index_lengths.get(&i.to_owned()).filter(|v| !matches!(v, Value::Null)) {
                     let _ = lengths.push(l.clone());
                 }
-                if let Some(o) = store::get(&index, &[k("orders"), i.to_owned()]).filter(|v| !matches!(v, Value::Null))
-                {
+                if let Some(o) = index_orders.get(&i.to_owned()).filter(|v| !matches!(v, Value::Null)) {
                     let _ = orders.push(o.clone());
                 }
             }
             if touched {
                 previous_indexes.push((index_id.clone(), Value::Array(index.clone())));
-                let unique = index.get_str("type").is_some_and(|t| t.strict_eq(&s(Database::INDEX_UNIQUE)));
+                let unique = index.get_str("type").is_some_and(|t| t.strict_eq(&s(IndexType::Unique.as_str())));
                 let hash_path = [key.clone(), index_id.clone()];
                 if unique && store::isset(&self.hashes, &hash_path) {
                     if let Some(h) = store::get(&self.hashes, &hash_path).cloned() {
@@ -374,6 +367,9 @@ impl Store {
             store::set(&mut self.data, &path, Value::Array(index));
         }
         self.journal(ctx, move |s: &mut Store| {
+            if !s.has(&key) {
+                return;
+            }
             store::set(&mut s.data, &[key.clone(), k("attributes"), id_key.clone()], previous_attribute);
             for (storage_key, value) in previous_values {
                 if store::isset(&s.data, &[key.clone(), k("documents"), storage_key.clone()]) {
@@ -392,7 +388,7 @@ impl Store {
 
     /// `renameAttribute($collection, $old, $new)`: the definition, every
     /// document's value and the indexes.
-    pub(super) fn rename_attribute(&mut self, ctx: &Ctx, collection: &str, old: &str, new: &str) -> Result<bool> {
+    pub(crate) fn rename_attribute(&mut self, ctx: &Ctx, collection: &str, old: &str, new: &str) -> Result<bool> {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
@@ -413,9 +409,11 @@ impl Store {
         let documents = store::vivify(&mut self.data, &[key.clone(), k("documents")]);
         store::for_each_mut(documents, |storage_key, document| {
             if let Value::Array(document) = document
-                && let Some(v) = document.remove(&old_key)
+                && document.contains_key(&old_key)
             {
+                let v = document.get(&old_key).cloned().unwrap_or(Value::Null);
                 document.set(new_key.clone(), v);
+                document.remove(&old_key);
                 touched_docs.push(storage_key);
             }
         });
@@ -430,7 +428,8 @@ impl Store {
             let mut changed = false;
             let keys: Vec<ArrayKey> = attributes.keys().map(|x| x.to_owned()).collect();
             for i in keys {
-                if attributes.get(&i).is_some_and(|a| filter(&crate::value::to_text(a)) == old) {
+                if matches!(attributes.get(&i), Some(Value::Str(a)) if filter(&String::from_utf8_lossy(a.as_bytes())) == old)
+                {
                     attributes.set(i, s(&new));
                     changed = true;
                 }
@@ -441,6 +440,9 @@ impl Store {
             }
         });
         self.journal(ctx, move |s: &mut Store| {
+            if !s.has(&key) {
+                return;
+            }
             let definition = store::get(&s.data, &[key.clone(), k("attributes"), new_key.clone()]).cloned();
             store::set(
                 &mut s.data,
@@ -466,7 +468,8 @@ impl Store {
                 };
                 let keys: Vec<ArrayKey> = attributes.keys().map(|x| x.to_owned()).collect();
                 for i in keys {
-                    if attributes.get(&i).is_some_and(|a| filter(&crate::value::to_text(a)) == new) {
+                    if matches!(attributes.get(&i), Some(Value::Str(a)) if filter(&String::from_utf8_lossy(a.as_bytes())) == new)
+                    {
                         attributes.set(i, store::s(&old));
                     }
                 }
@@ -476,64 +479,58 @@ impl Store {
         Ok(true)
     }
 
-    /// `createRelationship(...)`: registers the key fields.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn create_relationship(
-        &mut self,
-        ctx: &Ctx,
-        collection: &str,
-        related: &str,
-        kind: &str,
-        two_way: bool,
-        id: &str,
-        two_way_key: &str,
-    ) -> Result<bool> {
-        match kind {
-            Database::RELATION_ONE_TO_ONE => {
-                self.register_relationship_field(ctx, collection, id);
-                if two_way {
+    /// `createRelationship($collection, $relationship)`: registers the key
+    /// fields.
+    pub(crate) fn create_relationship(&mut self, ctx: &Ctx, collection: &str, relationship: &Relationship) {
+        let related = relationship.related_collection.as_str();
+        let key = relationship.key.as_deref().unwrap_or("");
+        let two_way_key = relationship.two_way_key.as_deref().unwrap_or("");
+        match relationship.kind {
+            RelationshipType::OneToOne => {
+                self.register_relationship_field(ctx, collection, key);
+                if relationship.two_way {
                     self.register_relationship_field(ctx, related, two_way_key);
                 }
             }
-            Database::RELATION_ONE_TO_MANY => self.register_relationship_field(ctx, related, two_way_key),
-            Database::RELATION_MANY_TO_ONE => self.register_relationship_field(ctx, collection, id),
-            Database::RELATION_MANY_TO_MANY => {}
-            _ => return Err(Error::database("Invalid relationship type")),
+            RelationshipType::OneToMany => self.register_relationship_field(ctx, related, two_way_key),
+            RelationshipType::ManyToOne => self.register_relationship_field(ctx, collection, key),
+            RelationshipType::ManyToMany => {}
         }
-        Ok(true)
     }
 
-    /// `updateRelationship(...)`: renames the key fields.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn update_relationship(
+    /// `updateRelationship($collection, $relationship, $side, $update)`:
+    /// renames the key fields.
+    pub(crate) fn update_relationship(
         &mut self,
         ctx: &Ctx,
         collection: &str,
-        related: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-        new_key: Option<&str>,
-        new_two_way_key: Option<&str>,
-    ) -> Result<bool> {
-        let key = filter(key);
-        let two_way_key = filter(two_way_key);
-        let new_key = new_key.map(filter);
-        let new_two_way_key = new_two_way_key.map(filter);
+        relationship: &Relationship,
+        side: RelationshipSide,
+        update: &Update,
+    ) {
+        let related = relationship.related_collection.as_str();
+        let key = filter(relationship.key.as_deref().unwrap_or(""));
+        let two_way_key = filter(relationship.two_way_key.as_deref().unwrap_or(""));
+        let new_key = update.key.as_deref().map(filter);
+        let new_two_way_key = update.two_way_key.as_deref().map(filter);
+        let two_way = update.two_way.unwrap_or(relationship.two_way);
         let changed = |new: &Option<String>, old: &str| new.as_deref().filter(|n| *n != old).map(str::to_owned);
-        match kind {
-            Database::RELATION_ONE_TO_ONE => {
-                if let Some(n) = changed(&new_key, &key) {
+        let parent = side == RelationshipSide::Parent;
+        match relationship.kind {
+            RelationshipType::OneToOne => {
+                if (two_way || parent)
+                    && let Some(n) = changed(&new_key, &key)
+                {
                     self.rename_document_field(ctx, collection, &key, &n);
                 }
-                if two_way && let Some(n) = changed(&new_two_way_key, &two_way_key) {
+                if (two_way || side == RelationshipSide::Child)
+                    && let Some(n) = changed(&new_two_way_key, &two_way_key)
+                {
                     self.rename_document_field(ctx, related, &two_way_key, &n);
                 }
             }
-            Database::RELATION_ONE_TO_MANY => {
-                if side == Database::RELATION_SIDE_PARENT {
+            RelationshipType::OneToMany => {
+                if parent {
                     if let Some(n) = changed(&new_two_way_key, &two_way_key) {
                         self.rename_document_field(ctx, related, &two_way_key, &n);
                     }
@@ -541,8 +538,8 @@ impl Store {
                     self.rename_document_field(ctx, collection, &key, &n);
                 }
             }
-            Database::RELATION_MANY_TO_ONE => {
-                if side == Database::RELATION_SIDE_CHILD {
+            RelationshipType::ManyToOne => {
+                if side == RelationshipSide::Child {
                     if let Some(n) = changed(&new_two_way_key, &two_way_key) {
                         self.rename_document_field(ctx, related, &two_way_key, &n);
                     }
@@ -550,7 +547,7 @@ impl Store {
                     self.rename_document_field(ctx, collection, &key, &n);
                 }
             }
-            Database::RELATION_MANY_TO_MANY => {
+            RelationshipType::ManyToMany => {
                 if let Some(junction) = self.resolve_junction_collection(ctx, collection, related, side) {
                     if let Some(n) = changed(&new_key, &key) {
                         self.rename_document_field(ctx, &junction, &key, &n);
@@ -560,29 +557,26 @@ impl Store {
                     }
                 }
             }
-            _ => return Err(Error::database("Invalid relationship type")),
         }
-        Ok(true)
     }
 
-    /// `deleteRelationship(...)`: drops the key fields.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn delete_relationship(
+    /// `deleteRelationship($collection, $relationship, $side)`: drops the
+    /// key fields, or the junction collection of a many-to-many.
+    pub(crate) fn delete_relationship(
         &mut self,
         ctx: &Ctx,
         collection: &str,
-        related: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-    ) -> Result<bool> {
-        let key = filter(key);
-        let two_way_key = filter(two_way_key);
-        match kind {
-            Database::RELATION_ONE_TO_ONE => {
-                if side == Database::RELATION_SIDE_PARENT {
+        relationship: &Relationship,
+        side: RelationshipSide,
+    ) {
+        let related = relationship.related_collection.as_str();
+        let key = filter(relationship.key.as_deref().unwrap_or(""));
+        let two_way_key = filter(relationship.two_way_key.as_deref().unwrap_or(""));
+        let two_way = relationship.two_way;
+        let parent = side == RelationshipSide::Parent;
+        match relationship.kind {
+            RelationshipType::OneToOne => {
+                if parent {
                     self.drop_document_field(ctx, collection, &key);
                     if two_way {
                         self.drop_document_field(ctx, related, &two_way_key);
@@ -594,24 +588,26 @@ impl Store {
                     }
                 }
             }
-            Database::RELATION_ONE_TO_MANY => {
-                if side == Database::RELATION_SIDE_PARENT {
+            RelationshipType::OneToMany => {
+                if parent {
                     self.drop_document_field(ctx, related, &two_way_key);
                 } else {
                     self.drop_document_field(ctx, collection, &key);
                 }
             }
-            Database::RELATION_MANY_TO_ONE => {
-                if side == Database::RELATION_SIDE_PARENT {
+            RelationshipType::ManyToOne => {
+                if parent {
                     self.drop_document_field(ctx, collection, &key);
                 } else {
                     self.drop_document_field(ctx, related, &two_way_key);
                 }
             }
-            Database::RELATION_MANY_TO_MANY => {}
-            _ => return Err(Error::database("Invalid relationship type")),
+            RelationshipType::ManyToMany => {
+                if let Some(junction) = self.resolve_junction_collection(ctx, collection, related, side) {
+                    self.delete_collection(ctx, &junction);
+                }
+            }
         }
-        Ok(true)
     }
 
     /// `registerRelationshipField($collection, $field)`.
@@ -624,7 +620,7 @@ impl Store {
             ctx,
             &key,
             k(&filter(field)),
-            Self::definition(Database::VAR_RELATIONSHIP, 0, true, false, false),
+            definition(ColumnType::Relationship.as_str(), 0, true, false, false),
         );
     }
 
@@ -646,9 +642,11 @@ impl Store {
         let documents = store::vivify(&mut self.data, &[key.clone(), k("documents")]);
         store::for_each_mut(documents, |storage_key, document| {
             if let Value::Array(document) = document
-                && let Some(v) = document.remove(&old_key)
+                && document.contains_key(&old_key)
             {
+                let v = document.get(&old_key).cloned().unwrap_or(Value::Null);
                 document.set(new_key.clone(), v);
+                document.remove(&old_key);
                 touched.push(storage_key);
             }
         });
@@ -705,21 +703,34 @@ impl Store {
         });
     }
 
-    /// `resolveJunctionCollection($collection, $relatedCollection, $side)`.
-    fn resolve_junction_collection(&self, ctx: &Ctx, collection: &str, related: &str, side: &str) -> Option<String> {
-        let metadata = Self::key(ctx, Database::METADATA);
+    /// `resolveJunctionCollection($collection, $relatedCollection, $side)`:
+    /// `_<parent sequence>_<child sequence>`.
+    fn resolve_junction_collection(
+        &self,
+        ctx: &Ctx,
+        collection: &str,
+        related: &str,
+        side: RelationshipSide,
+    ) -> Option<String> {
+        let metadata = Self::key(ctx, METADATA);
         if !self.has(&metadata) {
             return None;
         }
-        let a = self.locate_document(ctx, &metadata, Database::METADATA, collection)?;
-        let b = self.locate_document(ctx, &metadata, Database::METADATA, related)?;
-        let seq = |row: &Array| row.get_str("_id").filter(|v| !matches!(v, Value::Null)).map(crate::value::to_text);
+        let a = self.locate_document(ctx, &metadata, METADATA, collection)?;
+        let b = self.locate_document(ctx, &metadata, METADATA, related)?;
+        let seq = |row: &Array| match row.get_str(crate::storage::SEQUENCE) {
+            Some(v @ (Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_))) => {
+                Some(crate::value::to_text(v))
+            }
+            _ => None,
+        };
         let (a, b) = (seq(&a.1)?, seq(&b.1)?);
-        Some(if side == Database::RELATION_SIDE_PARENT { format!("_{a}_{b}") } else { format!("_{b}_{a}") })
+        Some(if side == RelationshipSide::Parent { format!("_{a}_{b}") } else { format!("_{b}_{a}") })
     }
 
-    /// `renameIndex($collection, $old, $new)`.
-    pub(super) fn rename_index(&mut self, ctx: &Ctx, collection: &str, old: &str, new: &str) -> Result<bool> {
+    /// `renameIndex($collection, $old, $new)`: whether the index holds the
+    /// new name afterwards.
+    pub(crate) fn rename_index(&mut self, ctx: &Ctx, collection: &str, old: &str, new: &str) -> Result<bool> {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
@@ -729,7 +740,7 @@ impl Store {
             .cloned()
             .filter(|v| !matches!(v, Value::Null))
         else {
-            return Ok(true);
+            return Ok(store::isset(&self.data, &[key, k("indexes"), new_key]));
         };
         let indexes = store::vivify(&mut self.data, &[key.clone(), k("indexes")]);
         indexes.set(new_key.clone(), index);
@@ -757,73 +768,41 @@ impl Store {
         Ok(true)
     }
 
-    /// `createIndex(...)`: a unique index first checks the rows it already
-    /// has, building its hash table.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn create_index(
-        &mut self,
-        ctx: &Ctx,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &[Value],
-        orders: &[Value],
-    ) -> Result<bool> {
-        let lengths = lengths.iter().cloned().collect();
-        let orders = orders.iter().cloned().collect();
-        self.create_index_with(ctx, collection, id, kind, attributes, lengths, orders)
-    }
-
-    /// `createIndex(...)` with the `$lengths` and `$orders` arrays as given.
-    #[allow(clippy::too_many_arguments)]
-    pub(super) fn create_index_with(
-        &mut self,
-        ctx: &Ctx,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: Array,
-        orders: Array,
-    ) -> Result<bool> {
+    /// `createIndex($collection, $index)`: a unique index first checks the
+    /// rows it already has, building its hash table.
+    pub(crate) fn create_index(&mut self, ctx: &Ctx, collection: &str, index: &Index) -> Result<bool> {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
         }
-        let unique = kind == Database::INDEX_UNIQUE && !attributes.is_empty();
+        let is_unique = index.kind == IndexType::Unique;
+        let unique = is_unique && !index.attributes.is_empty();
         let mut table = Array::new();
         if unique && let Some(documents) = store::get_array(&self.data, &[key.clone(), k("documents")]) {
             for (doc_key, row) in documents.iter() {
                 let Value::Array(row) = row else { continue };
                 let mut signature = Array::new();
-                for attribute in attributes {
-                    let _ = signature.push(normalize_index_value(self.resolve_attribute_value(ctx, row, attribute)));
+                for attribute in &index.attributes {
+                    let _ = signature.push(normalize_index_value(Self::resolve_attribute_value(row, attribute)));
                 }
                 if signature.values().any(|v| matches!(v, Value::Null)) {
                     continue;
                 }
                 if ctx.shared {
-                    signature = prepend(signature, row.get_str("_tenant").cloned().unwrap_or(Value::Null));
+                    signature = prepend(signature, row.get_str(crate::storage::TENANT).cloned().unwrap_or(Value::Null));
                 }
                 let hash = serialize(&signature);
                 if table.contains_key(&hash) {
-                    return Err(Error::new(Kind::Unique, "Unique index violation"));
+                    return Err(Error::unique(crate::error::UNIQUE_MESSAGE));
                 }
                 table.set(hash, key_value(doc_key));
             }
         }
-        let id_key = k(&filter(id));
-        let mut definition = Array::new();
-        definition.set(k("type"), s(kind));
-        definition.set(k("attributes"), Value::Array(attributes.iter().map(|a| s(a)).collect()));
-        definition.set(k("lengths"), Value::Array(lengths));
-        definition.set(k("orders"), Value::Array(orders));
-        store::set(&mut self.data, &[key.clone(), k("indexes"), id_key.clone()], Value::Array(definition));
+        let id_key = k(&filter(&index.key));
+        store::set(&mut self.data, &[key.clone(), k("indexes"), id_key.clone()], index_entry(index));
         if unique {
             store::set(&mut self.hashes, &[key.clone(), id_key.clone()], Value::Array(table));
         }
-        let is_unique = kind == Database::INDEX_UNIQUE;
         self.journal(ctx, move |s: &mut Store| {
             store::unset(&mut s.data, &[key.clone(), k("indexes"), id_key.clone()]);
             if is_unique {
@@ -833,8 +812,8 @@ impl Store {
         Ok(true)
     }
 
-    /// `deleteIndex($collection, $id)`.
-    pub(super) fn delete_index(&mut self, ctx: &Ctx, collection: &str, id: &str) {
+    /// `deleteIndex($collection, $key)`.
+    pub(crate) fn delete_index(&mut self, ctx: &Ctx, collection: &str, id: &str) {
         let key = Self::key(ctx, collection);
         if !self.has(&key) {
             return;
@@ -857,7 +836,7 @@ impl Store {
     }
 
     /// `getSizeOfCollection($collection)`: `strlen(serialize($this->data[$key]))`.
-    pub(super) fn size_of_collection(&self, ctx: &Ctx, collection: &str) -> i64 {
+    pub(crate) fn size_of_collection(&self, ctx: &Ctx, collection: &str) -> i64 {
         let key = Self::key(ctx, collection);
         match self.data.get(&key) {
             Some(v) if !matches!(v, Value::Null) => php_std::serialize::serialize(v).len() as i64,
@@ -866,19 +845,52 @@ impl Store {
     }
 }
 
+/// The definition array an attribute is stored as.
+fn definition(kind: &str, size: i64, signed: bool, array: bool, required: bool) -> Value {
+    let mut d = Array::new();
+    d.set(k("type"), s(kind));
+    d.set(k("size"), Value::Int(size));
+    d.set(k("signed"), Value::Bool(signed));
+    d.set(k("array"), Value::Bool(array));
+    d.set(k("required"), Value::Bool(required));
+    Value::Array(d)
+}
+
+/// `attributeEntry($attribute)`.
+fn attribute_entry(attribute: &Attribute) -> Value {
+    definition(
+        attribute.kind.as_str(),
+        attribute.size.unwrap_or(0),
+        attribute.signed,
+        attribute.array,
+        attribute.required,
+    )
+}
+
+/// `indexEntry($index)`: its type, attributes, lengths and orders (each
+/// order's value, or `null`).
+fn index_entry(index: &Index) -> Value {
+    let mut d = Array::new();
+    d.set(k("type"), s(index.kind.as_str()));
+    d.set(k("attributes"), Value::Array(index.attributes.iter().map(|a| s(a)).collect()));
+    d.set(k("lengths"), Value::Array(index.lengths.iter().map(|l| l.map_or(Value::Null, Value::Int)).collect()));
+    d.set(k("orders"), Value::Array(index.orders.iter().map(|o| o.map_or(Value::Null, |o| s(o.as_str()))).collect()));
+    Value::Array(d)
+}
+
 /// `array_unshift($signature, $value)`.
-pub(super) fn prepend(signature: Array, value: Value) -> Array {
+pub(crate) fn prepend(signature: Array, value: Value) -> Array {
     std::iter::once(value).chain(signature.into_iter().map(|(_, v)| v)).collect()
 }
 
 /// `serialize($signature)` as an array key.
-pub(super) fn serialize(signature: &Array) -> ArrayKey {
+pub(crate) fn serialize(signature: &Array) -> ArrayKey {
     ArrayKey::normalize(Str::from(php_std::serialize::serialize(&Value::Array(signature.clone()))))
 }
 
 /// `normalizeIndexValue($value)`: booleans as 0/1, arrays as JSON, numeric
 /// strings as numbers.
-pub(super) fn normalize_index_value(value: Value) -> Value {
+pub(crate) fn normalize_index_value(value: Value) -> Value {
     match value {
         Value::Null => Value::Null,
         Value::Bool(b) => Value::Int(i64::from(b)),

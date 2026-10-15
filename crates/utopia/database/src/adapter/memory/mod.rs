@@ -5,7 +5,14 @@
 //! semantics (insertion order, numeric string keys as integers), so the
 //! order documents are found in, the keys documents are stored under and
 //! the checks on them behave as in PHP. Transactions keep a journal of
-//! inverse operations per nesting level; rolling back runs them backwards.
+//! inverse operations per nesting level; rolling back runs them backwards,
+//! and committing a nested level hands its journal to the level around it.
+//!
+//! It supports schemas, full-text indexes (searched word by word, as
+//! MariaDB's natural-language mode), attribute resizing, objects and object
+//! indexes, operators, random order, nested transactions and caching, and
+//! stores relationships ([`Relationships`]); it has no spatial values,
+//! vectors or upserts.
 //!
 //! ```
 //! # tokio::runtime::Runtime::new()?.block_on(async {
@@ -13,9 +20,9 @@
 //! use utopia_database::adapter::memory::Memory;
 //!
 //! let adapter = Memory::new();
-//! adapter.set_database("app")?;
+//! adapter.set_database("app");
 //! adapter.create("app").await?;
-//! assert!(adapter.exists("app", None).await?);
+//! assert!(adapter.exists("app").await?);
 //! # Ok::<(), utopia_database::Error>(())
 //! # })?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
@@ -23,17 +30,24 @@
 //!
 //! PHP: `Utopia\Database\Adapter\Memory`.
 
-use std::sync::{Mutex, MutexGuard};
+use std::any::Any;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use async_trait::async_trait;
 use php_std::datetime::{DateTime, TzInfo};
+use utopia_query::schema::ColumnType;
 
-use super::{Adapter, FindOptions, State};
-use crate::change::Change;
-use crate::database::Database;
+use super::{Adapter, Find, Limits, MAX_DATETIME, Relationships, State};
+use crate::attribute::Attribute;
+use crate::capability::{Capabilities, Capability};
+use crate::collection::Collection;
 use crate::document::Document;
-use crate::error::{Error, Result};
+use crate::error::Result;
+use crate::index::Index;
+use crate::operator::Operator;
 use crate::query::Query;
+use crate::relationship::{Relationship, RelationshipSide, Update};
+use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
 
 mod documents;
@@ -62,7 +76,7 @@ pub(crate) struct Store {
     data: Array,
     /// `$permissions`: storage key => list of `document`, `type`, `permission`, `tenant`.
     permissions: Array,
-    /// `$permissionsByDocument`: key => document => type => permission => true.
+    /// `$permissionsByDocument`: key => tenant bucket => document => type => permission => true.
     by_document: Array,
     /// `$permissionsByPermission`: key => type => tenant bucket => permission => document => true.
     by_permission: Array,
@@ -70,8 +84,6 @@ pub(crate) struct Store {
     hashes: Array,
     /// `$journals`: one frame of inverses per transaction level.
     journals: Vec<Vec<Inverse>>,
-    /// `$supportForAttributes`.
-    support_for_attributes: bool,
 }
 
 /// The adapter settings a call reads (`$this->getDatabase()`, ...).
@@ -82,8 +94,8 @@ pub(crate) struct Ctx {
     shared: bool,
     tenant: Value,
     depth: i64,
-    skip_duplicates: bool,
-    authorization: std::sync::Arc<crate::validator::authorization::Authorization>,
+    ignoring_duplicates: bool,
+    authorization: Arc<Authorization>,
 }
 
 impl Default for Memory {
@@ -92,32 +104,16 @@ impl Default for Memory {
     }
 }
 
+impl std::fmt::Debug for Memory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Memory").finish_non_exhaustive()
+    }
+}
+
 impl Memory {
-    /// An empty in-memory database server.
-    ///
-    /// PHP: `new Memory()`.
+    /// An empty in-memory database server (`new Memory()`).
     pub fn new() -> Memory {
-        Memory {
-            state: State::default(),
-            store: Mutex::new(Store { support_for_attributes: true, ..Store::default() }),
-        }
-    }
-
-    /// `getDriver()`: `"memory"`.
-    ///
-    /// PHP: `Utopia\Database\Adapter\Memory::getDriver`.
-    pub fn driver(&self) -> &'static str {
-        "memory"
-    }
-
-    /// The stored collections, by storage key (`<database>.<namespace>_<id>`):
-    /// each with its `attributes`, `indexes`, `documents` (rows by document
-    /// key) and `sequence`.
-    ///
-    /// PHP: `Utopia\Database\Adapter\Memory::$data` (protected; the e2e
-    /// tests read it by reflection).
-    pub fn data(&self) -> Array {
-        self.store().data.clone()
+        Memory { state: State::default(), store: Mutex::new(Store::default()) }
     }
 
     fn store(&self) -> MutexGuard<'_, Store> {
@@ -125,15 +121,103 @@ impl Memory {
     }
 
     fn ctx(&self) -> Ctx {
-        let s = self.state.lock();
+        let (database, namespace, shared, depth, authorization) = {
+            let s = self.state.lock();
+            (s.database.clone(), s.namespace.clone(), s.shared_tables, s.in_transaction, s.authorization.clone())
+        };
         Ctx {
-            database: s.database.clone(),
-            namespace: s.namespace.clone(),
-            shared: s.shared_tables,
-            tenant: s.tenant.clone(),
-            depth: s.in_transaction,
-            skip_duplicates: s.skip_duplicates,
-            authorization: s.authorization.clone(),
+            database,
+            namespace,
+            shared,
+            tenant: self.tenant(),
+            depth,
+            ignoring_duplicates: self.state.ignoring_duplicates().get(),
+            authorization,
+        }
+    }
+
+    /// The storage key of a collection (`key()`):
+    /// `<database>.<namespace>_<collection>`.
+    #[doc(hidden)]
+    pub fn storage_key(&self, collection: &str) -> String {
+        store::key_text(Store::key(&self.ctx(), collection).as_ref())
+    }
+
+    /// The stored collections, by storage key: each with its `attributes`,
+    /// `indexes`, `documents` (rows by document key) and `sequence`
+    /// (`$data`, which PHP's tests read through a subclass).
+    #[doc(hidden)]
+    pub fn data(&self) -> Array {
+        self.store().data.clone()
+    }
+
+    /// Overwrites one stored column of a document's row, past every check
+    /// (what PHP's tests do through a subclass writing `$this->data`).
+    #[doc(hidden)]
+    pub fn store_attribute(&self, collection: &str, id: &str, column: &str, value: Value) {
+        let ctx = self.ctx();
+        let key = Store::key(&ctx, collection);
+        let doc_key = Store::document_key(&ctx, id, None);
+        let mut store = self.store();
+        store::set(&mut store.data, &[key, store::k("documents"), store::key_of(&doc_key), store::k(column)], value);
+    }
+
+    /// The unique-index hash tables, by storage key, index and serialized
+    /// signature (`$uniqueIndexHashes`).
+    #[doc(hidden)]
+    pub fn unique_index_hashes(&self) -> Array {
+        self.store().hashes.clone()
+    }
+
+    /// The flat permission entries, by storage key (`$permissions`).
+    #[doc(hidden)]
+    pub fn permission_entries(&self) -> Array {
+        self.store().permissions.clone()
+    }
+
+    /// Every property of the PHP adapter holding data, by PHP name:
+    /// `databases`, `data`, `permissions`, `permissionsByDocument`,
+    /// `permissionsByPermission`, `uniqueIndexHashes`.
+    #[doc(hidden)]
+    pub fn properties(&self) -> Vec<(&'static str, Array)> {
+        let store = self.store();
+        vec![
+            ("databases", store.databases.clone()),
+            ("data", store.data.clone()),
+            ("permissions", store.permissions.clone()),
+            ("permissionsByDocument", store.by_document.clone()),
+            ("permissionsByPermission", store.by_permission.clone()),
+            ("uniqueIndexHashes", store.hashes.clone()),
+        ]
+    }
+
+    /// `applyOperator($current, $operator)` (protected in PHP; its tests
+    /// reach it through a subclass).
+    #[doc(hidden)]
+    pub fn apply_operator(&self, current: &Value, operator: &Operator) -> Result<Value> {
+        operators::apply_operator(current, operator)
+    }
+
+    fn build_limits() -> Limits {
+        let utc = TzInfo::utc();
+        let date = |text: &str| DateTime::new(text.as_bytes(), None, &utc).expect("a valid datetime literal");
+        Limits {
+            string: 4_294_967_295,
+            varchar: 16_381,
+            integer: 4_294_967_295,
+            big_integer: crate::database::MAX_BIG_INT,
+            attributes: 1_017,
+            indexes: 64,
+            default_attributes: crate::database::internal_attributes(true).len() as i64,
+            default_indexes: crate::database::INTERNAL_INDEXES.len() as i64,
+            index_length: 1_024,
+            uid_length: 255,
+            document_size: 0,
+            min_date_time: date("0001-01-01 00:00:00"),
+            max_date_time: date(MAX_DATETIME),
+            id_type: ColumnType::Integer,
+            keywords: Vec::new(),
+            internal_index_keys: Vec::new(),
         }
     }
 }
@@ -152,7 +236,7 @@ impl Store {
 
 /// `filter($value)`: keeps `[A-Za-z0-9_-]`.
 pub(crate) fn filter(value: &str) -> String {
-    value.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-').collect()
+    super::filter(value)
 }
 
 #[async_trait]
@@ -161,28 +245,55 @@ impl Adapter for Memory {
         &self.state
     }
 
-    fn set_timeout(&self, _milliseconds: i64, _event: &str) -> Result<()> {
-        Ok(())
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn capabilities(&self) -> Capabilities {
+        Capabilities::of(&[
+            Capability::IndexKey,
+            Capability::IndexArray,
+            Capability::IndexUnique,
+            Capability::Schemas,
+            Capability::IndexFulltext,
+            Capability::AttributeResizing,
+            Capability::Objects,
+            Capability::IndexObject,
+            Capability::Operators,
+            Capability::OrderRandom,
+            Capability::DefinedAttributes,
+            Capability::TransactionNested,
+            Capability::Caching,
+        ])
+    }
+
+    fn limits(&self) -> Arc<Limits> {
+        let mut state = self.state.lock();
+        state.limits.get_or_insert_with(|| Arc::new(Memory::build_limits())).clone()
+    }
+
+    fn relationships(&self) -> Option<&dyn Relationships> {
+        Some(self)
     }
 
     async fn start_transaction(&self) -> Result<bool> {
-        self.store().journals.push(Vec::new());
+        let mut store = self.store();
+        store.journals.push(Vec::new());
         self.state.lock().in_transaction += 1;
         Ok(true)
     }
 
     async fn commit_transaction(&self) -> Result<bool> {
-        let depth = self.state.lock().in_transaction;
-        if depth == 0 {
-            return Ok(false);
-        }
         let mut store = self.store();
-        let frame = store.journals.pop();
         let depth = {
             let mut s = self.state.lock();
+            if s.in_transaction == 0 {
+                return Ok(false);
+            }
             s.in_transaction -= 1;
             s.in_transaction
         };
+        let frame = store.journals.pop();
         if let Some(frame) = frame
             && !frame.is_empty()
             && depth > 0
@@ -195,11 +306,10 @@ impl Adapter for Memory {
     }
 
     async fn rollback_transaction(&self) -> Result<bool> {
-        let depth = self.state.lock().in_transaction;
-        if depth == 0 {
+        let mut store = self.store();
+        if self.state.lock().in_transaction == 0 {
             return Ok(false);
         }
-        let mut store = self.store();
         if let Some(frame) = store.journals.pop() {
             for inverse in frame.into_iter().rev() {
                 inverse(&mut store);
@@ -209,26 +319,23 @@ impl Adapter for Memory {
         Ok(true)
     }
 
-    async fn ping(&self) -> Result<bool> {
-        Ok(true)
-    }
-
-    async fn reconnect(&self) -> Result<()> {
-        Ok(())
-    }
-
-    async fn connection_id(&self) -> Result<String> {
-        Ok("0".to_owned())
-    }
-
     async fn create(&self, name: &str) -> Result<bool> {
         let ctx = self.ctx();
         self.store().create(&ctx, name);
         Ok(true)
     }
 
-    async fn exists(&self, database: &str, collection: Option<&str>) -> Result<bool> {
-        Ok(self.store().exists(database, collection))
+    async fn update(&self, name: &str, new: &str) -> Result<bool> {
+        let ctx = self.ctx();
+        self.store().update(&ctx, name, new)
+    }
+
+    async fn exists(&self, database: &str) -> Result<bool> {
+        Ok(self.store().exists(database))
+    }
+
+    async fn collection_exists(&self, database: &str, collection: &str) -> Result<bool> {
+        Ok(self.store().collection_exists(database, collection))
     }
 
     async fn list(&self) -> Result<Vec<Document>> {
@@ -241,14 +348,14 @@ impl Adapter for Memory {
         Ok(true)
     }
 
-    async fn create_collection(&self, name: &str, attributes: &[Document], indexes: &[Document]) -> Result<bool> {
+    async fn create_collection(&self, collection: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().create_collection(&ctx, name, attributes, indexes)
+        self.store().create_collection(&ctx, collection, attributes, indexes)
     }
 
-    async fn delete_collection(&self, id: &str) -> Result<bool> {
+    async fn delete_collection(&self, collection: &str) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().delete_collection(&ctx, id);
+        self.store().delete_collection(&ctx, collection);
         Ok(true)
     }
 
@@ -262,55 +369,35 @@ impl Adapter for Memory {
     }
 
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
+        self.size_of_collection(collection).await
+    }
+
+    fn attribute_width(&self, _collection: &Collection) -> Result<i64> {
+        Ok(0)
+    }
+
+    async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
         let ctx = self.ctx();
-        Ok(self.store().size_of_collection(&ctx, collection))
+        self.store().create_attribute(&ctx, collection, attribute)
     }
 
-    async fn schema_attributes(&self, _collection: &str) -> Result<Vec<Document>> {
-        Ok(Vec::new())
-    }
-
-    async fn schema_indexes(&self, _collection: &str) -> Result<Vec<Document>> {
-        Ok(Vec::new())
-    }
-
-    async fn create_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        required: bool,
-    ) -> Result<bool> {
+    async fn create_attributes(&self, collection: &str, attributes: &[Attribute]) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().create_attribute(&ctx, collection, id, kind, size, signed, array, required)
+        let mut store = self.store();
+        for attribute in attributes {
+            store.create_attribute(&ctx, collection, attribute)?;
+        }
+        Ok(true)
     }
 
-    async fn create_attributes(&self, collection: &str, attributes: &[Array]) -> Result<bool> {
+    async fn update_attribute(&self, collection: &str, key: &str, attribute: &Attribute) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().create_attributes(&ctx, collection, attributes)
+        self.store().update_attribute(&ctx, collection, key, attribute)
     }
 
-    async fn update_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        new_key: Option<&str>,
-        required: bool,
-    ) -> Result<bool> {
+    async fn delete_attribute(&self, collection: &str, key: &str) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().update_attribute(&ctx, collection, id, kind, size, signed, array, new_key, required)
-    }
-
-    async fn delete_attribute(&self, collection: &str, id: &str) -> Result<bool> {
-        let ctx = self.ctx();
-        Ok(self.store().delete_attribute(&ctx, collection, id))
+        Ok(self.store().delete_attribute(&ctx, collection, key))
     }
 
     async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
@@ -318,95 +405,32 @@ impl Adapter for Memory {
         self.store().rename_attribute(&ctx, collection, old, new)
     }
 
-    async fn create_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        id: &str,
-        two_way_key: &str,
-    ) -> Result<bool> {
-        let ctx = self.ctx();
-        self.store().create_relationship(&ctx, collection, related_collection, kind, two_way, id, two_way_key)
+    async fn schema_attributes(&self, _collection: &str) -> Result<Vec<crate::schema::Column>> {
+        Ok(Vec::new())
     }
 
-    async fn update_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-        new_key: Option<&str>,
-        new_two_way_key: Option<&str>,
-    ) -> Result<bool> {
-        let ctx = self.ctx();
-        self.store().update_relationship(
-            &ctx,
-            collection,
-            related_collection,
-            kind,
-            two_way,
-            key,
-            two_way_key,
-            side,
-            new_key,
-            new_two_way_key,
-        )
+    async fn schema_indexes(&self, _collection: &str) -> Result<Vec<crate::schema::Index>> {
+        Ok(Vec::new())
     }
 
-    async fn delete_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-    ) -> Result<bool> {
-        let ctx = self.ctx();
-        self.store().delete_relationship(&ctx, collection, related_collection, kind, two_way, key, two_way_key, side)
+    fn column_type(&self, _attribute: &Attribute) -> Result<Option<String>> {
+        Ok(None)
     }
 
     async fn create_index(
         &self,
         collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &[Value],
-        orders: &[Value],
-        _attribute_types: &[(String, String)],
-        _collation: &[String],
-        _ttl: i64,
+        index: &Index,
+        _attribute_types: &[(String, ColumnType)],
+        _collation: &[(String, String)],
     ) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().create_index(&ctx, collection, id, kind, attributes, lengths, orders)
+        self.store().create_index(&ctx, collection, index)
     }
 
-    async fn create_index_arrays(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &Array,
-        orders: &Array,
-        _attribute_types: &[(String, String)],
-        _collation: &[String],
-        _ttl: i64,
-    ) -> Result<bool> {
+    async fn delete_index(&self, collection: &str, key: &str) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().create_index_with(&ctx, collection, id, kind, attributes, lengths.clone(), orders.clone())
-    }
-
-    async fn delete_index(&self, collection: &str, id: &str) -> Result<bool> {
-        let ctx = self.ctx();
-        self.store().delete_index(&ctx, collection, id);
+        self.store().delete_index(&ctx, collection, key);
         Ok(true)
     }
 
@@ -415,35 +439,30 @@ impl Adapter for Memory {
         self.store().rename_index(&ctx, collection, old, new)
     }
 
-    async fn get_document(
-        &self,
-        collection: &Document,
-        id: &str,
-        queries: &[Query],
-        _for_update: bool,
-    ) -> Result<Document> {
-        let ctx = self.ctx();
-        self.store().get_document(&ctx, collection, id, queries)
-    }
-
-    async fn create_document(&self, collection: &Document, document: Document) -> Result<Document> {
+    async fn create_document(&self, collection: &Collection, document: Document) -> Result<Document> {
         let ctx = self.ctx();
         self.store().create_document(&ctx, collection, document)
     }
 
-    async fn create_documents(&self, collection: &Document, documents: Vec<Document>) -> Result<Vec<Document>> {
+    async fn create_documents(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
         let ctx = self.ctx();
-        let mut store = self.store();
-        let mut created = Vec::with_capacity(documents.len());
-        for document in documents {
-            created.push(store.create_document(&ctx, collection, document)?);
-        }
-        Ok(created)
+        self.store().create_documents(&ctx, collection, documents)
+    }
+
+    async fn get_document(
+        &self,
+        collection: &Collection,
+        id: &str,
+        queries: Vec<Query>,
+        _for_update: bool,
+    ) -> Result<Document> {
+        let ctx = self.ctx();
+        self.store().get_document(&ctx, collection, id, &queries)
     }
 
     async fn update_document(
         &self,
-        collection: &Document,
+        collection: &Collection,
         id: &str,
         document: Document,
         skip_permissions: bool,
@@ -452,322 +471,101 @@ impl Adapter for Memory {
         self.store().update_document(&ctx, collection, id, document, skip_permissions)
     }
 
-    async fn update_documents(&self, collection: &Document, updates: &Document, documents: &[Document]) -> Result<i64> {
-        let ctx = self.ctx();
-        self.store().update_documents(&ctx, collection, updates, documents)
-    }
-
-    async fn upsert_documents(
+    async fn update_documents(
         &self,
-        _collection: &Document,
-        _attribute: &str,
-        _changes: Vec<Change>,
-    ) -> Result<Vec<Document>> {
-        Err(Error::database("Upsert is not implemented in the Memory adapter"))
-    }
-
-    async fn get_sequences(&self, collection: &str, documents: Vec<Document>) -> Result<Vec<Document>> {
+        collection: &Collection,
+        updates: &Document,
+        documents: Vec<Document>,
+        _skip_permissions: &[String],
+    ) -> Result<i64> {
         let ctx = self.ctx();
-        Ok(self.store().get_sequences(&ctx, collection, documents))
-    }
-
-    async fn delete_document(&self, collection: &str, id: &str) -> Result<bool> {
-        let ctx = self.ctx();
-        self.store().delete_document(&ctx, collection, id)
-    }
-
-    async fn delete_documents(&self, collection: &str, sequences: &[Value], permission_ids: &[String]) -> Result<i64> {
-        let ctx = self.ctx();
-        self.store().delete_documents(&ctx, collection, sequences, permission_ids)
+        self.store().update_documents(&ctx, collection, updates, &documents)
     }
 
     async fn increase_document_attribute(
         &self,
-        collection: &str,
+        collection: &Collection,
         id: &str,
         attribute: &str,
-        value: &Value,
+        value: Value,
         updated_at: &str,
-        min: Option<&Value>,
-        max: Option<&Value>,
+        min: Option<Value>,
+        max: Option<Value>,
     ) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().increase(&ctx, collection, id, attribute, value, updated_at, min, max)
+        self.store().increase(&ctx, collection, id, attribute, &value, updated_at, min.as_ref(), max.as_ref())
     }
 
-    async fn find(&self, collection: &Document, queries: &[Query], options: FindOptions<'_>) -> Result<Vec<Document>> {
+    async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool> {
         let ctx = self.ctx();
-        self.store().find(&ctx, collection, queries, &options)
+        self.store().delete_document(&ctx, collection, id)
     }
 
-    async fn sum(&self, collection: &Document, attribute: &str, queries: &[Query], max: Option<i64>) -> Result<Value> {
+    async fn delete_documents(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+    ) -> Result<i64> {
         let ctx = self.ctx();
-        self.store().sum(&ctx, collection, attribute, queries, max)
+        self.store().delete_documents(&ctx, collection, &sequences, &permission_ids)
     }
 
-    async fn count(&self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {
+    async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         let ctx = self.ctx();
-        self.store().count(&ctx, collection, queries, max)
+        self.store().find(&ctx, collection, &queries, &options)
     }
 
-    fn casting_before(&self, _collection: &Document, document: Document) -> Result<Document> {
-        Ok(document)
+    async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64> {
+        let ctx = self.ctx();
+        self.store().count(&ctx, collection, &queries, max)
     }
 
-    fn casting_after(&self, _collection: &Document, document: Document) -> Result<Document> {
-        Ok(document)
+    async fn sum(
+        &self,
+        collection: &Collection,
+        attribute: &str,
+        queries: Vec<Query>,
+        max: Option<i64>,
+    ) -> Result<Value> {
+        let ctx = self.ctx();
+        self.store().sum(&ctx, collection, attribute, &queries, max)
     }
 
-    fn set_utc_datetime(&self, value: &str) -> Result<Value> {
-        Ok(Value::Str(value.into()))
-    }
-
-    fn decode_point(&self, _wkb: &[u8]) -> Result<Value> {
-        Err(Error::database("Spatial types are not implemented in the Memory adapter"))
-    }
-
-    fn decode_linestring(&self, _wkb: &[u8]) -> Result<Value> {
-        Err(Error::database("Spatial types are not implemented in the Memory adapter"))
-    }
-
-    fn decode_polygon(&self, _wkb: &[u8]) -> Result<Value> {
-        Err(Error::database("Spatial types are not implemented in the Memory adapter"))
-    }
-
-    fn tenant_query(&self, _collection: &str, _alias: &str) -> String {
-        String::new()
-    }
-
-    fn limit_for_string(&self) -> i64 {
-        4294967295
-    }
-
-    fn limit_for_int(&self) -> i64 {
-        4294967295
-    }
-
-    fn limit_for_big_int(&self) -> i64 {
-        Database::MAX_BIG_INT
-    }
-
-    fn limit_for_attributes(&self) -> i64 {
-        1017
-    }
-
-    fn limit_for_indexes(&self) -> i64 {
-        64
-    }
-
-    fn max_index_length(&self) -> i64 {
-        1024
-    }
-
-    fn max_varchar_length(&self) -> i64 {
-        16381
-    }
-
-    fn max_uid_length(&self) -> i64 {
-        255
-    }
-
-    fn min_date_time(&self) -> DateTime {
-        DateTime::new(b"0001-01-01 00:00:00", None, &TzInfo::utc()).unwrap_or_else(|_| unreachable!("a valid date"))
-    }
-
-    fn id_attribute_type(&self) -> &'static str {
-        Database::VAR_INTEGER
-    }
-
-    fn count_of_attributes(&self, collection: &Document) -> i64 {
-        count_of(collection, "attributes") + self.count_of_default_attributes()
-    }
-
-    fn count_of_indexes(&self, collection: &Document) -> i64 {
-        count_of(collection, "indexes") + self.count_of_default_indexes()
-    }
-
-    fn count_of_default_attributes(&self) -> i64 {
-        Database::internal_attributes_const().len() as i64
-    }
-
-    fn count_of_default_indexes(&self) -> i64 {
-        Database::INTERNAL_INDEXES.len() as i64
-    }
-
-    fn document_size_limit(&self) -> i64 {
-        0
-    }
-
-    fn attribute_width(&self, _collection: &Document) -> Result<i64> {
-        Ok(0)
-    }
-
-    fn keywords(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn internal_indexes_keys(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn support_for_schemas(&self) -> bool {
-        true
-    }
-    fn support_for_attributes(&self) -> bool {
-        self.store().support_for_attributes
-    }
-    fn set_support_for_attributes(&self, support: bool) -> bool {
-        self.store().support_for_attributes = support;
-        support
-    }
-    fn support_for_schema_attributes(&self) -> bool {
-        false
-    }
-    fn support_for_schema_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_index(&self) -> bool {
-        true
-    }
-    fn support_for_index_array(&self) -> bool {
-        false
-    }
-    fn support_for_cast_index_array(&self) -> bool {
-        false
-    }
-    fn support_for_unique_index(&self) -> bool {
-        true
-    }
-    fn support_for_fulltext_index(&self) -> bool {
-        true
-    }
-    fn support_for_fulltext_wildcard_index(&self) -> bool {
-        false
-    }
-    fn support_for_casting(&self) -> bool {
-        true
-    }
-    fn support_for_query_contains(&self) -> bool {
-        true
-    }
-    fn support_for_timeouts(&self) -> bool {
-        false
-    }
-    fn support_for_relationships(&self) -> bool {
-        true
-    }
-    fn support_for_update_lock(&self) -> bool {
-        false
-    }
-    fn support_for_batch_operations(&self) -> bool {
-        true
-    }
-    fn support_for_attribute_resizing(&self) -> bool {
-        true
-    }
-    fn support_for_get_connection_id(&self) -> bool {
-        false
-    }
-    fn support_for_upserts(&self) -> bool {
-        false
-    }
-    fn support_for_upsert_on_unique_index(&self) -> bool {
-        false
-    }
-    fn support_for_vectors(&self) -> bool {
-        false
-    }
-    fn support_for_cache_skip_on_failure(&self) -> bool {
-        false
-    }
-    fn support_for_caching(&self) -> bool {
-        true
-    }
-    fn support_for_reconnection(&self) -> bool {
-        false
-    }
-    fn support_for_hostname(&self) -> bool {
-        false
-    }
-    fn support_for_batch_create_attributes(&self) -> bool {
-        true
-    }
-    fn support_for_spatial_attributes(&self) -> bool {
-        false
-    }
-    fn support_for_object(&self) -> bool {
-        true
-    }
-    fn support_for_object_indexes(&self) -> bool {
-        true
-    }
-    fn support_for_spatial_index_null(&self) -> bool {
-        false
-    }
-    fn support_for_operators(&self) -> bool {
-        true
-    }
-    fn support_for_optional_spatial_attribute_with_existing_rows(&self) -> bool {
-        false
-    }
-    fn support_for_spatial_index_order(&self) -> bool {
-        false
-    }
-    fn support_for_spatial_axis_order(&self) -> bool {
-        false
-    }
-    fn support_for_boundary_inclusive_contains(&self) -> bool {
-        false
-    }
-    fn support_for_distance_between_multi_dimension_geometry_in_meters(&self) -> bool {
-        false
-    }
-    fn support_for_multiple_fulltext_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_identical_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_order_random(&self) -> bool {
-        true
-    }
-    fn support_for_internal_casting(&self) -> bool {
-        false
-    }
-    fn support_for_utc_casting(&self) -> bool {
-        false
-    }
-    fn support_for_integer_booleans(&self) -> bool {
-        false
-    }
-    fn support_for_alter_locks(&self) -> bool {
-        false
-    }
-    fn support_non_utf_characters(&self) -> bool {
-        false
-    }
-    fn support_for_trigram_index(&self) -> bool {
-        false
-    }
-    fn support_for_pcre_regex(&self) -> bool {
-        true
-    }
-    fn support_for_posix_regex(&self) -> bool {
-        false
-    }
-    fn support_for_transaction_retries(&self) -> bool {
-        false
-    }
-    fn support_for_nested_transactions(&self) -> bool {
-        true
+    async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
+        let ctx = self.ctx();
+        Ok(self.store().get_sequences(&ctx, collection, documents))
     }
 }
 
-/// `\count($collection->getAttribute($key, []))`.
-fn count_of(collection: &Document, key: &str) -> i64 {
-    match collection.get(key) {
-        Some(Value::Array(a)) => a.len() as i64,
-        Some(Value::Ext(crate::value::Ext::Document(d))) => d.len() as i64,
-        _ => 0,
+#[async_trait]
+impl Relationships for Memory {
+    async fn create_relationship(&self, collection: &str, relationship: &Relationship) -> Result<bool> {
+        let ctx = self.ctx();
+        self.store().create_relationship(&ctx, collection, relationship);
+        Ok(true)
+    }
+
+    async fn update_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+        update: &Update,
+    ) -> Result<bool> {
+        let ctx = self.ctx();
+        self.store().update_relationship(&ctx, collection, relationship, side, update);
+        Ok(true)
+    }
+
+    async fn delete_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+    ) -> Result<bool> {
+        let ctx = self.ctx();
+        self.store().delete_relationship(&ctx, collection, relationship, side);
+        Ok(true)
     }
 }

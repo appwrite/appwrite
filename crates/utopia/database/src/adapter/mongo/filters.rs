@@ -1,95 +1,87 @@
 //! Queries as MongoDB filters, and the key mappings between documents and
 //! stored records.
 //!
+//! Filters are built as PHP arrays ([`Array`]) in the order and shape PHP's
+//! adapter builds them, then encoded to BSON.
+//!
 //! PHP: `Mongo::buildFilters`, `buildFilter`, `handleObjectFilters`,
 //! `flattenWithDotNotation`, `getQueryOperator`, `getQueryValue`,
-//! `createSafeRegex`, `replaceChars`, `replaceInternalIdsKeys`,
-//! `escapeQueryAttributes`, `getAttributeProjection`,
-//! `ensureRelationshipDefaults`, `removeNullKeys`.
+//! `createSafeRegex`, `replaceCharacters`, `replaceInternalIdsKeys`,
+//! `escapeQueryAttributes`, `getEscapedAttributes`, `getAttributeProjection`,
+//! `ensureRelationshipDefaults`, `removeNullKeys`, `stringifyIdentifier`.
 
-use super::Mongo;
+use utopia_query::{Method, Object, Value as QValue};
+
+use super::{Mongo, OPERATORS, key, text};
 use crate::adapter::Adapter;
-use crate::database::Database;
-use crate::document::Document;
-use crate::error::{Error, Kind, Result};
-use crate::query::{Method, Query};
+use crate::capability::Capability;
+use crate::collection::Collection;
+use crate::document::{self, Document};
+use crate::error::{Error, Result};
+use crate::query::Query;
+use crate::relationship::{RelationshipSide, RelationshipType};
+use crate::storage;
 use crate::value::{Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
 
-/// The operators `replaceInternalIdsKeys` leaves alone (PHP's
-/// `$operators`; `$all` is not among them).
-const OPERATORS: [&str; 18] = [
-    "$eq",
-    "$ne",
-    "$lt",
-    "$lte",
-    "$gt",
-    "$gte",
-    "$in",
-    "$nin",
-    "$text",
-    "$search",
-    "$or",
-    "$and",
-    "$match",
-    "$regex",
-    "$not",
-    "$nor",
-    "$exists",
-    "$elemMatch",
-];
-
-/// `$array[$key]` as an array (a fresh one when missing or not an array).
-pub(super) fn entry_of<'a>(array: &'a mut Array, key: &str) -> &'a mut Array {
-    let k = ArrayKey::normalize(Str::from(key));
-    if !matches!(array.get(&k), Some(Value::Array(_))) {
-        array.set(k.clone(), Value::Array(Array::new()));
-    }
-    match array.get_mut(&k) {
-        Some(Value::Array(a)) => a,
-        _ => unreachable!("set just above"),
-    }
+/// An array of `(key, value)` pairs, in order.
+pub(crate) fn assoc<const N: usize>(pairs: [(&str, Value); N]) -> Value {
+    Value::Array(map(pairs))
 }
 
-/// `$array[$key] = $value`.
-pub(super) fn set(array: &mut Array, key: &str, value: Value) {
-    array.set(ArrayKey::normalize(Str::from(key)), value);
+/// [`assoc`] as an [`Array`].
+pub(crate) fn map<const N: usize>(pairs: [(&str, Value); N]) -> Array {
+    pairs.into_iter().map(|(k, v)| (key(k), v)).collect()
 }
 
 /// `$array[$key][] = $value`.
-fn push(array: &mut Array, key: &str, value: Value) {
-    let _ = entry_of(array, key).push(value);
-}
-
-/// A one-entry array.
-pub(super) fn pair(key: &str, value: Value) -> Value {
-    let mut a = Array::new();
-    set(&mut a, key, value);
-    Value::Array(a)
-}
-
-/// `$array[$value]`'s key: PHP's cast of a value used as an array offset
-/// (a bool or float is an integer, `null` the empty string); an array or
-/// object is a `TypeError`.
-fn offset(value: &Value) -> Result<ArrayKey> {
-    Ok(match value {
-        Value::Array(_) | Value::Object(_) | Value::Ext(_) => {
-            return Err(Error::new(
-                Kind::TypeError,
-                format!("Cannot access offset of type {} on array", value.debug_type()),
-            ));
-        }
-        Value::Bool(b) => ArrayKey::Int(i64::from(*b)),
-        Value::Float(f) => ArrayKey::Int(php_std::format::dval_to_lval(*f)),
-        Value::Null => ArrayKey::Str(Str::EMPTY),
-        other => ArrayKey::normalize(Str::from(crate::value::to_text(other))),
-    })
+fn push(array: &mut Array, name: &str, value: Value) {
+    let k = key(name);
+    if !matches!(array.get(&k), Some(Value::Array(_))) {
+        array.set(k.clone(), Value::Array(Array::new()));
+    }
+    if let Some(Value::Array(a)) = array.get_mut(&k) {
+        let _ = a.push(value);
+    }
 }
 
 /// A key's text (integer keys as their digits).
-fn key_text(k: KeyRef<'_>) -> String {
+pub(crate) fn key_text(k: KeyRef<'_>) -> String {
     match k {
         KeyRef::Int(i) => i.to_string(),
         KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
+}
+
+/// `\is_string($v) ? $v : (\is_scalar($v) ? (string) $v : '')`.
+pub(crate) fn scalar_string(value: &Value) -> Str {
+    match value {
+        Value::Str(s) => s.clone(),
+        Value::Int(_) | Value::Float(_) | Value::Bool(_) => value.to_php_string().unwrap_or(Str::EMPTY),
+        _ => Str::EMPTY,
+    }
+}
+
+/// `stringifyIdentifier($value)`: a string as it is, a scalar as PHP prints
+/// it, a BSON object by its `__toString()` (an ObjectId's hex), anything
+/// else `''`.
+pub(crate) fn stringify(value: &Value) -> Str {
+    match value {
+        Value::Str(s) => s.clone(),
+        Value::Int(_) | Value::Float(_) | Value::Bool(_) => value.to_php_string().unwrap_or(Str::EMPTY),
+        Value::Ext(Ext::Bson(b)) => Str::from(match &**b {
+            BsonValue::ObjectId(bytes) => hex::encode(bytes),
+            BsonValue::UtcDateTime(ms) => ms.to_string(),
+            BsonValue::Regex { pattern, flags } => format!("/{pattern}/{flags}"),
+        }),
+        _ => Str::EMPTY,
+    }
+}
+
+/// PHP's `empty($value)`.
+pub(crate) fn empty(value: Option<&Value>) -> bool {
+    match value {
+        None | Some(Value::Null) => true,
+        Some(v) => !v.truthy(),
     }
 }
 
@@ -98,131 +90,172 @@ fn quote(value: &[u8]) -> Vec<u8> {
     php_std::pcre::preg_quote(value, Some(b"/"))
 }
 
-/// `replaceChars($from, $to, $array)`: maps keys between documents
+/// `createSafeRegex($value, $pattern, $flags)`: `value` quoted into
+/// `pattern` (its `%s`).
+fn safe_regex(value: &[u8], pattern: &str, flags: &str) -> Value {
+    let escaped = String::from_utf8_lossy(&quote(value)).into_owned();
+    Value::from(BsonValue::Regex { pattern: pattern.replacen("%s", &escaped, 1), flags: flags.to_owned() })
+}
+
+/// `replaceCharacters($from, $to, $array)`: maps keys between documents
 /// (`$id`, `$permissions`, `$createdAt`, ...) and stored records (`_uid`,
-/// `_permissions`, `_createdAt`, ...), recursively, dots escaped as
-/// `__dot__` on the way in and back on the way out. Renamed keys move to
+/// `_permissions`, `_createdAt`, ...), into nested arrays too, dots escaped
+/// as `__dot__` on the way in and back on the way out. Renamed keys move to
 /// the end, as PHP re-adds them.
-pub(super) fn replace_chars(from: &str, to: &str, mut array: Array) -> Array {
-    const FILTER: [&str; 4] = ["permissions", "createdAt", "updatedAt", "collection"];
-    const KEEP: [&str; 6] = ["$id", "$sequence", "$tenant", "_uid", "_id", "_tenant"];
-    let mut renames: Vec<(ArrayKey, String)> = Vec::new();
+pub fn replace_characters(from: &str, to: &str, mut array: Array) -> Array {
+    const SWAPPED: [&str; 4] = ["permissions", "createdAt", "updatedAt", "collection"];
+    const KEEP: [&str; 6] =
+        [document::ID, document::SEQUENCE, document::TENANT, storage::UID, storage::SEQUENCE, storage::TENANT];
+    let mut renames: Vec<(ArrayKey, Str)> = Vec::new();
     let keys: Vec<ArrayKey> = array.keys().map(KeyRef::to_owned).collect();
     for k in keys {
-        if let Some(Value::Array(v)) = array.get(&k) {
-            let v = v.clone();
-            array.set(k.clone(), Value::Array(replace_chars(from, to, v)));
+        if let Some(Value::Array(v)) = array.get_mut(&k) {
+            let inner = std::mem::take(v);
+            *v = replace_characters(from, to, inner);
         }
         let ArrayKey::Str(s) = &k else { continue };
-        let key = String::from_utf8_lossy(s.as_bytes()).into_owned();
-        let clean = key.replace(from, "");
-        let mut new_key = key.clone();
-        if FILTER.contains(&clean.as_str()) {
-            new_key = key.replace(from, to);
-        } else if key.starts_with(from) && !KEEP.contains(&key.as_str()) {
-            new_key = format!("{to}{}", &key[from.len()..]);
+        let name = s.as_bytes();
+        let clean = replace_bytes(name, from.as_bytes(), b"");
+        let mut new_key = name.to_vec();
+        if SWAPPED.iter().any(|w| w.as_bytes() == clean.as_slice()) {
+            new_key = replace_bytes(name, from.as_bytes(), to.as_bytes());
+        } else if name.starts_with(from.as_bytes()) && !KEEP.iter().any(|w| w.as_bytes() == name) {
+            new_key = [to.as_bytes(), &name[from.len()..]].concat();
         }
-        if from == "$" && new_key.contains('.') {
-            new_key = new_key.replace('.', "__dot__");
-        } else if from == "_" && key.contains("__dot__") {
-            new_key = new_key.replace("__dot__", ".");
+        if from == "$" && new_key.contains(&b'.') {
+            new_key = replace_bytes(&new_key, b".", b"__dot__");
+        } else if from == "_" && contains(name, b"__dot__") {
+            new_key = replace_bytes(&new_key, b"__dot__", b".");
         }
-        if new_key != key {
-            renames.push((k.clone(), new_key));
+        if new_key != name {
+            renames.push((k.clone(), Str::from(new_key)));
         }
     }
     for (old, new) in renames {
         let value = array.get(&old).cloned().unwrap_or(Value::Null);
-        array.set(ArrayKey::normalize(Str::from(new.as_str())), value);
+        array.set(ArrayKey::normalize(new), value);
         array.remove(&old);
     }
-    let take = |array: &mut Array, old: &str, new: &str, string: bool| {
-        let old = ArrayKey::Str(Str::from(old));
-        if let Some(value) = array.get(&old).filter(|v| !super::null(v)).cloned() {
-            let value = if string { Value::Str(super::bson::php_string(&value)) } else { value };
-            array.set(ArrayKey::Str(Str::from(new)), value);
-            array.remove(&old);
-        }
+    let take = |array: &mut Array, old: &str| -> Option<Value> {
+        let k = key(old);
+        let value = array.get(&k).cloned()?;
+        array.remove(&k);
+        Some(value)
     };
     if from == "_" {
-        take(&mut array, "_id", "$sequence", true);
-        take(&mut array, "_uid", "$id", false);
-        take(&mut array, "_tenant", "$tenant", false);
+        if array.get_str(storage::SEQUENCE).is_some_and(|v| !matches!(v, Value::Null)) {
+            let value = take(&mut array, storage::SEQUENCE).unwrap_or(Value::Null);
+            array.set(key(document::SEQUENCE), Value::Str(stringify(&value)));
+        }
+        if array.get_str(storage::UID).is_some_and(|v| !matches!(v, Value::Null)) {
+            let value = take(&mut array, storage::UID).unwrap_or(Value::Null);
+            array.set(key(document::ID), Value::Str(stringify(&value)));
+        }
+        if let Some(tenant) = take(&mut array, storage::TENANT) {
+            let tenant = match tenant {
+                Value::Int(_) | Value::Null => tenant,
+                other => Value::Str(stringify(&other)),
+            };
+            array.set(key(document::TENANT), tenant);
+        }
     } else if from == "$" {
-        take(&mut array, "$id", "_uid", false);
-        take(&mut array, "$sequence", "_id", false);
-        take(&mut array, "$tenant", "_tenant", false);
+        if array.get_str(document::ID).is_some_and(|v| !matches!(v, Value::Null)) {
+            let value = take(&mut array, document::ID).unwrap_or(Value::Null);
+            array.set(key(storage::UID), value);
+        }
+        if array.get_str(document::SEQUENCE).is_some_and(|v| !matches!(v, Value::Null)) {
+            let value = take(&mut array, document::SEQUENCE).unwrap_or(Value::Null);
+            array.set(key(storage::SEQUENCE), value);
+        }
+        if let Some(tenant) = take(&mut array, document::TENANT) {
+            array.set(key(storage::TENANT), tenant);
+        }
     }
     array
 }
 
-/// `replaceInternalIdsKeys($array, $from, $to, $exclude)`: `from` replaced
-/// by `to` in every key but the operators, recursively.
-pub(super) fn replace_internal_ids_keys(array: &Array, from: &str, to: &str) -> Array {
+fn contains(haystack: &[u8], needle: &[u8]) -> bool {
+    haystack.windows(needle.len()).any(|w| w == needle)
+}
+
+/// `str_replace($from, $to, $subject)` on bytes.
+fn replace_bytes(subject: &[u8], from: &[u8], to: &[u8]) -> Vec<u8> {
+    if from.is_empty() {
+        return subject.to_vec();
+    }
+    let mut out = Vec::with_capacity(subject.len());
+    let mut i = 0;
+    while i < subject.len() {
+        if subject[i..].starts_with(from) {
+            out.extend_from_slice(to);
+            i += from.len();
+        } else {
+            out.push(subject[i]);
+            i += 1;
+        }
+    }
+    out
+}
+
+/// `replaceInternalIdsKeys($array, '$', '_', $operators)`: `$` replaced by
+/// `_` in every key but the operators, recursively.
+pub(crate) fn replace_internal_ids_keys(array: &Array) -> Array {
     array
         .iter()
         .map(|(k, v)| {
-            let key = match k {
-                KeyRef::Str(s) => {
-                    let text = String::from_utf8_lossy(s);
-                    if OPERATORS.contains(&text.as_ref()) {
-                        k.to_owned()
-                    } else {
-                        ArrayKey::normalize(Str::from(text.replace(from, to)))
-                    }
+            let k = match k {
+                KeyRef::Str(s) if !OPERATORS.iter().any(|o| o.as_bytes() == s) => {
+                    ArrayKey::normalize(Str::from(replace_bytes(s, b"$", b"_")))
                 }
-                KeyRef::Int(_) => k.to_owned(),
+                other => other.to_owned(),
             };
-            let value = match v {
-                Value::Array(a) => Value::Array(replace_internal_ids_keys(a, from, to)),
+            let v = match v {
+                Value::Array(a) => Value::Array(replace_internal_ids_keys(a)),
                 other => other.clone(),
             };
-            (key, value)
+            (k, v)
         })
         .collect()
 }
 
 /// `removeNullKeys($target)`: the top-level entries that are not null.
-pub(super) fn remove_null_keys(array: Array) -> Array {
-    array.into_iter().filter(|(_, v)| !super::null(v)).collect()
+pub(crate) fn remove_null_keys(array: Array) -> Array {
+    array.into_iter().filter(|(_, v)| !matches!(v, Value::Null)).collect()
+}
+
+/// `flattenWithDotNotation($key, $value)`: the leaves of nested maps as
+/// dotted paths (lists are leaves), in the order PHP's stack reaches them.
+fn flatten(key: &str, value: Value) -> Vec<(String, Value)> {
+    let mut result: Vec<(String, Value)> = Vec::new();
+    let mut stack: Vec<(String, Value)> = vec![(key.to_owned(), value)];
+    while let Some((path, current)) = stack.pop() {
+        match current {
+            Value::Array(a) if !a.is_list() => {
+                for (k, v) in a.iter() {
+                    let next = key_text(k);
+                    let next_path = if path.is_empty() { next } else { format!("{path}.{next}") };
+                    stack.push((next_path, v.clone()));
+                }
+            }
+            leaf => match result.iter_mut().find(|(p, _)| *p == path) {
+                Some(entry) => entry.1 = leaf,
+                None => result.push((path, leaf)),
+            },
+        }
+    }
+    result
+}
+
+/// A crate query of a nested query value.
+fn nested(query: &Query) -> Vec<Query> {
+    query.nested().cloned().map(Query::from).collect()
 }
 
 impl Mongo {
-    /// `createSafeRegex($value, $pattern, $flags)`: `value` quoted into
-    /// `pattern` (`%s`), refusing a `$` followed by letters.
-    fn safe_regex(&self, value: &Value, pattern: &str, flags: &str, line: u32) -> Result<Value> {
-        // `string $value` of a userland method in coercive mode: scalars
-        // convert, anything else (null included) is a TypeError naming the
-        // calling line.
-        if matches!(
-            value,
-            Value::Null
-                | Value::Array(_)
-                | Value::Object(_)
-                | Value::Ext(Ext::Document(_) | Ext::Query(_) | Ext::Operator(_))
-        ) {
-            return Err(Error::new(
-                Kind::TypeError,
-                format!(
-                    "Utopia\\Database\\Adapter\\Mongo::createSafeRegex(): Argument #1 ($value) must be of type string, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/Mongo.php on line {line}",
-                    crate::document::value_name(value)
-                ),
-            ));
-        }
-        let text = super::bson::php_string(value);
-        let escaped = quote(text.as_bytes());
-        let injected = php_std::pcre::preg_match(br"/\$[a-z]+/i", &escaped, 0, 0)
-            .ok()
-            .is_some_and(|m| m.value.result == php_std::pcre::Value::Int(1));
-        if injected {
-            return Err(Error::database("Invalid regex pattern: potential injection detected"));
-        }
-        let escaped = String::from_utf8_lossy(&escaped).into_owned();
-        Ok(Value::from(BsonValue::Regex { pattern: pattern.replacen("%s", &escaped, 1), flags: flags.to_owned() }))
-    }
-
     /// `getQueryOperator($method)`.
-    pub(super) fn query_operator(method: &Method) -> Result<&'static str> {
+    ///
+    /// Fails ([`crate::Kind::Database`]) for a method that is not a filter.
+    pub(crate) fn query_operator(method: Method) -> Result<&'static str> {
         Ok(match method {
             Method::Equal | Method::IsNull => "$eq",
             Method::NotEqual | Method::IsNotNull => "$ne",
@@ -243,85 +276,79 @@ impl Mongo {
             Method::And => "$and",
             Method::Exists | Method::NotExists => "$exists",
             Method::ElemMatch => "$elemMatch",
-            other => {
-                return Err(Error::database(format!(
-                    "Unknown operator:{}. Must be one of equal, notEqual, lessThan, lessThanEqual, greaterThan, greaterThanEqual, isNull, isNotNull, between, notBetween, startsWith, notStartsWith, endsWith, notEndsWith, contains, notContains, search, notSearch, select",
-                    other.as_str()
-                )));
-            }
+            other => return Err(Error::database(format!("Unknown operator: {}", other.as_str()))),
         })
     }
 
     /// `getQueryValue($method, $value)`: starts-with and ends-with as
-    /// regular expressions.
-    fn query_value(method: &Method, value: Value) -> Result<Value> {
-        let text = |v: &Value| crate::document::string_arg(v, "preg_quote", "#1 ($str)");
-        Ok(match method {
+    /// anchored patterns.
+    fn query_value(method: Method, value: Value) -> Value {
+        match method {
             Method::StartsWith => {
-                let mut v = quote(text(&value)?.as_bytes());
-                v.extend_from_slice(b".*");
+                let mut v = b"^".to_vec();
+                v.extend_from_slice(&quote(scalar_string(&value).as_bytes()));
                 Value::Str(Str::from(v))
             }
             Method::EndsWith => {
-                let mut v = b".*".to_vec();
-                v.extend_from_slice(&quote(text(&value)?.as_bytes()));
+                let mut v = quote(scalar_string(&value).as_bytes());
+                v.push(b'$');
                 Value::Str(Str::from(v))
             }
             _ => value,
-        })
+        }
     }
 
-    /// `buildFilters($queries, $separator)`: the filter queries joined
-    /// under `separator` (`$and`), nested ones recursively.
-    pub(super) fn build_filters(&self, queries: &[Query], separator: &str) -> Result<Array> {
+    /// `buildFilters($queries, $separator)`: the filter queries joined under
+    /// `separator` (`$and`), nested ones recursively.
+    pub(crate) fn build_filters(&self, queries: &[Query], separator: &str) -> Result<Array> {
         let mut filters = Array::new();
-        let grouped = Query::group_by_type(queries);
-        for query in &grouped.filters {
+        let grouped = Query::group_by_type(queries)?;
+        for query in grouped.filters {
             if query.is_nested() {
-                let nested: Vec<Query> = query.queries().cloned().collect();
-                if *query.method() == Method::ElemMatch {
-                    let inner = self.build_filters(&nested, separator)?;
-                    push(&mut filters, separator, pair(query.attribute(), pair("$elemMatch", Value::Array(inner))));
+                let inner = nested(&query);
+                if query.method() == Method::ElemMatch {
+                    let built = self.build_filters(&inner, separator)?;
+                    push(
+                        &mut filters,
+                        separator,
+                        assoc([(query.attribute(), assoc([("$elemMatch", Value::Array(built))]))]),
+                    );
                     continue;
                 }
                 let operator = Self::query_operator(query.method())?;
-                let inner = self.build_filters(&nested, operator)?;
-                push(&mut filters, separator, Value::Array(inner));
+                push(&mut filters, separator, Value::Array(self.build_filters(&inner, operator)?));
             } else {
-                let filter = self.build_filter(query.clone())?;
-                push(&mut filters, separator, Value::Array(filter));
+                push(&mut filters, separator, Value::Array(self.build_filter(query)?));
             }
         }
         Ok(filters)
     }
 
     /// `buildFilter($query)`: one query as a filter.
-    pub(super) fn build_filter(&self, mut query: Query) -> Result<Array> {
-        if !self.support_for_attributes() || matches!(query.attribute(), "$createdAt" | "$updatedAt") {
-            let values: Vec<Value> = query
-                .values()
-                .iter()
-                .map(|value| match value {
-                    Value::Str(s) if Self::is_extended_iso_datetime(s.as_bytes()) => {
-                        super::casting::utc_datetime(s.as_bytes()).unwrap_or_else(|_| value.clone())
-                    }
-                    other => other.clone(),
-                })
-                .collect();
-            query.set_values(values);
+    pub(crate) fn build_filter(&self, mut query: Query) -> Result<Array> {
+        let mut values = crate::value::from_query_array(query.values());
+        if !self.supports(Capability::DefinedAttributes)
+            || matches!(query.attribute(), document::CREATED_AT | document::UPDATED_AT)
+        {
+            values = values.map_values(|_, value| match value {
+                Value::Str(s) if casting::is_extended_iso_datetime(s.as_bytes()) => {
+                    casting::utc_datetime(s.as_bytes()).unwrap_or_else(|_| value.clone())
+                }
+                other => other.clone(),
+            });
         }
         match query.attribute() {
-            "$id" => {
-                query.set_attribute("_uid");
+            document::ID => {
+                query.set_attribute(storage::UID);
             }
-            "$sequence" => {
-                query.set_attribute("_id");
+            document::SEQUENCE => {
+                query.set_attribute(storage::SEQUENCE);
             }
-            "$createdAt" => {
-                query.set_attribute("_createdAt");
+            document::CREATED_AT => {
+                query.set_attribute(storage::CREATED_AT);
             }
-            "$updatedAt" => {
-                query.set_attribute("_updatedAt");
+            document::UPDATED_AT => {
+                query.set_attribute(storage::UPDATED_AT);
             }
             other if other.starts_with('$') => {
                 let escaped = Self::escape_field_name(other);
@@ -330,20 +357,19 @@ impl Mongo {
             _ => {}
         }
         let attribute = query.attribute().to_owned();
-        let operator = Self::query_operator(query.method())?;
-        let method = query.method().clone();
-        let values = query.values().to_vec();
+        let method = query.method();
+        let operator = Self::query_operator(method)?;
         let value = match method {
             Method::IsNull | Method::IsNotNull => Value::Null,
             Method::Exists => Value::Bool(true),
             Method::NotExists => Value::Bool(false),
             _ => {
                 let raw = if values.len() > 1 {
-                    Value::Array(values.iter().cloned().collect())
+                    Value::Array(values.clone())
                 } else {
-                    values.first().cloned().unwrap_or(Value::Null)
+                    values.get(&ArrayKey::Int(0)).cloned().unwrap_or(Value::Null)
                 };
-                Self::query_value(&method, raw)?
+                Self::query_value(method, raw)
             }
         };
         let mut filter = Array::new();
@@ -356,85 +382,98 @@ impl Mongo {
             Method::NotEqual,
         ];
         if query.is_object_attribute() && !attribute.contains('.') && object_methods.contains(&method) {
-            self.handle_object_filters(&query, &mut filter);
+            Self::handle_object_filters(&query, &values, &mut filter);
             return Ok(filter);
         }
-        let list = Value::Array(values.iter().cloned().collect());
+        let list = Value::Array(values.clone());
         if operator == "$eq" && matches!(value, Value::Array(_)) {
-            set(entry_of(&mut filter, &attribute), "$in", value);
+            filter.set(key(&attribute), assoc([("$in", value)]));
         } else if operator == "$ne" && matches!(value, Value::Array(_)) {
-            set(entry_of(&mut filter, &attribute), "$nin", value);
+            filter.set(key(&attribute), assoc([("$nin", value)]));
         } else if operator == "$all" {
-            set(entry_of(&mut filter, &attribute), "$all", list);
+            filter.set(key(&attribute), assoc([("$all", list)]));
         } else if operator == "$in" {
             if matches!(method, Method::Contains | Method::ContainsAny) && !query.on_array() {
                 if let Value::Array(items) = &value {
-                    // array_map() keeps the keys: a map is a document.
-                    let mut ors = Array::new();
-                    for (key, item) in items.iter() {
-                        ors.set(
-                            key.to_owned(),
-                            pair(&attribute, pair("$regex", self.safe_regex(item, ".*%s.*", "i", 3203)?)),
-                        );
-                    }
-                    set(&mut filter, "$or", Value::Array(ors));
+                    // array_map() keeps the keys.
+                    let ors: Array = items
+                        .iter()
+                        .map(|(k, item)| {
+                            let regex = safe_regex(scalar_string(item).as_bytes(), ".*%s.*", "i");
+                            (k.to_owned(), assoc([(attribute.as_str(), assoc([("$regex", regex)]))]))
+                        })
+                        .collect();
+                    filter.set(key("$or"), Value::Array(ors));
                 } else {
-                    set(entry_of(&mut filter, &attribute), "$regex", self.safe_regex(&value, ".*%s.*", "i", 3208)?);
+                    filter.set(
+                        key(&attribute),
+                        assoc([("$regex", safe_regex(scalar_string(&value).as_bytes(), ".*%s.*", "i"))]),
+                    );
                 }
             } else {
-                set(entry_of(&mut filter, &attribute), "$in", list);
+                filter.set(key(&attribute), assoc([("$in", list)]));
             }
         } else if operator == "notContains" {
             if !query.on_array() {
-                set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i", 3215)?));
+                filter.set(
+                    key(&attribute),
+                    assoc([("$not", safe_regex(scalar_string(&value).as_bytes(), ".*%s.*", "i"))]),
+                );
             } else {
-                set(entry_of(&mut filter, &attribute), "$nin", list);
+                filter.set(key(&attribute), assoc([("$nin", list), ("$ne", Value::Null)]));
             }
         } else if operator == "$search" {
             if method == Method::NotSearch {
-                if value.truthy() {
-                    set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i", 3226)?));
+                if !empty(Some(&value)) {
+                    filter.set(
+                        key(&attribute),
+                        assoc([("$not", safe_regex(scalar_string(&value).as_bytes(), ".*%s.*", "i"))]),
+                    );
                 }
             } else {
-                set(entry_of(&mut filter, "$text"), operator, value);
+                filter.set(key("$text"), assoc([(operator, value)]));
             }
-        } else if operator == "between" {
+        } else if method == Method::Between {
             let (low, high) = bounds(&value);
-            let range = entry_of(&mut filter, &attribute);
-            set(range, "$lte", high);
-            set(range, "$gte", low);
-        } else if operator == "notBetween" {
+            filter.set(key(&attribute), assoc([("$lte", high), ("$gte", low)]));
+        } else if method == Method::NotBetween {
             let (low, high) = bounds(&value);
-            let ors = Array::from_list(vec![pair(&attribute, pair("$lt", low)), pair(&attribute, pair("$gt", high))]);
-            set(&mut filter, "$or", Value::Array(ors));
+            let ors = vec![
+                assoc([(attribute.as_str(), assoc([("$lt", low)]))]),
+                assoc([(attribute.as_str(), assoc([("$gt", high)]))]),
+            ];
+            filter.set(key("$or"), Value::Array(Array::from_list(ors)));
         } else if operator == "$regex" && method == Method::NotStartsWith {
-            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "^%s", "i", 3240)?));
+            filter.set(key(&attribute), assoc([("$not", safe_regex(scalar_string(&value).as_bytes(), "^%s", "i"))]));
         } else if operator == "$regex" && method == Method::NotEndsWith {
-            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "%s$", "i", 3242)?));
+            filter.set(key(&attribute), assoc([("$not", safe_regex(scalar_string(&value).as_bytes(), "%s$", "i"))]));
         } else if operator == "$exists" {
-            for name in values.iter() {
-                let mut condition = Array::new();
-                condition.set(offset(name)?, pair(operator, value.clone()));
-                push(&mut filter, "$or", Value::Array(condition));
-            }
+            let ors: Vec<Value> = values
+                .values()
+                .map(|name| {
+                    let mut condition = Array::new();
+                    condition.set(ArrayKey::normalize(scalar_string(name)), assoc([(operator, value.clone())]));
+                    Value::Array(condition)
+                })
+                .collect();
+            filter.set(key("$or"), Value::Array(Array::from_list(ors)));
         } else {
-            set(entry_of(&mut filter, &attribute), operator, value);
+            filter.set(key(&attribute), assoc([(operator, value)]));
         }
         Ok(filter)
     }
 
     /// `handleObjectFilters($query, $filter)`: equality and containment on
     /// an object attribute, as conditions on its flattened paths.
-    fn handle_object_filters(&self, query: &Query, filter: &mut Array) {
+    fn handle_object_filters(query: &Query, values: &Array, filter: &mut Array) {
         let not = matches!(query.method(), Method::NotContains | Method::NotEqual);
         let mut conditions: Vec<Value> = Vec::new();
-        for (k, value) in query.values_array().iter() {
-            let key = match k {
+        for (k, value) in values.iter() {
+            let name = match k {
                 KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
                 KeyRef::Int(_) => String::new(),
             };
-            let flattened = flatten(&key, value.clone());
-            let Some((path, leaf)) = flattened.into_iter().next() else { continue };
+            let Some((path, leaf)) = flatten(&name, value.clone()).into_iter().next() else { continue };
             let field =
                 if path.is_empty() { query.attribute().to_owned() } else { format!("{}.{path}", query.attribute()) };
             match query.method() {
@@ -443,7 +482,7 @@ impl Mongo {
                         Value::Array(a) => Value::Array(a),
                         other => Value::Array(Array::from_list(vec![other])),
                     };
-                    conditions.push(pair(&field, pair(if not { "$nin" } else { "$in" }, list)));
+                    conditions.push(assoc([(field.as_str(), assoc([(if not { "$nin" } else { "$in" }, list)]))]));
                 }
                 Method::Equal | Method::NotEqual => {
                     let operator = match (&leaf, not) {
@@ -452,162 +491,138 @@ impl Mongo {
                         (_, true) => "$ne",
                         (_, false) => "$eq",
                     };
-                    conditions.push(pair(&field, pair(operator, leaf)));
+                    conditions.push(assoc([(field.as_str(), assoc([(operator, leaf)]))]));
                 }
                 _ => {}
             }
         }
         let logical = if not { "$and" } else { "$or" };
-        let existing = match filter.get_str(logical) {
-            Some(Value::Array(a)) => Some(a.clone()),
-            _ => None,
-        };
-        match existing {
-            Some(mut a) if !conditions.is_empty() => {
-                for c in conditions {
-                    let _ = a.push(c);
-                }
-                set(filter, logical, Value::Array(a));
-            }
-            _ => set(filter, logical, Value::Array(Array::from_list(conditions))),
-        }
+        filter.set(key(logical), Value::Array(Array::from_list(conditions)));
     }
 
-    /// `escapeQueryAttributes($collection, $queries)`: queries on
-    /// attributes whose names have dots or start with `$` use the escaped
-    /// stored name (a nested path keeps its dots).
-    pub(super) fn escape_query_attributes(collection: &Document, queries: &mut [Query]) {
+    /// `getEscapedAttributes($collection)`: the stored field name of each
+    /// attribute whose key holds a dot or starts with `$`.
+    pub(crate) fn escaped_attributes(collection: &Collection) -> Result<Vec<(String, String)>> {
         let mut escaped: Vec<(String, String)> = Vec::new();
-        if let Some(Value::Array(attributes)) = collection.get("attributes") {
-            for attribute in attributes.values() {
-                let key = match attribute {
-                    Value::Ext(Ext::Document(d)) => d.get("$id").map(crate::value::to_text),
-                    Value::Array(a) => a.get_str("$id").map(crate::value::to_text),
-                    _ => None,
-                }
-                .unwrap_or_default();
-                if key.contains('.') || key.starts_with('$') {
-                    escaped.push((key.clone(), Self::escape_field_name(&key)));
+        for attribute in collection.attributes()? {
+            let k = &attribute.key;
+            if k.contains('.') || k.starts_with('$') {
+                let name = Self::escape_field_name(k);
+                match escaped.iter_mut().find(|(a, _)| a == k) {
+                    Some(entry) => entry.1 = name,
+                    None => escaped.push((k.clone(), name)),
                 }
             }
         }
+        Ok(escaped)
+    }
+
+    /// `escapeQueryAttributes($collection, $queries)`: queries on attributes
+    /// whose names hold dots or start with `$` address the escaped stored
+    /// name (a nested object path keeps its dots), inside groups and
+    /// `exists` too.
+    pub(crate) fn escape_query_attributes(collection: &Collection, queries: &mut [Query]) -> Result<()> {
+        let escaped = Self::escaped_attributes(collection)?;
         if escaped.is_empty() {
-            return;
+            return Ok(());
         }
         for query in queries.iter_mut() {
-            if let Some((_, name)) = escaped.iter().rev().find(|(k, _)| k == query.attribute()) {
-                let name = name.clone();
-                query.set_attribute(name);
-            }
+            escape_query(query, &escaped);
         }
+        Ok(())
     }
 
     /// `getAttributeProjection($selections)`: the selected attributes (but
-    /// internal ones) and every internal field.
-    pub(super) fn attribute_projection(selections: &[Value]) -> Result<Array> {
-        let internal: Vec<Value> =
-            Database::internal_attributes_const().iter().map(|a| Value::Str(Str::from(a.id()))).collect();
+    /// the internal ones, always selected) and every internal field.
+    pub(crate) fn attribute_projection(selections: &[QValue]) -> Array {
+        let internal: Vec<Value> = crate::database::internal_attributes(true).iter().map(|a| text(&a.key)).collect();
         let mut projection = Array::new();
         for selection in selections {
+            let selection = crate::value::from_query(selection);
             // `in_array()`: loose comparison.
-            if internal.iter().any(|i| i.loose_eq(selection)) {
+            if internal.iter().any(|i| i.loose_eq(&selection)) {
                 continue;
             }
-            projection.set(offset(selection)?, Value::Int(1));
+            let k = match &selection {
+                Value::Int(i) => ArrayKey::Int(*i),
+                Value::Bool(b) => ArrayKey::Int(i64::from(*b)),
+                Value::Null => ArrayKey::Str(Str::EMPTY),
+                other => ArrayKey::normalize(scalar_string(other)),
+            };
+            projection.set(k, Value::Int(1));
         }
-        for field in ["_uid", "_id", "_createdAt", "_updatedAt", "_permissions"] {
-            set(&mut projection, field, Value::Int(1));
+        for field in [storage::UID, storage::SEQUENCE, storage::CREATED_AT, storage::UPDATED_AT, storage::PERMISSIONS] {
+            projection.set(key(field), Value::Int(1));
         }
-        Ok(projection)
-    }
-
-    /// `getAttributeSelections($queries)`: the values of the `select` queries.
-    pub(super) fn attribute_selections(queries: &[Query]) -> Vec<Value> {
-        queries.iter().filter(|q| *q.method() == Method::Select).flat_map(|q| q.values().to_vec()).collect()
+        projection
     }
 
     /// `ensureRelationshipDefaults($collection, $document)`: `null` for the
-    /// relationship attributes a document lacks where SQL would have a
-    /// column for them.
-    pub(super) fn ensure_relationship_defaults(collection: &Document, document: &mut Document) {
-        let Some(Value::Array(attributes)) = collection.get("attributes") else { return };
-        for attribute in attributes.values() {
-            let get = |key: &str| -> Option<Value> {
-                match attribute {
-                    Value::Ext(Ext::Document(d)) => d.get(key).cloned(),
-                    Value::Array(a) => a.get_str(key).cloned(),
-                    _ => None,
-                }
-            };
-            let key = get("$id").map(|v| crate::value::to_text(&v)).unwrap_or_default();
-            let kind = get("type").map(|v| crate::value::to_text(&v)).unwrap_or_default();
-            if kind != Database::VAR_RELATIONSHIP
-                || document.as_array().contains_key(&ArrayKey::normalize(Str::from(key.as_str())))
-            {
+    /// relationship attributes a document lacks where SQL would hold a
+    /// column for them (MongoDB stores no null fields).
+    pub(crate) fn ensure_relationship_defaults(collection: &Collection, document: &mut Document) -> Result<()> {
+        for attribute in collection.attributes()? {
+            let Some(relationship) = &attribute.relationship else { continue };
+            if document.has(&attribute.key) {
                 continue;
             }
-            let options = match get("options") {
-                Some(Value::Array(a)) => a,
-                Some(Value::Ext(Ext::Document(d))) => d.as_array().clone(),
-                _ => Array::new(),
-            };
-            let option = |k: &str| options.get_str(k).cloned();
-            let two_way = option("twoWay").is_some_and(|v| v.truthy());
-            let side = option("side").map(|v| crate::value::to_text(&v)).unwrap_or_default();
-            let relation = option("relationType").map(|v| crate::value::to_text(&v)).unwrap_or_default();
-            let stores = match relation.as_str() {
-                Database::RELATION_ONE_TO_ONE => side == Database::RELATION_SIDE_PARENT || two_way,
-                Database::RELATION_ONE_TO_MANY => side == Database::RELATION_SIDE_CHILD,
-                Database::RELATION_MANY_TO_ONE => side == Database::RELATION_SIDE_PARENT,
-                _ => false,
+            let parent = attribute.side == Some(RelationshipSide::Parent);
+            let stores = match relationship.kind {
+                RelationshipType::OneToOne => parent || relationship.two_way,
+                RelationshipType::OneToMany => !parent,
+                RelationshipType::ManyToOne => parent,
+                RelationshipType::ManyToMany => false,
             };
             if stores {
-                document.set(key.as_str(), Value::Null);
+                document.put(attribute.key.as_str(), Value::Null);
             }
         }
+        Ok(())
     }
 }
 
-/// `$value[0]` and `$value[1]` of a between query's values.
+/// `escapeQueryFields()` of one query.
+fn escape_query(query: &mut Query, escaped: &[(String, String)]) {
+    let lookup = |name: &str| escaped.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
+    let method = query.method();
+    if method == Method::And || method == Method::Or {
+        let values = query.values().map_values(|_, value| match value {
+            QValue::Ext(Object::Query(inner)) => {
+                let mut child = Query::from(inner.as_ref().clone());
+                escape_query(&mut child, escaped);
+                QValue::Ext(Object::Query(Box::new(child.into_inner())))
+            }
+            other => other.clone(),
+        });
+        query.set_values(values);
+        return;
+    }
+    if method == Method::Exists || method == Method::NotExists {
+        let values = query.values().map_values(|_, value| match value {
+            QValue::Str(s) => match s.as_str().and_then(lookup) {
+                Some(name) => QValue::Str(Str::from(name)),
+                None => value.clone(),
+            },
+            other => other.clone(),
+        });
+        query.set_values(values);
+        return;
+    }
+    if let Some(name) = lookup(query.attribute()) {
+        query.set_attribute(name);
+    }
+}
+
+/// `$value[0] ?? null` and `$value[1] ?? null` of a between query's value
+/// (`[]` when it is not an array).
 fn bounds(value: &Value) -> (Value, Value) {
     match value {
         Value::Array(a) => (
             a.get(&ArrayKey::Int(0)).cloned().unwrap_or(Value::Null),
             a.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null),
         ),
-        Value::Str(s) => {
-            // A string offset: its first and second bytes; past the end,
-            // PHP warns and reads `""`.
-            let byte =
-                |i: usize| s.as_bytes().get(i).map_or(Value::Str(Str::EMPTY), |b| Value::Str(Str::from(vec![*b])));
-            (byte(0), byte(1))
-        }
         _ => (Value::Null, Value::Null),
     }
 }
 
-/// `flattenWithDotNotation($key, $value)`: the leaves of nested maps as
-/// dotted paths (lists are leaves), last pushed first, as PHP's stack pops.
-fn flatten(key: &str, value: Value) -> Vec<(String, Value)> {
-    let mut result: Vec<(String, Value)> = Vec::new();
-    let mut stack: Vec<(String, Value)> = vec![(key.to_owned(), value)];
-    while let Some((path, current)) = stack.pop() {
-        match current {
-            Value::Array(a) if !a.is_list() => {
-                for (k, v) in a.iter() {
-                    let next = key_text(k);
-                    let next_path = if path.is_empty() { next } else { format!("{path}.{next}") };
-                    stack.push((next_path, v.clone()));
-                }
-            }
-            leaf => {
-                if let Some(entry) = result.iter_mut().find(|(p, _)| *p == path) {
-                    entry.1 = leaf;
-                } else {
-                    result.push((path, leaf));
-                }
-            }
-        }
-    }
-    result
-}
+use super::casting;

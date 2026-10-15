@@ -3,41 +3,46 @@
 //!
 //! PHP: `Utopia\Database\Validator\IndexDependency`.
 
+use crate::attribute::Attribute;
 use crate::document::Document;
-use crate::validator::{attribute_key, lower};
-use crate::value::{Value, as_document};
+use crate::error::Result;
+use crate::index::Index;
+use crate::value::{Ext, Value};
 
 /// An attribute that no index uses, when the adapter indexes array
 /// attributes through casts (`cast_index_support`) and the attribute is an
 /// array; any attribute otherwise.
 ///
 /// ```
-/// use utopia_database::Document;
+/// use utopia_database::{Attribute, Index};
 /// use utopia_database::validator::index_dependency::IndexDependency;
-/// use utopia_database::value::{Value, list, string};
 ///
-/// let index = Document::from_pairs([("attributes", list([string("tags")]))]).unwrap();
-/// let validator = IndexDependency::new(vec![index], true);
-/// let tags = Document::from_pairs([("key", string("tags")), ("array", Value::Bool(true))]).unwrap();
-/// assert!(!validator.check(&tags));
+/// let validator = IndexDependency::new(vec![Index::key("idx", ["Tags"], vec![], vec![]).unwrap()], true);
+/// assert!(!validator.check(&Attribute::string("tags", 10).array(true)));
+/// assert!(validator.check(&Attribute::string("tags", 10)));
+/// assert_eq!(validator.description(), "Attribute can't be deleted or renamed because it is used in an index");
 /// ```
 ///
-/// PHP: `Utopia\Database\Validator\IndexDependency` (`new IndexDependency($indexes, $castIndexSupport)`).
+/// PHP: `Utopia\Database\Validator\IndexDependency` (`new
+/// IndexDependency($indexes, $castIndexSupport)`).
 #[derive(Clone, Debug)]
 pub struct IndexDependency {
-    indexes: Vec<Document>,
+    indexes: Vec<Index>,
     cast_index_support: bool,
 }
 
 impl IndexDependency {
     /// `new IndexDependency($indexes, $castIndexSupport)`.
-    pub fn new(indexes: Vec<Document>, cast_index_support: bool) -> Self {
+    pub fn new(indexes: Vec<Index>, cast_index_support: bool) -> Self {
         Self { indexes, cast_index_support }
     }
 
-    /// Whether the adapter indexes array attributes through casts.
-    pub fn cast_index_support(&self) -> bool {
-        self.cast_index_support
+    /// `new IndexDependency($indexes, ...)` of stored index documents.
+    ///
+    /// Fails as [`Index::from_document`] does.
+    pub fn from_documents(indexes: &[Document], cast_index_support: bool) -> Result<Self> {
+        let indexes = indexes.iter().map(Index::from_document).collect::<Result<Vec<_>>>()?;
+        Ok(Self::new(indexes, cast_index_support))
     }
 
     /// `getDescription()`.
@@ -45,28 +50,34 @@ impl IndexDependency {
         "Attribute can't be deleted or renamed because it is used in an index".to_owned()
     }
 
-    /// `isValid($attribute)` of an attribute document.
-    pub fn check(&self, attribute: &Document) -> bool {
-        if !self.cast_index_support {
+    /// `isValid($attribute)`.
+    pub fn check(&self, attribute: &Attribute) -> bool {
+        if !self.cast_index_support || !attribute.array {
             return true;
         }
-        if !attribute.get("array").is_some_and(Value::truthy) {
-            return true;
-        }
-        let key = lower(&attribute_key(attribute));
-        !self.indexes.iter().any(|index| match index.get("attributes") {
-            Some(Value::Array(attributes)) => attributes.values().any(|a| lower(a) == key),
-            _ => false,
-        })
+        let key = attribute.key.to_ascii_lowercase();
+        !self.indexes.iter().any(|index| index.attributes.iter().any(|a| a.to_ascii_lowercase() == key))
     }
 
-    /// `isValid($value)`: a document as [`IndexDependency::check`]. PHP
-    /// fails on another value when it reads it (with cast index support);
-    /// it is invalid here.
-    pub fn is_valid(&self, value: &Value) -> bool {
-        match as_document(value) {
-            Some(attribute) => self.check(attribute),
-            None => !self.cast_index_support,
+    /// `isValid($value)` of any value: an attribute document as
+    /// [`IndexDependency::check`] of its model.
+    ///
+    /// Fails (as PHP throws) when the value is not an attribute document
+    /// ([`crate::Kind::TypeError`]) or not a valid one (as
+    /// [`Attribute::from_document`]), with cast index support.
+    pub fn is_valid(&self, value: &Value) -> Result<bool> {
+        if !self.cast_index_support {
+            return Ok(true);
+        }
+        match value {
+            Value::Ext(Ext::Document(d)) => Ok(self.check(&Attribute::from_document(d)?)),
+            other => Err(crate::Error::new(
+                crate::Kind::TypeError,
+                format!(
+                    "Utopia\\Database\\Attribute::fromDocument(): Argument #1 ($document) must be of type Utopia\\Database\\Document, {} given",
+                    crate::document::value_name(other)
+                ),
+            )),
         }
     }
 
@@ -76,4 +87,4 @@ impl IndexDependency {
     }
 }
 
-super::validator!(IndexDependency, utopia_validators::Type::Object, false);
+super::validator!(IndexDependency, utopia_validators::Type::Object, false, fallible);

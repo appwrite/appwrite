@@ -10,7 +10,10 @@ use async_trait::async_trait;
 use php_std::ArrayKey;
 use utopia_database::Database as Db;
 use utopia_database::query::Query as DbQuery;
-use utopia_database::{Document, Kind as DbKind, Value as DbValue};
+use utopia_database::value::{from_query_array, to_query_array};
+use utopia_database::{
+    Attribute as DbAttribute, Collection, Document, Index as DbIndex, Kind as DbKind, PermissionType, Value as DbValue,
+};
 use utopia_query::{Array, Method, Query, Value};
 
 use super::{Adapter, Entry, Series, TimeSeries, Totals};
@@ -42,40 +45,28 @@ impl std::fmt::Debug for Database {
     }
 }
 
-/// A query value as a database value.
-fn to_db(value: &Value) -> DbValue {
-    match value {
-        Value::Null => DbValue::Null,
-        Value::Bool(b) => DbValue::Bool(*b),
-        Value::Int(i) => DbValue::Int(*i),
-        Value::Float(f) => DbValue::Float(*f),
-        Value::Str(s) => DbValue::Str(s.clone()),
-        Value::Array(a) => DbValue::Array(a.iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect()),
-        Value::Object(a) => DbValue::Object(a.iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect()),
-        Value::Ext(x) => {
-            DbValue::Array(php_std::Extension::to_array(x).iter().map(|(k, v)| (k.to_owned(), to_db(v))).collect())
-        }
-    }
+/// The attributes of `kind`'s schema as database models, for
+/// `createCollection()`.
+///
+/// PHP: `SQL::getAttributeDocuments($type)`.
+pub fn attribute_documents(kind: Kind) -> Result<Vec<DbAttribute>> {
+    Ok(kind
+        .schema()
+        .iter()
+        .map(|a| DbAttribute::from_array(&from_query_array(&a.to_array())))
+        .collect::<utopia_database::Result<_>>()?)
 }
 
-/// A database value as a query value.
-fn from_db(value: &DbValue) -> Value {
-    fn array(a: &utopia_database::Array) -> Array {
-        a.iter().map(|(k, v)| (k.to_owned(), from_db(v))).collect()
-    }
-    match value {
-        DbValue::Null => Value::Null,
-        DbValue::Bool(b) => Value::Bool(*b),
-        DbValue::Int(i) => Value::Int(*i),
-        DbValue::Float(f) => Value::Float(*f),
-        DbValue::Str(s) => Value::Str(s.clone()),
-        DbValue::Array(a) => Value::Array(array(a)),
-        DbValue::Object(a) => Value::Object(array(a)),
-        DbValue::Ext(x) => Value::Ext(utopia_query::Object::Row {
-            class: php_std::Extension::class(x).to_owned(),
-            fields: array(&php_std::Extension::to_array(x)),
-        }),
-    }
+/// The indexes of `kind` as database models, for `createCollection()`
+/// (without ClickHouse's `indexType`).
+///
+/// PHP: `SQL::getIndexDocuments($type)`.
+pub fn index_documents(kind: Kind) -> Result<Vec<DbIndex>> {
+    Ok(kind
+        .indexes()
+        .iter()
+        .map(|i| DbIndex::from_array(&from_query_array(&i.to_array())))
+        .collect::<utopia_database::Result<_>>()?)
 }
 
 /// `(int) $v`.
@@ -97,35 +88,6 @@ fn first(values: &Array) -> Option<&Value> {
 
 fn second(values: &Array) -> Option<&Value> {
     values.get(&ArrayKey::Int(1))
-}
-
-fn list(values: &Array) -> Vec<DbValue> {
-    values.values().map(to_db).collect()
-}
-
-fn attribute_document(attribute: Array) -> Result<Document> {
-    let DbValue::Array(attributes) = to_db(&Value::Array(attribute)) else { unreachable!("an array stays an array") };
-    Ok(Document::new(attributes)?)
-}
-
-fn string_attribute(id: &str, size: i64) -> Array {
-    let mut a = Array::default();
-    a.set(ArrayKey::from("$id"), Value::from(id));
-    a.set(ArrayKey::from("type"), Value::from("string"));
-    a.set(ArrayKey::from("size"), Value::Int(size));
-    a.set(ArrayKey::from("required"), Value::Bool(false));
-    a.set(ArrayKey::from("signed"), Value::Bool(true));
-    a.set(ArrayKey::from("array"), Value::Bool(false));
-    a.set(ArrayKey::from("filters"), Value::Array(Array::default()));
-    a
-}
-
-fn key_index(id: &str, attribute: &str) -> Array {
-    let mut a = Array::default();
-    a.set(ArrayKey::from("$id"), Value::from(id));
-    a.set(ArrayKey::from("type"), Value::from("key"));
-    a.set(ArrayKey::from("attributes"), Value::Array(Array::from_list(vec![Value::from(attribute)])));
-    a
 }
 
 impl Database {
@@ -189,9 +151,9 @@ impl Database {
         for query in queries {
             let attribute = query.attribute();
             let values = query.values();
-            let scalar = |v: Option<&Value>| v.map(to_db);
+            let scalar = |v: Option<&Value>| v.cloned();
             match query.method() {
-                Method::Equal => out.push(DbQuery::equal(attribute, list(values))),
+                Method::Equal => out.push(DbQuery::equal(attribute, values.clone())),
                 Method::GreaterThan => {
                     if let Some(v) = scalar(first(values)) {
                         out.push(DbQuery::greater_than(attribute, v));
@@ -206,13 +168,13 @@ impl Database {
                     if values.len() >= 2 {
                         out.push(DbQuery::between(
                             attribute,
-                            scalar(first(values)).unwrap_or(DbValue::Null),
-                            scalar(second(values)).unwrap_or(DbValue::Null),
+                            scalar(first(values)).unwrap_or(Value::Null),
+                            scalar(second(values)).unwrap_or(Value::Null),
                         ));
                     }
                 }
-                Method::Contains => out.push(DbQuery::contains(attribute, list(values))),
-                Method::ContainsAny => out.push(DbQuery::contains_any(attribute, list(values))),
+                Method::Contains => out.push(DbQuery::contains_string(attribute, values.clone())),
+                Method::ContainsAny => out.push(DbQuery::contains_any(attribute, values.clone())),
                 Method::IsNull => out.push(DbQuery::is_null(attribute)),
                 Method::IsNotNull => out.push(DbQuery::is_not_null(attribute)),
                 Method::NotEqual => {
@@ -220,24 +182,24 @@ impl Database {
                         out.push(DbQuery::not_equal(attribute, v));
                     }
                 }
-                Method::NotContains => out.push(DbQuery::not_contains(attribute, list(values))),
+                Method::NotContains => out.push(DbQuery::not_contains(attribute, values.clone())),
                 Method::NotBetween => {
                     if values.len() >= 2 {
                         out.push(DbQuery::not_between(
                             attribute,
-                            scalar(first(values)).unwrap_or(DbValue::Null),
-                            scalar(second(values)).unwrap_or(DbValue::Null),
+                            scalar(first(values)).unwrap_or(Value::Null),
+                            scalar(second(values)).unwrap_or(Value::Null),
                         ));
                     }
                 }
                 Method::StartsWith => {
                     if let Some(Value::Str(s)) = first(values) {
-                        out.push(DbQuery::starts_with(attribute, &String::from_utf8_lossy(s.as_bytes())));
+                        out.push(DbQuery::starts_with(attribute, s.clone()));
                     }
                 }
                 Method::EndsWith => {
                     if let Some(Value::Str(s)) = first(values) {
-                        out.push(DbQuery::ends_with(attribute, &String::from_utf8_lossy(s.as_bytes())));
+                        out.push(DbQuery::ends_with(attribute, s.clone()));
                     }
                 }
                 Method::LessThanEqual => {
@@ -250,8 +212,8 @@ impl Database {
                         out.push(DbQuery::greater_than_equal(attribute, v));
                     }
                 }
-                Method::OrderDesc => out.push(DbQuery::order_desc(attribute)),
-                Method::OrderAsc => out.push(DbQuery::order_asc(attribute)),
+                Method::OrderDesc => out.push(DbQuery::order_desc(attribute, None)),
+                Method::OrderAsc => out.push(DbQuery::order_asc(attribute, None)),
                 Method::Limit => {
                     if !values.is_empty() {
                         out.push(DbQuery::limit(first(values).map_or(0, cast_int)));
@@ -325,7 +287,7 @@ impl Adapter for Database {
         let mut set = |k: &str, v: Value| {
             out.set(ArrayKey::from(k), v);
         };
-        match self.db.exists(Some(&database), None).await {
+        match self.db.exists(Some(&database)).await {
             Err(e) => {
                 set("healthy", Value::Bool(false));
                 set("error", Value::from(e.message()));
@@ -334,12 +296,12 @@ impl Adapter for Database {
                 set("healthy", Value::Bool(false));
                 set("error", Value::from(format!("Database '{database}' does not exist").as_str()));
             }
-            Ok(true) => match self.db.get_collection(COLLECTION).await {
+            Ok(true) => match self.db.find_collection(COLLECTION).await {
                 Err(e) => {
                     set("healthy", Value::Bool(false));
                     set("error", Value::from(e.message()));
                 }
-                Ok(collection) if collection.is_empty() => {
+                Ok(None) => {
                     set("healthy", Value::Bool(false));
                     set("database", Value::from(database.as_str()));
                     set("collection", Value::from(COLLECTION));
@@ -350,7 +312,7 @@ impl Adapter for Database {
                         ),
                     );
                 }
-                Ok(_) => {
+                Ok(Some(_)) => {
                     set("healthy", Value::Bool(true));
                     set("database", Value::from(database.as_str()));
                     set("collection", Value::from(COLLECTION));
@@ -361,19 +323,19 @@ impl Adapter for Database {
     }
 
     async fn setup(&self) -> Result<()> {
-        if !self.db.exists(Some(&self.db.database()), None).await? {
+        if !self.db.exists(Some(&self.db.database())).await? {
             return Err(Error::exception("You need to create the database before running Usage setup"));
         }
-        let mut attributes =
-            Kind::Event.schema().iter().map(|a| attribute_document(a.to_array())).collect::<Result<Vec<_>>>()?;
-        let mut indexes =
-            Kind::Event.indexes().iter().map(|i| attribute_document(i.to_array())).collect::<Result<Vec<_>>>()?;
-        attributes.push(attribute_document(string_attribute("type", 16))?);
-        indexes.push(attribute_document(key_index("index-type", "type"))?);
-        attributes.push(attribute_document(string_attribute("ordinal", 255))?);
-        indexes.push(attribute_document(key_index("index-ordinal", "ordinal"))?);
+        // The event schema is a superset of the gauge schema for the
+        // dimensions both have, so one collection serves both types.
+        let mut attributes = attribute_documents(Kind::Event)?;
+        let mut indexes = index_documents(Kind::Event)?;
+        // A `type` column tells events and gauges apart in the one collection.
+        attributes.push(DbAttribute::string("type", 16));
+        indexes.push(DbIndex::key("index-type", ["type"], Vec::new(), Vec::new())?);
 
-        match self.db.create_collection(COLLECTION, attributes, indexes, None, true).await {
+        let collection = Collection::create(COLLECTION, "", attributes, indexes, None, true, Default::default())?;
+        match self.db.create_collection(collection).await {
             Ok(_) => Ok(()),
             Err(e) if e.is_a(DbKind::Duplicate) => Ok(()),
             Err(e) => Err(e.into()),
@@ -383,7 +345,7 @@ impl Adapter for Database {
     async fn add_batch(&self, metrics: &[Entry], kind: Kind, batch_size: i64) -> Result<bool> {
         let authorization = self.db.authorization();
         authorization
-            .skip(|| async {
+            .skip(async {
                 let mut entries = Vec::with_capacity(metrics.len());
                 for metric in metrics {
                     if metric.value < 0 && !metric.allow_negative {
@@ -453,11 +415,11 @@ impl Adapter for Database {
         let queries = Self::with_type(queries, kind);
         self.db
             .authorization()
-            .skip(|| async {
+            .skip(async {
                 let mut converted = Self::convert(&queries)?;
                 converted.push(DbQuery::limit(100));
                 loop {
-                    let documents = self.db.find(COLLECTION, converted.clone(), Db::PERMISSION_READ).await?;
+                    let documents = self.db.find(COLLECTION, converted.clone(), PermissionType::Read).await?;
                     if documents.is_empty() {
                         return Ok::<(), Error>(());
                     }
@@ -476,15 +438,12 @@ impl Adapter for Database {
         let documents = self
             .db
             .authorization()
-            .skip(|| async {
+            .skip(async {
                 let converted = Self::convert(&queries)?;
-                Ok::<_, Error>(self.db.find(COLLECTION, converted, Db::PERMISSION_READ).await?)
+                Ok::<_, Error>(self.db.find(COLLECTION, converted, PermissionType::Read).await?)
             })
             .await?;
-        Ok(documents
-            .iter()
-            .map(|d| Metric::new(d.array_copy(&[], &[]).iter().map(|(k, v)| (k.to_owned(), from_db(v))).collect()))
-            .collect())
+        Ok(documents.iter().map(|d| Metric::new(to_query_array(&d.array_copy()))).collect())
     }
 
     async fn count(&self, tenant: &str, queries: &[Query], kind: Option<Kind>, max: Option<i64>) -> Result<i64> {
@@ -492,7 +451,7 @@ impl Adapter for Database {
         let queries = Self::with_type(queries, kind);
         self.db
             .authorization()
-            .skip(|| async {
+            .skip(async {
                 let converted = Self::convert(&queries)?;
                 Ok(self.db.count(COLLECTION, converted, max).await?)
             })

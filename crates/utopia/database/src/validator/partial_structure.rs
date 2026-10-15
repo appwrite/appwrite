@@ -3,15 +3,15 @@
 //!
 //! PHP: `Utopia\Database\Validator\PartialStructure`.
 
+use crate::adapter::Profile;
 use crate::document::Document;
 use crate::error::Result;
-use crate::validator::structure::{Keys, Structure, StructureOptions, internal_attributes};
-use crate::validator::{array_key, index, index_or};
-use crate::value::{Array, Ext, Value};
+use crate::validator::structure::{OperatorCheck, Structure, internal_attributes};
+use crate::value::{Ext, Value};
 
 /// A [`Structure`] check of the attributes a document has: it need not
-/// name its collection or carry required attributes, except internal
-/// required ones it does carry.
+/// name its collection or carry required attributes, except the required
+/// internal attributes it does carry (even as `null`).
 ///
 /// PHP: `Utopia\Database\Validator\PartialStructure` (the constructor of
 /// `Structure`).
@@ -21,14 +21,27 @@ pub struct PartialStructure {
 }
 
 impl PartialStructure {
-    /// `new PartialStructure($collection, $idAttributeType)` with PHP's defaults.
-    pub fn new(collection: Document, id_attribute_type: impl Into<String>) -> Self {
-        Self { structure: Structure::new(collection, id_attribute_type) }
+    /// `new PartialStructure($collection, $profile)`.
+    pub fn new(collection: Document, profile: Profile) -> Self {
+        Self { structure: Structure::new(collection, profile) }
     }
 
-    /// `new PartialStructure(...)` with every option.
-    pub fn with_options(collection: Document, id_attribute_type: impl Into<String>, options: StructureOptions) -> Self {
-        Self { structure: Structure::with_options(collection, id_attribute_type, options) }
+    /// The same validator with `$currentDocument` ([`Structure::current_document`]).
+    #[must_use]
+    pub fn current_document(self, current: Option<Document>) -> Self {
+        Self { structure: self.structure.current_document(current) }
+    }
+
+    /// The same validator with `$storedAttributes` ([`Structure::stored_attributes`]).
+    #[must_use]
+    pub fn stored_attributes<S: Into<String>>(self, keys: impl IntoIterator<Item = S>) -> Self {
+        Self { structure: self.structure.stored_attributes(keys) }
+    }
+
+    /// The same validator checking operators with `check` ([`Structure::operators`]).
+    #[must_use]
+    pub fn operators(self, check: OperatorCheck) -> Self {
+        Self { structure: self.structure.operators(check) }
     }
 
     /// `getDescription()`.
@@ -44,55 +57,39 @@ impl PartialStructure {
     /// `isValid($value)` of any value: a document as
     /// [`PartialStructure::validate`] (leaving it as it is), anything else
     /// invalid.
+    ///
+    /// Fails as [`Structure::validate`] does.
     pub fn is_valid(&self, value: &Value) -> Result<bool> {
         match value {
-            Value::Ext(Ext::Document(d)) => self.check(d, &d.array_copy(&[], &[]), None),
+            Value::Ext(Ext::Document(d)) => self.run(d, None),
             _ => self.structure.fail("Value must be an instance of Document"),
         }
     }
 
     /// `isValid($document)`.
+    ///
+    /// Fails as [`Structure::validate`] does.
     pub fn validate(&self, document: &mut Document) -> Result<bool> {
-        let structure = document.array_copy(&[], &[]);
-        let present = Self::present(document);
-        self.check_with(&present, &structure, Some(document))
+        let copy = document.clone();
+        self.run(&copy, Some(document))
     }
 
-    /// Which internal attributes `document` has.
-    fn present(document: &Document) -> Vec<bool> {
-        internal_attributes().iter().map(|a| document.has(&crate::validator::text(index(a, "$id")))).collect()
-    }
-
-    /// [`PartialStructure::validate`] of `document`'s attributes.
-    fn check(&self, document: &Document, structure: &Array, write: Option<&mut Document>) -> Result<bool> {
-        self.check_with(&Self::present(document), structure, write)
-    }
-
-    /// The checks, given which internal attributes the document has,
-    /// writing what PHP changes in the document to `write` when given.
-    fn check_with(&self, present: &[bool], structure: &Array, write: Option<&mut Document>) -> Result<bool> {
+    fn run(&self, document: &Document, write: Option<&mut Document>) -> Result<bool> {
         let s = &self.structure;
         if !s.collection_ok() {
             return s.fail("Collection not found");
         }
-        let internal = internal_attributes();
-        let mut keys = Keys::default();
-        let empty = Value::from("");
-        for attribute in internal.iter().chain(s.collection_attributes()) {
-            keys.set(array_key(index_or(attribute, "$id", &empty)), attribute);
-        }
-        let required = internal
-            .iter()
-            .zip(present)
-            .filter(|(a, has)| **has && index(a, "required").strict_eq(&Value::Bool(true)))
-            .map(|(a, _)| a);
-        if !s.check_required(structure, required, &mut keys) {
+        let structure = document.array_copy();
+        let definitions = s.definitions()?;
+        let required =
+            internal_attributes().iter().filter(|a| a.required && document.as_array().get_str(&a.key).is_some());
+        if !s.check_required(&structure, required) {
             return Ok(false);
         }
-        if !s.check_unknown(structure, &keys) {
+        if !s.check_unknown(&structure, definitions) {
             return Ok(false);
         }
-        s.check_values(write, structure, &keys)
+        s.check_values(write, &structure, definitions)
     }
 }
 

@@ -3,259 +3,98 @@
 //!
 //! PHP: `Utopia\Database\Validator\Operator`.
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
-use php_std::value::Number;
+use utopia_query::schema::ColumnType;
 
-use crate::database::Database;
+use crate::attribute::Attribute;
+use crate::collection::Collection;
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
-use crate::operator::{Operator as DatabaseOperator, OperatorMethod};
-use crate::validator::{Message, array_key, index, is_numeric, text, text_key};
-use crate::value::{ArrayKey, Ext, Str, Value, as_document};
-
-/// `Operator::MAX_ARRAY_OPERATOR_SIZE`: the most items an array operator
-/// may carry.
-pub const MAX_ARRAY_OPERATOR_SIZE: usize = 10000;
-
-/// `Operator::ARRAY_FILTER_CONDITIONS`: the conditions of `arrayFilter`.
-pub const ARRAY_FILTER_CONDITIONS: [&str; 8] =
-    ["equal", "notEqual", "greaterThan", "greaterThanEqual", "lessThan", "lessThanEqual", "isNull", "isNotNull"];
+use crate::operator::{ARRAY_FILTER_CONDITIONS, MAX_ARRAY_OPERATOR_SIZE, Operator as DatabaseOperator, OperatorType};
+use crate::relationship::{RelationshipSide, RelationshipType};
+use crate::validator::big_int::{BigInt, Integer, Operand};
+use crate::validator::{Message, is_numeric, text};
+use crate::value::{Array, ArrayKey, Ext, Str, Value};
 
 /// Where PHP reports an `Operator::parse()` argument error from.
-const PARSE_CALLER: &str = "/usr/src/code/vendor/utopia-php/database/src/Database/Validator/Operator.php on line 108";
+const PARSE_CALLER: &str = "/usr/src/code/vendor/utopia-php/database/src/Database/Validator/Operator.php on line 201";
 
-const STRING_TYPES: [&str; 5] = ["string", "varchar", "text", "mediumtext", "longtext"];
+const STRING_TYPES: [ColumnType; 5] =
+    [ColumnType::String, ColumnType::Varchar, ColumnType::Text, ColumnType::MediumText, ColumnType::LongText];
 
 /// An operator valid for the attribute it updates: an existing attribute
-/// of a type the method applies to (numbers for arithmetic, arrays or
-/// many-side relationships for array methods, strings, booleans, dates),
-/// with well-formed values; with the current document, an integer result
-/// within 32-bit range, a string result within the attribute's size, and an
-/// insert index within the array.
+/// that is not encrypted, of a type the method applies to (numbers for
+/// arithmetic, arrays or many-side relationships for array methods,
+/// strings, booleans, dates), with well-formed values within the
+/// attribute's range; with the current document, an integer result within
+/// the attribute's range, a string result within its size, and an insert
+/// index within the array.
 ///
 /// ```
-/// use utopia_database::Document;
-/// use utopia_database::operator::{Operator, OperatorMethod};
+/// use utopia_database::{Attribute, Collection, Document};
+/// use utopia_database::operator::{Operator, OperatorType};
 /// use utopia_database::validator::operator::Operator as OperatorValidator;
-/// use utopia_database::value::{Value, list, string};
+/// use utopia_database::value::{Array, Value};
 ///
-/// let count = Document::from_pairs([("$id", string("count")), ("key", string("count")), ("type", string("integer"))]).unwrap();
-/// let collection = Document::from_pairs([("$id", string("c")), ("attributes", list([count.into()]))]).unwrap();
-/// let validator = OperatorValidator::new(&collection, None);
-/// assert!(validator.check(&Operator::new(OperatorMethod::Increment, "count", vec![Value::Int(1)])).unwrap());
-/// assert!(!validator.check(&Operator::new(OperatorMethod::Toggle, "count", vec![])).unwrap());
+/// let collection =
+///     Collection::create("c", "", vec![Attribute::integer("count")], vec![], None, true, Array::new()).unwrap();
+/// let validator = OperatorValidator::new(&collection, None, true).unwrap();
+/// assert!(validator.check(&Operator::new(OperatorType::Increment, "count", vec![Value::Int(1)])).unwrap());
+/// assert!(!validator.check(&Operator::new(OperatorType::Toggle, "count", vec![])).unwrap());
 /// assert_eq!(validator.description(), "Cannot apply toggle operator to non-boolean field 'count'");
 /// ```
 ///
-/// PHP: `Utopia\Database\Validator\Operator` (`new Operator($collection, $currentDocument)`).
+/// PHP: `Utopia\Database\Validator\Operator` (`new Operator($collection,
+/// $currentDocument, $supportUnsignedBigInt)`).
 #[derive(Clone, Debug)]
 pub struct Operator {
-    attributes: HashMap<ArrayKey, Document>,
+    attributes: HashMap<String, Attribute>,
     current_document: Option<Document>,
+    support_unsigned_big_int: bool,
     message: Message,
 }
 
-/// An arithmetic operator of PHP.
-#[derive(Clone, Copy)]
-pub(crate) enum Arith {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    Pow,
-}
-
-impl Arith {
-    fn symbol(self) -> &'static str {
-        match self {
-            Arith::Add => "+",
-            Arith::Sub => "-",
-            Arith::Mul => "*",
-            Arith::Div => "/",
-            Arith::Mod => "%",
-            Arith::Pow => "**",
+/// The integer `getIntegerValue()` reads from a value: an integer, an
+/// integer string, or a whole float within PHP's integer range.
+fn integer_value(value: &Value) -> Option<Integer> {
+    match value {
+        Value::Int(i) => Some(Integer::Int(*i)),
+        Value::Str(s) if BigInt::is_integer_string(s.as_bytes(), true) => {
+            BigInt::to_native(Operand::Str(s.as_bytes())).ok()
         }
+        Value::Float(f)
+            if f.is_finite()
+                && f.floor() == *f
+                && *f >= -9_223_372_036_854_775_808.0
+                && *f <= 9_223_372_036_854_775_808.0 =>
+        {
+            Some(Integer::Int(php_std::format::dval_to_lval(*f)))
+        }
+        _ => None,
     }
 }
 
-/// The number PHP's arithmetic reads from a value: `null` is 0, booleans
-/// 0 or 1, strings their (leading) number; `None` where PHP throws.
-fn operand(value: &Value) -> Option<Number> {
-    Some(match value {
-        Value::Null => Number::Int(0),
-        Value::Bool(b) => Number::Int(i64::from(*b)),
-        Value::Int(i) => Number::Int(*i),
-        Value::Float(f) => Number::Float(*f),
-        Value::Str(s) => {
-            let s = s.as_bytes();
-            if let Some((n, _)) = php_std::value::numeric_bytes_ex(s) {
-                return Some(n);
-            }
-            // A leading number ("5abc"): PHP warns and uses it.
-            let start = s.iter().take_while(|c| matches!(c, b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C)).count();
-            let mut end = start;
-            if end < s.len() && matches!(s[end], b'+' | b'-') {
-                end += 1;
-            }
-            let digits = |from: usize| s[from..].iter().take_while(|c| c.is_ascii_digit()).count();
-            let int_digits = digits(end);
-            end += int_digits;
-            let mut frac_digits = 0;
-            if end < s.len() && s[end] == b'.' {
-                frac_digits = digits(end + 1);
-                if int_digits + frac_digits > 0 {
-                    end += 1 + frac_digits;
-                }
-            }
-            if int_digits + frac_digits == 0 {
-                return None;
-            }
-            if end < s.len() && matches!(s[end], b'e' | b'E') {
-                let mut e = end + 1;
-                if e < s.len() && matches!(s[e], b'+' | b'-') {
-                    e += 1;
-                }
-                let exp = digits(e);
-                if exp > 0 {
-                    end = e + exp;
-                }
-            }
-            php_std::value::numeric_bytes_ex(&s[start..end]).map(|(n, _)| n)?
-        }
-        _ => return None,
-    })
-}
-
-/// `(int) $float` for `%`: 0 when it does not fit.
-fn to_int(n: Number) -> i64 {
-    match n {
-        Number::Int(i) => i,
-        Number::Float(f) if (-9.223_372_036_854_776e18..9.223_372_036_854_776e18).contains(&f) => f as i64,
-        Number::Float(_) => 0,
+/// The number `getNumericValue()` reads from a value: an integer or float,
+/// or a numeric string (an integer when it is an integer string within
+/// PHP's range, a float otherwise).
+fn numeric_value(value: &Value) -> Option<Value> {
+    match value {
+        Value::Int(_) | Value::Float(_) => Some(value.clone()),
+        Value::Str(s) if is_numeric(value) => Some(if BigInt::fits_php_int(s.as_bytes(), true) {
+            Value::Int(crate::value::to_long(value))
+        } else {
+            Value::Float(value.to_double())
+        }),
+        _ => None,
     }
 }
 
-/// `$a <op> $b` as PHP computes it on scalars.
-pub(crate) fn arith(op: Arith, a: &Value, b: &Value) -> Result<Value> {
-    let (Some(x), Some(y)) = (operand(a), operand(b)) else {
-        return Err(Error::new(
-            Kind::TypeError,
-            format!("Unsupported operand types: {} {} {}", a.debug_type(), op.symbol(), b.debug_type()),
-        ));
-    };
-    let float = |f: f64| Ok(Value::Float(f));
-    match op {
-        Arith::Add | Arith::Sub | Arith::Mul => match (x, y) {
-            (Number::Int(i), Number::Int(j)) => {
-                let exact = match op {
-                    Arith::Add => i.checked_add(j),
-                    Arith::Sub => i.checked_sub(j),
-                    _ => i.checked_mul(j),
-                };
-                match exact {
-                    Some(r) => Ok(Value::Int(r)),
-                    None => float(match op {
-                        Arith::Add => i as f64 + j as f64,
-                        Arith::Sub => i as f64 - j as f64,
-                        _ => i as f64 * j as f64,
-                    }),
-                }
-            }
-            (x, y) => float(match op {
-                Arith::Add => x.as_f64() + y.as_f64(),
-                Arith::Sub => x.as_f64() - y.as_f64(),
-                _ => x.as_f64() * y.as_f64(),
-            }),
-        },
-        Arith::Div => {
-            if y.as_f64() == 0.0 {
-                return Err(Error::new(Kind::DivisionByZero, "Division by zero"));
-            }
-            match (x, y) {
-                (Number::Int(i), Number::Int(j)) if j != -1 && i % j == 0 => Ok(Value::Int(i / j)),
-                (Number::Int(i), Number::Int(-1)) if i != i64::MIN => Ok(Value::Int(-i)),
-                (x, y) => float(x.as_f64() / y.as_f64()),
-            }
-        }
-        Arith::Mod => {
-            let (i, j) = (to_int(x), to_int(y));
-            if j == 0 {
-                return Err(Error::new(Kind::DivisionByZero, "Modulo by zero"));
-            }
-            Ok(Value::Int(if j == -1 { 0 } else { i % j }))
-        }
-        Arith::Pow => match (x, y) {
-            (Number::Int(i), Number::Int(j)) if j >= 0 => {
-                let exact = u32::try_from(j).ok().and_then(|j| i.checked_pow(j));
-                match exact {
-                    Some(r) => Ok(Value::Int(r)),
-                    None => float((i as f64).powf(j as f64)),
-                }
-            }
-            (x, y) => float(x.as_f64().powf(y.as_f64())),
-        },
-    }
-}
-
-/// `Operator::parse($string)` as the validator calls it; the message after
-/// `Invalid operator: `.
-fn parse(value: &Value) -> std::result::Result<DatabaseOperator, String> {
-    let Value::Str(s) = value else {
-        return Err(match value {
-            Value::Int(_) | Value::Float(_) | Value::Bool(_) => return parse(&Value::Str(Str::from(text(value)))),
-            other => format!(
-                "Utopia\\Database\\Operator::parse(): Argument #1 ($operator) must be of type string, {} given, called in {PARSE_CALLER}",
-                other.debug_type()
-            ),
-        });
-    };
-    let decoded =
-        php_std::json::decode(s.as_bytes(), Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
-            .map_err(|e| format!("Invalid operator: {}", e.message()))?;
-    let decoded = crate::value::from_plain(decoded);
-    let Value::Array(operator) = decoded else {
-        return Err(format!("Invalid operator. Must be an array, got {}", decoded.type_name()));
-    };
-    let field = |key: &str, default: Value| match operator.get_str(key) {
-        Some(Value::Null) | None => default,
-        Some(v) => v.clone(),
-    };
-    let method = field("method", Value::from(""));
-    let attribute = field("attribute", Value::from(""));
-    let values = field("values", Value::Array(Default::default()));
-    let Value::Str(method) = method else {
-        return Err(format!("Invalid operator method. Must be a string, got {}", method.type_name()));
-    };
-    let method = String::from_utf8_lossy(method.as_bytes()).into_owned();
-    let method = OperatorMethod::from_name(&method);
-    if let OperatorMethod::Other(m) = &method {
-        return Err(format!("Invalid operator method: {m}"));
-    }
-    let Value::Str(attribute) = attribute else {
-        return Err(format!("Invalid operator attribute. Must be a string, got {}", attribute.type_name()));
-    };
-    let Value::Array(values) = values else {
-        return Err(format!("Invalid operator values. Must be an array, got {}", values.type_name()));
-    };
-    Ok(DatabaseOperator::new(
-        method,
-        String::from_utf8_lossy(attribute.as_bytes()).into_owned(),
-        values.into_iter().map(|(_, v)| v).collect(),
-    ))
-}
-
-/// Whether a relationship attribute holds many documents on this side
-/// (`isRelationshipArray`).
-fn is_relationship_array(attribute: &Document) -> bool {
-    let options = attribute.get("options").cloned().unwrap_or(Value::Array(Default::default()));
-    let relation = index(&options, "relationType");
-    let side = index(&options, "side");
-    let is = |v: &Value, s: &str| v.strict_eq(&Value::from(s));
-    is(relation, Database::RELATION_MANY_TO_MANY)
-        || (is(relation, Database::RELATION_ONE_TO_MANY) && is(side, Database::RELATION_SIDE_PARENT))
-        || (is(relation, Database::RELATION_MANY_TO_ONE) && is(side, Database::RELATION_SIDE_CHILD))
+/// `BigInt::compare()` of an integer and a bound (an integer or integer
+/// string).
+fn compare(integer: &Integer, bound: &Value) -> Ordering {
+    Operand::from_value(bound).and_then(|b| BigInt::compare(integer, b).ok()).unwrap_or(Ordering::Greater)
 }
 
 /// A relationship value: a document id or a document.
@@ -263,30 +102,68 @@ fn is_relationship_value(item: &Value) -> bool {
     matches!(item, Value::Str(_) | Value::Ext(Ext::Document(_)))
 }
 
-fn in_strings(needle: &Value, haystack: &[&str]) -> bool {
-    haystack.iter().any(|h| needle.loose_eq(&Value::from(*h)))
+/// Whether a relationship attribute holds many documents on this side
+/// (`isRelationshipArray()`).
+fn is_relationship_array(attribute: &Attribute) -> bool {
+    match attribute.relationship.as_ref().map(|r| r.kind) {
+        Some(RelationshipType::ManyToMany) => true,
+        Some(RelationshipType::OneToMany) => attribute.side == Some(RelationshipSide::Parent),
+        Some(RelationshipType::ManyToOne) => attribute.side == Some(RelationshipSide::Child),
+        _ => false,
+    }
+}
+
+/// `$values[$i]`, `null` when missing.
+fn nth(values: &Array, i: i64) -> &Value {
+    const NULL: &Value = &Value::Null;
+    values.get(&ArrayKey::Int(i)).unwrap_or(NULL)
+}
+
+/// `is_array($values[0]) ? $values[0] : $values`.
+fn payload(values: &Array) -> &Array {
+    match nth(values, 0) {
+        Value::Array(a) => a,
+        _ => values,
+    }
 }
 
 impl Operator {
-    /// `new Operator($collection, $currentDocument)`: the collection's
-    /// attributes by `key` (or `$id`).
-    pub fn new(collection: &Document, current_document: Option<Document>) -> Self {
-        let mut attributes = HashMap::new();
-        if let Some(Value::Array(list)) = collection.get("attributes") {
-            for attribute in list.values().filter_map(as_document) {
-                let key = match attribute.get("key") {
-                    Some(k) => k.clone(),
-                    None => Value::from(attribute.id()),
-                };
-                attributes.insert(array_key(&key), attribute.clone());
-            }
-        }
-        Self { attributes, current_document, message: Message::new("Invalid operator") }
+    /// The validator of operators on `collection`'s attributes (by `key`),
+    /// predicting results against `current_document` when given; without
+    /// `support_unsigned_big_int`, arithmetic on an unsigned big integer
+    /// is refused.
+    ///
+    /// Fails as [`Collection::attributes`] does.
+    pub fn new(
+        collection: &Collection,
+        current_document: Option<Document>,
+        support_unsigned_big_int: bool,
+    ) -> Result<Self> {
+        let attributes =
+            collection.attributes()?.iter().map(|attribute| (attribute.key.clone(), attribute.clone())).collect();
+        Ok(Self { attributes, current_document, support_unsigned_big_int, message: Message::new("Invalid operator") })
     }
 
-    /// `getDescription()`.
+    /// [`Operator::new`] of a collection document (PHP's constructor reads
+    /// it with `Collection::fromDocument()`).
+    ///
+    /// Fails as [`Collection::from_document`] and [`Collection::attributes`] do.
+    pub fn from_document(
+        collection: &Document,
+        current_document: Option<Document>,
+        support_unsigned_big_int: bool,
+    ) -> Result<Self> {
+        Self::new(&Collection::from_document(collection)?, current_document, support_unsigned_big_int)
+    }
+
+    /// `getDescription()`: the reason of the last failure.
     pub fn description(&self) -> String {
         self.message.get()
+    }
+
+    /// `getType()`: `object`.
+    pub fn type_name(&self) -> &'static str {
+        "object"
     }
 
     fn fail(&self, message: impl Into<String>) -> Result<bool> {
@@ -294,73 +171,182 @@ impl Operator {
         Ok(false)
     }
 
-    /// `isValid($value)`: an operator, or a value `Operator::parse` reads
-    /// as one. Fails where PHP's arithmetic throws while predicting a
-    /// result (a `TypeError` on a current value that is not a number, a
-    /// `DivisionByZeroError` on a modulo by a fraction).
+    /// `isValid($value)`: an operator, or a value `Operator::parse()` reads
+    /// as one (an integer, float or boolean is read as its string).
+    ///
+    /// Fails with a [`Kind::TypeError`] where PHP's `strlen()` throws on the
+    /// current value of a `stringConcat` (an array or an object).
     pub fn is_valid(&self, value: &Value) -> Result<bool> {
-        match value {
-            Value::Ext(Ext::Operator(o)) => self.check(o),
-            other => match parse(other) {
-                Ok(o) => self.check(&o),
-                Err(message) => self.fail(format!("Invalid operator: {message}")),
-            },
-        }
+        let parsed;
+        let operator = match value {
+            Value::Ext(Ext::Operator(o)) => &**o,
+            Value::Null | Value::Array(_) | Value::Object(_) | Value::Ext(_) => {
+                return self.fail(format!(
+                    "Invalid operator: Utopia\\Database\\Operator::parse(): Argument #1 ($operator) must be of type string, {} given, called in {PARSE_CALLER}",
+                    value.debug_type()
+                ));
+            }
+            other => {
+                let source = match other {
+                    Value::Str(s) => s.clone(),
+                    other => other.to_php_string().unwrap_or(Str::EMPTY),
+                };
+                match DatabaseOperator::parse(source.as_bytes()) {
+                    Ok(o) => {
+                        parsed = o;
+                        &parsed
+                    }
+                    Err(e) => {
+                        let mut message = b"Invalid operator: ".to_vec();
+                        message.extend_from_slice(e.message_bytes());
+                        return self.fail(String::from_utf8_lossy(&message).into_owned());
+                    }
+                }
+            }
+        };
+        self.check(operator)
     }
 
     /// [`Operator::is_valid`] of an operator.
     pub fn check(&self, operator: &DatabaseOperator) -> Result<bool> {
-        let method = operator.method();
-        if let OperatorMethod::Other(m) = method {
-            return self.fail(format!("Invalid operator method: {m}"));
-        }
-        let Some(attribute) = self.attributes.get(&text_key(operator.attribute())) else {
+        let Some(attribute) = self.attributes.get(operator.attribute()) else {
             return self.fail(format!("Attribute '{}' does not exist in collection", operator.attribute()));
         };
         self.check_for_attribute(operator, attribute)
     }
 
-    fn check_for_attribute(&self, operator: &DatabaseOperator, attribute: &Document) -> Result<bool> {
+    fn in_bounds(&self, value: &Value, attribute: &Attribute) -> bool {
+        let Some(bounds) = attribute.bounds() else {
+            return false;
+        };
+        if attribute.is_integer() {
+            return integer_value(value).is_some_and(|i| {
+                compare(&i, &bounds.min) != Ordering::Less && compare(&i, &bounds.max) != Ordering::Greater
+            });
+        }
+        let Some(numeric) = numeric_value(value) else {
+            return false;
+        };
+        if let Value::Float(f) = numeric
+            && !f.is_finite()
+        {
+            return false;
+        }
+        numeric.compare(&bounds.min) >= 0 && numeric.compare(&bounds.max) <= 0
+    }
+
+    fn valid_limit(&self, limit: &Value, attribute: &Attribute, operator: &DatabaseOperator) -> bool {
+        let name = operator.method().as_str();
+        let finite = match limit {
+            Value::Int(_) => true,
+            Value::Float(f) => f.is_finite(),
+            Value::Str(_) => is_numeric(limit),
+            _ => false,
+        };
+        if !attribute.is_integer() || !finite {
+            if self.in_bounds(limit, attribute) {
+                return true;
+            }
+            self.message
+                .set(format!("Cannot apply {name} operator: max/min limit must be numeric, got {}", limit.type_name()));
+            return false;
+        }
+        let integral = Operand::from_value(limit).and_then(BigInt::integral_value);
+        let Some(integral) = integral else {
+            self.message.set(format!(
+                "Cannot apply {name} operator: max/min limit must be a whole number for integer attribute '{}', got {}",
+                operator.attribute(),
+                text(limit)
+            ));
+            return false;
+        };
+        let Some(bounds) = attribute.bounds() else {
+            self.message
+                .set(format!("Cannot apply {name} operator: max/min limit must be numeric, got {}", limit.type_name()));
+            return false;
+        };
+        if compare(&integral, &bounds.min) == Ordering::Less || compare(&integral, &bounds.max) == Ordering::Greater {
+            self.message.set(format!(
+                "Cannot apply {name} operator: max/min limit must be between {} and {}",
+                text(&bounds.min),
+                text(&bounds.max)
+            ));
+            return false;
+        }
+        true
+    }
+
+    fn range_message(&self, method: OperatorType, attribute: &Attribute, result: &Integer) -> bool {
+        let Some(bounds) = attribute.bounds() else {
+            return false;
+        };
+        let result_value = Value::from(result.clone());
+        let above = if attribute.is_integer() {
+            compare(result, &bounds.max) == Ordering::Greater
+        } else {
+            result_value.compare(&bounds.max) > 0
+        };
+        if above {
+            self.message.set(format!(
+                "Cannot apply {} operator: would overflow maximum value of {}",
+                method.as_str(),
+                text(&bounds.max)
+            ));
+            return false;
+        }
+        let below = if attribute.is_integer() {
+            compare(result, &bounds.min) == Ordering::Less
+        } else {
+            result_value.compare(&bounds.min) < 0
+        };
+        if below {
+            self.message.set(format!(
+                "Cannot apply {} operator: would underflow minimum value of {}",
+                method.as_str(),
+                text(&bounds.min)
+            ));
+            return false;
+        }
+        true
+    }
+
+    fn items_message(&self, name: &str, attribute: &Attribute) -> Result<bool> {
+        let Some(bounds) = attribute.bounds() else {
+            return Ok(false);
+        };
+        self.fail(format!(
+            "Cannot apply {name} operator: array items must be between {} and {}",
+            text(&bounds.min),
+            text(&bounds.max)
+        ))
+    }
+
+    fn check_for_attribute(&self, operator: &DatabaseOperator, attribute: &Attribute) -> Result<bool> {
         let method = operator.method();
         let name = method.as_str();
         let field = operator.attribute();
         let values = operator.values();
-        let first = values.first();
-        let kind = attribute.get("type").cloned().unwrap_or(Value::Null);
-        let is_array = attribute.get("array").is_some_and(Value::truthy);
-        let relationship = kind.strict_eq(&Value::from(Database::VAR_RELATIONSHIP));
-        let integer = kind.strict_eq(&Value::from(Database::VAR_INTEGER));
+        let values: &Array = &values;
+        let first = nth(values, 0);
+        let kind = attribute.kind;
+        let is_array = attribute.array;
+        let relationship = kind == ColumnType::Relationship;
 
         // Operators run on the stored value, which for an encrypted
         // attribute is the ciphertext.
-        let encrypt = Value::from("encrypt");
-        match attribute.get("filters") {
-            None => {}
-            Some(Value::Array(filters)) => {
-                if filters.values().any(|f| f.strict_eq(&encrypt)) {
-                    return self.fail(format!("Cannot apply {name} operator to encrypted attribute '{field}'"));
-                }
-            }
-            Some(other) => {
-                return Err(Error::new(
-                    Kind::TypeError,
-                    format!("in_array(): Argument #2 ($haystack) must be of type array, {} given", other.debug_type()),
-                ));
-            }
+        if attribute.filters.iter().any(|f| f == "encrypt") {
+            return self.fail(format!("Cannot apply {name} operator to encrypted attribute '{field}'"));
         }
 
         if matches!(
             method,
-            OperatorMethod::ArrayAppend
-                | OperatorMethod::ArrayPrepend
-                | OperatorMethod::ArrayIntersect
-                | OperatorMethod::ArrayDiff
-                | OperatorMethod::ArrayRemove
+            OperatorType::ArrayAppend
+                | OperatorType::ArrayPrepend
+                | OperatorType::ArrayIntersect
+                | OperatorType::ArrayDiff
+                | OperatorType::ArrayRemove
         ) {
-            let size = match first {
-                Some(Value::Array(a)) => a.len(),
-                _ => values.len(),
-            };
+            let size = payload(values).len();
             if size > MAX_ARRAY_OPERATOR_SIZE {
                 return self.fail(format!(
                     "Array size {size} exceeds maximum allowed size of {MAX_ARRAY_OPERATOR_SIZE} for array operations"
@@ -374,131 +360,124 @@ impl Operator {
                 "Cannot apply {name} operator: relationship values must be document IDs (strings) or Document objects"
             )
         };
-        let int_range = |item: &Value| {
-            is_numeric(item)
-                && (item.compare(&Value::Int(Database::MAX_INT)) > 0
-                    || item.compare(&Value::Int(Database::MIN_INT)) < 0)
-        };
+        let non_array = || format!("Cannot apply {name} operator to non-array field '{field}'");
 
         match method {
-            OperatorMethod::Increment
-            | OperatorMethod::Decrement
-            | OperatorMethod::Multiply
-            | OperatorMethod::Divide
-            | OperatorMethod::Modulo
-            | OperatorMethod::Power => {
-                if !in_strings(&kind, &[Database::VAR_INTEGER, Database::VAR_FLOAT]) {
+            OperatorType::Increment
+            | OperatorType::Decrement
+            | OperatorType::Multiply
+            | OperatorType::Divide
+            | OperatorType::Modulo
+            | OperatorType::Power => {
+                if !attribute.is_numeric() {
                     return self.fail(format!("Cannot apply {name} operator to non-numeric field '{field}'"));
                 }
-                let Some(value) = first.filter(|v| !matches!(v, Value::Null) && is_numeric(v)) else {
+                if !attribute.signed && kind == ColumnType::BigInteger && !self.support_unsigned_big_int {
+                    return self.fail(format!(
+                        "Cannot apply {name} operator: unsigned 64-bit arithmetic is not supported by this adapter"
+                    ));
+                }
+                if matches!(first, Value::Null) || !self.in_bounds(first, attribute) {
                     return self.fail(format!(
                         "Cannot apply {name} operator: value must be numeric, got {}",
-                        first.map_or("NULL", Value::type_name)
+                        first.type_name()
                     ));
+                }
+                let integer_type = attribute.is_integer();
+                let operand = if integer_type { integer_value(first).map(Value::from) } else { numeric_value(first) };
+                let Some(operand) = operand else {
+                    return Ok(false);
                 };
-                if matches!(method, OperatorMethod::Divide | OperatorMethod::Modulo) && value.to_double() == 0.0 {
-                    let what = if method == &OperatorMethod::Divide { "division" } else { "modulo" };
+                if matches!(method, OperatorType::Divide | OperatorType::Modulo)
+                    && matches!(operand, Value::Int(0) | Value::Float(0.0))
+                {
+                    let what = if method == OperatorType::Divide { "division" } else { "modulo" };
                     return self.fail(format!("Cannot apply {name} operator: {what} by zero"));
                 }
-                if let Some(limit) = values.get(1)
-                    && !matches!(limit, Value::Null)
-                    && !is_numeric(limit)
-                {
-                    return self.fail(format!(
-                        "Cannot apply {name} operator: max/min limit must be numeric, got {}",
-                        limit.type_name()
-                    ));
+                let limit = nth(values, 1);
+                if values.len() > 1 && !matches!(limit, Value::Null) && !self.valid_limit(limit, attribute, operator) {
+                    return Ok(false);
                 }
                 if let Some(current) = &self.current_document
-                    && integer
-                    && values.get(1).is_none_or(|v| matches!(v, Value::Null))
+                    && integer_type
+                    && matches!(limit, Value::Null)
                 {
-                    let current = current.get(field).cloned().unwrap_or(Value::Int(0));
-                    let op = match method {
-                        OperatorMethod::Increment => Arith::Add,
-                        OperatorMethod::Decrement => Arith::Sub,
-                        OperatorMethod::Multiply => Arith::Mul,
-                        OperatorMethod::Divide => Arith::Div,
-                        OperatorMethod::Modulo => Arith::Mod,
-                        _ => Arith::Pow,
+                    let stored = current.get(field).cloned().unwrap_or(Value::Int(0));
+                    let current = integer_value(&stored);
+                    let Some(current) = current.filter(|c| self.in_bounds(&Value::from(c.clone()), attribute)) else {
+                        return self.fail(format!(
+                            "Cannot apply {name} operator: current value is outside the attribute range"
+                        ));
                     };
-                    let predicted = arith(op, &current, value)?;
-                    if predicted.compare(&Value::Int(Database::MAX_INT)) > 0 {
-                        return self.fail(format!(
-                            "Cannot apply {name} operator: would overflow maximum value of {}",
-                            Database::MAX_INT
-                        ));
-                    }
-                    if predicted.compare(&Value::Int(Database::MIN_INT)) < 0 {
-                        return self.fail(format!(
-                            "Cannot apply {name} operator: would underflow minimum value of {}",
-                            Database::MIN_INT
-                        ));
+                    let Some(operand) = Operand::from_value(&operand) else {
+                        return Ok(false);
+                    };
+                    let predicted = match BigInt::calculate(method, &current, operand) {
+                        Ok(predicted) => predicted,
+                        Err(e) if e.kind() == Kind::InvalidArgument => {
+                            return self
+                                .fail(format!("Cannot apply {name} operator: result is outside the attribute range"));
+                        }
+                        Err(e) => return Err(e),
+                    };
+                    if !self.range_message(method, attribute, &predicted) {
+                        return Ok(false);
                     }
                 }
             }
-            OperatorMethod::ArrayAppend | OperatorMethod::ArrayPrepend => {
+            OperatorType::ArrayAppend | OperatorType::ArrayPrepend => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
-                    if !values.iter().all(is_relationship_value) {
+                    if !values.values().all(is_relationship_value) {
                         return self.fail(relationship_values());
                     }
                 } else if !is_array {
-                    return self.fail(format!("Cannot apply {name} operator to non-array field '{field}'"));
+                    return self.fail(non_array());
                 }
-                if !values.is_empty() && integer {
-                    let items: Vec<&Value> = match first {
-                        Some(Value::Array(a)) => a.values().collect(),
-                        _ => values.iter().collect(),
-                    };
-                    if items.into_iter().any(int_range) {
-                        return self.fail(format!(
-                            "Cannot apply {name} operator: array items must be between {} and {}",
-                            Database::MIN_INT,
-                            Database::MAX_INT
-                        ));
+                if !values.is_empty() && attribute.is_integer() {
+                    for item in payload(values).values() {
+                        if is_numeric(item) && !self.in_bounds(item, attribute) {
+                            return self.items_message(name, attribute);
+                        }
                     }
                 }
             }
-            OperatorMethod::ArrayUnique => {
+            OperatorType::ArrayUnique => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
                 } else if !is_array {
-                    return self.fail(format!("Cannot apply {name} operator to non-array field '{field}'"));
+                    return self.fail(non_array());
                 }
             }
-            OperatorMethod::ArrayInsert => {
+            OperatorType::ArrayInsert => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
                 } else if !is_array {
-                    return self.fail(format!("Cannot apply {name} operator to non-array field '{field}'"));
+                    return self.fail(non_array());
                 }
                 if values.len() != 2 {
                     return self
                         .fail(format!("Cannot apply {name} operator: requires exactly 2 values (index and value)"));
                 }
-                let Value::Int(index) = values[0] else {
-                    return self.fail(format!("Cannot apply {name} operator: index must be a non-negative integer"));
+                let index = match first {
+                    Value::Int(i) if *i >= 0 => *i,
+                    _ => {
+                        return self
+                            .fail(format!("Cannot apply {name} operator: index must be a non-negative integer"));
+                    }
                 };
-                if index < 0 {
-                    return self.fail(format!("Cannot apply {name} operator: index must be a non-negative integer"));
-                }
-                let insert = &values[1];
+                let insert = nth(values, 1);
                 if relationship && !is_relationship_value(insert) {
                     return self.fail(relationship_values());
                 }
-                if integer && int_range(insert) {
-                    return self.fail(format!(
-                        "Cannot apply {name} operator: array items must be between {} and {}",
-                        Database::MIN_INT,
-                        Database::MAX_INT
-                    ));
+                if attribute.is_integer() && is_numeric(insert) && !self.in_bounds(insert, attribute) {
+                    return self.items_message(name, attribute);
                 }
                 if let Some(current) = &self.current_document
                     && let Some(Value::Array(current)) = current.get(field)
@@ -510,26 +489,22 @@ impl Operator {
                     ));
                 }
             }
-            OperatorMethod::ArrayRemove => {
+            OperatorType::ArrayRemove => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
-                    let items: Vec<&Value> = match first {
-                        Some(Value::Array(a)) => a.values().collect(),
-                        _ => values.iter().collect(),
-                    };
-                    if !items.into_iter().all(is_relationship_value) {
+                    if !payload(values).values().all(is_relationship_value) {
                         return self.fail(relationship_values());
                     }
                 } else if !is_array {
-                    return self.fail(format!("Cannot apply {name} operator to non-array field '{field}'"));
+                    return self.fail(non_array());
                 }
                 if values.is_empty() {
                     return self.fail(format!("Cannot apply {name} operator: requires a value to remove"));
                 }
             }
-            OperatorMethod::ArrayIntersect => {
+            OperatorType::ArrayIntersect => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
@@ -540,57 +515,56 @@ impl Operator {
                 if values.is_empty() {
                     return self.fail(format!("{name} operator requires a non-empty array value"));
                 }
-                if relationship && !values.iter().all(is_relationship_value) {
+                if relationship && !values.values().all(is_relationship_value) {
                     return self.fail(relationship_values());
                 }
             }
-            OperatorMethod::ArrayDiff => {
+            OperatorType::ArrayDiff => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
-                    if !values.iter().all(is_relationship_value) {
+                    if !values.values().all(is_relationship_value) {
                         return self.fail(relationship_values());
                     }
                 } else if !is_array {
                     return self.fail(format!("Cannot use {name} operator on non-array attribute '{field}'"));
                 }
             }
-            OperatorMethod::ArrayFilter => {
+            OperatorType::ArrayFilter => {
                 if relationship {
                     if !is_relationship_array(attribute) {
                         return self.fail(single_relationship());
                     }
                 } else if !is_array {
-                    return self.fail(format!("Cannot apply {name} operator to non-array field '{field}'"));
+                    return self.fail(non_array());
                 }
                 if values.is_empty() || values.len() > 2 {
                     return self.fail(format!(
                         "Cannot apply {name} operator: requires 1 or 2 values (condition and optional comparison value)"
                     ));
                 }
-                let Value::Str(condition) = &values[0] else {
+                let Value::Str(condition) = first else {
                     return self.fail(format!("Cannot apply {name} operator: condition must be a string"));
                 };
                 if !ARRAY_FILTER_CONDITIONS.iter().any(|c| c.as_bytes() == condition.as_bytes()) {
                     return self.fail(format!(
                         "Invalid array filter condition '{}'. Must be one of: {}",
-                        text(&values[0]),
+                        text(first),
                         ARRAY_FILTER_CONDITIONS.join(", ")
                     ));
                 }
             }
-            OperatorMethod::StringConcat => {
-                if !in_strings(&kind, &STRING_TYPES) || is_array {
+            OperatorType::StringConcat => {
+                if !STRING_TYPES.contains(&kind) || is_array {
                     return self.fail(format!("Cannot apply {name} operator to non-string field '{field}'"));
                 }
-                let Some(Value::Str(concat)) = first else {
+                let Value::Str(concat) = first else {
                     return self.fail(format!("Cannot apply {name} operator: requires a string value"));
                 };
                 if let Some(current) = &self.current_document {
-                    let current = current.get(field).cloned().unwrap_or(Value::from(""));
+                    let current = current.get(field).cloned().unwrap_or(Value::Str(Str::EMPTY));
                     let current_len = match &current {
-                        Value::Str(s) => s.as_bytes().len(),
                         Value::Array(_) | Value::Object(_) | Value::Ext(_) => {
                             return Err(Error::new(
                                 Kind::TypeError,
@@ -600,56 +574,47 @@ impl Operator {
                                 ),
                             ));
                         }
-                        other => text(other).len(),
+                        other => other.to_php_string().map_or(0, |s| s.len()),
                     };
-                    let predicted = current_len + concat.as_bytes().len();
-                    let max = attribute.get("size").cloned().unwrap_or(Value::Int(0));
-                    if max.compare(&Value::Int(0)) > 0 && Value::Int(predicted as i64).compare(&max) > 0 {
+                    let predicted = current_len + concat.len();
+                    let max = attribute.size.unwrap_or(0);
+                    if max > 0 && predicted as i64 > max {
                         return self.fail(format!(
-                            "Cannot apply {name} operator: result would exceed maximum length of {} characters",
-                            text(&max)
+                            "Cannot apply {name} operator: result would exceed maximum length of {max} characters"
                         ));
                     }
                 }
             }
-            OperatorMethod::StringReplace => {
-                if !in_strings(&kind, &STRING_TYPES) {
+            OperatorType::StringReplace => {
+                if !STRING_TYPES.contains(&kind) {
                     return self.fail(format!("Cannot apply {name} operator to non-string field '{field}'"));
                 }
-                if values.len() != 2 || !matches!(values[0], Value::Str(_)) || !matches!(values[1], Value::Str(_)) {
+                if values.len() != 2 || !matches!(first, Value::Str(_)) || !matches!(nth(values, 1), Value::Str(_)) {
                     return self.fail(format!(
                         "Cannot apply {name} operator: requires exactly 2 string values (search and replace)"
                     ));
                 }
             }
-            OperatorMethod::Toggle => {
-                if !kind.strict_eq(&Value::from(Database::VAR_BOOLEAN)) {
+            OperatorType::Toggle => {
+                if kind != ColumnType::Boolean {
                     return self.fail(format!("Cannot apply {name} operator to non-boolean field '{field}'"));
                 }
             }
-            OperatorMethod::DateAddDays | OperatorMethod::DateSubDays => {
-                if !kind.strict_eq(&Value::from(Database::VAR_DATETIME)) {
+            OperatorType::DateAddDays | OperatorType::DateSubDays => {
+                if kind != ColumnType::Datetime {
                     return self.fail(format!("Cannot apply {name} operator to non-datetime field '{field}'"));
                 }
-                if !matches!(first, Some(Value::Int(_))) {
+                if !matches!(first, Value::Int(_)) {
                     return self.fail(format!("Cannot apply {name} operator: requires an integer number of days"));
                 }
             }
-            OperatorMethod::DateSetNow => {
-                if !kind.strict_eq(&Value::from(Database::VAR_DATETIME)) {
+            OperatorType::DateSetNow => {
+                if kind != ColumnType::Datetime {
                     return self.fail(format!("Cannot apply {name} operator to non-datetime field '{field}'"));
                 }
             }
-            OperatorMethod::Other(_) => {
-                return self.fail(format!("Cannot apply {name} operator: unsupported operator method"));
-            }
         }
         Ok(true)
-    }
-
-    /// `getType()`: `object`.
-    pub fn type_name(&self) -> &'static str {
-        "object"
     }
 }
 

@@ -3,6 +3,8 @@
 use async_trait::async_trait;
 use php_std::{Array, ArrayKey, Value};
 use utopia_database::Database as Db;
+use utopia_database::relationship::RelationshipSide;
+use utopia_query::schema::ColumnType;
 
 use super::api_reader::ApiReader;
 use super::reader::{Cursor, DatabaseReader, DatabaseResolver, Reader, ReaderQuery};
@@ -1059,8 +1061,8 @@ impl Appwrite {
                 let mut columns = Vec::new();
                 for column in &response {
                     let get = |k: &str| column.get_str(k).cloned().unwrap_or(Value::Null);
-                    if get("type").strict_eq(&v(Db::VAR_RELATIONSHIP))
-                        && get("side").strict_eq(&v(Db::RELATION_SIDE_CHILD))
+                    if get("type").strict_eq(&v(ColumnType::Relationship.as_str()))
+                        && get("side").strict_eq(&v(RelationshipSide::Child.as_str()))
                     {
                         continue;
                     }

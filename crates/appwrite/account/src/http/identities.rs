@@ -1,10 +1,11 @@
 //! OAuth identities of the account: `/v1/account/identities`.
 
-use utopia_database::query::Method;
+use utopia_database::PermissionType;
 use utopia_database::validator::query::cursor::Cursor as CursorValidator;
 use utopia_database::value::to_text;
-use utopia_database::{Database, Query, Value};
+use utopia_database::{Query, Value};
 use utopia_http::Response;
+use utopia_query::Method;
 
 use appwrite_core::database::documents::{self, Identity};
 use appwrite_core::database::{LIMIT_COUNT, collections};
@@ -36,7 +37,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let mut queries = ctx.queries(&collections::IDENTITIES)?;
     let include_total = ctx.optional_bool("total", true)?;
     let sequence = ctx.roles_user().map(|u| u.sequence).unwrap_or(0);
-    queries.push(Query::equal("userInternalId", [documents::internal_id(sequence)]));
+    queries.push(Query::equal("userInternalId", [sequence.to_string()]));
 
     let db = ctx.db()?;
     let cursor = queries.iter().position(|q| matches!(q.method(), Method::CursorAfter | Method::CursorBefore));
@@ -45,7 +46,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         if !validator.check(&queries[i]) {
             return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
         }
-        let id = queries[i].value().map(to_text).unwrap_or_default();
+        let id = queries[i].value().map(|v| to_text(&utopia_database::value::from_query(v))).unwrap_or_default();
         let document = db.get_document("identities", &id, Vec::new(), false).await?;
         if document.is_empty() {
             return Err(Error::with_message(
@@ -53,11 +54,11 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
                 format!("Identity '{id}' for the 'cursor' value not found."),
             ));
         }
-        queries[i].set_value(Value::from(document));
+        queries[i].set_value(utopia_database::value::to_query(&Value::from(document)));
     }
 
-    let filters = Query::group_by_type(&queries).filters;
-    let identities = db.find("identities", queries, Database::PERMISSION_READ).await?;
+    let filters = Query::group_by_type(&queries)?.filters;
+    let identities = db.find("identities", queries, PermissionType::Read).await?;
     let total = if include_total { db.count("identities", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     let identities: Vec<Identity> = documents::all(&identities);
     Ok(ctx.ok(&IdentityListModel { total, identities: &identities }))

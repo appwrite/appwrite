@@ -34,6 +34,32 @@ pub fn now() -> String {
     DateTime::new(b"now", None, &TzInfo::utc()).map(|date| format(&date)).unwrap_or_default()
 }
 
+/// A parse failure as PHP's library reports it: a database exception
+/// wrapping the `DateMalformedStringException` with the same message.
+fn malformed(message: &str) -> Error {
+    Error::database(message).with_previous(Error::new(Kind::DateMalformedString, message))
+}
+
+/// The current time in the database format, made later than `previous`:
+/// when `previous` is not before now (a clock that went back, or two
+/// writes within one millisecond), one millisecond after `previous`.
+///
+/// Fails with the parser's message when `previous` is not a date
+/// ([`Kind::Database`], wrapping the [`Kind::DateMalformedString`] error).
+///
+/// PHP: `DateTime::nowAfter($previous)`.
+pub fn now_after(previous: Option<&str>) -> Result<String> {
+    let current = now();
+    let Some(previous) = previous else { return Ok(current) };
+    let date = DateTime::new(current.as_bytes(), None, &TzInfo::utc()).map_err(|e| malformed(&e.message()))?;
+    let mut minimum = DateTime::new(previous.as_bytes(), None, &TzInfo::utc()).map_err(|e| malformed(&e.message()))?;
+    if date <= minimum {
+        minimum.modify(b"+1 millisecond").map_err(|e| malformed(&e.message()))?;
+        return Ok(format(&minimum));
+    }
+    Ok(current)
+}
+
 /// `date` in the database format ([`FORMAT_DB`]).
 ///
 /// PHP: `DateTime::format($date)`.
@@ -59,11 +85,11 @@ pub fn add_seconds(date: &mut DateTime, seconds: i64) -> Result<String> {
 /// timezone, in the database format.
 ///
 /// Fails with the parser's message when `datetime` is not a date
-/// ([`Kind::Database`]).
+/// ([`Kind::Database`], wrapping the [`Kind::DateMalformedString`] error).
 ///
 /// PHP: `DateTime::setTimezone($datetime)`.
 pub fn set_timezone(datetime: impl AsRef<[u8]>) -> Result<String> {
-    let mut value = DateTime::new(datetime.as_ref(), None, &TzInfo::utc()).map_err(|e| Error::database(e.message()))?;
+    let mut value = DateTime::new(datetime.as_ref(), None, &TzInfo::utc()).map_err(|e| malformed(&e.message()))?;
     value.set_timezone(&TimeZone::utc());
     Ok(format(&value))
 }

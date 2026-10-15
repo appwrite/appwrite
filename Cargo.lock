@@ -138,6 +138,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-system",
  "utopia-validators",
 ]
@@ -179,6 +180,7 @@ dependencies = [
  "utopia-locale",
  "utopia-lock",
  "utopia-pools",
+ "utopia-query",
  "utopia-queue",
  "utopia-system",
  "utopia-user-agent",
@@ -217,6 +219,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-validators",
 ]
 
@@ -236,6 +239,7 @@ dependencies = [
  "utopia-database",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-validators",
 ]
 
@@ -4306,6 +4310,7 @@ dependencies = [
  "futures-util",
  "getrandom 0.3.4",
  "hex",
+ "indexmap",
  "md-5 0.10.6",
  "mysql_async",
  "php-std",
@@ -4318,7 +4323,9 @@ dependencies = [
  "utopia-cache",
  "utopia-mongo",
  "utopia-pools",
+ "utopia-query",
  "utopia-validators",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -4502,6 +4509,7 @@ dependencies = [
  "tokio-postgres",
  "utopia-client",
  "utopia-database",
+ "utopia-query",
  "utopia-storage",
 ]
 

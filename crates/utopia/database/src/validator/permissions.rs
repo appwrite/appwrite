@@ -2,14 +2,19 @@
 //!
 //! PHP: `Utopia\Database\Validator\Permissions`.
 
-use crate::helpers::permission::Permission;
+use crate::permission::{Permission, PermissionType};
 use crate::validator::Message;
 use crate::validator::roles::check_role;
 use crate::value::Value;
 
-/// `[...Database::PERMISSIONS, Database::PERMISSION_WRITE]`: the actions a
-/// permission may grant, by default.
-pub const PERMISSIONS: [&str; 5] = ["create", "read", "update", "delete", "write"];
+/// The actions a permission may grant, by default.
+pub const PERMISSIONS: [PermissionType; 5] = [
+    PermissionType::Create,
+    PermissionType::Read,
+    PermissionType::Update,
+    PermissionType::Delete,
+    PermissionType::Write,
+];
 
 /// A list of permission strings (`read("any")`, `update("user:123")`, ...),
 /// at most `length` of them (0: no limit), each starting with one of the
@@ -36,13 +41,14 @@ pub struct Permissions {
 impl Default for Permissions {
     /// `new Permissions()`: any number of permissions, every action allowed.
     fn default() -> Self {
-        Self::new(0, PERMISSIONS.iter().map(|p| (*p).to_owned()).collect())
+        Self::new(0, &PERMISSIONS)
     }
 }
 
 impl Permissions {
     /// `new Permissions($length, $allowed)`.
-    pub fn new(length: i64, allowed: Vec<String>) -> Self {
+    pub fn new(length: i64, allowed: &[PermissionType]) -> Self {
+        let allowed = allowed.iter().map(|p| p.as_str().to_owned()).collect();
         Self { length, allowed, message: Message::new("Permissions Error") }
     }
 

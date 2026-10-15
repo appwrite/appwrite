@@ -1,182 +1,95 @@
-//! [`Database`]: collections, attributes, indexes, documents, finds,
-//! permissions, relationships, tenancy and caching over an [`Adapter`].
+//! [`Database`]: collections, attributes, indexes, relationships and
+//! documents over an [`Adapter`], with permissions, tenancy, hooks, events
+//! and the document and query caches.
 //!
-//! A [`Database`] is a cheap [`Clone`] handle: clones share one adapter,
-//! one cache and one set of settings, as every reference to a PHP object
-//! does. Settings live behind a [`std::sync::Mutex`] that is only ever held
-//! for the duration of a read or a write, never across an `.await` (clippy's
-//! `await_holding_lock` guards it).
+//! A [`Database`] is a cheap [`Clone`] handle: clones share one adapter, one
+//! cache and one set of settings, as every reference to a PHP object does.
+//! The plain settings live behind a [`std::sync::Mutex`] held only for a read
+//! or a write, never across an `.await`. The settings PHP scopes per
+//! coroutine (`silent()`, `withValidation()`, `skipFilters()`, ...) are
+//! [`Scoped`] values: a scope takes the future it runs, and what it sets is
+//! seen by that future and what it awaits, and by nothing else.
 //!
-//! Scoped settings (PHP's `skipRelationships($callback)`, `silent(...)`,
-//! `withTenant(...)`, ...) take an async closure, run it, and restore the
-//! previous value when the closure's future completes **or is dropped**, as
-//! PHP's `finally` does.
+//! # Areas
 //!
-//! # Areas and file ownership
+//! PHP's class (`Database.php` and its traits) is split by area; each file
+//! is one `impl Database` block:
 //!
-//! The PHP class (11k lines) is split by area; each file is one
-//! `impl Database` block:
+//! | File | PHP |
+//! |---|---|
+//! | `mod.rs` | the constructor, settings, adapter passthroughs, `profile()` |
+//! | `scopes.rs` | `silent()`, the scoped toggles (`withValidation()`, `skipFilters()`, ...), `snapshot()`/`withSnapshot()` |
+//! | `hooks.rs` | `addHook()`/`removeHook()`, `listens()`/`dispatch()`, decorators, `rewriteQueries()` |
+//! | `filters.rs` | `addFilter()`, the default filters, `encode()`/`decode()`/`casting()`, joins' encode/decode, `castBefore()`/`castAfter()` |
+//! | `queries.rs` | `convertQueries()`/`convertQuery()`, `checkQueryTypes()` |
+//! | `keys.rs` | cache keys, the query cache field and scope, invalidation tokens |
+//! | `retry.rs` | `withRetries()`, `cleanup()`, `updateMetadata()` |
+//! | `raw.rs` | `from()`, `schema()`, `query()`, `mutate()` |
+//! | `databases.rs` | `Trait\Databases` |
+//! | `transactions.rs` | `Trait\Transactions` |
+//! | `collections.rs`, `attributes.rs`, `indexes.rs`, `relationships.rs` | `Trait\Collections`, `Trait\Attributes`, `Trait\Indexes`, `Trait\Relationships` |
+//! | `documents/` | `Trait\Documents` (`cache.rs`: the document cache; `read.rs`: `getDocument()`; `find.rs`: `find()`, `count()`, `sum()`, `aggregate()`, `cursor()`; `cursors.rs`: `Trait\Cursors`; `create.rs`, `update.rs`, `upsert.rs`, `numeric.rs`, `delete.rs`: the writes) |
 //!
-//! | Area | Files | PHP methods |
-//! |---|---|---|
-//! | schema | `config.rs` | state getters/setters, `on`/`before`/`silent`/`trigger`, `skip*`/`with*` scopes, tenancy, document types, timeouts, metadata, `ping`/`reconnect` |
-//! | schema | `filters.rs` | `addFilter` and the registry, `encode`/`decode`/`casting`, `encodeAttribute`/`decodeAttribute`, `removeUnknownAttributes`, `encodeSpatialData`, filter signatures |
-//! | schema | `cache.rs` | cache keys, `purgeCached*`, `withCache`, `withDocumentTenant`, `tenantKey` |
-//! | schema | `collections.rs` | `create`/`exists`/`list`/`delete`, collections |
-//! | schema | `attributes.rs` | attributes, `updateAttributeMeta`/`updateIndexMeta` |
-//! | schema | `indexes.rs` | indexes |
-//! | schema | `metadata.rs` | `withRetries`, `cleanup*`, `updateMetadata`, `rollbackAttributeMetadata` |
-//! | schema | `transaction.rs` | `withTransaction` |
-//! | documents | `documents.rs` | `getDocument`, create/update/upsert/increase/decrease/delete documents, `refetchDocuments` |
-//! | documents | `find.rs` | `find`, `findOne`, `count`, `sum`, `foreach`, `iterate`, query conversion and validation, limits, schema introspection |
-//! | relationships | `relationships.rs` | relationship attributes, population, writes, deletes and relationship queries |
+//! # Futures and recursion
 //!
-//! Methods that one area calls in another (`encode`, `decode`, `casting`,
-//! `populate_documents_relationships`, `create_document_relationships`,
-//! `update_document_relationships`, `delete_document_relationships`,
-//! `convert_relationship_queries`, `process_relationship_queries`,
-//! `update_metadata`, `with_retries`, `purge_cached_*`, ...) keep the
-//! signatures they have here; `pub(crate)` helpers only one area calls may
-//! be reshaped by that area's owner.
-//!
-//! # Callbacks
-//!
-//! - Scopes: `FnOnce() -> Fut`, returning whatever the future returns.
-//! - [`Database::with_transaction`]: `FnMut() -> Fut` (PHP retries the
-//!   callback).
-//! - Bulk methods' `on_next` / `on_error`, and [`Database::foreach`]: a
-//!   `&mut dyn` [`Callback`], implemented by every
-//!   `FnMut(A) -> Result<()>` closure; implement the trait on a type for an
-//!   async callback.
-//! - Event listeners ([`Database::on`]): a synchronous [`Listener`]; an
-//!   error it returns propagates like a PHP listener's exception.
-//! - Attribute filters ([`Database::add_filter`]): a [`Filter`] (async
-//!   `encode` / `decode` receiving the document and the database).
-//! - [`Database::iterate`] returns a `'static` [`BoxStream`] of documents
-//!   (PHP's `Generator`): it pages lazily with `find`, as PHP does.
-//!
-//! # Status
-//!
-//! Implemented: the settings, scopes, listeners and `trigger` of
-//! `config.rs`; `filters.rs` (registry, default filters with PHP's
-//! signatures, `encode` / `decode` / `casting`, `encodeAttribute` /
-//! `decodeAttribute`, `encodeSpatialData`, `decodeObject`, filter
-//! signatures); `cache.rs` (keys, query cache key and field, purges,
-//! `with_cache`); `transaction.rs`; and in `collections.rs` the databases
-//! (`create`, `exists`, `list`, `delete`) plus `create_collection` and
-//! `get_collection`, which `create()` needs. Also small helpers other areas
-//! own, because the foundation calls them: `is_ttl_expired`
-//! (`documents.rs`), `check_query_types` (`find.rs`),
-//! `Database::metadata_collection` (`consts.rs`, PHP's `COLLECTION`) and
-//! `index_support` (`collections.rs`, the adapter's `IndexSupport` for the
-//! `Index` validator). Their owners may reshape them.
-//!
-//! The documents area (`documents.rs`, `find.rs`) is implemented: reads
-//! (with the document cache), creates, updates, upserts, increments,
-//! deletes, finds, counts, sums and iteration. It calls the relationships
-//! area only for collections with relationship attributes (PHP's
-//! relationship methods do nothing for the others).
-//! [`Database::get_document`], [`Database::create_document`],
-//! [`Database::update_document`], [`Database::delete_document`] and
-//! [`Database::find`] return a [`futures_util::future::BoxFuture`]: they
-//! recurse (a collection is read as a document; relationships read and
-//! write related documents), and a named future type breaks the cycle of
-//! async types.
-//!
-//! `get_collection(METADATA)` returns `Database::metadata_collection`
-//! itself rather than calling `get_document`: PHP's `getDocument` returns
-//! `new Document(COLLECTION)` for that id before anything else, so the
-//! behaviour is the same and `create()` works before `get_document` does.
-//!
-//! Schema area: `collections.rs`, `attributes.rs`, `indexes.rs` and
-//! `metadata.rs` are complete.
-//!
-//! Relationships area (`relationships.rs`) is complete: relationship
-//! attributes (with their junction collections and rollbacks), population,
-//! writes, on-delete rules and relationship queries. Population keeps the
-//! documents it reads in an arena and resolves which document holds which
-//! once, deepest first, as PHP's shared objects would show them.
-//! `process_relationship_queries` rewrites the `select` queries
-//! it is given, as PHP rewrites the query objects (`getDocument` passes the
-//! rewritten queries to the adapter; `find` works on `groupByType`'s
-//! clones, so its callers' queries are untouched).
-//!
-//! Cache keys are shared with PHP, so the default filters' signatures are
-//! PHP's (`file:line` of their closures in the PHP runtime's image:
-//! `/usr/src/code/vendor/utopia-php/database/src/Database/Database.php`).
-//! When the PHP library moves those closures, update `default_signature`'s
-//! line numbers: the test `default_signatures_match_the_php_source` reads
-//! them from `vendor/utopia-php/database/src/Database/Database.php` (or the
-//! file `UTOPIA_DATABASE_PHP` names) and fails on a moved closure, and the
-//! recorded `get_cache_keys` hashes check them too.
-//!
-//! # Working on an area
-//!
-//! Each area owns its files here and its glue in
-//! `crates/tools/compat/src/libs/database/core/<area>.rs` (`schema.rs`,
-//! `documents.rs`, `relationships.rs`); `core/mod.rs` routes each of the
-//! 151 operations of `tests/compat/database/spec.d/core.json` to its area by
-//! the area's `OPS` list. Glue an operation in the area's `call(op, json,
-//! session) -> R<Json>` with the shared `core/args.rs`:
-//!
-//! - Results: `R<T> = Result<T, Fail>`; `?` on a `utopia_database::Result`
-//!   makes the error the operation's `{"$error": ...}`, `?` on a `Fault`
-//!   stops the case, `fault(msg)` builds one. Encode with `encode(&Value)`,
-//!   `document(&Document)`, `documents(&[Document])`, `strings(&[S])`,
-//!   `datetime(&DateTime)`, `error(&Error)` (an exception passed as a
-//!   value), and the markers `database_marker()` (fluent setters),
-//!   `adapter_marker()`, `cache_marker()`, `authorization_marker()`.
-//! - The database: `args::db(json, session)?` (the `db` handle argument, or
-//!   the session's current database); `args::db_handle` also gives its
-//!   PostgreSQL adapter.
-//! - Arguments: `let a = Args::new(json);` then, by PHP parameter name
-//!   (camelCase, as recorded): `string`, `string_or`, `opt_string`, `int`,
-//!   `int_or`, `opt_int`, `bool`, `bool_or`, `opt_bool`, `value` (any
-//!   value, `null` when absent), `opt_value`, `array`, `strings`,
-//!   `opt_strings`, `document`, `opt_document`, `documents`
-//!   (`array<Document>`), `queries`, `query`, `datetime`, `cache`,
-//!   `authorization`, `database`; `has` (present, even `null`), `given`
-//!   (present and not `null`), `raw`. Argument tags (`$now`, `$repeat`,
-//!   `$datetime`) are resolved by every getter.
-//! - Callbacks: decode the other arguments first, then `let calls =
-//!   Calls::new(session);`, `let cb = calls.callback("onNext",
-//!   a.raw("onNext"))?;` (`None` for an absent / `null` one), call the
-//!   library with `|| cb.invoke(vec![...encoded args])` for closures, or
-//!   `Some(&mut cb.clone())` where it takes a `&mut dyn Callback<A>` (`A`:
-//!   `Document`, `(Document, Document)`, `(Document, Option<Document>)` or
-//!   `Error`, see `CallArgs`), then `calls.finish(result)`, which wraps the
-//!   result as `{"result", "calls"}` when there were callbacks. `invoke`
-//!   returns the callback's return value (`$return` or a `return: true`
-//!   step), and a step's uncaught error as the callback's error.
-//! - Fixtures and their log (`db.log`) are already glued: filters
-//!   (`database.add_filter`), formats (`db.add_format`), listeners
-//!   (`database.on`) and transformations (`database.before`).
-//!
-//! Run one trait's cases with `bin/compat run database --case <text>`,
-//! where `<text>` matches a case file or case name (`--case
-//! Scope-DocumentTests`, `--case "DocumentTests::testCreateDocument"`,
-//! `--case core-Database`); add `COMPAT_TIMEOUT=300` under load and `-v`
-//! for details. The PostgreSQL the cases use is started by
-//! `tests/compat/database/services.sh up`.
+//! The document operations recurse (a collection is read as a document;
+//! relationships read and write related documents through the database), so
+//! the methods on that cycle return a [`BoxFuture`]: [`Database::get_document`],
+//! [`Database::find`], [`Database::create_document`],
+//! [`Database::update_document`], [`Database::delete_document`] and the hooks'
+//! methods the writes call.
 //!
 //! PHP: `Utopia\Database\Database`.
 
-mod attributes;
-mod cache;
-mod collections;
-mod config;
 mod consts;
+
+mod attributes;
+mod collections;
+mod databases;
 mod documents;
 mod filters;
-mod find;
+mod hooks;
 mod indexes;
-mod metadata;
-mod plan;
+mod keys;
+mod queries;
+mod raw;
 mod relationships;
-mod transaction;
+mod retry;
+mod scopes;
+mod transactions;
 
-use std::collections::HashSet;
-use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
+#[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
+mod cache_engine_tests;
+#[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
+pub(crate) mod cache_fixtures;
+#[cfg(test)]
+mod core_memory_tests;
+#[cfg(test)]
+mod core_tests;
+#[cfg(test)]
+pub(crate) mod fixtures;
+#[cfg(test)]
+mod hook_tests;
+#[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
+pub(crate) mod observed;
+#[cfg(test)]
+pub(crate) mod relationship_spy;
+#[cfg(test)]
+mod schema_tests;
+#[cfg(test)]
+pub(crate) mod spy;
+#[cfg(test)]
+pub(crate) mod testing;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod testing_intercepted;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod testing_memory;
+
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, MutexGuard, RwLock};
 
 use async_trait::async_trait;
 use php_std::datetime::DateTime;
@@ -185,42 +98,47 @@ use utopia_cache::Cache;
 pub use futures_util::future::BoxFuture;
 pub use futures_util::stream::BoxStream;
 
-pub use collections::CollectionCache;
+pub use consts::*;
 pub use filters::Filter;
+pub use hooks::Hook;
+pub use transactions::Context;
 
-use crate::adapter::Adapter;
-use crate::document::Document;
-use crate::error::Result;
-use crate::query::Query;
+use crate::adapter::{Adapter, Profile};
+use crate::cache::{Invalidator, Query as QueryCache};
+use crate::capability::Capability;
+use crate::error::{Error, Result};
+use crate::event::Event;
+use crate::filter::Registry;
+use crate::hook::relationships::Relationships;
+use crate::hook::{Decorator, Lifecycle, Nested, Queries};
+use crate::profiler::Profiler;
+use crate::state::Scoped;
 use crate::validator::authorization::Authorization;
+use crate::validator::queries::documents::Documents as DocumentsValidator;
 use crate::value::Value;
 
-/// An event listener registered with [`Database::on`]: receives the event
-/// name and its payload (a document, a list of documents, a name, ...).
+/// Per-relationship nested selections: relationship key => the select
+/// queries to apply on the related collection, in PHP's key order.
 ///
-/// PHP: the `callable` of `Database::on($event, $name, $callback)`.
-pub type Listener = Arc<dyn Fn(&str, &Value) -> Result<()> + Send + Sync>;
+/// PHP: the `array<string, array<Query>> $selects` of `processQueries()` and
+/// `populateDocuments()`.
+pub type Selects = Vec<(String, Vec<crate::Query>)>;
 
-/// Per-relationship nested selections: relationship key => the queries to
-/// apply on the related collection, in PHP's key order.
+/// The staged view of a related document for the `authorize*()` checks:
+/// given a collection id and a document id, the document as staged writes
+/// leave it (an empty document when they delete it), or `None` to judge the
+/// stored one.
 ///
-/// PHP: the `array<string, array<Query>> $selects` of
-/// `processRelationshipQueries()` and `populateDocumentsRelationships()`.
-pub type Selects = Vec<(String, Vec<Query>)>;
+/// PHP: the `callable(string, string): ?Document $resolve` parameters.
+pub type Resolve = Arc<dyn Fn(&str, &str) -> Option<crate::Document> + Send + Sync>;
 
-/// A callback the bulk methods ([`Database::create_documents`],
-/// [`Database::update_documents`], [`Database::upsert_documents`],
-/// [`Database::delete_documents`]) call for each document written
-/// (`on_next`) or failure (`on_error`), and [`Database::foreach`] calls for
-/// each document found.
+/// A callback the bulk writes call for each document written (`on_next`)
+/// or failure (`on_error`).
 ///
 /// Every `FnMut(A) -> Result<()>` closure is one; implement the trait on a
-/// type for a callback that awaits. An error returned from `on_next` goes to
-/// `on_error` when there is one and is raised otherwise; an error returned
-/// from `on_error` is raised.
+/// type for a callback that awaits.
 ///
-/// PHP: the `?callable $onNext` / `?callable $onError` parameters and the
-/// `callable $callback` of `foreach()`.
+/// PHP: the `?callable $onNext` / `?callable $onError` parameters.
 #[async_trait]
 pub trait Callback<A: Send + 'static>: Send {
     /// Calls the callback.
@@ -238,247 +156,667 @@ where
     }
 }
 
-/// Where a database's own calls to methods a PHP subclass overrides go: the
-/// database a [`crate::mirror::Mirror`] is built on hands its events to the
-/// mirror's source and its relationship writes to the mirror, as PHP's
-/// `$this->...` reaches `Mirror`'s overrides.
-pub(crate) trait Overrides: Send + Sync {
-    /// The database whose listeners and silencing apply (`Mirror::on`,
-    /// `silent` and `trigger` go to the source).
-    fn events(&self) -> Database;
-    /// `$this->createDocument(...)`.
-    fn create_document<'a>(&'a self, collection: &'a str, document: Document) -> BoxFuture<'a, Result<Document>>;
-    /// `$this->updateDocument(...)`.
-    fn update_document<'a>(
-        &'a self,
-        collection: &'a str,
-        id: &'a str,
-        document: Document,
-    ) -> BoxFuture<'a, Result<Document>>;
-    /// `$this->deleteDocument(...)`.
-    fn delete_document<'a>(&'a self, collection: &'a str, id: &'a str) -> BoxFuture<'a, Result<bool>>;
-}
-
 /// The database. See the [module docs](self).
 ///
 /// PHP: `Utopia\Database\Database`.
 #[derive(Clone)]
 pub struct Database {
-    inner: Arc<Inner>,
+    pub(crate) inner: Arc<Inner>,
+}
+
+impl std::fmt::Debug for Database {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Database").field("database", &self.inner.adapter.database()).finish_non_exhaustive()
+    }
 }
 
 /// What every clone of a [`Database`] shares.
-struct Inner {
+pub(crate) struct Inner {
     /// `$adapter`.
-    adapter: Arc<dyn Adapter>,
-    /// `$instanceFilters`, in the order given to the constructor (set once).
-    instance_filters: Vec<(String, Arc<dyn Filter>)>,
-    /// Everything PHP's methods change after construction.
-    state: Mutex<State>,
-    /// Where its own calls to overridden methods go (set once, by a
-    /// [`crate::mirror::Mirror`] on the database it is built on).
-    overrides: OnceLock<Weak<dyn Overrides>>,
+    pub(crate) adapter: Arc<dyn Adapter>,
+    /// The plain properties PHP's methods change.
+    pub(crate) settings: Mutex<Settings>,
+    /// The properties PHP keeps in `State\Value`s.
+    pub(crate) toggles: Toggles,
+    /// The invalidation scope the current future runs in (PHP keys its
+    /// `$queryCacheMutations`, `$documentCacheMutations`, ... by coroutine
+    /// id; a scope is open from the outermost `withInvalidationScope()` to
+    /// its end).
+    pub(crate) context: Scoped<Option<Arc<Context>>>,
 }
 
-/// The mutable properties of PHP's `Database`.
-pub(crate) struct State {
+/// The scoped toggles of a database (PHP's `State\Value` properties).
+pub(crate) struct Toggles {
+    /// `$silenced`: whether every lifecycle hook is silenced.
+    pub(crate) silenced: Scoped<bool>,
+    /// `$silencedListeners`: the names of the silenced named hooks, in the
+    /// order they were silenced.
+    pub(crate) silenced_listeners: Scoped<Arc<Vec<String>>>,
+    /// `$requestTimestamp`.
+    pub(crate) request_timestamp: Scoped<Option<DateTime>>,
+    /// `$filtering`.
+    pub(crate) filtering: Scoped<bool>,
+    /// `$filterExclusions`: the names of the filters turned off (with
+    /// whether each is), `None` for PHP's `null`.
+    #[allow(clippy::type_complexity)]
+    pub(crate) filter_exclusions: Scoped<Option<Arc<Vec<(String, bool)>>>>,
+    /// `$validation`.
+    pub(crate) validation: Scoped<bool>,
+    /// `$datePreservation`.
+    pub(crate) date_preservation: Scoped<bool>,
+    /// `$sequencePreservation`.
+    pub(crate) sequence_preservation: Scoped<bool>,
+    /// `$ignoringDuplicates`.
+    pub(crate) ignoring_duplicates: Scoped<bool>,
+    /// `$grantChecking`.
+    pub(crate) grant_checking: Scoped<bool>,
+    /// `$rewriting`: whether query hooks rewrite the queries of reads.
+    pub(crate) rewriting: Scoped<bool>,
+}
+
+impl Default for Toggles {
+    fn default() -> Self {
+        Toggles {
+            silenced: Scoped::new(false),
+            silenced_listeners: Scoped::new(Arc::new(Vec::new())),
+            request_timestamp: Scoped::new(None),
+            filtering: Scoped::new(true),
+            filter_exclusions: Scoped::new(Some(Arc::new(Vec::new()))),
+            validation: Scoped::new(true),
+            date_preservation: Scoped::new(false),
+            sequence_preservation: Scoped::new(false),
+            ignoring_duplicates: Scoped::new(false),
+            grant_checking: Scoped::new(false),
+            rewriting: Scoped::new(true),
+        }
+    }
+}
+
+/// A hook registered under the class it was registered as (PHP's
+/// `removeHook(Class::class)` removes by class; `instanceof` is the type
+/// name here).
+pub(crate) struct Registered<T: ?Sized> {
+    /// The hook.
+    pub(crate) hook: Arc<T>,
+    /// Its type name (`std::any::type_name`).
+    pub(crate) class: &'static str,
+}
+
+impl<T: ?Sized> Clone for Registered<T> {
+    fn clone(&self) -> Self {
+        Registered { hook: self.hook.clone(), class: self.class }
+    }
+}
+
+/// The mutable properties of PHP's `Database` (and its traits).
+pub(crate) struct Settings {
     /// `$cache`.
     pub(crate) cache: Arc<Cache>,
     /// `$cacheName`.
     pub(crate) cache_name: String,
-    /// `$filterSignatures`: filter name => signature, sorted by name
-    /// (`ksort`).
-    pub(crate) filter_signatures: Vec<(String, String)>,
-    /// `$filterSignaturesEncoded`: `json_encode($filterSignatures)`.
-    pub(crate) filter_signatures_encoded: String,
-    /// The JSON of the signatures left active by `disabled_filters`, for
-    /// the registry version and disabled set it was computed for (not in
-    /// PHP, which encodes it on every call).
-    pub(crate) disabled_signatures_encoded: Option<(i64, HashSet<String>, String)>,
-    /// `$filterSignaturesVersion`: the global registry version the
-    /// signatures were computed at (`-1`: never). PHP also keeps
-    /// `$filterSignaturesSource` to notice changed instance filters; they
-    /// cannot change here after construction.
-    pub(crate) filter_signatures_version: i64,
-    /// `$listeners`: event => name => listener, in insertion order (`*`
-    /// first).
-    pub(crate) listeners: Vec<(String, Vec<(String, Listener)>)>,
-    /// `$silentListeners`: the listener names silenced; `None` silences all.
-    pub(crate) silent_listeners: Option<HashSet<String>>,
-    /// `$timestamp`: the request timestamp `withRequestTimestamp()` sets.
-    pub(crate) timestamp: Option<DateTime>,
-    /// `$resolveRelationships`.
-    pub(crate) resolve_relationships: bool,
-    /// `$checkRelationshipsExist`.
-    pub(crate) check_relationships_exist: bool,
-    /// `$relationshipFetchDepth`.
-    pub(crate) relationship_fetch_depth: i64,
-    /// `$inBatchRelationshipPopulation`.
-    pub(crate) in_batch_relationship_population: bool,
-    /// `$filter`.
-    pub(crate) filter: bool,
-    /// `$disabledFilters` (`null` is `None`).
-    pub(crate) disabled_filters: Option<HashSet<String>>,
-    /// `$validate`.
-    pub(crate) validate: bool,
+    /// `$codecs`: the filters of this handle, shared with the handles the
+    /// same registry is set on.
+    pub(crate) codecs: Option<Arc<RwLock<Registry>>>,
+    /// `$lifecycleHooks`.
+    pub(crate) lifecycle_hooks: Vec<Registered<dyn Lifecycle>>,
+    /// `$decorators`.
+    pub(crate) decorators: Vec<Registered<dyn Decorator>>,
+    /// `$nestedHooks`.
+    pub(crate) nested_hooks: Vec<Registered<dyn Nested>>,
+    /// `$queryHooks`.
+    pub(crate) query_hooks: Vec<Registered<dyn Queries>>,
+    /// `$relationshipHook`.
+    pub(crate) relationship_hook: Option<Arc<Relationships>>,
     /// `$dropUnknownAttributes`.
     pub(crate) drop_unknown_attributes: bool,
-    /// `$preserveDates`.
-    pub(crate) preserve_dates: bool,
-    /// `$skipDuplicates`.
-    pub(crate) skip_duplicates: bool,
-    /// `$preserveSequence`.
-    pub(crate) preserve_sequence: bool,
     /// `$maxQueryValues`.
     pub(crate) max_query_values: i64,
     /// `$migrating`.
     pub(crate) migrating: bool,
-    /// `$globalCollections`: the keys, in insertion order, without
-    /// duplicates.
+    /// `$profile`, once built.
+    pub(crate) profile: Option<Profile>,
+    /// `$globalCollections`, in insertion order, without duplicates.
     pub(crate) global_collections: Vec<String>,
-    /// `$relationshipWriteStack`: collection ids.
-    pub(crate) relationship_write_stack: Vec<String>,
-    // PHP's `$relationshipFetchStack` is never read nor written: not kept.
-    /// `$relationshipDeleteStack`.
-    pub(crate) relationship_delete_stack: Vec<Document>,
-    /// `$documentTypes`: collection => document class name.
+    /// `$documentTypes`: collection => the class of its documents.
     pub(crate) document_types: Vec<(String, String)>,
+    /// `$queryCache`.
+    pub(crate) query_cache: Option<Arc<QueryCache>>,
+    /// `$invalidator`.
+    pub(crate) invalidator: Option<Arc<Invalidator>>,
+    /// `$profiler`.
+    pub(crate) profiler: Option<Arc<Profiler>>,
     /// `$authorization`.
     pub(crate) authorization: Arc<Authorization>,
-    /// Where the bulk writes leave the documents they were given, as PHP's
-    /// caller sees its objects after the call (`Some` to capture them: a
-    /// [`crate::mirror::Mirror`] copies them to its destination).
-    pub(crate) capture: Option<Vec<Document>>,
-    /// The collections this handle read, by their document cache hash key, when
-    /// [`Database::set_collection_memo`] turned it on (`None`: off, as in
-    /// PHP). Not in PHP.
-    pub(crate) collection_memo: Option<std::collections::HashMap<String, Document>>,
-    /// The process's collections ([`Database::set_collection_cache`]). Not
-    /// in PHP.
-    pub(crate) collection_cache: Option<Arc<CollectionCache>>,
+    /// `$cacheWriterTimeout` (seconds).
+    pub(crate) cache_writer_timeout: i64,
+    /// `$documentsValidatorCache`, by `documentsValidatorCacheKey()`.
+    pub(crate) documents_validators: HashMap<String, Arc<DocumentsValidator>>,
+    /// `$sumValidatorCache`, by `getSumValidator()`'s key.
+    pub(crate) sum_validators: HashMap<String, Arc<crate::validator::query::aggregate::Aggregate>>,
+    /// `$definitionFillsFail` (`Trait\Transactions`).
+    pub(crate) definition_fills_fail: bool,
 }
 
 impl Database {
-    /// A database over `adapter`, caching in `cache`, with `filters` (name
-    /// => filter) taking precedence over the global ones of
-    /// [`Database::add_filter`]. Registers the default filters (`json`,
-    /// `datetime`, `point`, `linestring`, `polygon`, `vector`, `object`) on
-    /// first use, and gives the database and the adapter a fresh
-    /// [`Authorization`].
+    /// A database over `adapter`, caching in `cache`.
     ///
-    /// PHP: `Database::__construct(Adapter $adapter, Cache $cache, array $filters = [])`.
-    pub fn new(adapter: Arc<dyn Adapter>, cache: Arc<Cache>, filters: Vec<(String, Arc<dyn Filter>)>) -> Self {
-        let authorization = Arc::new(Authorization::new());
+    /// Gives the database and the adapter a fresh [`Authorization`], maps the
+    /// metadata collection's documents to [`crate::Collection`], and
+    /// registers the default filters on first use.
+    ///
+    /// PHP: `new Database(Adapter $adapter, Cache $cache)`.
+    pub fn new(adapter: Arc<dyn Adapter>, cache: Arc<Cache>) -> Self {
+        let authorization = Arc::new(Authorization::new(true));
         adapter.set_authorization(authorization.clone());
-        let database = Self {
+        filters::register_default_filters();
+        Database {
             inner: Arc::new(Inner {
                 adapter,
-                instance_filters: filters,
-                overrides: OnceLock::new(),
-                state: Mutex::new(State {
+                settings: Mutex::new(Settings {
                     cache,
-                    cache_name: "default".to_owned(),
-                    filter_signatures: Vec::new(),
-                    filter_signatures_encoded: String::new(),
-                    filter_signatures_version: -1,
-                    disabled_signatures_encoded: None,
-                    listeners: vec![(Self::EVENT_ALL.to_owned(), Vec::new())],
-                    silent_listeners: Some(HashSet::new()),
-                    timestamp: None,
-                    resolve_relationships: true,
-                    check_relationships_exist: true,
-                    relationship_fetch_depth: 0,
-                    in_batch_relationship_population: false,
-                    filter: true,
-                    disabled_filters: Some(HashSet::new()),
-                    validate: true,
+                    cache_name: crate::cache::Scope::NAME.to_owned(),
+                    codecs: None,
+                    lifecycle_hooks: Vec::new(),
+                    decorators: Vec::new(),
+                    nested_hooks: Vec::new(),
+                    query_hooks: Vec::new(),
+                    relationship_hook: None,
                     drop_unknown_attributes: false,
-                    preserve_dates: false,
-                    skip_duplicates: false,
-                    preserve_sequence: false,
                     max_query_values: 5000,
                     migrating: false,
+                    profile: None,
                     global_collections: Vec::new(),
-                    relationship_write_stack: Vec::new(),
-                    relationship_delete_stack: Vec::new(),
-                    document_types: Vec::new(),
+                    document_types: vec![(METADATA.to_owned(), crate::collection::CLASS.to_owned())],
+                    query_cache: None,
+                    invalidator: None,
+                    profiler: None,
                     authorization,
-                    capture: None,
-                    collection_memo: None,
-                    collection_cache: None,
+                    cache_writer_timeout: crate::cache::Scope::WRITER_TIMEOUT,
+                    documents_validators: HashMap::new(),
+                    sum_validators: HashMap::new(),
+                    definition_fills_fail: false,
                 }),
+                toggles: Toggles::default(),
+                context: Scoped::new(None),
             }),
-        };
-        Self::register_default_filters();
-        database
+        }
     }
 
-    /// Locks the settings for one read or write. Never hold the guard across
-    /// an `.await`.
-    pub(crate) fn state(&self) -> MutexGuard<'_, State> {
-        self.inner.state.lock().unwrap_or_else(|e| e.into_inner())
-    }
-
-    /// The adapter.
+    /// A database whose own filters (`codecs`) take precedence over the ones
+    /// [`Database::add_filter`] registers.
     ///
-    /// PHP: `Database::getAdapter()`.
+    /// Fails ([`crate::Kind::Duplicate`]) when a codec is named after a
+    /// built-in filter.
+    ///
+    /// PHP: `new Database($adapter, $cache, $filters)`.
+    pub fn with_filters(
+        adapter: Arc<dyn Adapter>,
+        cache: Arc<Cache>,
+        codecs: Vec<Arc<dyn crate::filter::Codec>>,
+    ) -> Result<Self> {
+        let database = Database::new(adapter, cache);
+        if !codecs.is_empty() {
+            let mut registry = Registry::new();
+            for codec in codecs {
+                registry.register(codec)?;
+            }
+            database.settings().codecs = Some(Arc::new(RwLock::new(registry)));
+        }
+        Ok(database)
+    }
+
+    /// Locks the settings for one read or write. Never hold the guard
+    /// across an `.await`.
+    pub(crate) fn settings(&self) -> MutexGuard<'_, Settings> {
+        self.inner.settings.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Whether `other` is a handle of this same database.
+    pub fn same(&self, other: &Database) -> bool {
+        Arc::ptr_eq(&self.inner, &other.inner)
+    }
+
+    /// The adapter (`getAdapter()`).
     pub fn adapter(&self) -> &Arc<dyn Adapter> {
         &self.inner.adapter
     }
 
-    /// Where this database's own calls to overridden methods go, if
-    /// anywhere.
-    pub(crate) fn overrides(&self) -> Option<Arc<dyn Overrides>> {
-        self.inner.overrides.get()?.upgrade()
+    /// The relationship hook, when one is registered.
+    pub(crate) fn relationship_hook(&self) -> Option<Arc<Relationships>> {
+        self.settings().relationship_hook.clone()
     }
 
-    /// Hands this database's own calls to overridden methods to `overrides`
-    /// from now on (once).
-    pub(crate) fn set_overrides(&self, overrides: Weak<dyn Overrides>) {
-        let _ = self.inner.overrides.set(overrides);
+    // ---- Adapter passthroughs ------------------------------------------
+
+    /// `setDatabase()`.
+    pub fn set_database(&self, name: &str) -> &Self {
+        self.inner.adapter.set_database(name);
+        self
     }
 
-    /// `$this->createDocument(...)` from within: the override's when there
-    /// is one.
-    pub(crate) fn dispatch_create_document<'a>(
-        &'a self,
-        collection: &'a str,
-        document: Document,
-    ) -> BoxFuture<'a, Result<Document>> {
-        match self.overrides() {
-            Some(o) => Box::pin(async move { o.create_document(collection, document).await }),
-            None => self.create_document(collection, document),
+    /// `getDatabase()`.
+    pub fn database(&self) -> String {
+        self.inner.adapter.database()
+    }
+
+    /// `setNamespace()`.
+    pub fn set_namespace(&self, namespace: &str) -> &Self {
+        self.inner.adapter.set_namespace(namespace);
+        self
+    }
+
+    /// `getNamespace()`.
+    pub fn namespace(&self) -> String {
+        self.inner.adapter.namespace()
+    }
+
+    /// The type of the internal sequence (`getIdAttributeType()`).
+    pub fn id_attribute_type(&self) -> utopia_query::schema::ColumnType {
+        self.inner.adapter.limits().id_type
+    }
+
+    /// The adapter's limits and capabilities and this database's mode, built
+    /// once and rebuilt when shared tables, migration or the schemaless mode
+    /// change (`profile()`).
+    pub fn profile(&self) -> Profile {
+        if let Some(profile) = self.settings().profile.clone() {
+            return profile;
+        }
+        let migrating = self.settings().migrating;
+        let profile = Profile::of(self.inner.adapter.clone(), migrating);
+        self.settings().profile = Some(profile.clone());
+        profile
+    }
+
+    /// `resetProfile()`: the profile and the validators built from it are
+    /// built again.
+    pub(crate) fn reset_profile(&self) {
+        let mut settings = self.settings();
+        settings.profile = None;
+        settings.documents_validators.clear();
+    }
+
+    /// Turns the adapter's schemaless mode on or off (`setSchemaless()`).
+    ///
+    /// Fails ([`crate::Kind::Database`]) to turn it on for an adapter
+    /// without a schemaless mode (`Adapter does not support schemaless`).
+    pub fn set_schemaless(&self, schemaless: bool) -> Result<&Self> {
+        match self.inner.adapter.schemaless() {
+            Some(s) => s.set_schemaless(schemaless),
+            None if schemaless => return Err(Error::database("Adapter does not support schemaless")),
+            None => {}
+        }
+        self.reset_profile();
+        Ok(self)
+    }
+
+    /// Uses `filters` on this handle instead of the ones it was built with
+    /// (`setFilters()`); handles sharing the registry see what is registered
+    /// on it later.
+    pub fn set_filters(&self, filters: Arc<RwLock<Registry>>) -> &Self {
+        self.settings().codecs = Some(filters);
+        self
+    }
+
+    /// The filters of this handle (`getFilters()`).
+    pub fn filters(&self) -> Arc<RwLock<Registry>> {
+        self.settings().codecs.get_or_insert_with(|| Arc::new(RwLock::new(Registry::new()))).clone()
+    }
+
+    /// Caches `find()` results in `query_cache`, or stops caching them
+    /// (`setQueryCache()`); also makes its [`Invalidator`] this database's.
+    pub fn set_query_cache(&self, query_cache: Option<Arc<QueryCache>>) -> &Self {
+        let mut settings = self.settings();
+        settings.invalidator = query_cache.as_ref().map(|q| Arc::new(Invalidator::new(q.clone())));
+        settings.query_cache = query_cache;
+        self
+    }
+
+    /// `getQueryCache()`.
+    pub fn query_cache(&self) -> Option<Arc<QueryCache>> {
+        self.settings().query_cache.clone()
+    }
+
+    /// Records the queries the adapter runs in [`Database::profiler`], or
+    /// stops recording them (`setProfiling()`).
+    pub fn set_profiling(&self, profiling: bool) -> &Self {
+        if !profiling {
+            if let Some(p) = &self.settings().profiler {
+                p.disable();
+            }
+            self.inner.adapter.set_profiler(None);
+            return self;
+        }
+        let profiler = self.settings().profiler.get_or_insert_with(|| Arc::new(Profiler::new())).clone();
+        profiler.enable();
+        self.inner.adapter.set_profiler(Some(profiler));
+        self
+    }
+
+    /// `isProfiling()`.
+    pub fn is_profiling(&self) -> bool {
+        self.settings().profiler.as_ref().is_some_and(|p| p.is_enabled())
+    }
+
+    /// `getProfiler()`.
+    pub fn profiler(&self) -> Option<Arc<Profiler>> {
+        self.settings().profiler.clone()
+    }
+
+    /// `setCache()`.
+    pub fn set_cache(&self, cache: Arc<Cache>) -> &Self {
+        self.settings().cache = cache;
+        self
+    }
+
+    /// `getCache()`.
+    pub fn cache(&self) -> Arc<Cache> {
+        self.settings().cache.clone()
+    }
+
+    /// `setCacheName()`.
+    pub fn set_cache_name(&self, name: &str) -> &Self {
+        self.settings().cache_name = name.to_owned();
+        self
+    }
+
+    /// `getCacheName()`.
+    pub fn cache_name(&self) -> String {
+        self.settings().cache_name.clone()
+    }
+
+    /// Seconds after which an invalidation that has not finished is treated
+    /// as abandoned (`setCacheWriterTimeout()`; negative is 0).
+    pub fn set_cache_writer_timeout(&self, seconds: i64) -> &Self {
+        self.settings().cache_writer_timeout = seconds.max(0);
+        self
+    }
+
+    /// `$cacheWriterTimeout`.
+    pub fn cache_writer_timeout(&self) -> i64 {
+        self.settings().cache_writer_timeout
+    }
+
+    /// `setSharedTables()`.
+    pub fn set_shared_tables(&self, shared_tables: bool) -> &Self {
+        self.inner.adapter.set_shared_tables(shared_tables);
+        self.reset_profile();
+        self
+    }
+
+    /// `hasSharedTables()`.
+    pub fn shared_tables(&self) -> bool {
+        self.inner.adapter.shared_tables()
+    }
+
+    /// `setTenant()`.
+    pub fn set_tenant(&self, tenant: Value) -> &Self {
+        self.inner.adapter.set_tenant(tenant);
+        self
+    }
+
+    /// `getTenant()`.
+    pub fn tenant(&self) -> Value {
+        self.inner.adapter.tenant()
+    }
+
+    /// Runs `future` with `tenant` (`withTenant()`), scoped to it.
+    pub async fn with_tenant<F: std::future::Future>(&self, tenant: Value, future: F) -> F::Output {
+        self.inner.adapter.state().tenant().with(tenant, future).await
+    }
+
+    /// `setTenantPerDocument()`.
+    pub fn set_tenant_per_document(&self, enabled: bool) -> &Self {
+        self.inner.adapter.set_tenant_per_document(enabled);
+        self
+    }
+
+    /// `isTenantPerDocument()`.
+    pub fn tenant_per_document(&self) -> bool {
+        self.inner.adapter.tenant_per_document()
+    }
+
+    /// `setAuthorization()`: on the database and its adapter.
+    pub fn set_authorization(&self, authorization: Arc<Authorization>) -> &Self {
+        self.inner.adapter.set_authorization(authorization.clone());
+        self.settings().authorization = authorization;
+        self
+    }
+
+    /// `getAuthorization()`.
+    pub fn authorization(&self) -> Arc<Authorization> {
+        self.settings().authorization.clone()
+    }
+
+    /// `setTimeout()`.
+    ///
+    /// Fails ([`crate::Kind::Database`]) for an adapter without timeouts
+    /// (`Adapter does not support timeouts`).
+    pub fn set_timeout(&self, milliseconds: i64, event: Event) -> Result<&Self> {
+        let Some(timeouts) = self.inner.adapter.timeouts() else {
+            return Err(Error::database("Adapter does not support timeouts"));
+        };
+        timeouts.set_timeout(milliseconds, event)?;
+        Ok(self)
+    }
+
+    /// `clearTimeout()`.
+    ///
+    /// Fails as [`Database::set_timeout`] does.
+    pub fn clear_timeout(&self, event: Event) -> Result<()> {
+        let Some(timeouts) = self.inner.adapter.timeouts() else {
+            return Err(Error::database("Adapter does not support timeouts"));
+        };
+        timeouts.clear_timeout(event);
+        Ok(())
+    }
+
+    /// `isDroppingUnknownAttributes()`.
+    pub fn is_dropping_unknown_attributes(&self) -> bool {
+        self.settings().drop_unknown_attributes
+    }
+
+    /// Drops attributes missing from the collection schema instead of
+    /// rejecting the write (`setDropUnknownAttributes()`).
+    pub fn set_drop_unknown_attributes(&self, drop: bool) -> &Self {
+        self.settings().drop_unknown_attributes = drop;
+        self
+    }
+
+    /// `setMigrating()`.
+    pub fn set_migrating(&self, migrating: bool) -> &Self {
+        self.settings().migrating = migrating;
+        self.reset_profile();
+        self
+    }
+
+    /// `isMigrating()`.
+    pub fn is_migrating(&self) -> bool {
+        self.settings().migrating
+    }
+
+    /// `setMaxQueryValues()`.
+    pub fn set_max_query_values(&self, max: i64) -> &Self {
+        let mut settings = self.settings();
+        if settings.max_query_values != max {
+            settings.documents_validators.clear();
+        }
+        settings.max_query_values = max;
+        self
+    }
+
+    /// `getMaxQueryValues()`.
+    pub fn max_query_values(&self) -> i64 {
+        self.settings().max_query_values
+    }
+
+    /// `setGlobalCollections()`: adds the collections.
+    pub fn set_global_collections<S: AsRef<str>>(&self, collections: &[S]) -> &Self {
+        let mut settings = self.settings();
+        for c in collections {
+            if !settings.global_collections.iter().any(|g| g == c.as_ref()) {
+                settings.global_collections.push(c.as_ref().to_owned());
+            }
+        }
+        self
+    }
+
+    /// `getGlobalCollections()`.
+    pub fn global_collections(&self) -> Vec<String> {
+        self.settings().global_collections.clone()
+    }
+
+    /// `resetGlobalCollections()`.
+    pub fn reset_global_collections(&self) {
+        self.settings().global_collections.clear();
+    }
+
+    /// Maps the documents of `collection` to the custom class `class`
+    /// (`setDocumentType()`): documents read from it carry that class
+    /// ([`crate::Document::class`]). PHP checks the class exists and extends
+    /// `Document`; Rust has no class to check.
+    pub fn set_document_type(&self, collection: &str, class: &str) -> &Self {
+        let mut settings = self.settings();
+        match settings.document_types.iter_mut().find(|(c, _)| c == collection) {
+            Some(entry) => entry.1 = class.to_owned(),
+            None => settings.document_types.push((collection.to_owned(), class.to_owned())),
+        }
+        self
+    }
+
+    /// `getDocumentType()`.
+    pub fn document_type(&self, collection: &str) -> Option<String> {
+        self.settings().document_types.iter().find(|(c, _)| c == collection).map(|(_, t)| t.clone())
+    }
+
+    /// `clearDocumentType()`.
+    pub fn clear_document_type(&self, collection: &str) {
+        self.settings().document_types.retain(|(c, _)| c != collection);
+    }
+
+    /// `clearDocumentTypes()`: the metadata collection keeps its own.
+    pub fn clear_document_types(&self) {
+        self.settings().document_types = vec![(METADATA.to_owned(), crate::collection::CLASS.to_owned())];
+    }
+
+    /// Whether `ALTER TABLE` statements take `LOCK=SHARED`, on adapters that
+    /// support it (`setLocks()`).
+    pub fn set_locks(&self, locks: bool) -> &Self {
+        if self.inner.adapter.supports(Capability::AlterLock) {
+            self.inner.adapter.set_locks(locks);
+        }
+        self
+    }
+
+    /// `setMetadata()`: a value printed in the query comments.
+    pub fn set_metadata(&self, key: &str, value: Value) -> &Self {
+        self.inner.adapter.set_metadata(key, value);
+        self
+    }
+
+    /// `getMetadata()`.
+    pub fn metadata(&self) -> Vec<(String, Value)> {
+        self.inner.adapter.metadata()
+    }
+
+    /// `resetMetadata()`.
+    pub fn reset_metadata(&self) {
+        self.inner.adapter.reset_metadata();
+    }
+
+    /// `removeTransform()`.
+    pub fn remove_transform(&self, name: &str) -> &Self {
+        self.inner.adapter.remove_transform(name);
+        self
+    }
+
+    /// The id of the adapter's connection, `None` for an adapter without one
+    /// (`getConnectionId()`).
+    pub async fn connection_id(&self) -> Result<Option<String>> {
+        match self.inner.adapter.connection() {
+            Some(c) => c.id().await.map(Some),
+            None => Ok(None),
         }
     }
 
-    /// `$this->updateDocument(...)` from within.
-    pub(crate) fn dispatch_update_document<'a>(
-        &'a self,
-        collection: &'a str,
-        id: &'a str,
-        document: Document,
-    ) -> BoxFuture<'a, Result<Document>> {
-        match self.overrides() {
-            Some(o) => Box::pin(async move { o.update_document(collection, id, document).await }),
-            None => self.update_document(collection, id, document),
+    /// The host the adapter is connected to, `None` for an adapter without
+    /// a connection (`getHostname()`).
+    pub async fn hostname(&self) -> Result<Option<String>> {
+        match self.inner.adapter.connection() {
+            Some(c) => c.hostname().await.map(Some),
+            None => Ok(None),
         }
     }
 
-    /// `$this->deleteDocument(...)` from within.
-    pub(crate) fn dispatch_delete_document<'a>(
-        &'a self,
-        collection: &'a str,
-        id: &'a str,
-    ) -> BoxFuture<'a, Result<bool>> {
-        match self.overrides() {
-            Some(o) => Box::pin(async move { o.delete_document(collection, id).await }),
-            None => self.delete_document(collection, id),
+    /// Whether the adapter's connection answers; an adapter without one is
+    /// always reachable (`ping()`).
+    pub async fn ping(&self) -> Result<bool> {
+        match self.inner.adapter.connection() {
+            Some(c) => c.ping().await,
+            None => Ok(true),
         }
+    }
+
+    /// Re-establishes the adapter's connection (`reconnect()`).
+    pub async fn reconnect(&self) -> Result<()> {
+        match self.inner.adapter.connection() {
+            Some(c) => c.reconnect().await,
+            None => Ok(()),
+        }
+    }
+
+    /// The attributes a collection may declare besides the internal ones; 0
+    /// when there is no limit (`getLimitForAttributes()`).
+    pub fn limit_for_attributes(&self) -> i64 {
+        let limits = self.inner.adapter.limits();
+        if limits.attributes == 0 { 0 } else { limits.attributes - limits.default_attributes }
+    }
+
+    /// The indexes a collection may declare besides the internal ones
+    /// (`getLimitForIndexes()`).
+    pub fn limit_for_indexes(&self) -> i64 {
+        let limits = self.inner.adapter.limits();
+        limits.indexes - limits.default_indexes
+    }
+
+    /// `getMaxUidLength()`.
+    pub fn max_uid_length(&self) -> i64 {
+        self.inner.adapter.limits().uid_length
+    }
+
+    /// The attributes every document carries; `$tenant` only under shared
+    /// tables (`internalAttributes()`).
+    pub fn internal_attributes(&self) -> &'static [crate::Attribute] {
+        internal_attributes(self.inner.adapter.shared_tables())
+    }
+
+    /// The columns the engine holds for a collection, empty where the adapter
+    /// does not support [`Capability::SchemaIntrospection`]
+    /// (`getSchemaAttributes()`).
+    pub async fn schema_attributes(&self, collection: &str) -> Result<Vec<crate::schema::Column>> {
+        if !self.inner.adapter.supports(Capability::SchemaIntrospection) {
+            return Ok(Vec::new());
+        }
+        self.inner.adapter.schema_attributes(collection).await
+    }
+
+    /// The indexes the engine holds for a collection (`getSchemaIndexes()`).
+    pub async fn schema_indexes(&self, collection: &str) -> Result<Vec<crate::schema::Index>> {
+        if !self.inner.adapter.supports(Capability::SchemaIntrospection) {
+            return Ok(Vec::new());
+        }
+        self.inner.adapter.schema_indexes(collection).await
+    }
+
+    /// Whether the last read was served by a read replica, whose result must
+    /// not be cached for other readers (`isReadFromReplica()`).
+    pub(crate) fn is_read_from_replica(&self) -> bool {
+        self.inner.adapter.served_by_replica()
     }
 }
 
-/// Runs a closure when dropped: the `finally` of PHP's scoped setters, which
-/// also runs when the scoped future is cancelled.
+/// Runs a closure when dropped: the `finally` of a PHP scope, which also
+/// runs when the scoped future is cancelled.
 pub(crate) struct Finally<F: FnOnce()>(Option<F>);
 
 impl<F: FnOnce()> Finally<F> {
@@ -496,6 +834,16 @@ impl<F: FnOnce()> Drop for Finally<F> {
     }
 }
 
+/// A console line (PHP's `Console::warning()`), as a `tracing` warning.
+pub(crate) fn warning(message: impl AsRef<str>) {
+    tracing::warn!("{}", message.as_ref());
+}
+
+/// A console error line (PHP's `Console::error()`).
+pub(crate) fn console_error(message: impl AsRef<str>) {
+    tracing::error!("{}", message.as_ref());
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -505,35 +853,5 @@ mod tests {
     #[test]
     fn handle_is_send_sync_and_clone() {
         assert_send_sync::<Database>();
-    }
-
-    /// The futures of the main entry points must stay `Send` (tokio spawns
-    /// them): this fails to compile when an implementation holds a
-    /// non-`Send` value (such as the settings guard) across an await.
-    #[allow(dead_code, unreachable_code, clippy::diverging_sub_expression)]
-    fn futures_are_send(db: &Database) {
-        fn send<T: Send>(_: T) {}
-        send(db.get_document("c", "d", Vec::new(), false));
-        send(db.create_document("c", Document::empty()));
-        send(db.update_document("c", "d", Document::empty()));
-        send(db.delete_document("c", "d"));
-        send(db.find("c", Vec::new(), Database::PERMISSION_READ));
-        send(db.count("c", Vec::new(), None));
-        send(db.create_collection("c", Vec::new(), Vec::new(), None, true));
-        send(db.create_attribute(
-            "c",
-            "a",
-            Database::VAR_STRING,
-            10,
-            false,
-            Value::Null,
-            true,
-            false,
-            None,
-            Default::default(),
-            Vec::new(),
-        ));
-        send(db.create_relationship("c", "r", Database::RELATION_ONE_TO_ONE, false, None, None, "restrict"));
-        send(db.iterate("c", Vec::new(), Database::PERMISSION_READ));
     }
 }

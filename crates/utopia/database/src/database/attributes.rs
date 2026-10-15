@@ -1,904 +1,656 @@
-//! Attributes: create, update, rename, delete, and the checks they run.
+//! Attributes.
 //!
-//! Area: schema.
+//! PHP: `Trait\Attributes`.
 
-use futures_util::FutureExt;
+use std::sync::Arc;
+
 use php_std::value::Number;
+use utopia_query::schema::{ColumnType, IndexType};
 
-use super::Database;
-use super::metadata::{Rollback, documents_at, set_documents};
-use crate::document::{Document, SetType};
+use super::retry::Rollback;
+use super::{Database, MAX_VECTOR_DIMENSIONS, METADATA};
+use crate::adapter::{self, Feature};
+use crate::attribute::{Attribute, Patch, Update};
+use crate::capability::Capability;
+use crate::collection::{self, Collection};
+use crate::document::SetType;
 use crate::error::{Error, Kind, Result};
-use crate::validator::attribute::{Attribute as AttributeValidator, AttributeOptions};
+use crate::event::{Domain, Event};
+use crate::index::Index;
+use crate::schema::Column;
+use crate::validator::attribute_definition::AttributeDefinition;
 use crate::validator::big_int::BigInt;
-use crate::validator::index::Index as IndexValidator;
+use crate::validator::index_definition::IndexDefinition;
 use crate::validator::index_dependency::IndexDependency;
+use crate::validator::spatial::Spatial;
 use crate::validator::structure::formats;
-use crate::value::{Array, ArrayKey, Str, Value, to_text};
+use crate::value::{Array, Value};
 
-/// `in_array($value, $haystack)` for constant strings: loose comparison.
-fn in_list(value: &Value, list: &[&str]) -> bool {
-    list.iter().any(|t| Value::Str(Str::from(*t)).loose_eq(value))
-}
-
-/// `gettype($value)`.
-fn gettype(value: &Value) -> &'static str {
-    match value {
-        Value::Null => "NULL",
-        Value::Bool(_) => "boolean",
-        Value::Int(_) => "integer",
-        Value::Float(_) => "double",
-        Value::Str(_) => "string",
-        Value::Array(_) => "array",
-        Value::Object(_) | Value::Ext(_) => "object",
-    }
-}
-
-/// A string value.
-fn s(text: &str) -> Value {
-    Value::Str(Str::from(text))
-}
+/// The `attributes` field of a stored index (`INDEX_ATTRIBUTES`).
+const INDEX_ATTRIBUTES: &str = "attributes";
 
 /// `number_format($n)`.
 fn number_format(n: Number) -> String {
     String::from_utf8_lossy(&php_std::format::number_format(n, 0, b".", b",")).into_owned()
 }
 
-/// A value passed to an `int` parameter (PHP's coercion without
-/// `strict_types`): integers as they are, floats and numeric strings
-/// truncated, booleans as 0 or 1; anything else fails like PHP.
-fn int_param(value: &Value, function: &str, position: usize, name: &str) -> Result<i64> {
-    match value {
-        Value::Int(i) => Ok(*i),
-        Value::Bool(b) => Ok(i64::from(*b)),
-        Value::Float(f) if f.fract() == 0.0 && f.is_finite() => Ok(*f as i64),
-        Value::Str(v) if php_std::value::numeric_bytes_ex(v.as_bytes()).is_some() => Ok(value.to_double() as i64),
-        other => Err(Error::new(
-            Kind::TypeError,
-            format!(
-                "Utopia\\Database\\Database::{function}(): Argument #{position} (${name}) must be of type int, {} given",
-                other.type_name()
-            ),
-        )),
-    }
-}
-
-/// A value passed to a `string` parameter: strings as they are, other
-/// scalars as their text; anything else fails like PHP.
-fn string_param(value: &Value, function: &str, position: usize, name: &str) -> Result<String> {
-    match value {
-        Value::Str(_) | Value::Int(_) | Value::Float(_) | Value::Bool(_) => Ok(to_text(value)),
-        other => Err(Error::new(
-            Kind::TypeError,
-            format!(
-                "Utopia\\Database\\Database::{function}(): Argument #{position} (${name}) must be of type string, {} given",
-                other.type_name()
-            ),
-        )),
-    }
-}
-
-/// A value passed to a `bool` parameter: scalars by truthiness.
-fn bool_param(value: &Value, function: &str, position: usize, name: &str) -> Result<bool> {
-    match value {
-        Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => Ok(value.truthy()),
-        other => Err(Error::new(
-            Kind::TypeError,
-            format!(
-                "Utopia\\Database\\Database::{function}(): Argument #{position} (${name}) must be of type bool, {} given",
-                other.type_name()
-            ),
-        )),
-    }
-}
-
-/// A value passed to an `array` parameter.
-fn array_param(value: &Value, function: &str, position: usize, name: &str) -> Result<Array> {
-    match value {
-        Value::Array(a) => Ok(a.clone()),
-        other => Err(Error::new(
-            Kind::TypeError,
-            format!(
-                "Utopia\\Database\\Database::{function}(): Argument #{position} (${name}) must be of type array, {} given",
-                other.type_name()
-            ),
-        )),
-    }
-}
-
-/// `array_unique($values)`: the first of the values with the same string
-/// form, keeping their keys.
-fn array_unique(values: Array) -> Array {
-    let mut seen: Vec<String> = Vec::new();
-    let mut out = Array::new();
-    for (k, v) in values.iter() {
-        let text = to_text(v);
-        if !seen.contains(&text) {
-            seen.push(text);
-            out.set(k.to_owned(), v.clone());
-        }
-    }
-    out
-}
-
-/// The attribute metadata document PHP builds (`new Document([...])`).
-#[allow(clippy::too_many_arguments)]
-fn attribute_document(
-    id: &str,
-    kind: &str,
-    size: i64,
-    required: bool,
-    default: &Value,
-    signed: bool,
-    array: bool,
-    format: Option<&str>,
-    format_options: &Array,
-    filters: &Array,
-) -> Result<Document> {
-    Document::new(
-        [
-            (ArrayKey::from("$id"), s(&crate::helpers::id::custom(id))),
-            (ArrayKey::from("key"), s(id)),
-            (ArrayKey::from("type"), s(kind)),
-            (ArrayKey::from("size"), Value::Int(size)),
-            (ArrayKey::from("required"), Value::Bool(required)),
-            (ArrayKey::from("default"), default.clone()),
-            (ArrayKey::from("signed"), Value::Bool(signed)),
-            (ArrayKey::from("array"), Value::Bool(array)),
-            (ArrayKey::from("format"), format.map_or(Value::Null, s)),
-            (ArrayKey::from("formatOptions"), Value::Array(format_options.clone())),
-            (ArrayKey::from("filters"), Value::Array(filters.clone())),
-        ]
-        .into_iter()
-        .collect(),
-    )
-}
-
-/// The position of the entry whose `$id` loosely equals `id`
-/// (`array_search($id, array_map(fn ($a) => $a['$id'], $entries))`).
-fn search(entries: &[Document], id: &str) -> Option<usize> {
-    let id = s(id);
-    entries.iter().position(|e| e.get("$id").unwrap_or(&Value::Null).loose_eq(&id))
-}
-
-/// The `$collection => _metadata` document of the purge event.
-fn purge_payload(collection_id: &str) -> Value {
-    Value::from(Document::from_array_unchecked(
-        [(ArrayKey::from("$id"), s(collection_id)), (ArrayKey::from("$collection"), s(Database::METADATA))]
-            .into_iter()
-            .collect(),
-    ))
-}
-
-/// Whether the `type` of `document` is exactly `kind`.
-fn has_type(document: &Document, kind: &str) -> bool {
-    matches!(document.get("type"), Some(Value::Str(t)) if t.as_bytes() == kind.as_bytes())
-}
-
 impl Database {
-    /// Purges the cached collection and its metadata document (with
-    /// retries) and triggers [`Database::EVENT_DOCUMENT_PURGE`] for it.
-    async fn purge_collection_metadata(&self, collection_id: &str, collection: bool) -> Result<()> {
-        if collection {
-            self.with_retries(|| async { self.purge_cached_collection(collection_id).await.map(|_| ()) }, 3, 100, 2.0)
-                .await?;
-        }
-        self.with_retries(
-            || async { self.purge_cached_document_internal(Self::METADATA, Some(collection_id)).await.map(|_| ()) },
-            3,
-            100,
-            2.0,
-        )
-        .await?;
-        let _ = self.trigger(Self::EVENT_DOCUMENT_PURGE, &purge_payload(collection_id));
-        Ok(())
-    }
-
-    /// The column type the adapter would give an attribute, compared with
-    /// an orphan column's: `true` when the orphan can be kept.
-    #[allow(clippy::too_many_arguments)]
-    fn orphan_column_matches(
-        &self,
-        schema_attributes: &[Document],
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        required: bool,
-    ) -> Result<Option<bool>> {
-        let adapter = self.adapter();
-        let expected = adapter.column_type(kind, size, signed, array, required)?;
-        if expected.is_empty() {
-            return Ok(None);
-        }
-        let filtered = adapter.filter(id)?.to_ascii_lowercase();
-        for schema in schema_attributes {
-            if schema.id().to_ascii_lowercase() == filtered {
-                let actual = schema.get("columnType").map(to_text).unwrap_or_default().to_ascii_uppercase();
-                return Ok(Some(actual == expected.to_ascii_uppercase()));
-            }
-        }
-        Ok(None)
-    }
-
-    /// Whether `collection` already has an attribute with key `id` (any
-    /// case) in its metadata.
-    fn exists_in_metadata(collection: &Document, id: &str) -> bool {
-        let id = id.to_ascii_lowercase();
-        documents_at(collection, "attributes").iter().any(|a| {
-            let key = a.get("key").map_or_else(|| a.id().to_owned(), to_text);
-            key.to_ascii_lowercase() == id
-        })
-    }
-
-    /// Creates attribute `id` on `collection`: validates it (type, size,
-    /// default, format, filters, limits), alters the table, then persists
-    /// the metadata (rolling the column back when that fails); triggers
-    /// [`Database::EVENT_ATTRIBUTE_CREATE`].
+    /// Adds an attribute to a collection (`createAttribute()`): its column
+    /// (reusing a column only the schema holds when its type matches), then
+    /// its definition. Returns the attribute as stored.
     ///
-    /// PHP: `Database::createAttribute($collection, $id, $type, $size,
-    /// $required, $default = null, $signed = true, $array = false, $format =
-    /// null, $formatOptions = [], $filters = [])`. Validator: `Attribute`.
-    #[allow(clippy::too_many_arguments)]
-    pub async fn create_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        required: bool,
-        default: Value,
-        signed: bool,
-        array: bool,
-        format: Option<&str>,
-        format_options: Array,
-        filters: Vec<String>,
-    ) -> Result<bool> {
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection,
+    /// ([`crate::Kind::Duplicate`]) for an existing key,
+    /// ([`crate::Kind::Limit`]) past the adapter's limits,
+    /// ([`crate::Kind::Refused`]) when the adapter does not create the
+    /// column, and as the attribute validator does.
+    pub async fn create_attribute(&self, collection: &str, attribute: Attribute) -> Result<Attribute> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let attribute = Database::normalise(&attribute)?;
+        let id = definition.id().to_owned();
 
-        let mut filters: Array = filters.iter().map(|f| s(f)).collect();
-        if Self::ATTRIBUTE_FILTER_TYPES.contains(&kind) {
-            let _ = filters.push(s(kind));
-            filters = array_unique(filters);
-        }
-        let size = self.normalize_big_int_size(kind, size);
+        let schema_attributes = self.schema_attributes(&id).await?;
 
-        let schema_attributes = if adapter.support_for_schema_attributes() {
-            self.schema_attributes(collection.id()).await?
-        } else {
-            Vec::new()
+        let exists_in_schema = match self.validate_attribute(&definition, &attribute, &schema_attributes) {
+            Ok(()) => false,
+            Err(error) if error.is_a(Kind::Duplicate) => {
+                self.reconcile_schema_only_column(&definition, &attribute, &schema_attributes, error).await?
+            }
+            Err(error) => return Err(error),
         };
 
-        let mut exists_in_schema = false;
-        let attribute = match self
-            .validate_attribute(
-                &collection,
-                id,
-                kind,
-                size,
-                required,
-                &default,
-                signed,
-                array,
-                format,
-                &format_options,
-                &filters,
-                Some(&schema_attributes),
-            )
-            .await
-        {
-            Ok(attribute) => attribute,
-            Err(e) if e.is_a(Kind::Duplicate) => {
-                // A column without metadata: the remains of a partial
-                // failure. Keep it when its type matches, drop it otherwise.
-                if Self::exists_in_metadata(&collection, id) {
-                    return Err(e);
-                }
-                match self.orphan_column_matches(&schema_attributes, id, kind, size, signed, array, required)? {
-                    Some(false) => {
-                        adapter.delete_attribute(collection.id(), id).await?;
-                    }
-                    _ => exists_in_schema = true,
-                }
-                attribute_document(
-                    id,
-                    kind,
-                    size,
-                    required,
-                    &default,
-                    signed,
-                    array,
-                    format,
-                    &format_options,
-                    &filters,
-                )?
-            }
-            Err(e) => return Err(e),
-        };
+        let created = !exists_in_schema && self.create_attribute_in_schema(&id, &attribute).await?;
 
-        let mut created = false;
-        if !exists_in_schema {
-            match adapter.create_attribute(collection.id(), id, kind, size, signed, array, required).await {
-                Ok(true) => created = true,
-                Ok(false) => return Err(Error::database("Failed to create attribute")),
-                // The column exists only in the table: persist the metadata.
-                Err(e) if e.is_a(Kind::Duplicate) => {}
-                Err(e) => return Err(e),
-            }
-        }
+        definition.set_with(collection::ATTRIBUTES, Value::from(attribute.to_document()?), SetType::Append)?;
 
-        collection.set_with("attributes", Value::from(attribute.clone()), SetType::Append);
-
-        let collection_id = collection.id().to_owned();
         self.update_metadata(
-            &collection,
-            Some(Rollback::Throwing(self.cleanup_attribute(&collection_id, id, 3).boxed())),
+            &definition,
+            Rollback::Throwing(Box::pin(self.cleanup_attribute(&id, &attribute.key, 3))),
             created,
-            &format!("attribute creation '{id}'"),
+            &format!("attribute creation '{}'", attribute.key),
         )
         .await?;
 
-        self.purge_collection_metadata(&collection_id, true).await?;
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_CREATE, &Value::from(attribute));
-        Ok(true)
+        self.purge_collection_caches(&id).await?;
+
+        self.trigger(Event::AttributeCreate, || Domain::AttributeCreated {
+            collection: id.clone(),
+            attribute: attribute.clone(),
+        })
+        .await?;
+
+        Ok(attribute)
     }
 
-    /// Creates several attributes at once, each an array with `$id`,
-    /// `type`, `size`, `required` and optionally `default`, `signed`,
-    /// `array`, `format`, `formatOptions`, `filters` (missing keys raise
-    /// PHP's errors); triggers [`Database::EVENT_ATTRIBUTE_CREATE`] with
-    /// the list.
+    /// Adds attributes to a collection at once (`createAttributes()`):
+    /// every one validated, the columns created in one call, the
+    /// definitions written once. Returns the attributes as stored.
     ///
-    /// PHP: `Database::createAttributes()`.
-    pub async fn create_attributes(&self, collection: &str, attributes: Vec<Array>) -> Result<bool> {
+    /// Fails ([`crate::Kind::Database`]) for no attributes (`No attributes
+    /// to create`) or one without a key (`Missing attribute key`), and as
+    /// [`Database::create_attribute`] does.
+    pub async fn create_attributes(&self, collection: &str, attributes: Vec<Attribute>) -> Result<Vec<Attribute>> {
         if attributes.is_empty() {
             return Err(Error::database("No attributes to create"));
         }
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
-        let schema_attributes = if adapter.support_for_schema_attributes() {
-            self.schema_attributes(collection.id()).await?
-        } else {
-            Vec::new()
-        };
 
-        let isset = |a: &Array, k: &str| !matches!(a.get_str(k), None | Some(Value::Null));
-        let mut documents = Vec::new();
-        let mut to_create: Vec<Array> = Vec::new();
-        for mut attribute in attributes {
-            for (key, message) in [
-                ("$id", "Missing attribute key"),
-                ("type", "Missing attribute type"),
-                ("size", "Missing attribute size"),
-                ("required", "Missing attribute required"),
-            ] {
-                if !isset(&attribute, key) {
-                    return Err(Error::database(message));
-                }
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+
+        let schema_attributes = self.schema_attributes(&id).await?;
+
+        let mut stored = Vec::with_capacity(attributes.len());
+        let mut to_create = Vec::new();
+        for attribute in &attributes {
+            if attribute.key.is_empty() {
+                return Err(Error::database("Missing attribute key"));
             }
-            for (key, default) in [
-                ("default", Value::Null),
-                ("signed", Value::Bool(true)),
-                ("array", Value::Bool(false)),
-                ("format", Value::Null),
-                ("formatOptions", Value::Array(Array::new())),
-                ("filters", Value::Array(Array::new())),
-            ] {
-                if !isset(&attribute, key) {
-                    attribute.set(ArrayKey::from(key), default);
-                }
-            }
-            let get = |a: &Array, k: &str| a.get_str(k).cloned().unwrap_or(Value::Null);
-            let kind = string_param(&get(&attribute, "type"), "normalizeBigIntSize", 1, "type")?;
-            let size = int_param(&get(&attribute, "size"), "normalizeBigIntSize", 2, "size")?;
-            let size = self.normalize_big_int_size(&kind, size);
-            attribute.set(ArrayKey::from("size"), Value::Int(size));
 
-            let id = string_param(&get(&attribute, "$id"), "validateAttribute", 2, "id")?;
-            let required = bool_param(&get(&attribute, "required"), "validateAttribute", 5, "required")?;
-            let default = get(&attribute, "default");
-            let signed = bool_param(&get(&attribute, "signed"), "validateAttribute", 7, "signed")?;
-            let array = bool_param(&get(&attribute, "array"), "validateAttribute", 8, "array")?;
-            let format = match get(&attribute, "format") {
-                Value::Null => None,
-                f => Some(string_param(&f, "validateAttribute", 9, "format")?),
-            };
-            let format_options =
-                array_param(&get(&attribute, "formatOptions"), "validateAttribute", 10, "formatOptions")?;
-            let filters = array_param(&get(&attribute, "filters"), "validateAttribute", 11, "filters")?;
-
-            let mut exists_in_schema = false;
-            let document = match self
-                .validate_attribute(
-                    &collection,
-                    &id,
-                    &kind,
-                    size,
-                    required,
-                    &default,
-                    signed,
-                    array,
-                    format.as_deref(),
-                    &format_options,
-                    &filters,
-                    Some(&schema_attributes),
-                )
-                .await
-            {
-                Ok(document) => document,
-                Err(e) if e.is_a(Kind::Duplicate) => {
-                    if Self::exists_in_metadata(&collection, &id) {
-                        return Err(e);
-                    }
-                    match self.orphan_column_matches(&schema_attributes, &id, &kind, size, signed, array, required)? {
-                        Some(false) => {
-                            adapter.delete_attribute(collection.id(), &id).await?;
-                        }
-                        Some(true) => exists_in_schema = true,
-                        None => {}
-                    }
-                    attribute_document(
-                        &id,
-                        &kind,
-                        size,
-                        required,
-                        &default,
-                        signed,
-                        array,
-                        format.as_deref(),
-                        &format_options,
-                        &filters,
-                    )?
+            let attribute = Database::normalise(attribute)?;
+            let exists_in_schema = match self.validate_attribute(&definition, &attribute, &schema_attributes) {
+                Ok(()) => false,
+                Err(error) if error.is_a(Kind::Duplicate) => {
+                    self.reconcile_schema_only_column(&definition, &attribute, &schema_attributes, error).await?
                 }
-                Err(e) => return Err(e),
+                Err(error) => return Err(error),
             };
-            documents.push(document);
+
             if !exists_in_schema {
-                to_create.push(attribute);
+                to_create.push(attribute.clone());
             }
+            stored.push(attribute);
         }
 
-        let mut created = false;
-        if !to_create.is_empty() {
-            match adapter.create_attributes(collection.id(), &to_create).await {
-                Ok(true) => created = true,
-                Ok(false) => return Err(Error::database("Failed to create attributes")),
-                Err(e) if e.is_a(Kind::Duplicate) => {
-                    // One column exists already: create the others one by one.
-                    for attribute in &to_create {
-                        let get = |k: &str| attribute.get_str(k).cloned().unwrap_or(Value::Null);
-                        let result = adapter
-                            .create_attribute(
-                                collection.id(),
-                                &to_text(&get("$id")),
-                                &to_text(&get("type")),
-                                int_param(&get("size"), "createAttribute", 4, "size")?,
-                                get("signed").truthy(),
-                                get("array").truthy(),
-                                get("required").truthy(),
-                            )
-                            .await;
-                        match result {
-                            Ok(_) => created = true,
-                            Err(e) if e.is_a(Kind::Duplicate) => {}
-                            Err(e) => return Err(e),
-                        }
-                    }
-                }
-                Err(e) => return Err(e),
-            }
+        let created =
+            if to_create.is_empty() { Vec::new() } else { self.create_attributes_in_schema(&id, &to_create).await? };
+
+        for attribute in &stored {
+            definition.set_with(collection::ATTRIBUTES, Value::from(attribute.to_document()?), SetType::Append)?;
         }
 
-        for document in &documents {
-            collection.set_with("attributes", Value::from(document.clone()), SetType::Append);
-        }
-
-        let collection_id = collection.id().to_owned();
         self.update_metadata(
-            &collection,
-            Some(Rollback::Errors(self.cleanup_attributes(&collection_id, &documents, 3).boxed())),
-            created,
+            &definition,
+            Rollback::Errors(Box::pin(self.cleanup_attributes(&id, &created, 3))),
+            !created.is_empty(),
             "attributes creation",
         )
         .await?;
 
-        self.purge_collection_metadata(&collection_id, true).await?;
-        let payload = Value::Array(documents.into_iter().map(Value::from).collect());
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_CREATE, &payload);
+        self.purge_collection_caches(&id).await?;
+
+        let listeners = self.listens(Event::AttributeCreate);
+        if !listeners.is_empty() {
+            for attribute in &stored {
+                self.dispatch(
+                    &Domain::AttributeCreated { collection: id.clone(), attribute: attribute.clone() },
+                    &listeners,
+                )
+                .await?;
+            }
+        }
+
+        self.trigger(Event::AttributesCreate, || Domain::AttributeBatchCreated {
+            collection: id.clone(),
+            attributes: stored.clone(),
+        })
+        .await?;
+
+        Ok(stored)
+    }
+
+    /// Changes an attribute (`updateAttribute()`): a sparse update, where an
+    /// unset field keeps its value and `default: null` clears the default.
+    /// An explicit `required: true` clears the default; a default on an
+    /// attribute that is or becomes required is refused; `required: false`
+    /// relaxes the column's `NOT NULL`. Returns the attribute as stored.
+    ///
+    /// Fails ([`crate::Kind::Database`]) for the metadata collection, a
+    /// relationship or an invalid change, ([`crate::Kind::NotFound`]) for a
+    /// missing attribute, ([`crate::Kind::Duplicate`]) for a rename onto an
+    /// existing key, ([`crate::Kind::Limit`]) past the row width,
+    /// ([`crate::Kind::Dependency`]) for an indexed array renamed,
+    /// ([`crate::Kind::Index`]) for an index the change invalidates, and
+    /// ([`crate::Kind::Refused`]) when the adapter does not alter the
+    /// column.
+    pub async fn update_attribute(&self, collection: &str, key: &str, update: Update) -> Result<Attribute> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+
+        if id == METADATA {
+            return Err(Error::database("Cannot update metadata attributes"));
+        }
+
+        let attributes = definition.attributes()?.to_vec();
+        let Some(position) = attribute_position(&attributes, key) else {
+            return Err(Error::not_found("Attribute not found"));
+        };
+
+        let stored = attributes[position].clone();
+
+        if stored.kind == ColumnType::Relationship {
+            return Err(Error::database("Cannot update relationship as an attribute"));
+        }
+
+        if update.is_empty() {
+            return Ok(stored);
+        }
+
+        let required = update.required.unwrap_or(stored.required);
+        if required && matches!(&update.default, Patch::Set(v) if !matches!(v, Value::Null)) {
+            return Err(Error::database("Cannot set a default value on a required attribute"));
+        }
+
+        let mut updated = stored.apply(&update)?;
+        if update.required == Some(true) && !matches!(updated.default, Value::Null) {
+            updated = updated.apply(&Update { default: Patch::Set(Value::Null), ..Default::default() })?;
+        }
+
+        let new_key = updated.key.clone();
+        let renaming = new_key != key;
+        if renaming && attribute_position(&attributes, &new_key).is_some() {
+            return Err(Error::duplicate("Attribute name already used"));
+        }
+
+        self.validate_attribute_update(
+            &updated,
+            update.size.or(stored.size).unwrap_or(0),
+            update.array.unwrap_or(stored.array),
+        )?;
+
+        let adapter = &self.inner.adapter;
+        let spatial_null = adapter.supports(Capability::IndexSpatialNull);
+        let altering = update.kind.is_some()
+            || update.size.is_some()
+            || update.signed.is_some()
+            || update.array.is_some()
+            || update.key.is_some()
+            || (updated.is_spatial() && !spatial_null);
+
+        let original_indexes = definition.indexes()?.to_vec();
+        let attributes = replacing(&attributes, key, &updated);
+        let indexes = if renaming {
+            rename_indexed_attribute(&original_indexes, key, &new_key)?
+        } else {
+            original_indexes.clone()
+        };
+
+        write_attributes(&mut definition, &attributes)?;
+        if renaming {
+            write_indexes(&mut definition, &indexes)?;
+        }
+
+        let limits = adapter.limits();
+        if limits.document_size > 0 && adapter.attribute_width(&definition)? >= limits.document_size {
+            return Err(Error::limit("Row width limit reached. Cannot update attribute."));
+        }
+
+        if updated.is_spatial() && !spatial_null {
+            assert_spatial_indexes_required(&attributes, &indexes)?;
+        }
+
+        let mut updated_in_schema = false;
+
+        if altering {
+            if renaming {
+                let validator = IndexDependency::new(indexes.clone(), adapter.supports(Capability::IndexArrayCast));
+                if !validator.check(&updated) {
+                    return Err(Error::dependency(validator.description()));
+                }
+            }
+
+            if self.is_validating() {
+                let validator = self.index_validator(attributes.clone(), original_indexes.clone());
+                for index in &indexes {
+                    if !validator.check(index)? {
+                        return Err(Error::index(validator.description()));
+                    }
+                }
+            }
+
+            updated_in_schema = adapter.update_attribute(&id, key, &updated).await?;
+
+            if !updated_in_schema {
+                return Err(Error::refused("Failed to update attribute"));
+            }
+        } else if stored.required && !updated.required && !adapter.relax_attribute_required(&id, key).await? {
+            return Err(Error::refused("Failed to update attribute"));
+        }
+
+        self.update_metadata(
+            &definition,
+            Rollback::Silent(Box::pin(async { adapter.update_attribute(&id, &new_key, &stored).await.map(|_| ()) })),
+            updated_in_schema,
+            &format!("attribute update '{key}'"),
+        )
+        .await?;
+
+        if altering {
+            self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+        }
+        self.with_retries(
+            || async { self.purge_cached_document_internal(METADATA, Some(&id)).await.map(|_| ()) },
+            3,
+            100,
+        )
+        .await?;
+
+        self.trigger(Event::DocumentPurge, || Domain::DocumentPurged {
+            collection: METADATA.to_owned(),
+            id: id.clone(),
+        })
+        .await?;
+
+        self.trigger(Event::AttributeUpdate, || Domain::AttributeUpdated {
+            collection: id.clone(),
+            attribute: updated.clone(),
+        })
+        .await?;
+
+        Ok(updated)
+    }
+
+    /// Whether the collection can take the attribute without exceeding its
+    /// limits (`checkAttribute()`).
+    ///
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection and
+    /// ([`crate::Kind::Limit`]) past the attribute count or row width.
+    pub async fn check_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+
+        definition.set_with(collection::ATTRIBUTES, Value::from(attribute.to_document()?), SetType::Append)?;
+
+        let adapter = &self.inner.adapter;
+        let limits = adapter.limits();
+        if limits.attributes > 0 && adapter.count_of_attributes(&definition)? > limits.attributes {
+            return Err(Error::limit(format!(
+                "Column limit reached. Cannot create new attribute. Current attribute count is {} but the maximum is {}. Remove some attributes to free up space.",
+                adapter.count_of_attributes(&definition)?,
+                limits.attributes
+            )));
+        }
+
+        if limits.document_size > 0 && adapter.attribute_width(&definition)? >= limits.document_size {
+            return Err(Error::limit(format!(
+                "Row width limit reached. Cannot create new attribute. Current row width is {} bytes but the maximum is {} bytes. Reduce the size of existing attributes or remove some attributes to free up space.",
+                adapter.attribute_width(&definition)?,
+                limits.document_size
+            )));
+        }
+
         Ok(true)
     }
 
-    /// `0` for `bigint` (sized by the adapter), `size` otherwise.
+    /// Removes an attribute (`deleteAttribute()`): the attribute dropped
+    /// from every index on it (and every index left on none), then its
+    /// column, then its definition.
     ///
-    /// PHP: `Database::normalizeBigIntSize()` (private).
-    pub(crate) fn normalize_big_int_size(&self, kind: &str, size: i64) -> i64 {
-        if kind == Self::VAR_BIGINT { 0 } else { size }
-    }
-
-    /// Validates a new attribute against `collection` and returns its
-    /// metadata document. `schema_attributes` are the table's columns when
-    /// the caller already fetched them.
-    ///
-    /// PHP: `Database::validateAttribute()` (private). Validator:
-    /// `Attribute::new(..).is_valid(&attribute)`.
-    #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn validate_attribute(
-        &self,
-        collection: &Document,
-        id: &str,
-        kind: &str,
-        size: i64,
-        required: bool,
-        default: &Value,
-        signed: bool,
-        array: bool,
-        format: Option<&str>,
-        format_options: &Array,
-        filters: &Array,
-        schema_attributes: Option<&[Document]>,
-    ) -> Result<Document> {
-        let adapter = self.adapter().clone();
-        let size = self.normalize_big_int_size(kind, size);
-        let attribute =
-            attribute_document(id, kind, size, required, default, signed, array, format, format_options, filters)?;
-
-        let mut clone = collection.clone();
-        clone.set_with("attributes", Value::from(attribute.clone()), SetType::Append);
-
-        let schema_attributes = match schema_attributes {
-            Some(s) => s.to_vec(),
-            None if adapter.support_for_schema_attributes() => self.schema_attributes(collection.id()).await?,
-            None => Vec::new(),
+    /// Fails ([`crate::Kind::NotFound`]) for a missing attribute,
+    /// ([`crate::Kind::Database`]) for a relationship,
+    /// ([`crate::Kind::Dependency`]) for an indexed array, and
+    /// ([`crate::Kind::Refused`]) when the adapter does not drop the column.
+    pub async fn delete_attribute(&self, collection: &str, key: &str) -> Result<()> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+        let mut attributes = definition.attributes()?.to_vec();
+        let Some(position) = attribute_position(&attributes, key) else {
+            return Err(Error::not_found("Attribute not found"));
         };
-        let (count_adapter, width_adapter, filter_adapter) = (adapter.clone(), adapter.clone(), adapter.clone());
-        let (count_clone, width_clone) = (clone.clone(), clone);
-        let validator = AttributeValidator::new(
-            &documents_at(collection, "attributes"),
-            &schema_attributes,
-            AttributeOptions {
-                max_attributes: adapter.limit_for_attributes(),
-                max_width: adapter.document_size_limit(),
-                max_string_length: adapter.limit_for_string(),
-                max_varchar_length: adapter.max_varchar_length(),
-                max_int_length: adapter.limit_for_int(),
-                max_big_int_length: adapter.limit_for_big_int(),
-                support_for_schema_attributes: adapter.support_for_schema_attributes(),
-                support_for_vectors: adapter.support_for_vectors(),
-                support_for_spatial_attributes: adapter.support_for_spatial_attributes(),
-                support_for_object: adapter.support_for_object(),
-                support_unsigned_big_int: adapter.support_for_unsigned_big_int(),
-                attribute_count: Some(Box::new(move |_| Ok(count_adapter.count_of_attributes(&count_clone)))),
-                attribute_width: Some(Box::new(move |_| width_adapter.attribute_width(&width_clone))),
-                filter: Some(Box::new(move |id| filter_adapter.filter(id).unwrap_or_default())),
-                is_migrating: self.is_migrating(),
-                shared_tables: self.shared_tables(),
-            },
-        );
-        validator.check(&attribute)?;
-        Ok(attribute)
-    }
 
-    /// The filters an attribute of type `kind` must carry (`datetime`).
-    ///
-    /// PHP: `Database::getRequiredFilters()` (protected).
-    pub(crate) fn required_filters(&self, kind: Option<&str>) -> Vec<String> {
-        match kind {
-            Some(Self::VAR_DATETIME) => vec!["datetime".to_owned()],
-            _ => Vec::new(),
-        }
-    }
+        let attribute = attributes[position].clone();
 
-    /// The types `Unknown attribute type` lists.
-    fn supported_types(&self) -> Vec<&'static str> {
-        let mut supported = vec![
-            Self::VAR_STRING,
-            Self::VAR_VARCHAR,
-            Self::VAR_TEXT,
-            Self::VAR_MEDIUMTEXT,
-            Self::VAR_LONGTEXT,
-            Self::VAR_INTEGER,
-            Self::VAR_BIGINT,
-            Self::VAR_FLOAT,
-            Self::VAR_BOOLEAN,
-            Self::VAR_DATETIME,
-            Self::VAR_RELATIONSHIP,
-        ];
-        if self.adapter().support_for_vectors() {
-            supported.push(Self::VAR_VECTOR);
+        if attribute.kind == ColumnType::Relationship {
+            return Err(Error::database("Cannot delete relationship as an attribute"));
         }
-        if self.adapter().support_for_spatial_attributes() {
-            supported.extend(Self::SPATIAL_TYPES);
-        }
-        supported
-    }
 
-    /// Checks that `default` suits an attribute of type `kind`.
-    ///
-    /// PHP: `Database::validateDefaultTypes()` (protected).
-    pub(crate) fn validate_default_types(&self, kind: &str, default: &Value) -> Result<()> {
-        let default_type = gettype(default);
-        if default_type == "NULL" {
-            return Ok(());
-        }
-        if let Value::Array(values) = default {
-            // Spatial types and objects take the array itself.
-            if !Self::SPATIAL_TYPES.contains(&kind) && !s(kind).loose_eq(&s(Self::VAR_OBJECT)) {
-                for value in values.values() {
-                    self.validate_default_types(kind, value)?;
-                }
-            }
-            return Ok(());
-        }
-        let mismatch =
-            || Error::database(format!("Default value {} does not match given type {kind}", to_text(default)));
-        match kind {
-            Self::VAR_STRING | Self::VAR_VARCHAR | Self::VAR_TEXT | Self::VAR_MEDIUMTEXT | Self::VAR_LONGTEXT => {
-                if default_type != "string" {
-                    return Err(mismatch());
-                }
-            }
-            Self::VAR_INTEGER | Self::VAR_FLOAT | Self::VAR_BOOLEAN => {
-                if kind != default_type {
-                    return Err(mismatch());
-                }
-            }
-            Self::VAR_BIGINT => {
-                if default_type != "integer" && default_type != "string" {
-                    return Err(mismatch());
-                }
-                if let Value::Str(v) = default
-                    && !BigInt::is_integer_string(v.as_bytes(), true)
-                {
-                    return Err(Error::database(format!(
-                        "Default value {} is not a valid integer string for type bigint",
-                        to_text(default)
-                    )));
-                }
-            }
-            Self::VAR_DATETIME => {
-                if default_type != Self::VAR_STRING {
-                    return Err(mismatch());
-                }
-            }
-            Self::VAR_VECTOR => {
-                if default_type != "double" && default_type != "integer" {
-                    return Err(Error::database("Vector components must be numeric values (float or integer)"));
-                }
-            }
-            _ => {
-                return Err(Error::database(format!(
-                    "Unknown attribute type: {kind}. Must be one of {}",
-                    self.supported_types().join(", ")
-                )));
+        let indexes = definition.indexes()?.to_vec();
+        let adapter = &self.inner.adapter;
+
+        if self.is_validating() {
+            let validator = IndexDependency::new(indexes.clone(), adapter.supports(Capability::IndexArrayCast));
+            if !validator.check(&attribute) {
+                return Err(Error::dependency(validator.description()));
             }
         }
+
+        attributes.remove(position);
+        write_attributes(&mut definition, &attributes)?;
+        write_indexes(&mut definition, &without_indexed_attribute(&indexes, key)?)?;
+
+        let deleted_in_schema = self.delete_attribute_from_schema(&id, key).await?;
+
+        self.update_metadata(
+            &definition,
+            Rollback::Silent(Box::pin(async { adapter.create_attribute(&id, &attribute).await.map(|_| ()) })),
+            deleted_in_schema,
+            &format!("attribute deletion '{key}'"),
+        )
+        .await?;
+
+        self.purge_collection_caches(&id).await?;
+
+        self.trigger(Event::AttributeDelete, || Domain::AttributeDeleted {
+            collection: id.clone(),
+            attribute: attribute.clone(),
+        })
+        .await?;
+
         Ok(())
     }
 
-    /// Applies `update` to index `id` of `collection` (receiving the index,
-    /// the collection and the index's position) and persists the metadata.
-    /// Returns the updated index.
+    /// Renames an attribute (`renameAttribute()`): its column, then its
+    /// definition and the indexes on it.
     ///
-    /// PHP: `Database::updateIndexMeta()` (protected).
-    pub(crate) async fn update_index_meta<F>(&self, collection: &str, id: &str, update: F) -> Result<Document>
-    where
-        F: FnOnce(&mut Document, &Document, usize) -> Result<()> + Send,
-    {
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.id() == Self::METADATA {
-            return Err(Error::database("Cannot update metadata indexes"));
-        }
-        let mut indexes = documents_at(&collection, "indexes");
-        let Some(position) = search(&indexes, id) else {
-            return Err(Error::not_found("Index not found"));
-        };
-        update(&mut indexes[position], &collection, position)?;
-        let index = indexes[position].clone();
-        set_documents(&mut collection, "indexes", indexes);
-        self.update_metadata(&collection, None, false, &format!("index metadata update '{id}'")).await?;
-        Ok(index)
-    }
+    /// Fails ([`crate::Kind::Duplicate`]) when `new` is taken,
+    /// ([`crate::Kind::NotFound`]) for a missing attribute,
+    /// ([`crate::Kind::Dependency`]) for an indexed array,
+    /// ([`crate::Kind::Database`]) when the adapter fails, and
+    /// ([`crate::Kind::Refused`]) when it does not rename the column.
+    pub async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<()> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+        let attributes = definition.attributes()?.to_vec();
+        let position = attribute_position(&attributes, old);
 
-    /// Applies `update` to attribute `id` of `collection` (receiving the
-    /// attribute, the collection and the attribute's position), persists
-    /// the metadata and triggers [`Database::EVENT_ATTRIBUTE_UPDATE`].
-    /// Returns the updated attribute.
-    ///
-    /// PHP: `Database::updateAttributeMeta()` (protected).
-    pub(crate) async fn update_attribute_meta<F>(&self, collection: &str, id: &str, update: F) -> Result<Document>
-    where
-        F: FnOnce(&mut Document, &Document, usize) -> Result<()> + Send,
-    {
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.id() == Self::METADATA {
-            return Err(Error::database("Cannot update metadata attributes"));
+        if attribute_position(&attributes, new).is_some() {
+            return Err(Error::duplicate("Attribute name already used"));
         }
-        let mut attributes = documents_at(&collection, "attributes");
-        let Some(position) = search(&attributes, id) else {
+
+        let Some(position) = position else {
             return Err(Error::not_found("Attribute not found"));
         };
-        update(&mut attributes[position], &collection, position)?;
-        let attribute = attributes[position].clone();
-        set_documents(&mut collection, "attributes", attributes);
-        self.update_metadata(&collection, None, false, &format!("attribute metadata update '{id}'")).await?;
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_UPDATE, &Value::from(attribute.clone()));
-        Ok(attribute)
-    }
 
-    /// Sets whether an attribute is required (metadata only).
-    ///
-    /// PHP: `Database::updateAttributeRequired()`.
-    pub async fn update_attribute_required(&self, collection: &str, id: &str, required: bool) -> Result<Document> {
-        self.update_attribute_meta(collection, id, |attribute, _, _| {
-            attribute.set("required", Value::Bool(required));
-            Ok(())
-        })
-        .await
-    }
+        let indexes = definition.indexes()?.to_vec();
+        let adapter = &self.inner.adapter;
 
-    /// Sets an attribute's format (metadata only).
-    ///
-    /// PHP: `Database::updateAttributeFormat()`.
-    pub async fn update_attribute_format(&self, collection: &str, id: &str, format: &str) -> Result<Document> {
-        self.update_attribute_meta(collection, id, |attribute, _, _| {
-            let kind = attribute.get("type").map(to_text).unwrap_or_default();
-            if !formats::has(format, &kind) {
+        if self.is_validating() {
+            let validator = IndexDependency::new(indexes.clone(), adapter.supports(Capability::IndexArrayCast));
+            if !validator.check(&attributes[position]) {
+                return Err(Error::dependency(validator.description()));
+            }
+        }
+
+        let renamed = attributes[position].apply(&Update { key: Some(new.to_owned()), ..Default::default() })?;
+        let attributes = replacing(&attributes, old, &renamed);
+
+        let renamed_in_schema = match adapter.rename_attribute(&id, old, new).await {
+            Ok(r) => r,
+            Err(error) if error.is_a(Kind::Duplicate) || error.is_a(Kind::NotFound) => return Err(error),
+            Err(error) => {
                 return Err(Error::database(format!(
-                    "Format \"{format}\" not available for attribute type \"{kind}\""
-                )));
+                    "Failed to rename attribute '{old}' to '{new}': {}",
+                    error.message()
+                ))
+                .with_previous(error));
             }
-            attribute.set("format", s(format));
-            Ok(())
-        })
-        .await
-    }
-
-    /// Sets an attribute's format options (metadata only).
-    ///
-    /// PHP: `Database::updateAttributeFormatOptions()`.
-    pub async fn update_attribute_format_options(
-        &self,
-        collection: &str,
-        id: &str,
-        format_options: Array,
-    ) -> Result<Document> {
-        self.update_attribute_meta(collection, id, |attribute, _, _| {
-            attribute.set("formatOptions", Value::Array(format_options));
-            Ok(())
-        })
-        .await
-    }
-
-    /// Sets an attribute's filters (metadata only).
-    ///
-    /// PHP: `Database::updateAttributeFilters()`.
-    pub async fn update_attribute_filters(&self, collection: &str, id: &str, filters: Vec<String>) -> Result<Document> {
-        self.update_attribute_meta(collection, id, |attribute, _, _| {
-            attribute.set("filters", Value::Array(filters.iter().map(|f| s(f)).collect()));
-            Ok(())
-        })
-        .await
-    }
-
-    /// Sets an attribute's default (metadata only).
-    ///
-    /// PHP: `Database::updateAttributeDefault()`.
-    pub async fn update_attribute_default(&self, collection: &str, id: &str, default: Value) -> Result<Document> {
-        self.update_attribute_meta(collection, id, |attribute, _, _| {
-            if matches!(attribute.get("required"), Some(Value::Bool(true))) {
-                return Err(Error::database("Cannot set a default value on a required attribute"));
-            }
-            let kind = string_param(attribute.get("type").unwrap_or(&Value::Null), "validateDefaultTypes", 1, "type")?;
-            self.validate_default_types(&kind, &default)?;
-            attribute.set("default", default);
-            Ok(())
-        })
-        .await
-    }
-
-    /// Updates an attribute: each `Some` argument, and a `default` other
-    /// than [`Value::Null`] (PHP's `??=`), replaces the current setting;
-    /// alters the column when its type, size, signedness,
-    /// array-ness or key changes; persists the metadata (reverting the
-    /// column when that fails).
-    ///
-    /// PHP: `Database::updateAttribute($collection, $id, $type = null, $size
-    /// = null, $required = null, $default = null, $signed = null, $array =
-    /// null, $format = null, $formatOptions = null, $filters = null, $newKey
-    /// = null)`.
-    #[allow(clippy::too_many_arguments)]
-    pub async fn update_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: Option<&str>,
-        size: Option<i64>,
-        required: Option<bool>,
-        default: Value,
-        signed: Option<bool>,
-        array: Option<bool>,
-        format: Option<&str>,
-        format_options: Option<Array>,
-        filters: Option<Vec<String>>,
-        new_key: Option<&str>,
-    ) -> Result<Document> {
-        let adapter = self.adapter().clone();
-        let mut collection_doc = self.silent(|| self.get_collection(collection), None).await?;
-        if collection_doc.id() == Self::METADATA {
-            return Err(Error::database("Cannot update metadata attributes"));
-        }
-        let mut attributes = documents_at(&collection_doc, "attributes");
-        let Some(position) = search(&attributes, id) else {
-            return Err(Error::not_found("Attribute not found"));
         };
-        let mut attribute = attributes[position].clone();
-        let current = |key: &str| attribute.get(key).cloned().unwrap_or(Value::Null);
 
-        let original_type = current("type");
-        let original_size = current("size");
-        let original_signed = current("signed");
-        let original_array = current("array");
-        let original_required = current("required");
-        let original_key = current("key");
-        let original_indexes = documents_at(&collection_doc, "indexes");
-
-        let mut altering = kind.is_some() || size.is_some() || signed.is_some() || array.is_some() || new_key.is_some();
-        let kind = kind.map_or_else(|| current("type"), s);
-        let size = size.map_or_else(|| current("size"), Value::Int);
-        let signed = signed.map_or_else(|| current("signed"), Value::Bool);
-        let required = required.map_or_else(|| current("required"), Value::Bool);
-        let mut default = if matches!(default, Value::Null) { current("default") } else { default };
-        let array = array.map_or_else(|| current("array"), Value::Bool);
-        let format = format.map_or_else(|| current("format"), s);
-        let format_options = format_options.map_or_else(|| current("formatOptions"), Value::Array);
-        let filters = filters.map_or_else(|| current("filters"), |f| Value::Array(f.iter().map(|f| s(f)).collect()));
-
-        let kind_text = string_param(&kind, "normalizeBigIntSize", 1, "type")?;
-        let size = self.normalize_big_int_size(&kind_text, int_param(&size, "normalizeBigIntSize", 2, "size")?);
-
-        if matches!(required, Value::Bool(true)) && !matches!(default, Value::Null) {
-            default = Value::Null;
-        }
-        if !adapter.support_for_spatial_index_null() && in_list(&kind, &Self::SPATIAL_TYPES) {
-            altering = true;
+        if !renamed_in_schema {
+            return Err(Error::refused(format!("Failed to rename attribute '{old}' to '{new}'")));
         }
 
-        match kind_text.as_str() {
-            Self::VAR_STRING => {
+        write_attributes(&mut definition, &attributes)?;
+        write_indexes(&mut definition, &rename_indexed_attribute(&indexes, old, new)?)?;
+
+        self.update_metadata(
+            &definition,
+            Rollback::Throwing(Box::pin(async { adapter.rename_attribute(&id, new, old).await.map(|_| ()) })),
+            true,
+            &format!("attribute rename '{old}' to '{new}'"),
+        )
+        .await?;
+
+        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+
+        self.trigger(Event::AttributeRename, || Domain::AttributeRenamed {
+            collection: id.clone(),
+            old: old.to_owned(),
+            attribute: renamed.clone(),
+        })
+        .await?;
+
+        Ok(())
+    }
+
+    /// Creates an attribute's column (`createAttributeInSchema()`): whether
+    /// this call created it, `false` when the schema already held it.
+    ///
+    /// Fails ([`crate::Kind::Mismatch`]) when the schema holds the column
+    /// with another type, and ([`crate::Kind::Refused`]) when the adapter
+    /// does not create it.
+    async fn create_attribute_in_schema(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
+        match self.inner.adapter.create_attribute(collection, attribute).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to create attribute")),
+            Err(error) if error.is_a(Kind::Mismatch) => Err(error),
+            // The column exists only in the physical schema (the metadata
+            // check passed), so the metadata is written for it.
+            Err(error) if error.is_a(Kind::Duplicate) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Creates attributes' columns (`createAttributesInSchema()`): the
+    /// attributes this call created, without those the schema already held.
+    ///
+    /// Fails as [`Database::create_attribute_in_schema`] does (`Failed to
+    /// create attributes`).
+    async fn create_attributes_in_schema(&self, collection: &str, attributes: &[Attribute]) -> Result<Vec<Attribute>> {
+        match self.inner.adapter.create_attributes(collection, attributes).await {
+            Ok(true) => Ok(attributes.to_vec()),
+            Ok(false) => Err(Error::refused("Failed to create attributes")),
+            Err(error) if error.is_a(Kind::Mismatch) => Err(error),
+            Err(error) if error.is_a(Kind::Duplicate) => {
+                // At least one column already exists, so each is created on
+                // its own and the duplicates are skipped.
+                let mut created = Vec::new();
+                for attribute in attributes {
+                    match self.create_attribute_in_schema(collection, attribute).await {
+                        Ok(true) => created.push(attribute.clone()),
+                        Ok(false) => {}
+                        Err(error) => {
+                            self.cleanup_attributes(collection, &created, 3).await?;
+                            return Err(error);
+                        }
+                    }
+                }
+                Ok(created)
+            }
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Drops an attribute's column (`deleteAttributeFromSchema()`): whether
+    /// this call dropped it, `false` when the schema no longer held it.
+    ///
+    /// Fails ([`crate::Kind::Refused`]) when the adapter does not drop it.
+    async fn delete_attribute_from_schema(&self, collection: &str, key: &str) -> Result<bool> {
+        match self.inner.adapter.delete_attribute(collection, key).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to delete attribute")),
+            // Already absent from the schema; the metadata is still removed.
+            Err(error) if error.is_a(Kind::NotFound) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
+
+    /// A column in the schema but not in this collection's metadata is
+    /// reused when its type matches the request, and dropped to be
+    /// recreated otherwise; under shared tables it belongs to another
+    /// tenant's collection, so a mismatch is refused instead
+    /// (`reconcileSchemaOnlyColumn()`). Whether the column is reused.
+    ///
+    /// Fails ([`crate::Kind::Duplicate`]) with `duplicate` when the metadata
+    /// holds the key, or for a shared column of another type.
+    async fn reconcile_schema_only_column(
+        &self,
+        definition: &Collection,
+        attribute: &Attribute,
+        schema_attributes: &[Column],
+        duplicate: Error,
+    ) -> Result<bool> {
+        let key = attribute.key.to_ascii_lowercase();
+        if definition.attributes()?.iter().any(|existing| existing.key.to_ascii_lowercase() == key) {
+            return Err(duplicate);
+        }
+
+        let adapter = &self.inner.adapter;
+        let Some(expected) = adapter.column_type(attribute)? else {
+            return Ok(true);
+        };
+
+        let filtered = adapter::filter(&attribute.key).to_ascii_lowercase();
+        for column in schema_attributes {
+            if column.name.to_ascii_lowercase() != filtered {
+                continue;
+            }
+
+            if column.kind == expected {
+                return Ok(true);
+            }
+
+            if self.shared_tables() {
+                return Err(
+                    Error::duplicate("Attribute exists in the shared table with another type").with_previous(duplicate)
+                );
+            }
+
+            adapter.delete_attribute(definition.id(), &attribute.key).await?;
+
+            return Ok(false);
+        }
+
+        Ok(true)
+    }
+
+    /// Validates a new attribute against the collection, its columns and
+    /// the adapter's limits (`validateAttribute()`).
+    ///
+    /// Fails ([`crate::Kind::Duplicate`]) for an existing key,
+    /// ([`crate::Kind::Limit`]) past a limit, and
+    /// ([`crate::Kind::Database`]) otherwise.
+    fn validate_attribute(
+        &self,
+        definition: &Collection,
+        attribute: &Attribute,
+        schema_attributes: &[Column],
+    ) -> Result<()> {
+        let mut with_attribute = definition.clone();
+        with_attribute.set_with(collection::ATTRIBUTES, Value::from(attribute.to_document()?), SetType::Append)?;
+        let with_attribute = Arc::new(with_attribute);
+
+        let count_adapter = self.inner.adapter.clone();
+        let count_collection = with_attribute.clone();
+        let width_adapter = self.inner.adapter.clone();
+        let width_collection = with_attribute;
+
+        let validator = AttributeDefinition::new(definition.attributes()?.to_vec(), self.profile())
+            .schema_attributes(schema_attributes)
+            .measures(
+                Some(Box::new(move |_| count_adapter.count_of_attributes(&count_collection))),
+                Some(Box::new(move |_| width_adapter.attribute_width(&width_collection))),
+            )
+            .filter(Box::new(adapter::filter));
+
+        validator.check(attribute)?;
+        Ok(())
+    }
+
+    /// Checks the updated attribute against the adapter
+    /// (`validateAttributeUpdate()`). `size` and `array` are the requested
+    /// values, since the model normalises them away for types that take
+    /// neither.
+    ///
+    /// Fails ([`crate::Kind::Database`]) with the reason.
+    fn validate_attribute_update(&self, attribute: &Attribute, size: i64, array: bool) -> Result<()> {
+        let adapter = &self.inner.adapter;
+        let limits = adapter.limits();
+        match attribute.kind {
+            ColumnType::String => {
                 if size == 0 {
                     return Err(Error::database("Size length is required"));
                 }
-                if size > adapter.limit_for_string() {
+                if size > limits.string {
                     return Err(Error::database(format!(
                         "Max size allowed for string is: {}",
-                        number_format(Number::Int(adapter.limit_for_string()))
+                        number_format(Number::Int(limits.string))
                     )));
                 }
             }
-            Self::VAR_VARCHAR => {
+            ColumnType::Varchar => {
                 if size == 0 {
                     return Err(Error::database("Size length is required"));
                 }
-                if size > adapter.max_varchar_length() {
+                if size > limits.varchar {
                     return Err(Error::database(format!(
                         "Max size allowed for varchar is: {}",
-                        number_format(Number::Int(adapter.max_varchar_length()))
+                        number_format(Number::Int(limits.varchar))
                     )));
                 }
             }
-            Self::VAR_TEXT | Self::VAR_MEDIUMTEXT | Self::VAR_LONGTEXT | Self::VAR_BIGINT => {}
-            Self::VAR_INTEGER => {
-                let max = adapter.limit_for_int();
-                // `$limit / 2` is a float when the limit is odd.
-                let limit = if signed.truthy() {
+            ColumnType::Integer => {
+                // `$integer / 2` is a float when the integer is odd.
+                let max = limits.integer;
+                let limit = if attribute.signed {
                     if max % 2 == 0 { Number::Int(max / 2) } else { Number::Float(max as f64 / 2.0) }
                 } else {
                     Number::Int(max)
@@ -911,51 +663,48 @@ impl Database {
                     return Err(Error::database(format!("Max size allowed for int is: {}", number_format(limit))));
                 }
             }
-            Self::VAR_FLOAT | Self::VAR_BOOLEAN | Self::VAR_DATETIME => {
+            ColumnType::Float | ColumnType::Double | ColumnType::Boolean | ColumnType::Datetime => {
                 if size != 0 {
                     return Err(Error::database("Size must be empty"));
                 }
             }
-            Self::VAR_OBJECT => {
-                if !adapter.support_for_object() {
+            ColumnType::Object => {
+                if !adapter.supports(Capability::Objects) {
                     return Err(Error::database("Object attributes are not supported"));
                 }
                 if size != 0 {
                     return Err(Error::database("Size must be empty for object attributes"));
                 }
-                if array.truthy() {
+                if array {
                     return Err(Error::database("Object attributes cannot be arrays"));
                 }
             }
-            Self::VAR_POINT | Self::VAR_LINESTRING | Self::VAR_POLYGON => {
-                if !adapter.support_for_spatial_attributes() {
+            ColumnType::Point | ColumnType::Linestring | ColumnType::Polygon => {
+                if !adapter.has_feature(Feature::Spatial) {
                     return Err(Error::database("Spatial attributes are not supported"));
                 }
                 if size != 0 {
                     return Err(Error::database("Size must be empty for spatial attributes"));
                 }
-                if array.truthy() {
+                if array {
                     return Err(Error::database("Spatial attributes cannot be arrays"));
                 }
             }
-            Self::VAR_VECTOR => {
-                if !adapter.support_for_vectors() {
+            ColumnType::Vector => {
+                if !adapter.supports(Capability::Vectors) {
                     return Err(Error::database("Vector types are not supported by the current database"));
                 }
-                if array.truthy() {
+                if array {
                     return Err(Error::database("Vector type cannot be an array"));
                 }
                 if size <= 0 {
                     return Err(Error::database("Vector dimensions must be a positive integer"));
                 }
-                if size > Self::MAX_VECTOR_DIMENSIONS {
-                    return Err(Error::database(format!(
-                        "Vector dimensions cannot exceed {}",
-                        Self::MAX_VECTOR_DIMENSIONS
-                    )));
+                if size > MAX_VECTOR_DIMENSIONS {
+                    return Err(Error::database(format!("Vector dimensions cannot exceed {MAX_VECTOR_DIMENSIONS}")));
                 }
-                if !matches!(default, Value::Null) {
-                    let Value::Array(components) = &default else {
+                if !matches!(attribute.default, Value::Null) {
+                    let Value::Array(components) = &attribute.default else {
                         return Err(Error::database("Vector default value must be an array"));
                     };
                     if components.len() as i64 != size {
@@ -966,422 +715,269 @@ impl Database {
                     }
                 }
             }
-            _ => {
-                return Err(Error::database(format!(
-                    "Unknown attribute type: {kind_text}. Must be one of {}",
-                    self.supported_types().join(", ")
-                )));
-            }
+            _ => {}
         }
 
-        let required_filters = self.required_filters(Some(&kind_text));
-        let Value::Array(filter_list) = &filters else {
-            return Err(Error::new(
-                Kind::TypeError,
-                format!("array_diff(): Argument #2 must be of type array, {} given", filters.type_name()),
-            ));
-        };
-        let given: Vec<String> = filter_list.values().map(to_text).collect();
-        if required_filters.iter().any(|f| !given.contains(f)) {
+        if let Some(format) = &attribute.format
+            && !formats::has(&format.name, attribute.kind)
+        {
             return Err(Error::database(format!(
-                "Attribute of type: {kind_text} requires the following filters: {}",
-                required_filters.join(",")
+                "Format (\"{}\") not available for this attribute type (\"{}\")",
+                format.name,
+                attribute.kind.as_str()
             )));
         }
 
-        if format.truthy() {
-            let format_text = to_text(&format);
-            if !formats::has(&format_text, &kind_text) {
-                return Err(Error::database(format!(
-                    "Format (\"{format_text}\") not available for this attribute type (\"{kind_text}\")"
-                )));
-            }
+        if !matches!(attribute.default, Value::Null) {
+            self.validate_default_types(attribute.kind, &attribute.default, attribute.signed)?;
         }
 
-        if !matches!(default, Value::Null) {
-            if required.truthy() {
-                return Err(Error::database("Cannot set a default value on a required attribute"));
-            }
-            self.validate_default_types(&kind_text, &default)?;
+        Ok(())
+    }
+
+    /// Checks a default (or each element of an array default) against the
+    /// type (`validateDefaultTypes()`).
+    ///
+    /// Fails ([`crate::Kind::Database`]) with the mismatch.
+    pub(crate) fn validate_default_types(&self, kind: ColumnType, default: &Value, signed: bool) -> Result<()> {
+        if let Value::Null = default {
+            return Ok(());
         }
 
-        let key = s(new_key.unwrap_or(id));
-        attribute.set("$id", key.clone());
-        attribute.set("key", key);
-        attribute.set("type", kind.clone());
-        attribute.set("size", Value::Int(size));
-        attribute.set("signed", signed.clone());
-        attribute.set("array", array.clone());
-        attribute.set("format", format);
-        attribute.set("formatOptions", format_options);
-        attribute.set("filters", filters);
-        attribute.set("required", required.clone());
-        attribute.set("default", default);
+        if let Value::Array(items) = default {
+            if matches!(kind, ColumnType::Point | ColumnType::Linestring | ColumnType::Polygon) {
+                let spatial = Spatial::new(kind.as_str());
+                if !spatial.is_valid(default) {
+                    return Err(Error::database(format!("Invalid default value: {}", spatial.description())));
+                }
+                return Ok(());
+            }
 
-        attributes[position] = attribute.clone();
-        set_documents(&mut collection_doc, "attributes", attributes.clone());
+            if kind != ColumnType::Object {
+                for value in items.values() {
+                    self.validate_default_types(kind, value, signed)?;
+                }
+            }
 
-        if adapter.document_size_limit() > 0
-            && adapter.attribute_width(&collection_doc)? >= adapter.document_size_limit()
+            return Ok(());
+        }
+
+        let matches = match kind {
+            ColumnType::String
+            | ColumnType::Varchar
+            | ColumnType::Text
+            | ColumnType::MediumText
+            | ColumnType::LongText
+            | ColumnType::Datetime => matches!(default, Value::Str(_)),
+            ColumnType::Integer => matches!(default, Value::Int(_)),
+            ColumnType::Boolean => matches!(default, Value::Bool(_)),
+            ColumnType::BigInteger => {
+                BigInt::new(signed, self.inner.adapter.supports(Capability::UnsignedBigInt)).is_valid(default)
+            }
+            ColumnType::Float | ColumnType::Double => matches!(default, Value::Float(_)),
+            ColumnType::Vector => matches!(default, Value::Int(_) | Value::Float(_)),
+            _ => false,
+        };
+
+        if matches {
+            return Ok(());
+        }
+
+        if kind == ColumnType::Vector {
+            return Err(Error::database("Vector components must be numeric values (float or integer)"));
+        }
+
+        let value = match default {
+            Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => crate::value::to_text(default),
+            _ => "[non-scalar]".to_owned(),
+        };
+
+        if kind == ColumnType::BigInteger
+            && let Value::Str(s) = default
+            && !BigInt::is_integer_string(s.as_bytes(), signed)
         {
-            return Err(Error::limit("Row width limit reached. Cannot update attribute."));
-        }
-
-        if Self::SPATIAL_TYPES.contains(&kind_text.as_str())
-            && matches!(kind, Value::Str(_))
-            && !adapter.support_for_spatial_index_null()
-        {
-            let lookup = |name: &str| {
-                let name = name.to_ascii_lowercase();
-                attributes.iter().rev().find(|a| {
-                    let key = a.get("key").or_else(|| a.get("$id")).map(to_text).unwrap_or_default();
-                    key.to_ascii_lowercase() == name
-                })
-            };
-            for index in documents_at(&collection_doc, "indexes") {
-                if !has_type(&index, Self::INDEX_SPATIAL) {
-                    continue;
-                }
-                let names: Vec<String> = match index.get("attributes") {
-                    Some(Value::Array(a)) => a.values().map(to_text).collect(),
-                    _ => Vec::new(),
-                };
-                for name in names {
-                    let Some(found) = lookup(&name) else { continue };
-                    let found_type = found.get("type").cloned().unwrap_or(Value::Null);
-                    let found_required = found.get("required").is_some_and(Value::truthy);
-                    if matches!(&found_type, Value::Str(t) if Self::SPATIAL_TYPES.iter().any(|s| s.as_bytes() == t.as_bytes()))
-                        && !found_required
-                    {
-                        return Err(Error::index(format!(
-                            "Spatial indexes do not allow null values. Mark the attribute \"{name}\" as required or create the index on a column with no null values."
-                        )));
-                    }
-                }
-            }
-        }
-
-        let signed_bool = signed.truthy();
-        let array_bool = array.truthy();
-        let required_bool = required.truthy();
-        let mut updated = false;
-        if altering {
-            let mut indexes = documents_at(&collection_doc, "indexes");
-            if let Some(new_key) = new_key
-                && id != new_key
-            {
-                let old = s(id);
-                for index in &mut indexes {
-                    let Some(Value::Array(names)) = index.get("attributes") else { continue };
-                    if !names.values().any(|n| n.loose_eq(&old)) {
-                        continue;
-                    }
-                    let renamed: Array = names
-                        .iter()
-                        .map(|(k, n)| (k.to_owned(), if n.strict_eq(&old) { s(new_key) } else { n.clone() }))
-                        .collect();
-                    index.set("attributes", Value::Array(renamed));
-                }
-                set_documents(&mut collection_doc, "indexes", indexes.clone());
-
-                let validator = IndexDependency::new(indexes.clone(), adapter.support_for_cast_index_array());
-                if !validator.is_valid(&Value::from(attribute.clone())) {
-                    return Err(Error::dependency(validator.description()));
-                }
-            }
-
-            if self.state().validate {
-                let validator = IndexValidator::new(
-                    &attributes,
-                    original_indexes,
-                    adapter.max_index_length(),
-                    adapter.internal_indexes_keys().iter().map(|k| (*k).to_owned()).collect(),
-                    self.index_support(),
-                );
-                for index in &indexes {
-                    if !validator.is_valid(&Value::from(index.clone())) {
-                        return Err(Error::index(validator.description()));
-                    }
-                }
-            }
-
-            updated = adapter
-                .update_attribute(collection, id, &kind_text, size, signed_bool, array_bool, new_key, required_bool)
-                .await?;
-            if !updated {
-                return Err(Error::database("Failed to update attribute"));
-            }
-        }
-
-        let rollback = {
-            let adapter = adapter.clone();
-            let collection = collection.to_owned();
-            let current_key = new_key.unwrap_or(id).to_owned();
-            async move {
-                let original_type = string_param(&original_type, "updateAttribute", 3, "type")?;
-                let original_size = int_param(&original_size, "updateAttribute", 4, "size").unwrap_or(0);
-                let original_key = match original_key {
-                    Value::Null => None,
-                    k => Some(to_text(&k)),
-                };
-                adapter
-                    .update_attribute(
-                        &collection,
-                        &current_key,
-                        &original_type,
-                        original_size,
-                        original_signed.truthy(),
-                        original_array.truthy(),
-                        original_key.as_deref(),
-                        original_required.truthy(),
-                    )
-                    .await
-                    .map(|_| ())
-            }
-            .boxed()
-        };
-        self.update_metadata(
-            &collection_doc,
-            Some(Rollback::Silent(rollback)),
-            updated,
-            &format!("attribute update '{id}'"),
-        )
-        .await?;
-
-        self.purge_collection_metadata(collection, altering).await?;
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_UPDATE, &Value::from(attribute.clone()));
-        Ok(attribute)
-    }
-
-    /// Checks that `attribute` can be added to `collection` (attribute
-    /// count and row width limits).
-    ///
-    /// PHP: `Database::checkAttribute()`.
-    pub fn check_attribute(&self, collection: &Document, attribute: &Document) -> Result<bool> {
-        let adapter = self.adapter();
-        let mut collection = collection.clone();
-        collection.set_with("attributes", Value::from(attribute.clone()), SetType::Append);
-
-        let limit = adapter.limit_for_attributes();
-        if limit > 0 && adapter.count_of_attributes(&collection) > limit {
-            return Err(Error::limit(format!(
-                "Column limit reached. Cannot create new attribute. Current attribute count is {} but the maximum is {limit}. Remove some attributes to free up space.",
-                adapter.count_of_attributes(&collection)
+            return Err(Error::database(format!(
+                "Default value {value} is not a valid integer string for type bigint"
             )));
         }
-        let size = adapter.document_size_limit();
-        if size > 0 && adapter.attribute_width(&collection)? >= size {
-            return Err(Error::limit(format!(
-                "Row width limit reached. Cannot create new attribute. Current row width is {} bytes but the maximum is {size} bytes. Reduce the size of existing attributes or remove some attributes to free up space.",
-                adapter.attribute_width(&collection)?
-            )));
-        }
-        Ok(true)
+
+        Err(Error::database(format!(
+            "Default value {value} does not match given type {}",
+            Attribute::stored_type(kind)
+        )))
     }
 
-    /// Deletes an attribute and the indexes over it; triggers
-    /// [`Database::EVENT_ATTRIBUTE_DELETE`].
+    /// The validator of attribute types alone (`typeValidator()`).
+    pub(crate) fn type_validator(&self) -> AttributeDefinition {
+        AttributeDefinition::new(Vec::new(), self.profile())
+    }
+
+    /// The validator of indexes over `attributes`, beside `indexes`
+    /// (`indexValidator()`).
+    pub(crate) fn index_validator(&self, attributes: Vec<Attribute>, indexes: Vec<Index>) -> IndexDefinition {
+        IndexDefinition::new(attributes, indexes, self.profile())
+    }
+
+    /// The attribute with every field normalised for its type, as it is
+    /// stored (`normalise()`).
     ///
-    /// PHP: `Database::deleteAttribute()`.
-    pub async fn delete_attribute(&self, collection: &str, id: &str) -> Result<bool> {
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        let mut attributes = documents_at(&collection, "attributes");
-        let indexes = documents_at(&collection, "indexes");
+    /// Fails ([`crate::Kind::Structure`]) as [`Attribute::apply`] does.
+    pub(crate) fn normalise(attribute: &Attribute) -> Result<Attribute> {
+        attribute.apply(&Update::default())
+    }
 
-        let Some(position) = attributes
-            .iter()
-            .position(|a| matches!(a.get("$id"), Some(Value::Str(i)) if i.as_bytes() == id.as_bytes()))
-        else {
-            return Err(Error::not_found("Attribute not found"));
-        };
-        let attribute = attributes.remove(position);
-
-        if has_type(&attribute, Self::VAR_RELATIONSHIP) {
-            return Err(Error::database("Cannot delete relationship as an attribute"));
-        }
-
-        if self.state().validate {
-            let validator = IndexDependency::new(indexes.clone(), adapter.support_for_cast_index_array());
-            if !validator.is_valid(&Value::from(attribute.clone())) {
-                return Err(Error::dependency(validator.description()));
-            }
-        }
-
-        let id_value = s(id);
-        let mut kept = Vec::new();
-        for mut index in indexes {
-            let names: Vec<Value> = match index.get("attributes") {
-                Some(Value::Array(a)) => a.values().filter(|n| !n.strict_eq(&id_value)).cloned().collect(),
-                _ => Vec::new(),
-            };
-            if names.is_empty() {
-                continue;
-            }
-            index.set("attributes", Value::Array(names.into_iter().collect()));
-            kept.push(index);
-        }
-        set_documents(&mut collection, "attributes", attributes);
-        set_documents(&mut collection, "indexes", kept);
-
-        let collection_id = collection.id().to_owned();
-        let mut should_rollback = false;
-        match adapter.delete_attribute(&collection_id, id).await {
-            Ok(true) => should_rollback = true,
-            Ok(false) => return Err(Error::database("Failed to delete attribute")),
-            Err(e) if e.is_a(Kind::NotFound) => {}
-            Err(e) => return Err(e),
-        }
-
-        let rollback = {
-            let adapter = adapter.clone();
-            let collection_id = collection_id.clone();
-            let id = id.to_owned();
-            let get = |k: &str| attribute.get(k).cloned().unwrap_or(Value::Null);
-            let (kind, size) = (get("type"), get("size"));
-            let or = |v: Value, d: bool| if matches!(v, Value::Null) { d } else { v.truthy() };
-            let signed = or(get("signed"), true);
-            let array = or(get("array"), false);
-            let required = or(get("required"), false);
-            async move {
-                let kind = string_param(&kind, "createAttribute", 3, "type")?;
-                let size = int_param(&size, "createAttribute", 4, "size")?;
-                adapter.create_attribute(&collection_id, &id, &kind, size, signed, array, required).await.map(|_| ())
-            }
-            .boxed()
-        };
-        self.update_metadata(
-            &collection,
-            Some(Rollback::Silent(rollback)),
-            should_rollback,
-            &format!("attribute deletion '{id}'"),
+    /// Purges a collection's documents and its cached definition, and
+    /// dispatches [`Event::DocumentPurge`] of the definition, isolated
+    /// (`purgeCollectionCaches()`).
+    pub(crate) async fn purge_collection_caches(&self, collection: &str) -> Result<()> {
+        self.with_retries(|| self.purge_cached_collection(collection), 3, 100).await?;
+        self.with_retries(
+            || async { self.purge_cached_document_internal(METADATA, Some(collection)).await.map(|_| ()) },
+            3,
+            100,
         )
         .await?;
 
-        self.purge_collection_metadata(&collection_id, true).await?;
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_DELETE, &Value::from(attribute));
-        Ok(true)
+        self.trigger(Event::DocumentPurge, || Domain::DocumentPurged {
+            collection: METADATA.to_owned(),
+            id: collection.to_owned(),
+        })
+        .await
     }
 
-    /// Renames an attribute (and its references in indexes).
+    /// Drops an attribute's column, with retries (`cleanupAttribute()`).
     ///
-    /// PHP: `Database::renameAttribute()`.
-    pub async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        let mut attributes = documents_at(&collection, "attributes");
-        let mut indexes = documents_at(&collection, "indexes");
-
-        let mut position = None;
-        for (i, value) in attributes.iter().enumerate() {
-            if value.id() == old {
-                position = Some(i);
-            }
-            if value.id() == new {
-                return Err(Error::duplicate("Attribute name already used"));
-            }
-        }
-        let Some(position) = position.filter(|p| !attributes[*p].is_empty()) else {
-            return Err(Error::not_found("Attribute not found"));
-        };
-
-        if self.state().validate {
-            let validator = IndexDependency::new(indexes.clone(), adapter.support_for_cast_index_array());
-            if !validator.is_valid(&Value::from(attributes[position].clone())) {
-                return Err(Error::dependency(validator.description()));
-            }
-        }
-
-        attributes[position].set("$id", s(new));
-        attributes[position].set("key", s(new));
-        let attribute = attributes[position].clone();
-
-        let old_value = s(old);
-        for index in &mut indexes {
-            let names = match index.get("attributes") {
-                Some(Value::Array(a)) => a.clone(),
-                _ => Array::new(),
-            };
-            let renamed: Array = names
-                .iter()
-                .map(|(k, n)| (k.to_owned(), if n.strict_eq(&old_value) { s(new) } else { n.clone() }))
-                .collect();
-            index.set("attributes", Value::Array(renamed));
-        }
-
-        let collection_id = collection.id().to_owned();
-        let renamed = match adapter.rename_attribute(&collection_id, old, new).await {
-            Ok(true) => true,
-            failed => {
-                let e = match failed {
-                    Err(e) => e,
-                    _ => Error::database("Failed to rename attribute"),
-                };
-                let fail = |e: Error| {
-                    Error::database(format!("Failed to rename attribute '{old}' to '{new}': {}", e.message()))
-                        .with_previous(e)
-                };
-                if !adapter.support_for_schema_attributes() {
-                    return Err(fail(e));
-                }
-                // A prior partial failure may have renamed the column.
-                let filtered = adapter.filter(new)?.to_ascii_lowercase();
-                let schema = self.schema_attributes(&collection_id).await?;
-                if !schema.iter().any(|a| a.id().to_ascii_lowercase() == filtered) {
-                    return Err(fail(e));
-                }
-                true
-            }
-        };
-
-        set_documents(&mut collection, "attributes", attributes);
-        set_documents(&mut collection, "indexes", indexes);
-
-        let rollback = {
-            let adapter = adapter.clone();
-            let collection_id = collection_id.clone();
-            let (old, new) = (old.to_owned(), new.to_owned());
-            async move { adapter.rename_attribute(&collection_id, &new, &old).await.map(|_| ()) }.boxed()
-        };
-        self.update_metadata(
-            &collection,
-            Some(Rollback::Throwing(rollback)),
-            renamed,
-            &format!("attribute rename '{old}' to '{new}'"),
+    /// Fails as the last attempt does.
+    pub(crate) async fn cleanup_attribute(&self, collection: &str, key: &str, attempts: u32) -> Result<()> {
+        self.cleanup(
+            || async { self.inner.adapter.delete_attribute(collection, key).await.map(|_| ()) },
+            "attribute",
+            key,
+            attempts,
         )
-        .await?;
+        .await
+    }
 
-        self.with_retries(|| async { self.purge_cached_collection(&collection_id).await.map(|_| ()) }, 3, 100, 2.0)
-            .await?;
-        let _ = self.trigger(Self::EVENT_ATTRIBUTE_UPDATE, &Value::from(attribute));
-        Ok(renamed)
+    /// Drops the columns of `attributes` (`cleanupAttributes()`): the
+    /// messages of the cleanups that failed.
+    ///
+    /// Fails with an engine error (PHP's `\Error`, which its `catch
+    /// (Exception)` lets through) unchanged.
+    pub(crate) async fn cleanup_attributes(
+        &self,
+        collection: &str,
+        attributes: &[Attribute],
+        attempts: u32,
+    ) -> Result<Vec<String>> {
+        let mut errors = Vec::new();
+        for attribute in attributes {
+            match self.cleanup_attribute(collection, &attribute.key, attempts).await {
+                Ok(()) => {}
+                Err(error) if error.is_engine_error() => return Err(error),
+                Err(error) => errors.push(error.message().to_owned()),
+            }
+        }
+        Ok(errors)
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn array_unique_keeps_the_first_keys() {
-        let values: Array = [s("x"), s("x"), s("datetime")].into_iter().collect();
-        let unique = array_unique(values);
-        assert_eq!(unique.len(), 2);
-        assert!(unique.get(&ArrayKey::Int(0)).is_some_and(|v| v.strict_eq(&s("x"))));
-        assert!(unique.get(&ArrayKey::Int(2)).is_some_and(|v| v.strict_eq(&s("datetime"))));
+/// Engines without nullable spatial indexes need every attribute a spatial
+/// index covers to be required (`assertSpatialIndexesRequired()`).
+///
+/// Fails ([`crate::Kind::Index`]) naming the attribute.
+fn assert_spatial_indexes_required(attributes: &[Attribute], indexes: &[Index]) -> Result<()> {
+    for index in indexes {
+        if index.kind != IndexType::Spatial {
+            continue;
+        }
+        for key in &index.attributes {
+            let lower = key.to_ascii_lowercase();
+            let attribute = attributes.iter().rev().find(|a| a.key.to_ascii_lowercase() == lower);
+            if let Some(attribute) = attribute
+                && attribute.is_spatial()
+                && !attribute.required
+            {
+                return Err(Error::index(format!(
+                    "Spatial indexes do not allow null values. Mark the attribute \"{key}\" as required or create the index on a column with no null values."
+                )));
+            }
+        }
     }
+    Ok(())
+}
 
-    #[test]
-    fn gettype_names() {
-        assert_eq!(gettype(&Value::Float(1.0)), "double");
-        assert_eq!(gettype(&Value::Null), "NULL");
-        assert_eq!(gettype(&Value::Bool(true)), "boolean");
-    }
+/// The position of the attribute stored under `key` (`attributePosition()`).
+pub(crate) fn attribute_position(attributes: &[Attribute], key: &str) -> Option<usize> {
+    attributes.iter().position(|a| a.key == key)
+}
 
-    #[test]
-    fn int_params_coerce_like_php() {
-        assert_eq!(int_param(&s("12"), "f", 1, "size").unwrap(), 12);
-        assert_eq!(int_param(&Value::Float(3.0), "f", 1, "size").unwrap(), 3);
-        assert!(int_param(&Value::Null, "f", 1, "size").unwrap_err().is_a(Kind::TypeError));
+/// `attributes` with the one under `key` replaced (`replacing()`).
+fn replacing(attributes: &[Attribute], key: &str, replacement: &Attribute) -> Vec<Attribute> {
+    attributes.iter().map(|a| if a.key == key { replacement.clone() } else { a.clone() }).collect()
+}
+
+/// Every index on `old` pointed at `new` (`renameIndexedAttribute()`).
+///
+/// Fails ([`crate::Kind::Index`]) as [`Index::from_document`] does.
+fn rename_indexed_attribute(indexes: &[Index], old: &str, new: &str) -> Result<Vec<Index>> {
+    indexes
+        .iter()
+        .map(|index| {
+            if index.attributes.iter().any(|a| a == old) {
+                let attributes: Vec<String> =
+                    index.attributes.iter().map(|a| if a == old { new.to_owned() } else { a.clone() }).collect();
+                with_indexed_attributes(index, &attributes)
+            } else {
+                Ok(index.clone())
+            }
+        })
+        .collect()
+}
+
+/// Drops the attribute from every index on it, and every index left on no
+/// attribute (`withoutIndexedAttribute()`).
+///
+/// Fails ([`crate::Kind::Index`]) as [`Index::from_document`] does.
+fn without_indexed_attribute(indexes: &[Index], key: &str) -> Result<Vec<Index>> {
+    let mut remaining = Vec::with_capacity(indexes.len());
+    for index in indexes {
+        if !index.attributes.iter().any(|a| a == key) {
+            remaining.push(index.clone());
+            continue;
+        }
+        let attributes: Vec<String> = index.attributes.iter().filter(|a| *a != key).cloned().collect();
+        if !attributes.is_empty() {
+            remaining.push(with_indexed_attributes(index, &attributes)?);
+        }
     }
+    Ok(remaining)
+}
+
+/// The index over `attributes`, read back from its stored form
+/// (`withIndexedAttributes()`).
+///
+/// Fails ([`crate::Kind::Index`]) as [`Index::from_document`] does.
+pub(crate) fn with_indexed_attributes(index: &Index, attributes: &[String]) -> Result<Index> {
+    let mut document = index.to_document();
+    document.set(INDEX_ATTRIBUTES, super::collections::string_list(attributes))?;
+    Index::from_document(&document)
+}
+
+/// Stores `attributes` as the definition's attributes (`writeAttributes()`).
+///
+/// Fails as [`Attribute::to_document`] does.
+pub(crate) fn write_attributes(definition: &mut Collection, attributes: &[Attribute]) -> Result<()> {
+    let documents = attributes.iter().map(|a| a.to_document().map(Value::from)).collect::<Result<Vec<_>>>()?;
+    definition.set(collection::ATTRIBUTES, Value::Array(Array::from_list(documents)))?;
+    Ok(())
+}
+
+/// Stores `indexes` as the definition's indexes (`writeIndexes()`,
+/// `writeIndexList()`).
+///
+/// Fails as [`Collection::set`] does.
+pub(crate) fn write_indexes(definition: &mut Collection, indexes: &[Index]) -> Result<()> {
+    let documents = indexes.iter().map(|i| Value::from(i.to_document())).collect();
+    definition.set(collection::INDEXES, Value::Array(Array::from_list(documents)))?;
+    Ok(())
 }

@@ -4388,8 +4388,7 @@
             "getUpdatedAt": ""
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
+      ]
     },
     {
       "name": "running the schema twice fails on duplicates",
@@ -9353,8 +9352,7 @@
             "getUpdatedAt": ""
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
+      ]
     },
     {
       "name": "skip mode skips what exists",
@@ -14071,8 +14069,7 @@
             "getUpdatedAt": ""
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
+      ]
     },
     {
       "name": "overwrite mode with the same spec skips",
@@ -18670,8 +18667,7 @@
             "getUpdatedAt": ""
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: upsertDocuments() on an adapter without the Upserts feature fails with \"Adapter does not support upserts\" (7.x Memory: \"Upsert is not implemented in the Memory adapter\")"
+      ]
     },
     {
       "name": "invalid ids, missing parents, defaults, formats, indexes and rows that fail",
@@ -20691,8 +20687,7 @@
           },
           "expect": []
         }
-      ],
-      "blocked": "utopia-database 8.x: the UID validator allows periods and hyphens and says so in its description"
+      ]
     },
     {
       "name": "overwrite mode updates newer schema in place, recreates changed types and drops orphans",
@@ -22728,8 +22723,7 @@
             "getUpdatedAt": ""
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: updateAttribute() resizes a column an index covers (7.x re-validates the collection's indexes and fails with \"There is already an index with the same attributes and orders\"); utopia-database 8.x: upsertDocuments() on an adapter without the Upserts feature fails with \"Adapter does not support upserts\" (7.x Memory: \"Upsert is not implemented in the Memory adapter\")"
+      ]
     },
     {
       "name": "vectorsdb collections take their dimension and documentsdb collections take no columns",

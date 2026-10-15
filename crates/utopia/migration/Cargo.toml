@@ -29,6 +29,7 @@ tokio = { workspace = true, features = ["fs", "io-util", "rt", "sync", "time"] }
 tokio-postgres = { workspace = true, optional = true }
 utopia-client.workspace = true
 utopia-database = { workspace = true, features = ["memory"] }
+utopia-query.workspace = true
 utopia-storage.workspace = true
 
 [dev-dependencies]

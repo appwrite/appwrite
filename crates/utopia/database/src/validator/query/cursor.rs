@@ -2,28 +2,31 @@
 //!
 //! PHP: `Utopia\Database\Validator\Query\Cursor`.
 
-use crate::database::Database;
-use crate::query::{Method, Query};
-use crate::validator::Message;
-use crate::validator::query::base::{INVALID_QUERY, MethodType, query_validator};
-use crate::validator::uid::Uid;
-use crate::value::{Ext, Str, Value};
+use utopia_query::Method;
 
-/// A cursor query whose value (a document id, or a document) is a valid
-/// [`Uid`] of at most `max_length` characters.
+use crate::database;
+use crate::validator::Message;
+use crate::validator::query::base::{INVALID_QUERY, MethodType, query_of, query_validator};
+use crate::validator::uid::Uid;
+use crate::value::{self as dbvalue, Value, as_document};
+
+/// A `cursorAfter` or `cursorBefore` query whose value is a document id, or
+/// a document holding one. A document without an id is a row a join or a
+/// distinct read returned and is accepted; any other value, an array
+/// included, is refused.
 ///
 /// ```
-/// use utopia_database::query::{Method, Query};
+/// use utopia_database::Query;
 /// use utopia_database::validator::query::cursor::Cursor;
-/// use utopia_database::value::string;
 ///
 /// let cursor = Cursor::default();
-/// assert!(cursor.check(&Query::new(Method::CursorAfter, "", vec![string("doc1")])));
-/// assert!(!cursor.check(&Query::new(Method::CursorAfter, "", vec![string("_doc")])));
+/// assert!(cursor.check(&Query::cursor_after_value(utopia_query::string("movie1"))));
+/// assert!(!cursor.check(&Query::cursor_after_value(utopia_query::string(""))));
+/// assert!(cursor.description().starts_with("Invalid cursor: UID must contain"));
 /// ```
 ///
 /// PHP: `Utopia\Database\Validator\Query\Cursor` (`new Cursor($maxLength)`).
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Cursor {
     max_length: i64,
     message: Message,
@@ -32,14 +35,14 @@ pub struct Cursor {
 impl Default for Cursor {
     /// `new Cursor()`: ids of at most 36 characters.
     fn default() -> Self {
-        Self::new(Database::MAX_UID_DEFAULT_LENGTH)
+        Cursor::new(database::MAX_UID_DEFAULT_LENGTH)
     }
 }
 
 impl Cursor {
     /// `new Cursor($maxLength)`.
     pub fn new(max_length: i64) -> Self {
-        Self { max_length, message: Message::new(INVALID_QUERY) }
+        Cursor { max_length, message: Message::new(INVALID_QUERY) }
     }
 
     /// `getDescription()`.
@@ -47,21 +50,28 @@ impl Cursor {
         self.message.get()
     }
 
+    /// `isValid($value)`: anything but a query is refused.
+    pub fn is_valid(&self, value: &Value) -> bool {
+        query_of(value).is_some_and(|q| self.check(q))
+    }
+
     /// `isValid($query)`.
-    pub fn check(&self, query: &Query) -> bool {
+    pub fn check(&self, query: &utopia_query::Query) -> bool {
         if !matches!(query.method(), Method::CursorAfter | Method::CursorBefore) {
             return false;
         }
-        let cursor = match query.value() {
-            Some(Value::Ext(Ext::Document(d))) => Value::Str(Str::from(d.id())),
-            Some(v) => v.clone(),
-            None => Value::Null,
-        };
-        let uid = Uid::new(self.max_length);
-        if uid.is_valid(&cursor) {
+        let mut cursor = query.value().map_or(Value::Null, dbvalue::from_query);
+        if let Some(document) = as_document(&cursor) {
+            if document.id().is_empty() {
+                return true;
+            }
+            cursor = dbvalue::string(document.id());
+        }
+        let validator = Uid::new(self.max_length);
+        if validator.is_valid(&cursor) {
             return true;
         }
-        self.message.set(format!("Invalid cursor: {}", uid.description()));
+        self.message.set(format!("Invalid cursor: {}", validator.description()));
         false
     }
 }

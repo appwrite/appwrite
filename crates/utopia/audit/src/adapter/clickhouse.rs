@@ -13,7 +13,7 @@ use utopia_query::schema::{
 };
 use utopia_query::{Array as QArray, Method, Object, Value as QValue};
 
-use crate::schema::{self, Attribute, CLICKHOUSE_ATTRIBUTES, CLICKHOUSE_INDEXES, Index, Sql, VAR_DATETIME};
+use crate::schema::{self, Attribute, CLICKHOUSE_ATTRIBUTES, CLICKHOUSE_INDEXES, Index, Sql};
 use crate::{Adapter, DateTime, Error, Log, Page, Query, Range, Result};
 
 /// The ClickHouse HTTP port, 8123.
@@ -331,7 +331,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             "tenant" if self.shared_tables => "UInt64",
             "limit" | "offset" | "max" => "UInt64",
             _ => match self.attribute(column) {
-                Some(a) if a.kind == VAR_DATETIME => "DateTime64(3)",
+                Some(a) if a.kind == ColumnType::Datetime => "DateTime64(3)",
                 _ => "String",
             },
         }
@@ -343,7 +343,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         builder.use_named_bindings(true);
         let mut types: Vec<(&str, &str)> = vec![("id", "String")];
         for attribute in self.attributes() {
-            types.push((attribute.id, self.param_type(attribute.id)));
+            types.push((&attribute.key, self.param_type(&attribute.key)));
         }
         if self.shared_tables {
             types.push(("tenant", "UInt64"));
@@ -452,8 +452,8 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
     fn select_columns(&self) -> String {
         let mut columns = vec![escape_identifier("id")];
         for attribute in self.attributes() {
-            if attribute.id != "data" {
-                columns.push(escape_identifier(attribute.id));
+            if attribute.key != "data" {
+                columns.push(escape_identifier(&attribute.key));
             }
         }
         columns.push(escape_identifier("data"));
@@ -696,7 +696,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         let parsed = schema::parse_resource(&resource);
         let mut processed = log.clone();
         for attribute in self.attributes() {
-            let column = attribute.id;
+            let column = attribute.key.as_str();
             if column == "data" || column == "time" {
                 continue;
             }
@@ -726,7 +726,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         row.set(key("id"), id);
         row.set(key("time"), qstr(time));
         for attribute in self.attributes() {
-            let column = attribute.id;
+            let column = attribute.key.as_str();
             if column == "time" {
                 continue;
             }
@@ -1080,7 +1080,7 @@ impl<A: utopia_client::Adapter> Sql for ClickHouse<A> {
     /// optional, `LowCardinality(...)` for the bounded dimensions.
     fn column_definition(&self, id: &str) -> Result<String> {
         let attribute = self.attribute(id).ok_or_else(|| schema::not_found(id))?;
-        let kind = if attribute.kind == VAR_DATETIME { "DateTime64(3)" } else { "String" };
+        let kind = if attribute.kind == ColumnType::Datetime { "DateTime64(3)" } else { "String" };
         if kind == "String" && LOW_CARDINALITY_COLUMNS.contains(&id) {
             let column = if attribute.required { "LowCardinality(String)" } else { "LowCardinality(Nullable(String))" };
             return Ok(format!("{id} {column}"));
@@ -1106,13 +1106,13 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
         let mut table = ClickHouseSchema::new().table(self.qualified_table());
         table.string("id", 255).primary();
         for attribute in self.attributes() {
-            if attribute.id == "time" {
+            if attribute.key == "time" {
                 table.datetime("time", 3);
                 continue;
             }
-            let kind = if attribute.kind == VAR_DATETIME { ColumnType::Datetime } else { ColumnType::String };
-            let column = table.add_column(attribute.id, kind, None);
-            if LOW_CARDINALITY_COLUMNS.contains(&attribute.id) {
+            let kind = if attribute.kind == ColumnType::Datetime { ColumnType::Datetime } else { ColumnType::String };
+            let column = table.add_column(&attribute.key, kind, None);
+            if LOW_CARDINALITY_COLUMNS.contains(&attribute.key.as_str()) {
                 column.low_cardinality();
             }
             if !attribute.required {
@@ -1123,11 +1123,7 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
             table.big_integer("tenant").unsigned().nullable();
         }
         for index in self.indexes() {
-            let mut definition = SchemaIndex::new(
-                index.id,
-                index.attributes.iter().map(|a| (*a).to_owned()).collect(),
-                IndexType::Index,
-            );
+            let mut definition = SchemaIndex::new(&index.key, index.attributes.clone(), IndexType::Index);
             definition.algorithm = Some(IndexAlgorithm::BloomFilter);
             definition.granularity = Some(1);
             table.add_index(definition)?;
@@ -1202,7 +1198,7 @@ impl<A: utopia_client::Adapter> Adapter for ClickHouse<A> {
             rows.push(QValue::Array(self.row(log)?));
         }
         let mut columns: Vec<String> = vec!["id".into(), "time".into()];
-        columns.extend(self.attributes().iter().filter(|a| a.id != "time").map(|a| a.id.to_owned()));
+        columns.extend(self.attributes().iter().filter(|a| a.key != "time").map(|a| a.key.clone()));
         if self.shared_tables {
             columns.push("tenant".into());
         }

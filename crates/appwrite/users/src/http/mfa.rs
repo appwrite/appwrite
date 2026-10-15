@@ -20,7 +20,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let mfa = php::truthy(&ctx.required("mfa", &Boolean::STRICT)?);
     let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let mut updates = Document::default();
-    updates.set("mfa", DbValue::Bool(mfa));
+    updates.put("mfa", DbValue::Bool(mfa));
     let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(ctx.ok(&UserModel { user: &user, render: ctx.render() }))
@@ -80,7 +80,7 @@ fn backup_codes() -> Result<Vec<String>> {
 /// Stores the codes (the `encrypt` filter encrypts each one).
 async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result<()> {
     let mut updates = Document::default();
-    updates.set("mfaRecoveryCodes", documents::strings(codes));
+    updates.put("mfaRecoveryCodes", documents::strings(codes));
     base::update_user(ctx, &user.id, updates, &[]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(())
@@ -120,7 +120,7 @@ pub async fn delete_authenticator(ctx: &mut Context) -> Result<Response> {
     };
     let db = ctx.db()?;
     db.delete_document("authenticators", &authenticator.id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(ctx.no_content())
 }

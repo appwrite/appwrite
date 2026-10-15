@@ -214,9 +214,9 @@ async fn add_factor(
         }
     }
     let mut updates = Document::default();
-    updates.set("factors", documents::strings(&unique));
+    updates.put("factors", documents::strings(&unique));
     if let Some(at) = mfa_updated_at {
-        updates.set("mfaUpdatedAt", datetime::value(&at));
+        updates.put("mfaUpdatedAt", datetime::value(&at));
         session.mfa_updated_at = Some(at);
     }
     session.factors = unique;
@@ -230,10 +230,10 @@ async fn add_factor(
 async fn update_user(ctx: &mut Context, id: &str, updates: Document) -> Result<User> {
     let db = ctx.db()?;
     let skipped = base::skipped(&[]);
-    let mut updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
+    let mut updated = db.skip_filters(Some(skipped.as_slice()), db.update_document("users", id, updates)).await?;
     for (filter, attribute) in [("subQueryTargets", "targets"), ("subQueryAuthenticators", "authenticators")] {
         let value = filters::sub_query(&db, filter, &updated).await?;
-        updated.set(attribute, value);
+        updated.put(attribute, value);
     }
     Ok(User::from(&updated))
 }
@@ -244,7 +244,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let user = caller(ctx)?;
     let mut session = session(ctx)?;
     let mut updates = Document::default();
-    updates.set("mfa", Value::Bool(mfa));
+    updates.put("mfa", Value::Bool(mfa));
     let user = update_user(ctx, &user.id, updates).await?;
     if mfa {
         let mut factors = session.factors.clone();
@@ -353,7 +353,7 @@ fn provisioning_uri(secret: &str, label: &str, issuer: &str) -> String {
 /// The stored secret of an authenticator (`data.secret`).
 async fn authenticator_secret(ctx: &mut Context, id: &str) -> Result<Option<String>> {
     let db = ctx.db()?;
-    let document = db.authorization().skip(|| db.get_document("authenticators", id, Vec::new(), false)).await?;
+    let document = db.authorization().skip(db.get_document("authenticators", id, Vec::new(), false)).await?;
     Ok(document.json("data").and_then(|d| d.get("secret").and_then(Json::as_str).map(str::to_owned)))
 }
 
@@ -391,17 +391,17 @@ pub async fn create_authenticator(ctx: &mut Context) -> Result<Response> {
         db.delete_document("authenticators", &existing.id).await?;
     }
     let mut authenticator = Document::default();
-    authenticator.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-    authenticator.set("userId", Value::from(user.id.as_str()));
-    authenticator.set("userInternalId", documents::internal_id(user.sequence));
-    authenticator.set("type", Value::from("totp"));
-    authenticator.set("verified", Value::Bool(false));
+    authenticator.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+    authenticator.put("userId", Value::from(user.id.as_str()));
+    authenticator.put("userInternalId", documents::internal_id(user.sequence));
+    authenticator.put("type", Value::from("totp"));
+    authenticator.put("verified", Value::Bool(false));
     let mut data = Map::new();
     data.insert("secret".into(), Json::String(secret.clone()));
-    authenticator.set("data", utopia_database::Value::from_json(&Json::Object(data)));
-    authenticator.set("$permissions", base::owner_permissions(&user.id));
+    authenticator.put("data", utopia_database::Value::from_json(&Json::Object(data)));
+    authenticator.set("$permissions", base::owner_permissions(&user.id))?;
     db.create_document("authenticators", authenticator).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     let uri = provisioning_uri(&secret, &label, &issuer);
     Ok(ctx.ok(&MfaTypeModel { secret: &secret, uri: &uri }))
@@ -425,9 +425,9 @@ pub async fn update_authenticator(ctx: &mut Context) -> Result<Response> {
     }
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("verified", Value::Bool(true));
+    updates.put("verified", Value::Bool(true));
     db.update_document("authenticators", &authenticator.id, updates).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let mut factors = session.factors.clone();
     factors.push(kind);
     add_factor(ctx, &mut session, factors, None).await?;
@@ -445,7 +445,7 @@ pub async fn delete_authenticator(ctx: &mut Context) -> Result<Response> {
     };
     let db = ctx.db()?;
     db.delete_document("authenticators", &authenticator.id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(ctx.no_content())
 }
@@ -461,7 +461,7 @@ fn backup_codes() -> Result<Vec<String>> {
 async fn store_codes(ctx: &mut Context, user: &User, codes: &[String]) -> Result<()> {
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("mfaRecoveryCodes", documents::strings(codes));
+    updates.put("mfaRecoveryCodes", documents::strings(codes));
     db.update_document("users", &user.id, updates).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(())
@@ -526,13 +526,13 @@ pub async fn create_challenge(ctx: &mut Context) -> Result<Response> {
     let expire = datetime::add_seconds(datetime::now(), base::EXPIRATION_CONFIRM);
     let code = base::code_secret();
     let mut challenge = Document::default();
-    challenge.set("userId", Value::from(user.id.as_str()));
-    challenge.set("userInternalId", documents::internal_id(user.sequence));
-    challenge.set("type", Value::from(factor.as_str()));
-    challenge.set("token", Value::from(base::token_secret(256)?.as_str()));
-    challenge.set("code", Value::from(code.as_str()));
-    challenge.set("expire", datetime::value(&expire));
-    challenge.set("$permissions", base::owner_permissions(&user.id));
+    challenge.put("userId", Value::from(user.id.as_str()));
+    challenge.put("userInternalId", documents::internal_id(user.sequence));
+    challenge.put("type", Value::from(factor.as_str()));
+    challenge.put("token", Value::from(base::token_secret(256)?.as_str()));
+    challenge.put("code", Value::from(code.as_str()));
+    challenge.put("expire", datetime::value(&expire));
+    challenge.set("$permissions", base::owner_permissions(&user.id))?;
     let db = ctx.db()?;
     let challenge = Challenge::from(&db.create_document("challenges", challenge).await?);
 
@@ -651,7 +651,7 @@ pub async fn update_challenge(ctx: &mut Context) -> Result<Response> {
         "recoveryCode" if user.mfa_recovery_codes.contains(&otp) => {
             let codes: Vec<String> = user.mfa_recovery_codes.iter().filter(|c| **c != otp).cloned().collect();
             let mut updates = Document::default();
-            updates.set("mfaRecoveryCodes", documents::strings(&codes));
+            updates.put("mfaRecoveryCodes", documents::strings(&codes));
             db.update_document("users", &user.id, updates).await?;
             true
         }
@@ -661,7 +661,7 @@ pub async fn update_challenge(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserInvalidToken));
     }
     db.delete_document("challenges", &challenge_id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let mut factors = session.factors.clone();
     factors.push(kind);
     add_factor(ctx, &mut session, factors, Some(datetime::now())).await?;

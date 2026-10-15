@@ -1,70 +1,437 @@
-//! [`Adapter`]: the storage engine under a [`crate::Database`].
+//! [`Adapter`]: the storage engine under a database, and what it offers
+//! ([`Limits`], [`Capability`], [`Feature`], [`Profile`]).
 //!
-//! An adapter owns one connection (like PHP's PDO handle) and the per-handle
-//! settings the database passes down: database (schema) and namespace (table
-//! prefix), shared tables and tenant, timeouts, statement transforms
-//! ([`Adapter::before`]) and the authorization checked by document-level
-//! permissions. It turns the database's calls (collections, attributes,
-//! indexes, documents, finds) into statements and back.
+//! # The contract
 //!
-//! PHP: `Utopia\Database\Adapter` (abstract class). Its concrete methods are
-//! the provided methods of the trait, over the [`State`] every adapter
-//! embeds; its abstract methods are the required ones. Capability getters
-//! (`getSupportFor*`) keep their names in snake case.
+//! An adapter is shared by every task using a database handle, so every
+//! method takes `&self`; its per-handle settings (database, namespace,
+//! shared tables, tenant, metadata, locks, hooks, transforms, profiler,
+//! authorization) live in the [`State`] it embeds and exposes through
+//! [`Adapter::state`]. The settings PHP scopes per coroutine (the tenant,
+//! `ignoreDuplicates()`) are [`Scoped`](crate::state::Scoped) values there.
 //!
-//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
-//! `mariadb::MariaDB` (feature `mariadb`; MariaDB and, with feature `mysql`,
-//! MySQL), `sqlite::Sqlite` (feature `sqlite`), `memory::Memory` (feature
-//! `memory`), `mongo::Mongo` (feature `mongo`), `redis::Redis` (feature
-//! `redis`) and `pool::Pool` (feature `pool`), over a pool of adapters.
+//! The required methods are PHP's abstract ones, async where they reach
+//! the engine, taking the library's value objects ([`Collection`],
+//! [`Attribute`], [`Index`], [`Relationship`]) and moving what they consume
+//! ([`Query`] lists, documents) so an adapter hands them to its builder
+//! without a copy. The provided methods are PHP's concrete ones.
+//!
+//! What an adapter may or may not do is declared, not discovered:
+//!
+//! - **Capabilities** ([`Adapter::capabilities`], a [`Capabilities`] bit
+//!   set; [`Adapter::supports`]) are behaviour flags.
+//! - **Features** ([`Feature`]) are optional groups of methods, each a
+//!   trait ([`Casting`], [`Connection`], [`QueryBuilder`], [`RawQuery`],
+//!   [`Relationships`], [`Schemaless`], [`Spatial`], [`Timeouts`],
+//!   [`Upserts`]). An adapter implementing one returns itself from the
+//!   matching accessor ([`Adapter::casting`], [`Adapter::connection`], ...);
+//!   [`Adapter::features`] and [`Adapter::has_feature`] are derived from
+//!   the accessors. A proxy such as a pool answers for the adapter it
+//!   borrows by forwarding the accessors, which is why the database asks
+//!   [`Adapter::has_feature`] and never downcasts.
+//! - **Limits** ([`Adapter::limits`]) are one [`Limits`] value.
+//!
+//! A database reads these once into a [`Profile`], which the validators
+//! take.
+//!
+//! # How a database drives an adapter
+//!
+//! - Settings: `set_database`, `set_namespace`, `set_shared_tables`,
+//!   `set_tenant` (and [`Scoped::with`](crate::state::Scoped::with) on
+//!   [`State::tenant`] for a scoped tenant), `set_tenant_per_document`,
+//!   `set_metadata`, `set_locks`, `set_authorization`, `set_profiler`,
+//!   `add_write_hook`, `add_transform`.
+//! - Schema: `create`/`update`/`exists`/`list`/`delete` databases;
+//!   `create_collection`, `delete_collection`, `analyze_collection`,
+//!   `collection_exists`; attributes and indexes; relationships through
+//!   [`Relationships`].
+//! - Documents: `create_document(s)`, `get_document`, `update_document(s)`,
+//!   `increase_document_attribute`, `delete_document(s)`, `get_sequences`,
+//!   upserts through [`Upserts`]; reads through `find` (documents, and rows
+//!   of aggregates and `groupBy`), `count` and `sum`.
+//! - Transactions: [`with_transaction`] (retries, savepoints, lost
+//!   connections) over `start_transaction`, `commit_transaction`,
+//!   `rollback_transaction`, [`Adapter::abandon_transaction`].
+//!
+//! PHP: `Utopia\Database\Adapter`, `Adapter\Limits`, `Adapter\Profile`,
+//! `Adapter\CursorBoundary`, `Adapter\Timeout`, `Adapter\Feature\*`.
 
+#[cfg(feature = "mongo")]
+pub mod mongo;
+#[cfg(any(feature = "postgres", feature = "mariadb", feature = "sqlite"))]
+pub mod sql;
+
+use std::any::Any;
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use async_trait::async_trait;
+use futures_util::future::BoxFuture;
 use php_std::datetime::DateTime;
+use utopia_query::schema::{ColumnType, IndexType};
+use utopia_query::{CursorDirection, OrderDirection};
 
+use crate::attribute::Attribute;
+use crate::capability::{Capabilities, Capability};
 use crate::change::Change;
+use crate::collection::Collection;
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
+use crate::event::Event;
+use crate::hook::{Tenancy, Transform, Write};
+use crate::index::Index;
+use crate::permission::PermissionType;
+use crate::profiler::Profiler;
 use crate::query::Query;
+use crate::relationship::{self, Relationship, RelationshipSide};
+use crate::schema;
+use crate::state::Scoped;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
 
 #[cfg(feature = "memory")]
 pub mod memory;
-#[cfg(feature = "mongo")]
-pub mod mongo;
 #[cfg(feature = "pool")]
 pub mod pool;
-#[cfg(feature = "postgres")]
-pub mod postgres;
 #[cfg(feature = "redis")]
 pub mod redis;
-#[cfg(feature = "sqlite")]
-pub mod sqlite;
 
-#[cfg(feature = "mariadb")]
-pub mod mariadb;
+/// The latest datetime an adapter stores (`Adapter::MAX_DATETIME`).
+pub const MAX_DATETIME: &str = "9999-12-31 23:59:59";
 
-pub mod sqlstate;
+/// The fixed limits of an adapter: the largest string, varchar and integer
+/// sizes, the attribute, index and document size caps (0 when there is
+/// none), the attributes and indexes every collection holds, the longest
+/// index key and document id, the datetime range, the type of the sequence,
+/// and the names no attribute or index may take.
+///
+/// PHP: `Utopia\Database\Adapter\Limits`.
+#[derive(Debug, Clone)]
+pub struct Limits {
+    /// The largest string (`string`).
+    pub string: i64,
+    /// The largest varchar (`varchar`).
+    pub varchar: i64,
+    /// The largest integer (`integer`).
+    pub integer: i64,
+    /// The largest big integer (`bigInteger`).
+    pub big_integer: i64,
+    /// The most attributes of a collection, 0 for no cap (`attributes`).
+    pub attributes: i64,
+    /// The most indexes of a collection, 0 for no cap (`indexes`).
+    pub indexes: i64,
+    /// The attributes every collection holds (`defaultAttributes`).
+    pub default_attributes: i64,
+    /// The indexes every collection holds (`defaultIndexes`).
+    pub default_indexes: i64,
+    /// The longest index key, in bytes (`indexLength`).
+    pub index_length: i64,
+    /// The longest document id (`uidLength`).
+    pub uid_length: i64,
+    /// The largest document, in bytes, 0 for no cap (`documentSize`).
+    pub document_size: i64,
+    /// The earliest datetime (`minDateTime`).
+    pub min_date_time: DateTime,
+    /// The latest datetime (`maxDateTime`).
+    pub max_date_time: DateTime,
+    /// The type of the sequence (`idType`).
+    pub id_type: ColumnType,
+    /// The names no attribute or index may take (`keywords`).
+    pub keywords: Vec<String>,
+    /// The names of the indexes every collection holds (`internalIndexKeys`).
+    pub internal_index_keys: Vec<String>,
+}
 
-/// A statement transform registered with [`Adapter::before`]: receives the
-/// SQL about to run and returns the SQL to run instead.
-pub type Transform = Arc<dyn Fn(String) -> String + Send + Sync>;
+/// An optional group of adapter methods.
+///
+/// PHP: the `Utopia\Database\Adapter\Feature\*` interfaces, checked with
+/// `hasFeature(Feature\X::class)`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Feature {
+    /// [`Casting`]: the adapter converts values itself.
+    Casting,
+    /// [`Connection`]: a connection it can check, re-establish and identify.
+    Connection,
+    /// [`QueryBuilder`]: builders in the adapter's dialect.
+    QueryBuilder,
+    /// [`RawQuery`]: raw statements.
+    RawQuery,
+    /// [`Relationships`]: relationship storage.
+    Relationships,
+    /// [`Schemaless`]: a schemaless mode.
+    Schemaless,
+    /// [`Spatial`]: spatial values.
+    Spatial,
+    /// [`Timeouts`]: statement timeouts.
+    Timeouts,
+    /// [`Upserts`]: upserts.
+    Upserts,
+}
 
-/// `Database::EVENT_ALL`: transforms registered for every statement.
-pub const EVENT_ALL: &str = "*";
+impl Feature {
+    /// Every feature, in PHP's `Database::FEATURES` order.
+    pub const ALL: [Feature; 9] = [
+        Feature::Casting,
+        Feature::Connection,
+        Feature::QueryBuilder,
+        Feature::RawQuery,
+        Feature::Relationships,
+        Feature::Schemaless,
+        Feature::Spatial,
+        Feature::Timeouts,
+        Feature::Upserts,
+    ];
+
+    /// The PHP interface (`Feature\X::class`).
+    pub fn php_class(self) -> &'static str {
+        match self {
+            Feature::Casting => "Utopia\\Database\\Adapter\\Feature\\Casting",
+            Feature::Connection => "Utopia\\Database\\Adapter\\Feature\\Connection",
+            Feature::QueryBuilder => "Utopia\\Database\\Adapter\\Feature\\QueryBuilder",
+            Feature::RawQuery => "Utopia\\Database\\Adapter\\Feature\\RawQuery",
+            Feature::Relationships => "Utopia\\Database\\Adapter\\Feature\\Relationships",
+            Feature::Schemaless => "Utopia\\Database\\Adapter\\Feature\\Schemaless",
+            Feature::Spatial => "Utopia\\Database\\Adapter\\Feature\\Spatial",
+            Feature::Timeouts => "Utopia\\Database\\Adapter\\Feature\\Timeouts",
+            Feature::Upserts => "Utopia\\Database\\Adapter\\Feature\\Upserts",
+        }
+    }
+
+    const fn bit(self) -> u16 {
+        1 << (self as u8)
+    }
+}
+
+/// A set of [`Feature`]s.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct Features(u16);
+
+impl Features {
+    /// The empty set.
+    pub const EMPTY: Features = Features(0);
+
+    /// The set of `features`.
+    pub const fn of(features: &[Feature]) -> Features {
+        let mut bits = 0;
+        let mut i = 0;
+        while i < features.len() {
+            bits |= features[i].bit();
+            i += 1;
+        }
+        Features(bits)
+    }
+
+    /// Whether `feature` is in the set.
+    pub const fn contains(self, feature: Feature) -> bool {
+        self.0 & feature.bit() != 0
+    }
+
+    /// The set with `feature`.
+    #[must_use]
+    pub const fn with(self, feature: Feature) -> Features {
+        Features(self.0 | feature.bit())
+    }
+
+    /// The features in the set.
+    pub fn iter(self) -> impl Iterator<Item = Feature> {
+        Feature::ALL.into_iter().filter(move |f| self.contains(*f))
+    }
+}
+
+impl FromIterator<Feature> for Features {
+    fn from_iter<I: IntoIterator<Item = Feature>>(iter: I) -> Self {
+        iter.into_iter().fold(Features::EMPTY, Features::with)
+    }
+}
+
+/// What a database's adapter offers and the mode the database runs in,
+/// read once so validators are configured from one value.
+///
+/// [`Capability::DefinedAttributes`] follows the schema mode of the
+/// connection a statement runs on: a profile given a `defined_attributes`
+/// probe asks it on every check.
+///
+/// PHP: `Utopia\Database\Adapter\Profile`.
+#[derive(Clone)]
+pub struct Profile {
+    /// The adapter's limits.
+    pub limits: Arc<Limits>,
+    /// The capabilities it supports.
+    pub capabilities: Capabilities,
+    /// The features it implements.
+    pub features: Features,
+    /// Whether tables are shared.
+    pub shared_tables: bool,
+    /// Whether a migration is running.
+    pub migrating: bool,
+    defined_attributes: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
+}
+
+impl std::fmt::Debug for Profile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Profile")
+            .field("capabilities", &self.capabilities)
+            .field("features", &self.features)
+            .field("shared_tables", &self.shared_tables)
+            .field("migrating", &self.migrating)
+            .finish()
+    }
+}
+
+impl Profile {
+    /// A profile (`new Profile(...)`).
+    pub fn new(
+        limits: Arc<Limits>,
+        capabilities: Capabilities,
+        features: Features,
+        shared_tables: bool,
+        migrating: bool,
+        defined_attributes: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
+    ) -> Self {
+        Profile { limits, capabilities, features, shared_tables, migrating, defined_attributes }
+    }
+
+    /// The profile of `adapter`, its schema mode asked on every check.
+    pub fn of(adapter: Arc<dyn Adapter>, migrating: bool) -> Self {
+        let probe = adapter.clone();
+        Profile::new(
+            adapter.limits(),
+            adapter.capabilities(),
+            adapter.features(),
+            adapter.state().shared_tables(),
+            migrating,
+            Some(Arc::new(move || probe.supports(Capability::DefinedAttributes))),
+        )
+    }
+
+    /// Whether the adapter supports `capability` (`supports()`).
+    pub fn supports(&self, capability: Capability) -> bool {
+        if capability == Capability::DefinedAttributes
+            && let Some(probe) = &self.defined_attributes
+        {
+            return probe();
+        }
+        self.capabilities.contains(capability)
+    }
+
+    /// Whether the adapter implements `feature` (`hasFeature()`).
+    pub fn has_feature(&self, feature: Feature) -> bool {
+        self.features.contains(feature)
+    }
+}
+
+/// A bound of a cursor over an order: the field, its direction and the
+/// cursor's value.
+///
+/// PHP: `Utopia\Database\Adapter\CursorBoundary` (internal).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CursorBoundary {
+    /// The field ordered by.
+    pub field: String,
+    /// Its direction.
+    pub direction: OrderDirection,
+    /// The cursor's value of the field.
+    pub reference: Value,
+}
+
+/// The options of [`Adapter::find`].
+///
+/// PHP: `find()`'s parameters after the queries.
+#[derive(Debug, Clone)]
+pub struct Find {
+    /// The most rows to read (`$limit`, 25 by default).
+    pub limit: Option<i64>,
+    /// The rows to skip (`$offset`).
+    pub offset: Option<i64>,
+    /// The attributes to order by (`$orderAttributes`).
+    pub order_attributes: Vec<String>,
+    /// Their directions (`$orderTypes`).
+    pub order_types: Vec<OrderDirection>,
+    /// The cursor's values by attribute (`$cursor`).
+    pub cursor: Array,
+    /// Which side of the cursor to read (`$cursorDirection`).
+    pub cursor_direction: CursorDirection,
+    /// The permission the rows are read under (`$forPermission`).
+    pub for_permission: PermissionType,
+}
+
+impl Default for Find {
+    fn default() -> Self {
+        Find {
+            limit: Some(25),
+            offset: None,
+            order_attributes: Vec::new(),
+            order_types: Vec::new(),
+            cursor: Array::new(),
+            cursor_direction: CursorDirection::After,
+            for_permission: PermissionType::Read,
+        }
+    }
+}
+
+/// The timeout state of an adapter that implements [`Timeouts`]: a global
+/// timeout and one per event.
+///
+/// PHP: `Utopia\Database\Adapter\Timeout` (a trait).
+#[derive(Debug, Default)]
+pub struct TimeoutState {
+    inner: Mutex<(i64, Vec<(Event, i64)>)>,
+}
+
+impl TimeoutState {
+    /// The timeout of `event`: its own, else the global one, else 0
+    /// (`getTimeout()`).
+    pub fn get(&self, event: Event) -> i64 {
+        let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        inner
+            .1
+            .iter()
+            .find(|(e, _)| *e == event)
+            .or_else(|| inner.1.iter().find(|(e, _)| *e == Event::All))
+            .map_or(inner.0, |(_, ms)| *ms)
+    }
+
+    /// Sets the timeout of `event` (`setTimeoutState()`).
+    pub fn set(&self, milliseconds: i64, event: Event) {
+        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        match inner.1.iter_mut().find(|(e, _)| *e == event) {
+            Some(entry) => entry.1 = milliseconds,
+            None => inner.1.push((event, milliseconds)),
+        }
+        if event == Event::All {
+            inner.0 = milliseconds;
+        }
+    }
+
+    /// The timeouts set, by event in the order they were first set
+    /// (`$timeouts`); [`Event::All`] is the global one.
+    pub fn entries(&self) -> Vec<(Event, i64)> {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).1.clone()
+    }
+
+    /// Clears the timeout of `event`, or every timeout for [`Event::All`]
+    /// (`clearTimeoutState()`).
+    pub fn clear(&self, event: Event) {
+        let mut inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        if event == Event::All {
+            *inner = (0, Vec::new());
+        } else {
+            inner.1.retain(|(e, _)| *e != event);
+        }
+    }
+}
 
 /// The settings PHP's `Adapter` base class keeps per handle.
 pub struct State {
     inner: Mutex<StateInner>,
+    tenant: Scoped<Value>,
+    ignoring_duplicates: Scoped<bool>,
 }
 
-/// The fields of [`State`].
+/// The plain fields of [`State`].
 #[derive(Clone)]
 pub struct StateInner {
-    /// `$database`: the schema (SQL) or database (Mongo) name.
+    /// `$database`: the schema (SQL) or database (MongoDB) name.
     pub database: String,
     /// `$hostname`.
     pub hostname: String,
@@ -72,193 +439,216 @@ pub struct StateInner {
     pub namespace: String,
     /// `$sharedTables`.
     pub shared_tables: bool,
-    /// `$tenant` (`int|string|null`; [`Value::Null`] when unset).
-    pub tenant: Value,
     /// `$tenantPerDocument`.
     pub tenant_per_document: bool,
-    /// `$timeout` in milliseconds.
-    pub timeout: i64,
     /// `$inTransaction`: the nesting depth.
     pub in_transaction: i64,
-    /// `$alterLocks`.
-    pub alter_locks: bool,
-    /// `$skipDuplicates`.
-    pub skip_duplicates: bool,
-    /// `$debug`.
-    pub debug: Array,
-    /// `$transformations`: event => name => transform, in insertion order.
-    pub transformations: Vec<(String, Vec<(String, Transform)>)>,
+    /// `$transactionCalls`: the `withTransaction()` calls running.
+    pub transaction_calls: i64,
+    /// `$locks`.
+    pub locks: bool,
+    /// `$transforms`, by name in registration order.
+    pub transforms: Vec<(String, Arc<dyn Transform>)>,
     /// `$metadata`, in insertion order.
-    pub metadata: Vec<(String, String)>,
+    pub metadata: Vec<(String, Value)>,
+    /// `$writeHooks`.
+    pub write_hooks: Vec<Arc<dyn Write>>,
+    /// `$profiler`.
+    pub profiler: Option<Arc<Profiler>>,
     /// `$authorization`.
     pub authorization: Arc<Authorization>,
+    /// `$limits`, once built (reset when shared tables change).
+    pub limits: Option<Arc<Limits>>,
 }
 
 impl Default for State {
     fn default() -> Self {
-        Self {
+        State {
             inner: Mutex::new(StateInner {
                 database: String::new(),
                 hostname: String::new(),
                 namespace: String::new(),
                 shared_tables: false,
-                tenant: Value::Null,
                 tenant_per_document: false,
-                timeout: 0,
                 in_transaction: 0,
-                alter_locks: false,
-                skip_duplicates: false,
-                debug: Array::new(),
-                transformations: vec![(EVENT_ALL.to_owned(), Vec::new())],
+                transaction_calls: 0,
+                locks: false,
+                transforms: Vec::new(),
                 metadata: Vec::new(),
-                authorization: Arc::new(Authorization::new()),
+                write_hooks: Vec::new(),
+                profiler: None,
+                authorization: Arc::new(Authorization::new(true)),
+                limits: None,
             }),
+            tenant: Scoped::new(Value::Null),
+            ignoring_duplicates: Scoped::new(false),
         }
     }
 }
 
 impl State {
-    /// Locks the fields for reading or writing. Never held across an await.
+    /// Locks the plain fields. Never held across an await.
     pub fn lock(&self) -> MutexGuard<'_, StateInner> {
         self.inner.lock().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// `before($event, $name, $callback)`.
-    pub fn before(&self, event: &str, name: &str, transform: Option<Transform>) {
-        let mut s = self.lock();
-        let slot = match s.transformations.iter().position(|(e, _)| e == event) {
-            Some(i) => i,
-            None => {
-                s.transformations.push((event.to_owned(), Vec::new()));
-                s.transformations.len() - 1
-            }
-        };
-        let list = &mut s.transformations[slot].1;
-        match transform {
-            None => list.retain(|(n, _)| n != name),
-            Some(t) => match list.iter_mut().find(|(n, _)| n == name) {
-                Some(entry) => entry.1 = t,
-                None => list.push((name.to_owned(), t)),
-            },
-        }
+    /// The tenant, scoped per future (`withTenant()` is
+    /// [`Scoped::with`] on it).
+    pub fn tenant(&self) -> &Scoped<Value> {
+        &self.tenant
     }
 
-    /// `trigger($event, $query)`: applies the `*` transforms, then the
-    /// event's, in registration order.
-    pub fn trigger(&self, event: &str, query: String) -> String {
-        let transforms: Vec<Transform> = {
-            let s = self.lock();
-            let all = s.transformations.iter().find(|(e, _)| e == EVENT_ALL).map(|(_, l)| l.as_slice()).unwrap_or(&[]);
-            let own = if event == EVENT_ALL {
-                &[][..]
-            } else {
-                s.transformations.iter().find(|(e, _)| e == event).map(|(_, l)| l.as_slice()).unwrap_or(&[])
-            };
-            all.iter().chain(own.iter()).map(|(_, t)| t.clone()).collect()
-        };
-        transforms.iter().fold(query, |q, t| t(q))
+    /// Whether the current future runs under `ignoreDuplicates()`.
+    pub fn ignoring_duplicates(&self) -> &Scoped<bool> {
+        &self.ignoring_duplicates
+    }
+
+    /// `hasSharedTables()`.
+    pub fn shared_tables(&self) -> bool {
+        self.lock().shared_tables
+    }
+
+    /// `getDatabase()`.
+    pub fn database(&self) -> String {
+        self.lock().database.clone()
+    }
+
+    /// `getNamespace()`.
+    pub fn namespace(&self) -> String {
+        self.lock().namespace.clone()
+    }
+
+    /// The registered transforms applied to `query`, in registration order
+    /// (what an adapter runs before executing a statement).
+    pub fn transform(&self, event: Event, query: String) -> Result<String> {
+        let transforms: Vec<Arc<dyn Transform>> = self.lock().transforms.iter().map(|(_, t)| t.clone()).collect();
+        transforms.iter().try_fold(query, |q, t| t.transform(event, q))
     }
 }
 
-/// `$adapter->withTransaction($callback)`: runs `f` in a transaction,
-/// committing on success and rolling back on failure. Failures other than
-/// duplicate, restricted, authorization, relationship, conflict, limit and
-/// timeout errors are retried twice, after 50 ms and 100 ms.
-pub async fn with_transaction<A, T, F, Fut>(adapter: &A, mut f: F) -> Result<T>
-where
-    A: Adapter + ?Sized,
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<T>>,
-{
-    // Adapters that cannot (Mongo off a replica set) or need not (already
-    // in one) open a transaction run the callback as it is.
-    if adapter.bypass_transaction().await? {
-        return f().await;
-    }
-    // An adapter over a pool holds one connection for the whole
-    // transaction, retries included (PHP's `Pool::withTransaction`).
-    let pinned = adapter.pin_connection().await?;
-    let result = run_transaction(adapter, &mut f).await;
-    if pinned {
-        adapter.unpin_connection(result.is_err()).await;
-    }
-    result
+/// `Adapter::filter()`: `value` with every character but `A-Z`, `a-z`,
+/// `0-9`, `_` and `-` removed.
+///
+/// ```
+/// assert_eq!(utopia_database::adapter::filter("my db!"), "mydb");
+/// ```
+pub fn filter(value: &str) -> String {
+    value.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-').collect()
 }
 
-/// The attempts of [`with_transaction`].
-async fn run_transaction<A, T, F, Fut>(adapter: &A, f: &mut F) -> Result<T>
-where
-    A: Adapter + ?Sized,
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<T>>,
-{
-    let retries = 2;
-    for attempt in 0..=retries {
-        let result = async {
-            adapter.start_transaction().await?;
-            let value = f().await?;
-            adapter.commit_transaction().await?;
-            Ok::<T, Error>(value)
-        }
-        .await;
-        let action = match result {
-            Ok(v) => return Ok(v),
-            Err(e) => e,
-        };
-        let mut rollback = None;
-        if let Err(e) = adapter.rollback_transaction().await {
-            rollback = Some(e);
-            adapter.state().lock().in_transaction = 0;
-        }
-        if [
-            Kind::Duplicate,
-            Kind::Restricted,
-            Kind::Authorization,
-            Kind::Relationship,
-            Kind::Conflict,
-            Kind::Limit,
-            Kind::Timeout,
-        ]
-        .iter()
-        .any(|k| action.is_a(*k))
-        {
-            return Err(action);
-        }
-        if attempt < retries {
-            tokio::time::sleep(std::time::Duration::from_micros(50_000 * (attempt as u64 + 1))).await;
-            continue;
-        }
-        return Err(if adapter.rethrows_rollback_failure() { rollback.unwrap_or(action) } else { action });
+/// `Adapter::escapeWildcards()`: `%`, `_`, `[`, `]`, `^`, `-`, `.`, `*`,
+/// `+`, `?`, `(`, `)`, `{`, `}` and `|` escaped with a backslash.
+pub fn escape_wildcards(value: &str) -> String {
+    let mut out = value.to_owned();
+    for wildcard in ['%', '_', '[', ']', '^', '-', '.', '*', '+', '?', '(', ')', '{', '}', '|'] {
+        out = out.replace(wildcard, &format!("\\{wildcard}"));
     }
-    Err(Error::transaction("Failed to execute transaction"))
+    out
 }
 
-/// The arguments of [`Adapter::find`] besides the collection and queries.
-#[derive(Clone, Debug)]
-pub struct FindOptions<'a> {
-    /// `$limit` (`null` for none).
-    pub limit: Option<i64>,
-    /// `$offset`.
-    pub offset: Option<i64>,
-    /// `$orderAttributes`.
-    pub order_attributes: &'a [String],
-    /// `$orderTypes` (`ASC`, `DESC`, `RANDOM`).
-    pub order_types: &'a [String],
-    /// `$cursor`: the cursor document's attributes (empty for none).
-    pub cursor: &'a Array,
-    /// `$cursorDirection` (`after`, `before`).
-    pub cursor_direction: &'a str,
-    /// `$forPermission` (`read`, `update`, ...).
-    pub for_permission: &'a str,
-}
-
-/// A storage engine. See the [module docs](self).
+/// The storage engine under a database.
+///
+/// PHP: `Utopia\Database\Adapter`. Its abstract methods are the required
+/// methods here; its concrete ones are provided, over [`Adapter::state`].
 #[async_trait]
-pub trait Adapter: Send + Sync {
-    /// The settings PHP's base class keeps.
+pub trait Adapter: Send + Sync + 'static {
+    /// The settings of the handle.
     fn state(&self) -> &State;
 
-    // ----- Settings (PHP's concrete base methods) -----
+    /// The adapter as [`Any`], to reach its concrete type (PHP's
+    /// `getDriver()` returns the connection; Rust callers downcast the
+    /// adapter they built instead).
+    fn as_any(&self) -> &dyn Any;
+
+    // ---- What the adapter offers -------------------------------------
+
+    /// The capabilities the adapter supports (`capabilities()`): by default
+    /// key, array and unique indexes.
+    fn capabilities(&self) -> Capabilities {
+        Capabilities::of(&[Capability::IndexKey, Capability::IndexArray, Capability::IndexUnique])
+    }
+
+    /// Whether the adapter supports `capability` (`supports()`).
+    fn supports(&self, capability: Capability) -> bool {
+        self.capabilities().contains(capability)
+    }
+
+    /// The adapter's limits (`limits()`), built once per shared-tables mode.
+    fn limits(&self) -> Arc<Limits>;
+
+    /// The features the adapter implements, from its accessors.
+    fn features(&self) -> Features {
+        let mut features = Features::EMPTY;
+        let checks: [(Feature, bool); 9] = [
+            (Feature::Casting, self.casting().is_some()),
+            (Feature::Connection, self.connection().is_some()),
+            (Feature::QueryBuilder, self.query_builder().is_some()),
+            (Feature::RawQuery, self.raw_query().is_some()),
+            (Feature::Relationships, self.relationships().is_some()),
+            (Feature::Schemaless, self.schemaless().is_some()),
+            (Feature::Spatial, self.spatial().is_some()),
+            (Feature::Timeouts, self.timeouts().is_some()),
+            (Feature::Upserts, self.upserts().is_some()),
+        ];
+        for (feature, present) in checks {
+            if present {
+                features = features.with(feature);
+            }
+        }
+        features
+    }
+
+    /// Whether the adapter implements `feature` (`hasFeature()`).
+    fn has_feature(&self, feature: Feature) -> bool {
+        self.features().contains(feature)
+    }
+
+    /// [`Casting`], when implemented.
+    fn casting(&self) -> Option<&dyn Casting> {
+        None
+    }
+
+    /// [`Connection`], when implemented.
+    fn connection(&self) -> Option<&dyn Connection> {
+        None
+    }
+
+    /// [`QueryBuilder`], when implemented.
+    fn query_builder(&self) -> Option<&dyn QueryBuilder> {
+        None
+    }
+
+    /// [`RawQuery`], when implemented.
+    fn raw_query(&self) -> Option<&dyn RawQuery> {
+        None
+    }
+
+    /// [`Relationships`], when implemented.
+    fn relationships(&self) -> Option<&dyn Relationships> {
+        None
+    }
+
+    /// [`Schemaless`], when implemented.
+    fn schemaless(&self) -> Option<&dyn Schemaless> {
+        None
+    }
+
+    /// [`Spatial`], when implemented.
+    fn spatial(&self) -> Option<&dyn Spatial> {
+        None
+    }
+
+    /// [`Timeouts`], when implemented.
+    fn timeouts(&self) -> Option<&dyn Timeouts> {
+        None
+    }
+
+    /// [`Upserts`], when implemented.
+    fn upserts(&self) -> Option<&dyn Upserts> {
+        None
+    }
+
+    // ---- Settings ------------------------------------------------------
 
     /// `setAuthorization()`.
     fn set_authorization(&self, authorization: Arc<Authorization>) {
@@ -270,31 +660,34 @@ pub trait Adapter: Send + Sync {
         self.state().lock().authorization.clone()
     }
 
-    /// `setDebug()`.
-    fn set_debug(&self, key: &str, value: Value) {
-        self.state().lock().debug.set(key.into(), value);
+    /// `setProfiler()`.
+    fn set_profiler(&self, profiler: Option<Arc<Profiler>>) {
+        self.state().lock().profiler = profiler;
     }
 
-    /// `getDebug()`.
-    fn debug(&self) -> Array {
-        self.state().lock().debug.clone()
+    /// `getProfiler()`.
+    fn profiler(&self) -> Option<Arc<Profiler>> {
+        self.state().lock().profiler.clone()
     }
 
-    /// `resetDebug()`.
-    fn reset_debug(&self) {
-        self.state().lock().debug = Array::new();
+    /// `setDatabase()`: the name [`filter`]ed.
+    fn set_database(&self, name: &str) {
+        self.state().lock().database = filter(name);
     }
 
-    /// `setNamespace()`: the namespace, filtered to `[A-Za-z0-9_-]`.
-    fn set_namespace(&self, namespace: &str) -> Result<()> {
-        let filtered = self.filter(namespace)?;
-        self.state().lock().namespace = filtered;
-        Ok(())
+    /// `getDatabase()`.
+    fn database(&self) -> String {
+        self.state().database()
+    }
+
+    /// `setNamespace()`: the namespace [`filter`]ed.
+    fn set_namespace(&self, namespace: &str) {
+        self.state().lock().namespace = filter(namespace);
     }
 
     /// `getNamespace()`.
     fn namespace(&self) -> String {
-        self.state().lock().namespace.clone()
+        self.state().namespace()
     }
 
     /// `setHostname()`.
@@ -302,101 +695,142 @@ pub trait Adapter: Send + Sync {
         self.state().lock().hostname = hostname.to_owned();
     }
 
-    /// `getHostname()`.
-    fn hostname(&self) -> String {
-        self.state().lock().hostname.clone()
+    /// `setSharedTables()`: the limits are built again when it changes.
+    fn set_shared_tables(&self, shared_tables: bool) {
+        let mut state = self.state().lock();
+        if state.shared_tables != shared_tables {
+            state.shared_tables = shared_tables;
+            state.limits = None;
+        }
     }
 
-    /// `setDatabase()`: the name, filtered.
-    fn set_database(&self, name: &str) -> Result<bool> {
-        let filtered = self.filter(name)?;
-        self.state().lock().database = filtered;
-        Ok(true)
-    }
-
-    /// `getDatabase()`.
-    fn database(&self) -> String {
-        self.state().lock().database.clone()
-    }
-
-    /// `setSharedTables()`.
-    fn set_shared_tables(&self, shared: bool) -> bool {
-        self.state().lock().shared_tables = shared;
-        true
-    }
-
-    /// `getSharedTables()`.
+    /// `hasSharedTables()`.
     fn shared_tables(&self) -> bool {
-        self.state().lock().shared_tables
+        self.state().shared_tables()
     }
 
-    /// `setTenant()` (`int|string|null`).
-    fn set_tenant(&self, tenant: Value) -> bool {
-        self.state().lock().tenant = tenant;
-        true
+    /// `setTenant()`: the value the current future sees (see
+    /// [`Scoped::set`]).
+    fn set_tenant(&self, tenant: Value) {
+        self.state().tenant().set(tenant);
     }
 
-    /// `getTenant()`.
+    /// `getTenant()`: a string of digits as an integer.
     fn tenant(&self) -> Value {
-        self.state().lock().tenant.clone()
+        match self.state().tenant().get() {
+            Value::Str(s) if !s.is_empty() && s.as_bytes().iter().all(u8::is_ascii_digit) => {
+                Value::Int(php_std::format::str_to_int(s.as_bytes()))
+            }
+            other => other,
+        }
     }
 
     /// `setTenantPerDocument()`.
-    fn set_tenant_per_document(&self, enabled: bool) -> bool {
-        self.state().lock().tenant_per_document = enabled;
-        true
+    fn set_tenant_per_document(&self, tenant_per_document: bool) {
+        self.state().lock().tenant_per_document = tenant_per_document;
     }
 
-    /// `getTenantPerDocument()`.
+    /// `isTenantPerDocument()`.
     fn tenant_per_document(&self) -> bool {
         self.state().lock().tenant_per_document
     }
 
-    /// `setMetadata()`: also installs the `metadata` transform that prefixes
-    /// every statement with `/* key: value */` lines.
-    fn set_metadata(&self, key: &str, value: &str) {
-        let output = {
-            let mut s = self.state().lock();
-            match s.metadata.iter_mut().find(|(k, _)| k == key) {
-                Some(entry) => entry.1 = value.to_owned(),
-                None => s.metadata.push((key.to_owned(), value.to_owned())),
-            }
-            s.metadata.iter().map(|(k, v)| format!("/* {k}: {v} */\n")).collect::<String>()
-        };
-        self.before(EVENT_ALL, "metadata", Some(Arc::new(move |q: String| format!("{output}{q}"))));
+    /// `setMetadata()`: the value replaces the key's, in its place.
+    fn set_metadata(&self, key: &str, value: Value) {
+        let mut state = self.state().lock();
+        match state.metadata.iter_mut().find(|(k, _)| k == key) {
+            Some(entry) => entry.1 = value,
+            None => state.metadata.push((key.to_owned(), value)),
+        }
     }
 
     /// `getMetadata()`.
-    fn metadata(&self) -> Vec<(String, String)> {
+    fn metadata(&self) -> Vec<(String, Value)> {
         self.state().lock().metadata.clone()
     }
 
-    /// `resetMetadata()` (the `metadata` transform stays, as in PHP).
+    /// `resetMetadata()`.
     fn reset_metadata(&self) {
         self.state().lock().metadata.clear();
     }
 
-    /// `setTimeout()`: the statement timeout for `event` (`*` for all).
-    fn set_timeout(&self, milliseconds: i64, event: &str) -> Result<()>;
-
-    /// `getTimeout()`.
-    fn timeout(&self) -> i64 {
-        self.state().lock().timeout
+    /// `setLocks()`.
+    fn set_locks(&self, locks: bool) {
+        self.state().lock().locks = locks;
     }
 
-    /// `clearTimeout()`.
-    fn clear_timeout(&self, event: &str) {
-        self.before(event, "timeout", None);
-        self.state().lock().timeout = 0;
+    /// `addWriteHook()`.
+    fn add_write_hook(&self, hook: Arc<dyn Write>) {
+        self.state().lock().write_hooks.push(hook);
     }
 
-    /// `clearTimeouts()`.
-    fn clear_timeouts(&self) {
-        let events: Vec<String> = self.state().lock().transformations.iter().map(|(e, _)| e.clone()).collect();
-        for e in events {
-            self.clear_timeout(&e);
+    /// `removeWriteHook($hook)` for an instance.
+    fn remove_write_hook(&self, hook: &Arc<dyn Write>) {
+        self.state().lock().write_hooks.retain(|h| !Arc::ptr_eq(h, hook));
+    }
+
+    /// `removeWriteHook(Tenancy::class)`: removes the tenancy hooks.
+    fn remove_tenancy_hooks(&self) {
+        self.state().lock().write_hooks.retain(|h| h.tenancy().is_none());
+    }
+
+    /// `getWriteHooks()`.
+    fn write_hooks(&self) -> Vec<Arc<dyn Write>> {
+        self.state().lock().write_hooks.clone()
+    }
+
+    /// `getTenantHook()`: the first [`Tenancy`] write hook.
+    fn tenant_hook(&self) -> Option<Tenancy> {
+        self.state().lock().write_hooks.iter().find_map(|h| h.tenancy().cloned())
+    }
+
+    /// `addTransform()`: replaces a transform of the same name in its place.
+    fn add_transform(&self, name: &str, transform: Arc<dyn Transform>) {
+        let mut state = self.state().lock();
+        match state.transforms.iter_mut().find(|(n, _)| n == name) {
+            Some(entry) => entry.1 = transform,
+            None => state.transforms.push((name.to_owned(), transform)),
         }
-        self.state().lock().timeout = 0;
+    }
+
+    /// `removeTransform()`.
+    fn remove_transform(&self, name: &str) {
+        self.state().lock().transforms.retain(|(n, _)| n != name);
+    }
+
+    /// `resetTransforms()`.
+    fn reset_transforms(&self) {
+        self.state().lock().transforms.clear();
+    }
+
+    /// The row as every write hook decorates a row written for `document`
+    /// (`decorateRow()`): the document's tenant, else the adapter's.
+    fn decorate_row(&self, row: Array, document: &Document) -> Array {
+        let hooks = self.write_hooks();
+        if hooks.is_empty() {
+            return row;
+        }
+        let metadata =
+            crate::hook::RowMetadata { tenant: document.tenant().unwrap_or_else(|| self.state().tenant().get()) };
+        hooks.iter().fold(row, |row, hook| hook.decorate_row(row, &metadata))
+    }
+
+    // ---- Transactions --------------------------------------------------
+
+    /// Starts a transaction, or a savepoint inside one.
+    async fn start_transaction(&self) -> Result<bool>;
+
+    /// Commits the innermost transaction.
+    async fn commit_transaction(&self) -> Result<bool>;
+
+    /// Rolls the innermost transaction back.
+    async fn rollback_transaction(&self) -> Result<bool>;
+
+    /// How [`with_transaction`] runs a callback on this adapter (an adapter
+    /// that overrides PHP's `withTransaction()` answers other than
+    /// [`TransactionStrategy::Savepoints`]).
+    async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
+        Ok(TransactionStrategy::Savepoints)
     }
 
     /// `inTransaction()`.
@@ -404,476 +838,653 @@ pub trait Adapter: Send + Sync {
         self.state().lock().in_transaction > 0
     }
 
-    /// The flag `skipDuplicates($callback)` sets around its callback.
-    fn set_skip_duplicates(&self, skip: bool) -> bool {
-        std::mem::replace(&mut self.state().lock().skip_duplicates, skip)
+    /// Ends what the connection may still hold of a failed outermost
+    /// attempt (`abandonTransaction()`; nothing by default).
+    async fn abandon_transaction(&self) {}
+
+    /// Whether a failure can succeed on another attempt (`isRetryable()`):
+    /// a [`Kind::Transaction`] (or [`Kind::Contention`]) anywhere in its
+    /// chain, or a lost connection before any other typed library error.
+    fn is_retryable(&self, failure: &Error) -> bool {
+        let mut cause = Some(failure);
+        while let Some(c) = cause {
+            if c.is_a(Kind::Transaction) {
+                return true;
+            }
+            if c.is_a(Kind::Database) && c.kind() != Kind::Database {
+                return false;
+            }
+            if self.is_transient(c) {
+                return true;
+            }
+            cause = c.previous();
+        }
+        false
     }
 
-    /// Whether duplicates are skipped (`$skipDuplicates`).
-    fn skip_duplicates(&self) -> bool {
-        self.state().lock().skip_duplicates
+    /// Whether an error is transient (`isTransient()`): a lost connection.
+    fn is_transient(&self, error: &Error) -> bool {
+        crate::connection::is_lost(error)
     }
 
-    /// `before($event, $name, $callback)`; `None` removes the transform.
-    fn before(&self, event: &str, name: &str, transform: Option<Transform>) {
-        self.state().before(event, name, transform);
-    }
+    // ---- Databases -----------------------------------------------------
 
-    /// `trigger($event, $query)`.
-    fn trigger(&self, event: &str, query: String) -> String {
-        self.state().trigger(event, query)
-    }
-
-    /// `filter()`: keeps `[A-Za-z0-9_-]`.
-    fn filter(&self, value: &str) -> Result<String> {
-        Ok(value.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-').collect())
-    }
-
-    /// `enableAlterLocks()`.
-    fn enable_alter_locks(&self, enable: bool) {
-        self.state().lock().alter_locks = enable;
-    }
-
-    /// `getColumnType()` (adapters without SQL types return `""`).
-    fn column_type(&self, _kind: &str, _size: i64, _signed: bool, _array: bool, _required: bool) -> Result<String> {
-        Ok(String::new())
-    }
-
-    // ----- Transactions -----
-
-    /// Before [`with_transaction`] runs its attempts: an adapter over a pool
-    /// of connections pins one for the whole transaction and returns `true`
-    /// (`false` when one is pinned already). Other adapters own their
-    /// connection and pin nothing.
-    ///
-    /// PHP: the pinning in `Pool::withTransaction()`.
-    async fn pin_connection(&self) -> Result<bool> {
-        Ok(false)
-    }
-
-    /// After a transaction [`Adapter::pin_connection`] pinned a connection
-    /// for: hands it back (`failed` when the transaction failed).
-    async fn unpin_connection(&self, _failed: bool) {}
-
-    /// Whether `withTransaction()` runs its callback without a transaction:
-    /// adapters that override it to skip one when they cannot (Mongo off a
-    /// replica set) or need not (already in one). `false`.
-    async fn bypass_transaction(&self) -> Result<bool> {
-        Ok(false)
-    }
-
-    /// Whether `withTransaction()`, once out of retries, reports a failed
-    /// rollback in place of the failure that caused it (`true`; Mongo
-    /// reports the failure).
-    fn rethrows_rollback_failure(&self) -> bool {
-        true
-    }
-
-    /// `startTransaction()`.
-    async fn start_transaction(&self) -> Result<bool>;
-    /// `commitTransaction()`.
-    async fn commit_transaction(&self) -> Result<bool>;
-    /// `rollbackTransaction()`.
-    async fn rollback_transaction(&self) -> Result<bool>;
-
-    // ----- Connection -----
-
-    /// `ping()`.
-    async fn ping(&self) -> Result<bool>;
-    /// `reconnect()`.
-    async fn reconnect(&self) -> Result<()>;
-    /// `getConnectionId()`.
-    async fn connection_id(&self) -> Result<String>;
-
-    // ----- Databases -----
-
-    /// `create($name)`.
+    /// Creates a database (`create()`).
     async fn create(&self, name: &str) -> Result<bool>;
-    /// `exists($database, $collection)`.
-    async fn exists(&self, database: &str, collection: Option<&str>) -> Result<bool>;
-    /// `list()`.
+
+    /// Renames a database (`update()`).
+    async fn update(&self, name: &str, new: &str) -> Result<bool>;
+
+    /// Whether a database exists (`exists()`).
+    async fn exists(&self, database: &str) -> Result<bool>;
+
+    /// Whether a collection exists in a database (`collectionExists()`).
+    async fn collection_exists(&self, database: &str, collection: &str) -> Result<bool>;
+
+    /// The databases (`list()`).
     async fn list(&self) -> Result<Vec<Document>>;
-    /// `delete($name)`.
+
+    /// Deletes a database (`delete()`).
     async fn delete(&self, name: &str) -> Result<bool>;
 
-    // ----- Collections -----
+    // ---- Collections ---------------------------------------------------
 
-    /// `createCollection($name, $attributes, $indexes)`.
-    async fn create_collection(&self, name: &str, attributes: &[Document], indexes: &[Document]) -> Result<bool>;
-    /// `deleteCollection($id)`.
-    async fn delete_collection(&self, id: &str) -> Result<bool>;
-    /// `analyzeCollection($collection)`.
+    /// Creates a collection's storage (`createCollection()`).
+    async fn create_collection(&self, collection: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool>;
+
+    /// Drops a collection's storage (`deleteCollection()`).
+    async fn delete_collection(&self, collection: &str) -> Result<bool>;
+
+    /// Refreshes a collection's planner statistics (`analyzeCollection()`).
     async fn analyze_collection(&self, collection: &str) -> Result<bool>;
-    /// `getSizeOfCollection($collection)`.
+
+    /// The size of a collection's data (`getSizeOfCollection()`).
     async fn size_of_collection(&self, collection: &str) -> Result<i64>;
-    /// `getSizeOfCollectionOnDisk($collection)`.
+
+    /// The size of a collection on disk (`getSizeOfCollectionOnDisk()`).
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64>;
-    /// `getSchemaAttributes($collection)`.
-    async fn schema_attributes(&self, collection: &str) -> Result<Vec<Document>>;
-    /// `getSchemaIndexes($collection)`.
-    async fn schema_indexes(&self, collection: &str) -> Result<Vec<Document>>;
 
-    // ----- Attributes -----
+    /// The bytes a row of the collection's attributes takes (`getAttributeWidth()`).
+    fn attribute_width(&self, collection: &Collection) -> Result<i64>;
 
-    /// `createAttribute($collection, $id, $type, $size, $signed, $array, $required)`.
-    #[allow(clippy::too_many_arguments)]
-    async fn create_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        required: bool,
-    ) -> Result<bool>;
-    /// `createAttributes($collection, $attributes)`: each an array with
-    /// `$id`, `type`, `size`, `signed`, `array`, `required`.
-    async fn create_attributes(&self, collection: &str, attributes: &[Array]) -> Result<bool>;
-    /// `updateAttribute($collection, $id, $type, $size, $signed, $array, $newKey, $required)`.
-    #[allow(clippy::too_many_arguments)]
-    async fn update_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        size: i64,
-        signed: bool,
-        array: bool,
-        new_key: Option<&str>,
-        required: bool,
-    ) -> Result<bool>;
-    /// `deleteAttribute($collection, $id)`.
-    async fn delete_attribute(&self, collection: &str, id: &str) -> Result<bool>;
-    /// `renameAttribute($collection, $old, $new)`.
+    /// The attributes of a collection, the internal ones included (`getCountOfAttributes()`).
+    fn count_of_attributes(&self, collection: &Collection) -> Result<i64> {
+        Ok(collection.attributes()?.len() as i64 + self.limits().default_attributes)
+    }
+
+    /// The indexes of a collection, the internal ones included (`getCountOfIndexes()`).
+    fn count_of_indexes(&self, collection: &Collection) -> Result<i64> {
+        Ok(collection.indexes()?.len() as i64 + self.limits().default_indexes)
+    }
+
+    // ---- Attributes ----------------------------------------------------
+
+    /// Adds an attribute's column (`createAttribute()`).
+    async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool>;
+
+    /// Adds several attributes' columns (`createAttributes()`).
+    async fn create_attributes(&self, collection: &str, attributes: &[Attribute]) -> Result<bool>;
+
+    /// Changes an attribute's column; the target key is `attribute.key`
+    /// (`updateAttribute()`).
+    async fn update_attribute(&self, collection: &str, key: &str, attribute: &Attribute) -> Result<bool>;
+
+    /// Drops an attribute's `NOT NULL` without a column change
+    /// (`relaxAttributeRequired()`; nothing by default).
+    async fn relax_attribute_required(&self, collection: &str, id: &str) -> Result<bool> {
+        let _ = (collection, id);
+        Ok(true)
+    }
+
+    /// Drops an attribute's column (`deleteAttribute()`).
+    async fn delete_attribute(&self, collection: &str, key: &str) -> Result<bool>;
+
+    /// Renames an attribute's column (`renameAttribute()`).
     async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<bool>;
 
-    // ----- Relationships -----
+    /// The columns the engine holds for a collection (`getSchemaAttributes()`).
+    async fn schema_attributes(&self, collection: &str) -> Result<Vec<schema::Column>>;
 
-    /// `createRelationship($collection, $relatedCollection, $type, $twoWay, $id, $twoWayKey)`.
-    async fn create_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        id: &str,
-        two_way_key: &str,
-    ) -> Result<bool>;
-    /// `updateRelationship(...)`.
-    #[allow(clippy::too_many_arguments)]
-    async fn update_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-        new_key: Option<&str>,
-        new_two_way_key: Option<&str>,
-    ) -> Result<bool>;
-    /// `deleteRelationship(...)`.
-    #[allow(clippy::too_many_arguments)]
-    async fn delete_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-    ) -> Result<bool>;
+    /// The indexes the engine holds for a collection (`getSchemaIndexes()`).
+    async fn schema_indexes(&self, collection: &str) -> Result<Vec<schema::Index>>;
 
-    // ----- Indexes -----
+    /// The type the engine reports for an index of `kind`
+    /// (`getSchemaIndexType()`; `kind` by default).
+    fn schema_index_type(&self, kind: IndexType) -> IndexType {
+        kind
+    }
 
-    /// `createIndex($collection, $id, $type, $attributes, $lengths, $orders, $indexAttributeTypes, $collation, $ttl)`.
-    #[allow(clippy::too_many_arguments)]
+    /// The column type of an attribute; `None` on engines without columns
+    /// (`getColumnType()`).
+    fn column_type(&self, attribute: &Attribute) -> Result<Option<String>>;
+
+    // ---- Indexes -------------------------------------------------------
+
+    /// Creates an index (`createIndex()`): `attribute_types` maps each
+    /// attribute to its type, `collation` each to its collation.
     async fn create_index(
         &self,
         collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &[Value],
-        orders: &[Value],
-        attribute_types: &[(String, String)],
-        collation: &[String],
-        ttl: i64,
+        index: &Index,
+        attribute_types: &[(String, ColumnType)],
+        collation: &[(String, String)],
     ) -> Result<bool>;
-    /// `createIndex(...)` with `$lengths` and `$orders` as the arrays the
-    /// database built (their keys kept, sparse ones included). The default
-    /// hands [`Adapter::create_index`] one entry per attribute (`null` for
-    /// a missing one); an adapter that stores the arrays overrides it.
-    #[allow(clippy::too_many_arguments)]
-    async fn create_index_arrays(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &Array,
-        orders: &Array,
-        attribute_types: &[(String, String)],
-        collation: &[String],
-        ttl: i64,
-    ) -> Result<bool> {
-        let positional = |a: &Array| -> Vec<Value> {
-            (0..attributes.len())
-                .map(|i| a.get(&crate::value::ArrayKey::Int(i as i64)).cloned().unwrap_or(Value::Null))
-                .collect()
-        };
-        self.create_index(
-            collection,
-            id,
-            kind,
-            attributes,
-            &positional(lengths),
-            &positional(orders),
-            attribute_types,
-            collation,
-            ttl,
-        )
-        .await
-    }
-    /// `deleteIndex($collection, $id)`.
-    async fn delete_index(&self, collection: &str, id: &str) -> Result<bool>;
-    /// `renameIndex($collection, $old, $new)`.
+
+    /// Drops an index (`deleteIndex()`).
+    async fn delete_index(&self, collection: &str, key: &str) -> Result<bool>;
+
+    /// Renames an index (`renameIndex()`).
     async fn rename_index(&self, collection: &str, old: &str, new: &str) -> Result<bool>;
 
-    // ----- Documents -----
+    // ---- Documents -----------------------------------------------------
 
-    /// `getDocument($collection, $id, $queries, $forUpdate)`.
+    /// Stores a new document (`createDocument()`).
+    async fn create_document(&self, collection: &Collection, document: Document) -> Result<Document>;
+
+    /// Stores new documents (`createDocuments()`); under `ignoreDuplicates()`
+    /// only those inserted are returned.
+    async fn create_documents(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>>;
+
+    /// Reads a document (`getDocument()`); an empty document when missing.
     async fn get_document(
         &self,
-        collection: &Document,
+        collection: &Collection,
         id: &str,
-        queries: &[Query],
+        queries: Vec<Query>,
         for_update: bool,
     ) -> Result<Document>;
-    /// `createDocument($collection, $document)`.
-    async fn create_document(&self, collection: &Document, document: Document) -> Result<Document>;
-    /// `createDocuments($collection, $documents)`.
-    async fn create_documents(&self, collection: &Document, documents: Vec<Document>) -> Result<Vec<Document>>;
-    /// `updateDocument($collection, $id, $document, $skipPermissions)`.
-    /// Returns `$document` as the call leaves it (PHP's caller holds that
-    /// object, which an adapter may change in place), not what PHP returns.
+
+    /// Updates a document stored under `id` (`updateDocument()`).
     async fn update_document(
         &self,
-        collection: &Document,
+        collection: &Collection,
         id: &str,
         document: Document,
         skip_permissions: bool,
     ) -> Result<Document>;
-    /// `updateDocuments($collection, $updates, $documents)`.
-    async fn update_documents(&self, collection: &Document, updates: &Document, documents: &[Document]) -> Result<i64>;
-    /// `upsertDocuments($collection, $attribute, $changes)`.
-    async fn upsert_documents(
+
+    /// Applies `updates` to `documents` (`updateDocuments()`);
+    /// `skip_permissions` are the ids whose permissions the update keeps.
+    async fn update_documents(
         &self,
-        collection: &Document,
-        attribute: &str,
-        changes: Vec<Change>,
-    ) -> Result<Vec<Document>>;
-    /// `getSequences($collection, $documents)`.
-    async fn get_sequences(&self, collection: &str, documents: Vec<Document>) -> Result<Vec<Document>>;
-    /// `deleteDocument($collection, $id)`.
-    async fn delete_document(&self, collection: &str, id: &str) -> Result<bool>;
-    /// `deleteDocuments($collection, $sequences, $permissionIds)`.
-    async fn delete_documents(&self, collection: &str, sequences: &[Value], permission_ids: &[String]) -> Result<i64>;
-    /// `increaseDocumentAttribute($collection, $id, $attribute, $value, $updatedAt, $min, $max)`.
+        collection: &Collection,
+        updates: &Document,
+        documents: Vec<Document>,
+        skip_permissions: &[String],
+    ) -> Result<i64>;
+
+    /// Adds `value` to an attribute, within `min` and `max`
+    /// (`increaseDocumentAttribute()`); numbers may be numeric strings.
     #[allow(clippy::too_many_arguments)]
     async fn increase_document_attribute(
         &self,
-        collection: &str,
+        collection: &Collection,
         id: &str,
         attribute: &str,
-        value: &Value,
+        value: Value,
         updated_at: &str,
-        min: Option<&Value>,
-        max: Option<&Value>,
+        min: Option<Value>,
+        max: Option<Value>,
     ) -> Result<bool>;
-    /// `find($collection, $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursor, $cursorDirection, $forPermission)`.
-    async fn find(&self, collection: &Document, queries: &[Query], options: FindOptions<'_>) -> Result<Vec<Document>>;
-    /// `sum($collection, $attribute, $queries, $max)`: an int or a float.
-    async fn sum(&self, collection: &Document, attribute: &str, queries: &[Query], max: Option<i64>) -> Result<Value>;
-    /// `count($collection, $queries, $max)`.
-    async fn count(&self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64>;
 
-    // ----- Value conversion -----
+    /// Deletes a document (`deleteDocument()`).
+    async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool>;
 
-    /// `castingBefore($collection, $document)`.
-    fn casting_before(&self, collection: &Document, document: Document) -> Result<Document>;
-    /// `castingAfter($collection, $document)`.
-    fn casting_after(&self, collection: &Document, document: Document) -> Result<Document>;
-    /// `setUTCDatetime($value)`.
-    fn set_utc_datetime(&self, value: &str) -> Result<Value>;
-    /// `decodePoint($wkb)`.
-    fn decode_point(&self, wkb: &[u8]) -> Result<Value>;
-    /// `decodeLinestring($wkb)`.
-    fn decode_linestring(&self, wkb: &[u8]) -> Result<Value>;
-    /// `decodePolygon($wkb)`.
-    fn decode_polygon(&self, wkb: &[u8]) -> Result<Value>;
-    /// `getTenantQuery($collection, $alias)`.
-    fn tenant_query(&self, collection: &str, alias: &str) -> String;
+    /// Deletes documents by sequence, and the permissions of `permission_ids`
+    /// (`deleteDocuments()`).
+    async fn delete_documents(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+    ) -> Result<i64>;
 
-    // ----- Limits -----
+    /// Reads documents (`find()`): documents, or rows of aggregates and
+    /// `groupBy` queries.
+    async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>>;
 
-    /// `getLimitForString()`.
-    fn limit_for_string(&self) -> i64;
-    /// `getLimitForInt()`.
-    fn limit_for_int(&self) -> i64;
-    /// `getLimitForBigInt()`.
-    fn limit_for_big_int(&self) -> i64;
-    /// `getLimitForAttributes()`.
-    fn limit_for_attributes(&self) -> i64;
-    /// `getLimitForIndexes()`.
-    fn limit_for_indexes(&self) -> i64;
-    /// `getMaxIndexLength()`.
-    fn max_index_length(&self) -> i64;
-    /// `getMaxVarcharLength()`.
-    fn max_varchar_length(&self) -> i64;
-    /// `getMaxUIDLength()`.
-    fn max_uid_length(&self) -> i64;
-    /// `getMinDateTime()`.
-    fn min_date_time(&self) -> DateTime;
-    /// `getMaxDateTime()`: `9999-12-31 23:59:59`.
-    fn max_date_time(&self) -> DateTime {
-        DateTime::new(b"9999-12-31 23:59:59", None, &php_std::datetime::TzInfo::utc())
-            .unwrap_or_else(|_| unreachable!("a valid date"))
+    /// Counts documents, up to `max` (`count()`).
+    async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64>;
+
+    /// Sums an attribute, over at most `max` documents (`sum()`): an integer
+    /// or a float.
+    async fn sum(
+        &self,
+        collection: &Collection,
+        attribute: &str,
+        queries: Vec<Query>,
+        max: Option<i64>,
+    ) -> Result<Value>;
+
+    /// The documents with their stored `$sequence` (`getSequences()`).
+    async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>>;
+
+    /// The read concurrency a pool can give relationship population (PHP's
+    /// `Pool::getReadConcurrency()`; 1 for an adapter that is not a pool).
+    fn read_concurrency(&self) -> usize {
+        1
     }
-    /// `getIdAttributeType()`.
-    fn id_attribute_type(&self) -> &'static str;
-    /// `getCountOfAttributes($collection)`.
-    fn count_of_attributes(&self, collection: &Document) -> i64;
-    /// `getCountOfIndexes($collection)`.
-    fn count_of_indexes(&self, collection: &Document) -> i64;
-    /// `getCountOfDefaultAttributes()`.
-    fn count_of_default_attributes(&self) -> i64;
-    /// `getCountOfDefaultIndexes()`.
-    fn count_of_default_indexes(&self) -> i64;
-    /// `getDocumentSizeLimit()`.
-    fn document_size_limit(&self) -> i64;
-    /// `getAttributeWidth($collection)`.
-    fn attribute_width(&self, collection: &Document) -> Result<i64>;
-    /// `getKeywords()`.
-    fn keywords(&self) -> &'static [&'static str];
-    /// `getInternalIndexesKeys()`.
-    fn internal_indexes_keys(&self) -> &'static [&'static str];
 
-    // ----- Capabilities -----
-
-    /// `getSupportForSchemas()`.
-    fn support_for_schemas(&self) -> bool;
-    /// `getSupportForAttributes()`.
-    fn support_for_attributes(&self) -> bool;
-    /// `setSupportForAttributes()`.
-    fn set_support_for_attributes(&self, support: bool) -> bool;
-    /// `getSupportForSchemaAttributes()`.
-    fn support_for_schema_attributes(&self) -> bool;
-    /// `getSupportForSchemaIndexes()`.
-    fn support_for_schema_indexes(&self) -> bool;
-    /// `getSupportForIndex()`.
-    fn support_for_index(&self) -> bool;
-    /// `getSupportForIndexArray()`.
-    fn support_for_index_array(&self) -> bool;
-    /// `getSupportForCastIndexArray()`.
-    fn support_for_cast_index_array(&self) -> bool;
-    /// `getSupportForUniqueIndex()`.
-    fn support_for_unique_index(&self) -> bool;
-    /// `getSupportForFulltextIndex()`.
-    fn support_for_fulltext_index(&self) -> bool;
-    /// `getSupportForFulltextWildcardIndex()`.
-    fn support_for_fulltext_wildcard_index(&self) -> bool;
-    /// `getSupportForCasting()`.
-    fn support_for_casting(&self) -> bool;
-    /// `getSupportForQueryContains()`.
-    fn support_for_query_contains(&self) -> bool;
-    /// `getSupportForTimeouts()`.
-    fn support_for_timeouts(&self) -> bool;
-    /// `getSupportForRelationships()`.
-    fn support_for_relationships(&self) -> bool;
-    /// `getSupportForUpdateLock()`.
-    fn support_for_update_lock(&self) -> bool;
-    /// `getSupportForBatchOperations()`.
-    fn support_for_batch_operations(&self) -> bool;
-    /// `getSupportForAttributeResizing()`.
-    fn support_for_attribute_resizing(&self) -> bool;
-    /// `getSupportForGetConnectionId()`.
-    fn support_for_get_connection_id(&self) -> bool;
-    /// `getSupportForUpserts()`.
-    fn support_for_upserts(&self) -> bool;
-    /// `getSupportForUpsertOnUniqueIndex()`.
-    fn support_for_upsert_on_unique_index(&self) -> bool;
-    /// `getSupportForVectors()`.
-    fn support_for_vectors(&self) -> bool;
-    /// `getSupportForCacheSkipOnFailure()`.
-    fn support_for_cache_skip_on_failure(&self) -> bool;
-    /// `getSupportForCaching()`.
-    fn support_for_caching(&self) -> bool;
-    /// `getSupportForReconnection()`.
-    fn support_for_reconnection(&self) -> bool;
-    /// `getSupportForHostname()`.
-    fn support_for_hostname(&self) -> bool;
-    /// `getSupportForBatchCreateAttributes()`.
-    fn support_for_batch_create_attributes(&self) -> bool;
-    /// `getSupportForSpatialAttributes()`.
-    fn support_for_spatial_attributes(&self) -> bool;
-    /// `getSupportForObject()`.
-    fn support_for_object(&self) -> bool;
-    /// `getSupportForObjectIndexes()`.
-    fn support_for_object_indexes(&self) -> bool;
-    /// `getSupportForSpatialIndexNull()`.
-    fn support_for_spatial_index_null(&self) -> bool;
-    /// `getSupportForOperators()`.
-    fn support_for_operators(&self) -> bool;
-    /// `getSupportForOptionalSpatialAttributeWithExistingRows()`.
-    fn support_for_optional_spatial_attribute_with_existing_rows(&self) -> bool;
-    /// `getSupportForSpatialIndexOrder()`.
-    fn support_for_spatial_index_order(&self) -> bool;
-    /// `getSupportForSpatialAxisOrder()`.
-    fn support_for_spatial_axis_order(&self) -> bool;
-    /// `getSupportForBoundaryInclusiveContains()`.
-    fn support_for_boundary_inclusive_contains(&self) -> bool;
-    /// `getSupportForDistanceBetweenMultiDimensionGeometryInMeters()`.
-    fn support_for_distance_between_multi_dimension_geometry_in_meters(&self) -> bool;
-    /// `getSupportForMultipleFulltextIndexes()`.
-    fn support_for_multiple_fulltext_indexes(&self) -> bool;
-    /// `getSupportForIdenticalIndexes()`.
-    fn support_for_identical_indexes(&self) -> bool;
-    /// `getSupportForOrderRandom()`.
-    fn support_for_order_random(&self) -> bool;
-    /// `getSupportForUnsignedBigInt()`.
-    fn support_for_unsigned_big_int(&self) -> bool {
+    /// Whether the last read was served by a read replica (PHP's
+    /// `ReadWritePool::servedByReplica()`; `false` elsewhere).
+    fn served_by_replica(&self) -> bool {
         false
     }
-    /// `getSupportForInternalCasting()`.
-    fn support_for_internal_casting(&self) -> bool;
-    /// `getSupportForUTCCasting()`.
-    fn support_for_utc_casting(&self) -> bool;
-    /// `getSupportForIntegerBooleans()`.
-    fn support_for_integer_booleans(&self) -> bool;
-    /// `getSupportForAlterLocks()`.
-    fn support_for_alter_locks(&self) -> bool;
-    /// `getSupportNonUtfCharacters()`.
-    fn support_non_utf_characters(&self) -> bool;
-    /// `getSupportForTrigramIndex()`.
-    fn support_for_trigram_index(&self) -> bool;
-    /// `getSupportForPCRERegex()`.
-    fn support_for_pcre_regex(&self) -> bool;
-    /// `getSupportForPOSIXRegex()`.
-    fn support_for_posix_regex(&self) -> bool;
-    /// `getSupportForRegex()`.
-    fn support_for_regex(&self) -> bool {
-        self.support_for_pcre_regex() || self.support_for_posix_regex()
+
+    /// Runs a transaction on another adapter: [`with_transaction`] hands
+    /// it the transaction's `body`, which runs the attempts on the adapter
+    /// it is given. By default the transaction runs on this adapter, and
+    /// `body` is given back.
+    ///
+    /// PHP: `Pool::withTransaction()` (a pool pins one connection for the
+    /// calling coroutine and runs the transaction there, so every statement
+    /// of the callback shares its session).
+    fn transaction_scope<'a>(
+        &'a self,
+        body: TransactionBody<'a>,
+    ) -> std::result::Result<BoxFuture<'a, Result<()>>, TransactionBody<'a>> {
+        Err(body)
     }
-    /// `getSupportForTTLIndexes()`.
-    fn support_for_ttl_indexes(&self) -> bool {
+}
+
+/// How [`with_transaction`] runs a callback, as [`Adapter::transaction_strategy`]
+/// answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransactionStrategy {
+    /// PHP's `Adapter::withTransaction()`: a transaction, or a savepoint in
+    /// one; a lost transaction is reported; only the outermost call retries.
+    Savepoints,
+    /// The callback alone, outside any transaction (an engine without
+    /// transactions, or a call nested in an open transaction on an engine
+    /// without savepoints).
+    Direct,
+    /// One transaction per attempt and no savepoints (PHP's
+    /// `Mongo::withTransaction()`): a failed attempt is rolled back (a
+    /// rollback failure ignored) and abandoned
+    /// ([`Adapter::abandon_transaction`]); a retryable failure whose chain
+    /// holds `conflict_code` runs again up to `conflict_retries` times after
+    /// a random wait of one to four `conflict_wait`s times the attempt (at
+    /// most five), any other retryable one twice, 50 ms and 100 ms apart.
+    Sessions {
+        /// The code of a write conflict.
+        conflict_code: i64,
+        /// How many times a write conflict runs again.
+        conflict_retries: u32,
+        /// The shortest wait before a write conflict runs again.
+        conflict_wait: std::time::Duration,
+    },
+}
+
+/// The body of a transaction an [`Adapter::transaction_scope`] runs: given
+/// the adapter the transaction runs on, it runs [`with_transaction`]'s
+/// attempts there and says whether they succeeded.
+pub type TransactionBody<'a> = Box<dyn FnOnce(Arc<dyn Adapter>) -> BoxFuture<'a, bool> + Send + 'a>;
+
+/// Runs `callback` in a transaction (`withTransaction()`): commits when it
+/// succeeds, rolls back when it fails, and runs it again after a failure
+/// [`Adapter::is_retryable`] accepts, up to twice, 50 ms and 100 ms apart.
+/// Only the outermost call retries; a call nested in another rolls back to
+/// its savepoint and returns the failure.
+///
+/// Fails ([`Kind::Transaction`]) when the transaction was lost before the
+/// callback returned or before it could commit.
+///
+/// An adapter with an [`Adapter::transaction_scope`] (a pool) runs the
+/// attempts on the adapter it chooses.
+pub async fn with_transaction<A, T, F, Fut>(adapter: &A, callback: F) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut + Send,
+    Fut: Future<Output = Result<T>> + Send,
+    T: Send,
+{
+    let mut slot: Option<Result<T>> = None;
+    let mut callback = Some(callback);
+    let scope = {
+        let (slot, callback) = (&mut slot, &mut callback);
+        let body: TransactionBody<'_> = Box::new(move |inner: Arc<dyn Adapter>| {
+            Box::pin(async move {
+                let Some(callback) = callback.take() else { return false };
+                let result = attempts(&*inner, callback).await;
+                let succeeded = result.is_ok();
+                *slot = Some(result);
+                succeeded
+            })
+        });
+        match adapter.transaction_scope(body) {
+            Ok(scope) => Some(scope.await),
+            Err(_) => None,
+        }
+    };
+    match scope {
+        Some(scoped) => {
+            scoped?;
+            slot.unwrap_or_else(|| Err(Error::transaction("Failed to execute transaction")))
+        }
+        None => match callback.take() {
+            Some(callback) => attempts(adapter, callback).await,
+            None => Err(Error::transaction("Failed to execute transaction")),
+        },
+    }
+}
+
+/// The attempts of [`with_transaction`] on `adapter`.
+async fn attempts<A, T, F, Fut>(adapter: &A, mut callback: F) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    const RETRIES: u32 = 2;
+    match adapter.transaction_strategy().await? {
+        TransactionStrategy::Savepoints => {}
+        TransactionStrategy::Direct => return callback().await,
+        TransactionStrategy::Sessions { conflict_code, conflict_retries, conflict_wait } => {
+            return with_session_transaction(adapter, callback, conflict_code, conflict_retries, conflict_wait).await;
+        }
+    }
+    let (depth, enclosed) = {
+        let mut state = adapter.state().lock();
+        let depth = state.in_transaction;
+        let enclosed = state.transaction_calls > 0;
+        state.transaction_calls += 1;
+        (depth, enclosed)
+    };
+    let outermost = depth == 0 && !enclosed;
+    struct Calls<'a>(&'a State);
+    impl Drop for Calls<'_> {
+        fn drop(&mut self) {
+            self.0.lock().transaction_calls -= 1;
+        }
+    }
+    let _calls = Calls(adapter.state());
+    let in_transaction = || adapter.state().lock().in_transaction;
+
+    for attempt in 0..=RETRIES {
+        let mut started = false;
+        let result: Result<T> = async {
+            adapter.start_transaction().await?;
+            started = true;
+            let value = callback().await?;
+            if in_transaction() <= depth {
+                return Err(Error::transaction(
+                    "Failed to commit transaction: the transaction was lost before the callback returned",
+                ));
+            }
+            adapter.commit_transaction().await?;
+            Ok(value)
+        }
+        .await;
+        let action = match result {
+            Ok(value) => return Ok(value),
+            Err(e) => e,
+        };
+        let mut rollback = None;
+        let mut lost = started && in_transaction() <= depth;
+        if !lost {
+            if let Err(e) = adapter.rollback_transaction().await {
+                rollback = Some(e);
+                adapter.state().lock().in_transaction = 0;
+            }
+            lost = in_transaction() < depth;
+        }
+        if outermost {
+            adapter.abandon_transaction().await;
+        }
+        if lost {
+            if !action.is_a(Kind::Contention) {
+                return Err(Error::transaction(
+                    "Failed to execute transaction: the transaction was lost before it could commit",
+                )
+                .with_previous(action));
+            }
+            if depth > 0 {
+                return Err(action);
+            }
+        }
+        if enclosed || !adapter.is_retryable(&action) {
+            return Err(action);
+        }
+        if attempt < RETRIES {
+            tokio::time::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
+            continue;
+        }
+        return Err(rollback.unwrap_or(action));
+    }
+    Err(Error::transaction("Failed to execute transaction"))
+}
+
+/// [`TransactionStrategy::Sessions`]: PHP's `Mongo::withTransaction()` loop.
+async fn with_session_transaction<A, T, F, Fut>(
+    adapter: &A,
+    mut callback: F,
+    conflict_code: i64,
+    conflict_retries: u32,
+    conflict_wait: std::time::Duration,
+) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    const RETRIES: u32 = 2;
+    let conflict = |failure: &Error| {
+        let mut cause = Some(failure);
+        while let Some(c) = cause {
+            if c.code() == conflict_code {
+                return true;
+            }
+            cause = c.previous();
+        }
         false
+    };
+    let mut attempt: u32 = 0;
+    loop {
+        let result: Result<T> = async {
+            adapter.start_transaction().await?;
+            let value = callback().await?;
+            adapter.commit_transaction().await?;
+            Ok(value)
+        }
+        .await;
+        let action = match result {
+            Ok(value) => return Ok(value),
+            Err(e) => e,
+        };
+        let _ = adapter.rollback_transaction().await;
+        adapter.abandon_transaction().await;
+        if !adapter.is_retryable(&action) {
+            return Err(action);
+        }
+        if conflict(&action) && attempt < conflict_retries {
+            let mut bytes = [0u8; 4];
+            let _ = getrandom::fill(&mut bytes);
+            let base = conflict_wait.as_micros() as u64;
+            let micros = base + u64::from(u32::from_le_bytes(bytes)) % (3 * base + 1);
+            let wait = micros * u64::from((attempt + 1).min(5));
+            tokio::time::sleep(std::time::Duration::from_micros(wait)).await;
+            attempt += 1;
+            continue;
+        }
+        if attempt < RETRIES {
+            tokio::time::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
+            attempt += 1;
+            continue;
+        }
+        return Err(action);
     }
-    /// `getSupportForTransactionRetries()`.
-    fn support_for_transaction_retries(&self) -> bool;
-    /// `getSupportForNestedTransactions()`.
-    fn support_for_nested_transactions(&self) -> bool;
+}
+
+/// An adapter whose engine stores and returns native types, so it converts
+/// documents itself instead of having the library cast them.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Casting`.
+pub trait Casting: Send + Sync {
+    /// A document's values converted to the engine's types before it is
+    /// written (`castBefore()`).
+    fn cast_before(&self, collection: &Collection, document: Document) -> Result<Document>;
+
+    /// Documents read from the engine converted back, a page at a time
+    /// (`castAfter()`).
+    fn cast_after(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>>;
+
+    /// A datetime string as the value the engine compares stored datetimes
+    /// with (`castDatetime()`).
+    fn cast_datetime(&self, value: &str) -> Result<Value>;
+}
+
+/// An adapter that talks to a server over a connection it can check,
+/// re-establish and identify.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Connection`.
+#[async_trait]
+pub trait Connection: Send + Sync {
+    /// Whether the connection answers (`ping()`).
+    async fn ping(&self) -> Result<bool>;
+
+    /// Re-establishes the connection (`reconnect()`).
+    async fn reconnect(&self) -> Result<()>;
+
+    /// The connection's id (`id()`).
+    async fn id(&self) -> Result<String>;
+
+    /// The server's hostname (`hostname()`).
+    async fn hostname(&self) -> Result<String>;
+}
+
+/// An adapter with builders in its dialect.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\QueryBuilder`.
+pub trait QueryBuilder: Send + Sync {
+    /// A query builder scoped with the adapter's scope, whose `from()` takes
+    /// a collection id (`builder()`).
+    fn builder(&self) -> Result<crate::hook::SqlBuilder>;
+
+    /// A schema builder in the adapter's dialect (`schema()`).
+    fn schema(&self) -> Result<SqlSchema>;
+}
+
+/// A schema builder of `utopia-query` in an adapter's dialect.
+///
+/// PHP: `MySQLSchema|PostgresSchema` (SQLite's extends MySQL's).
+#[derive(Clone)]
+#[allow(missing_debug_implementations)]
+pub enum SqlSchema {
+    /// MySQL and MariaDB.
+    MySql(utopia_query::schema::MySql),
+    /// PostgreSQL.
+    PostgreSql(utopia_query::schema::PostgreSql),
+    /// SQLite.
+    Sqlite(utopia_query::schema::Sqlite),
+}
+
+/// The values of the `select` queries among `queries`, in order
+/// (`getAttributeSelections()`).
+pub fn attribute_selections(queries: &[Query]) -> Vec<utopia_query::Value> {
+    queries
+        .iter()
+        .filter(|q| q.method() == utopia_query::Method::Select)
+        .flat_map(|q| q.values().values().cloned().collect::<Vec<_>>())
+        .collect()
+}
+
+/// An adapter that runs raw statements.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\RawQuery`.
+#[async_trait]
+pub trait RawQuery: Send + Sync {
+    /// The rows a raw query reads, as documents (`rawQuery()`).
+    async fn raw_query(&self, query: &str, bindings: utopia_query::Array) -> Result<Vec<Document>>;
+
+    /// The rows a raw statement changes (`rawMutation()`).
+    async fn raw_mutation(&self, query: &str, bindings: utopia_query::Array) -> Result<i64>;
+}
+
+/// An adapter that stores relationships. Every relationship is given from
+/// the side of `collection`, with both keys resolved.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Relationships`.
+#[async_trait]
+pub trait Relationships: Send + Sync {
+    /// Creates the storage of a relationship from its parent side
+    /// (`createRelationship()`).
+    async fn create_relationship(&self, collection: &str, relationship: &Relationship) -> Result<bool>;
+
+    /// Renames the stored keys of a relationship as `update` says
+    /// (`updateRelationship()`).
+    async fn update_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+        update: &relationship::Update,
+    ) -> Result<bool>;
+
+    /// Drops the storage of a relationship (`deleteRelationship()`).
+    async fn delete_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+    ) -> Result<bool>;
+}
+
+/// An adapter that can store documents without a declared schema.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Schemaless`.
+pub trait Schemaless: Send + Sync {
+    /// Switches schemaless mode (`setSchemaless()`).
+    fn set_schemaless(&self, schemaless: bool);
+
+    /// Whether schemaless mode is on (`isSchemaless()`).
+    fn is_schemaless(&self) -> bool;
+}
+
+/// An adapter that converts spatial values between coordinate arrays and
+/// the form the engine stores.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Spatial`.
+pub trait Spatial: Send + Sync {
+    /// A point, linestring or polygon encoded for storage (`encode()`).
+    ///
+    /// Fails ([`Kind::Structure`]) for an invalid geometry, and
+    /// ([`Kind::Database`]) for a type that is not spatial.
+    fn encode(&self, value: &Value, kind: ColumnType) -> Result<String>;
+
+    /// A stored geometry decoded into coordinates (`decode()`).
+    fn decode(&self, value: &[u8], kind: ColumnType) -> Result<Value>;
+}
+
+/// An adapter that bounds how long its statements may run.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Timeouts`.
+pub trait Timeouts: Send + Sync {
+    /// Sets the timeout of `event` (`setTimeout()`).
+    fn set_timeout(&self, milliseconds: i64, event: Event) -> Result<()>;
+
+    /// Clears the timeout of `event`, or every one (`clearTimeout()`).
+    fn clear_timeout(&self, event: Event);
+
+    /// The timeout statements of `event` run under (`getTimeout()`).
+    fn timeout(&self, event: Event) -> i64;
+}
+
+/// An adapter that upserts.
+///
+/// PHP: `Utopia\Database\Adapter\Feature\Upserts`.
+#[async_trait]
+pub trait Upserts: Send + Sync {
+    /// Inserts the change's new document or updates the stored one
+    /// (`upsertDocument()`).
+    async fn upsert_document(&self, collection: &Collection, change: Change) -> Result<Document>;
+
+    /// Upserts each change; with `increase`, an update adds the new
+    /// document's value of that attribute to the stored one
+    /// (`upsertDocuments()`).
+    async fn upsert_documents(
+        &self,
+        collection: &Collection,
+        changes: Vec<Change>,
+        increase: Option<&str>,
+    ) -> Result<Vec<Document>>;
 }

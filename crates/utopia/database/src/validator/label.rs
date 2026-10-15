@@ -2,7 +2,7 @@
 //!
 //! PHP: `Utopia\Database\Validator\Label`.
 
-use crate::database::Database;
+use crate::database;
 use crate::validator::key::Key;
 use crate::value::Value;
 
@@ -25,7 +25,7 @@ pub struct Label {
 impl Default for Label {
     /// `new Label()`: at most 36 characters.
     fn default() -> Self {
-        Self::new(false, Database::MAX_UID_DEFAULT_LENGTH)
+        Self::new(false, database::MAX_UID_DEFAULT_LENGTH)
     }
 }
 

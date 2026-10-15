@@ -1,11 +1,11 @@
 //! Shared domain steps of the Teams module.
 
-use utopia_database::helpers::permission::Permission;
-use utopia_database::helpers::role::Role;
-use utopia_database::query::Method;
+use utopia_database::Permission;
+use utopia_database::Role;
 use utopia_database::validator::query::cursor::Cursor as CursorValidator;
 use utopia_database::value::{list, to_text};
 use utopia_database::{Database, Document, Query, Value};
+use utopia_query::Method;
 
 use appwrite_core::database::documents::{self, Membership, Team, User};
 use appwrite_core::platform::Context;
@@ -46,7 +46,7 @@ pub async fn resolve_cursor(db: &Database, collection: &str, queries: &mut [Quer
     if !validator.check(&queries[cursor]) {
         return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
     }
-    let id = queries[cursor].value().map(to_text).unwrap_or_default();
+    let id = queries[cursor].value().map(|v| to_text(&utopia_database::value::from_query(v))).unwrap_or_default();
     let document = db.get_document(collection, &id, Vec::new(), false).await?;
     if document.is_empty() {
         return Err(Error::with_message(
@@ -54,7 +54,7 @@ pub async fn resolve_cursor(db: &Database, collection: &str, queries: &mut [Quer
             format!("{label} '{id}' for the 'cursor' value not found."),
         ));
     }
-    queries[cursor].set_value(Value::from(document));
+    queries[cursor].set_value(utopia_database::value::to_query(&Value::from(document)));
     Ok(())
 }
 

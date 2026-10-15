@@ -9,7 +9,7 @@ repository = "https://github.com/utopia-rs/database"
 publish.workspace = true
 
 [features]
-default = ["postgres"]
+default = ["postgres", "memory"]
 # The PostgreSQL adapter.
 postgres = ["dep:postgres-protocol", "dep:fallible-iterator"]
 # The MariaDB adapter.
@@ -47,8 +47,11 @@ utopia-cache.workspace = true
 utopia-pools = { workspace = true, optional = true }
 utopia-mongo = { workspace = true, optional = true }
 utopia-validators.workspace = true
+utopia-query.workspace = true
+xxhash-rust.workspace = true
 
 [dev-dependencies]
+indexmap.workspace = true
 tokio = { workspace = true, features = ["sync", "time", "rt", "macros", "rt-multi-thread"] }
 
 [package.metadata.utopia]

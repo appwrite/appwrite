@@ -6,8 +6,9 @@ use std::time::Duration;
 
 use utopia_cache::Cache;
 use utopia_cache::redis::aio::ConnectionManager;
-use utopia_database::adapter::pool::Pooled;
-use utopia_database::adapter::postgres::{Config as PostgresConfig, Postgres};
+use utopia_database::Adapter;
+use utopia_database::adapter::pool::{Pool, Pooled};
+use utopia_database::adapter::sql::{Engine, Sql};
 
 use super::Hooks;
 use super::pwned::Pwned;
@@ -116,30 +117,31 @@ impl State {
 }
 
 /// A pool of `size` PostgreSQL connections to `dsn` (opened as they are
-/// needed), with one connection opened now: the fallback its handles read
-/// capabilities from. Waits up to 30 seconds for the server.
+/// needed), as `app/init/registers.php` builds a `database` pool: a
+/// `Postgres` adapter over `pgsql:host=..;port=..;dbname=..;connect_timeout=3`
+/// on the DSN's database. Waits up to 30 seconds for the server, then
+/// answers ahead what every connection answers alike ([`Pool::warm`]).
 async fn connect(dsn: &DatabaseDsn, size: usize) -> Result<Connections, BootError> {
-    let config = PostgresConfig {
-        host: dsn.host.clone(),
-        port: dsn.port,
-        user: dsn.user.clone(),
-        password: dsn.password.clone(),
-        dbname: dsn.database.clone(),
-    };
+    let pdo = format!("pgsql:host={};port={};dbname={};connect_timeout=3", dsn.host, dsn.port, dsn.database);
+    let (user, password, database) = (dsn.user.clone(), dsn.password.clone(), dsn.database.clone());
     let pool = utopia_pools::Pool::new(
         utopia_pools::Channel::new(),
         &format!("database_{}", dsn.name),
         size.max(1),
         move || {
-            let config = config.clone();
-            async move { Ok::<_, utopia_database::Error>(Pooled::new(Postgres::with_config(config).await?)) }
+            let (pdo, user, password, database) = (pdo.clone(), user.clone(), password.clone(), database.clone());
+            async move {
+                let adapter = Sql::connect(Engine::Postgres, &pdo, Some(&user), Some(&password)).await?;
+                adapter.set_database(&database);
+                Ok::<_, utopia_database::Error>(Pooled::new(adapter))
+            }
         },
         10.0,
     )?;
     let mut attempt = 0;
-    let connection = loop {
-        match pool.pop().await {
-            Ok(connection) => break connection,
+    loop {
+        match Pool::new(pool.clone()).warm().await {
+            Ok(()) => break,
             Err(e) if attempt < 30 => {
                 tracing::warn!(error = %e, database = dsn.name, "waiting for the database");
                 attempt += 1;
@@ -147,8 +149,6 @@ async fn connect(dsn: &DatabaseDsn, size: usize) -> Result<Connections, BootErro
             }
             Err(e) => return Err(e.into()),
         }
-    };
-    let fallback = connection.resource().0.clone();
-    pool.reclaim(&connection);
-    Ok(Connections { pool, fallback })
+    }
+    Ok(Connections { pool })
 }

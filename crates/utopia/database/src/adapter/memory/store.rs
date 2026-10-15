@@ -33,6 +33,14 @@ pub fn key_value(key: KeyRef<'_>) -> Value {
     }
 }
 
+/// A key as the string `(string) $key` gives.
+pub fn key_text(key: KeyRef<'_>) -> String {
+    match key {
+        KeyRef::Int(i) => i.to_string(),
+        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
+}
+
 /// `$a[k1][k2]...` (`None` when a step is missing or not an array).
 pub fn get<'a>(a: &'a Array, path: &[ArrayKey]) -> Option<&'a Value> {
     let (last, init) = path.split_last()?;

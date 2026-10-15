@@ -1,385 +1,443 @@
-//! Indexes: create, rename, delete.
+//! Indexes.
 //!
-//! Area: schema.
+//! PHP: `Trait\Indexes`.
 
-use futures_util::FutureExt;
+use utopia_query::schema::ColumnType;
 
 use super::Database;
-use super::metadata::{Rollback, documents_at, set_documents};
-use crate::document::Document;
+use super::attributes::write_indexes;
+use super::retry::Rollback;
+use crate::adapter;
+use crate::attribute::Attribute;
+use crate::capability::Capability;
+use crate::collection::Collection;
 use crate::error::{Error, Kind, Result};
-use crate::validator::index::Index as IndexValidator;
-use crate::value::{Array, ArrayKey, Str, Value, to_text};
-
-/// The `$id` of an index entry, as `$index['$id']` reads it.
-fn entry_id(index: &Document) -> Value {
-    index.get("$id").cloned().unwrap_or(Value::Null)
-}
-
-/// `in_array($needle, $haystack)`: loose comparison.
-fn in_array(needle: &Value, haystack: &[Value]) -> bool {
-    haystack.iter().any(|v| v.loose_eq(needle))
-}
-
-/// The base attribute of an index attribute: `a` of the nested path `a.b.c`.
-fn base_attribute(attribute: &str) -> &str {
-    attribute.split_once('.').map_or(attribute, |(base, _)| base)
-}
-
-/// The strings of an index's `attributes`.
-fn strings_at(index: &Document, key: &str) -> Vec<String> {
-    match index.get(key) {
-        Some(Value::Array(a)) => a.values().map(to_text).collect(),
-        _ => Vec::new(),
-    }
-}
+use crate::event::{Domain, Event};
+use crate::index::Index;
+use crate::schema;
+use crate::storage;
 
 impl Database {
-    /// The type of each index attribute, by the attribute (`a.b` nested
-    /// paths by their base attribute `a`), for the adapter's index
-    /// definition.
+    /// Adds an index to a collection (`createIndex()`): returns it as
+    /// stored (fitted to its attributes).
     ///
-    /// PHP: the `$indexAttributesWithTypes` / `$indexAttributeTypes` of
-    /// `createIndex()` and `deleteIndex()`.
-    fn index_attribute_types(attributes: &[String], collection_attributes: &[Document]) -> Vec<(String, String)> {
-        let mut types: Vec<(String, String)> = Vec::new();
-        for attribute in attributes {
-            let base = base_attribute(attribute);
-            let found = collection_attributes
-                .iter()
-                .find(|a| matches!(a.get("key"), Some(Value::Str(k)) if k.as_bytes() == base.as_bytes()));
-            if let Some(found) = found {
-                let kind = found.get("type").map(to_text).unwrap_or_default();
-                match types.iter_mut().find(|(k, _)| k == attribute) {
-                    Some(entry) => entry.1 = kind,
-                    None => types.push((attribute.clone(), kind)),
-                }
-            }
-        }
-        types
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection,
+    /// ([`crate::Kind::Database`]) for an index on no attribute,
+    /// ([`crate::Kind::Duplicate`]) for an existing key,
+    /// ([`crate::Kind::Limit`]) past the index limit,
+    /// ([`crate::Kind::Index`]) for an invalid index,
+    /// ([`crate::Kind::Unique`]) when the stored documents violate a unique
+    /// index, and ([`crate::Kind::Refused`]) when the adapter does not
+    /// create it.
+    pub async fn create_index(&self, collection: &str, index: Index) -> Result<Index> {
+        let mut stored = self.store_indexes(collection, vec![index]).await?;
+        Ok(stored.remove(0))
     }
 
-    /// Creates index `id` of type `kind` over `attributes`, with optional
-    /// per-attribute `lengths` and `orders` (`null` entries for none) and,
-    /// for TTL indexes, `ttl` seconds; validates it against the collection
-    /// and the adapter's capabilities, then persists the metadata (dropping
-    /// the index when that fails); triggers
-    /// [`Database::EVENT_INDEX_CREATE`].
+    /// Adds indexes to a collection at once (`createIndexes()`): every one
+    /// is validated before any is created, and the metadata is written once;
+    /// when the engine fails part way, the indexes this call created are
+    /// dropped again. Returns them as stored.
     ///
-    /// PHP: `Database::createIndex($collection, $id, $type, $attributes,
-    /// $lengths = [], $orders = [], $ttl = 1)`. Validator: `Index`.
-    #[allow(clippy::too_many_arguments)]
-    pub async fn create_index(
-        &self,
-        collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: Vec<String>,
-        lengths: Vec<Value>,
-        orders: Vec<Value>,
-        ttl: i64,
-    ) -> Result<bool> {
-        if attributes.is_empty() {
-            return Err(Error::database("Missing attributes"));
-        }
-        let adapter = self.adapter().clone();
-
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        let indexes = documents_at(&collection, "indexes");
-        if indexes.iter().any(|i| i.id().eq_ignore_ascii_case(id)) {
-            return Err(Error::duplicate("Index already exists"));
-        }
-        if adapter.count_of_indexes(&collection) >= adapter.limit_for_indexes() {
-            return Err(Error::limit("Index limit reached. Cannot create new index."));
+    /// Fails as [`Database::create_index`] does.
+    pub async fn create_indexes(&self, collection: &str, indexes: Vec<Index>) -> Result<Vec<Index>> {
+        if indexes.is_empty() {
+            return Ok(Vec::new());
         }
 
-        let collection_attributes = documents_at(&collection, "attributes");
-        let mut lengths: Array = lengths.into_iter().collect();
-        let mut orders: Array = orders.into_iter().collect();
-        let max_index_length = adapter.max_index_length();
-        for (i, attribute) in attributes.iter().enumerate() {
-            let base = base_attribute(attribute);
-            let key = ArrayKey::Int(i as i64);
-            for collection_attribute in &collection_attributes {
-                if !matches!(collection_attribute.get("key"), Some(Value::Str(k)) if k.as_bytes() == base.as_bytes()) {
-                    continue;
-                }
-                let attribute_type = collection_attribute.get("type").cloned().unwrap_or(Value::Null);
-                if Self::STRING_TYPES.iter().any(|t| Value::Str(Str::from(*t)).loose_eq(&attribute_type)) {
-                    let length = lengths.get(&key).cloned().unwrap_or(Value::Null);
-                    let size = collection_attribute.get("size").cloned().unwrap_or(Value::Null);
-                    if length.truthy() && length.strict_eq(&size) && max_index_length > 0 {
-                        lengths.set(key.clone(), Value::Null);
-                    }
-                }
-                if collection_attribute.get("array").is_some_and(Value::truthy) {
-                    if max_index_length > 0 {
-                        lengths.set(key.clone(), Value::Int(Self::MAX_ARRAY_INDEX_LENGTH));
-                    }
-                    orders.set(key.clone(), Value::Null);
-                }
-                break;
-            }
-        }
-        let attribute_types = Self::index_attribute_types(&attributes, &collection_attributes);
+        let stored = self.store_indexes(collection, indexes).await?;
 
-        let index = Document::new(
-            [
-                (ArrayKey::from("$id"), Value::Str(Str::from(crate::helpers::id::custom(id)))),
-                (ArrayKey::from("key"), Value::Str(Str::from(id))),
-                (ArrayKey::from("type"), Value::Str(Str::from(kind))),
-                (
-                    ArrayKey::from("attributes"),
-                    Value::Array(attributes.iter().map(|a| Value::Str(Str::from(a.as_str()))).collect()),
-                ),
-                (ArrayKey::from("lengths"), Value::Array(lengths.clone())),
-                (ArrayKey::from("orders"), Value::Array(orders.clone())),
-                (ArrayKey::from("ttl"), Value::Int(ttl)),
-            ]
-            .into_iter()
-            .collect(),
-        )?;
-
-        if self.state().validate {
-            let validator = IndexValidator::new(
-                &collection_attributes,
-                indexes,
-                max_index_length,
-                adapter.internal_indexes_keys().iter().map(|k| (*k).to_owned()).collect(),
-                self.index_support(),
-            );
-            if !validator.is_valid(&Value::from(index.clone())) {
-                return Err(Error::index(validator.description()));
-            }
-        }
-
-        let mut created = false;
-        let mut exists_in_schema = false;
-        if adapter.support_for_schema_indexes() && !(adapter.shared_tables() && self.is_migrating()) {
-            let schema_indexes = self.schema_indexes(collection.id()).await?;
-            let filtered_id = adapter.filter(id)?;
-            for schema_index in &schema_indexes {
-                if !schema_index.id().eq_ignore_ascii_case(&filtered_id) {
-                    continue;
-                }
-                let columns = schema_index.get("columns").cloned().unwrap_or(Value::Array(Array::new()));
-                let schema_lengths = schema_index.get("lengths").cloned().unwrap_or(Value::Array(Array::new()));
-                let mut filtered = Array::new();
-                for attribute in &attributes {
-                    let _ = filtered.push(Value::Str(Str::from(adapter.filter(attribute)?)));
-                }
-                if columns.strict_eq(&Value::Array(filtered))
-                    && schema_lengths.strict_eq(&Value::Array(lengths.clone()))
-                {
-                    exists_in_schema = true;
-                } else {
-                    match adapter.delete_index(collection.id(), id).await {
-                        Ok(_) => {}
-                        Err(e) if e.is_a(Kind::NotFound) => {}
-                        Err(e) => return Err(e),
-                    }
-                }
-                break;
-            }
-        }
-
-        if !exists_in_schema {
-            let result = adapter
-                .create_index_arrays(
-                    collection.id(),
-                    id,
-                    kind,
-                    &attributes,
-                    &lengths,
-                    &orders,
-                    &attribute_types,
-                    &[],
-                    ttl,
-                )
-                .await;
-            match result {
-                Ok(true) => created = true,
-                Ok(false) => return Err(Error::database("Failed to create index")),
-                Err(e) if e.is_a(Kind::Unique) => return Err(e),
-                // The index exists only in the table (an orphan of a
-                // partial failure): keep it and persist the metadata.
-                Err(e) if e.is_a(Kind::Duplicate) => {}
-                Err(e) => return Err(e),
-            }
-        }
-
-        let mut all = documents_at(&collection, "indexes");
-        all.push(index.clone());
-        set_documents(&mut collection, "indexes", all);
-
-        let collection_id = collection.id().to_owned();
-        self.update_metadata(
-            &collection,
-            Some(Rollback::Throwing(self.cleanup_index(&collection_id, id, 3).boxed())),
-            created,
-            &format!("index creation '{id}'"),
-        )
+        self.trigger(Event::IndexesCreate, || Domain::IndexBatchCreated {
+            collection: collection.to_owned(),
+            indexes: stored.clone(),
+        })
         .await?;
 
-        self.trigger(Self::EVENT_INDEX_CREATE, &Value::from(index))?;
-        Ok(true)
+        Ok(stored)
     }
 
-    /// Renames an index; triggers [`Database::EVENT_INDEX_RENAME`].
+    /// Renames an index (`renameIndex()`).
     ///
-    /// PHP: `Database::renameIndex()`.
-    pub async fn rename_index(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        let mut indexes = documents_at(&collection, "indexes");
-        let ids: Vec<Value> = indexes.iter().map(entry_id).collect();
-        if !in_array(&Value::Str(Str::from(old)), &ids) {
+    /// Fails ([`crate::Kind::NotFound`]) for a missing index,
+    /// ([`crate::Kind::Duplicate`]) when `new` is taken,
+    /// ([`crate::Kind::Database`]) when the adapter fails, and
+    /// ([`crate::Kind::Refused`]) when it does not rename the index.
+    pub async fn rename_index(&self, collection: &str, old: &str, new: &str) -> Result<()> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+        let mut indexes = definition.indexes()?.to_vec();
+
+        let Some(position) = index_position(&indexes, old) else {
             return Err(Error::not_found("Index not found"));
-        }
-        if in_array(&Value::Str(Str::from(new)), &ids) {
+        };
+
+        if index_position(&indexes, new).is_some() {
             return Err(Error::duplicate("Index name already used"));
         }
 
-        // `false` when no index has exactly the id `old`.
-        let mut renamed_index = Value::Bool(false);
-        for index in &mut indexes {
-            if matches!(index.get("$id"), Some(Value::Str(i)) if i.as_bytes() == old.as_bytes()) {
-                index.set("key", Value::Str(Str::from(new)));
-                index.set("$id", Value::Str(Str::from(new)));
-                renamed_index = Value::from(index.clone());
-                break;
+        let renamed = indexes[position].with_key(new);
+        indexes[position] = renamed.clone();
+        write_indexes(&mut definition, &indexes)?;
+
+        let adapter = &self.inner.adapter;
+        let renamed_in_schema = match adapter.rename_index(&id, old, new).await {
+            Ok(r) => r,
+            Err(error) => {
+                self.complete_prior_index_rename(&id, old, new, error).await?;
+                true
             }
+        };
+
+        if !renamed_in_schema {
+            return Err(Error::refused(format!("Failed to rename index '{old}' to '{new}'")));
         }
-        set_documents(&mut collection, "indexes", indexes);
 
-        let collection_id = collection.id().to_owned();
-        let renamed = match adapter.rename_index(&collection_id, old, new).await {
-            Ok(true) => true,
-            first => {
-                let e = match first {
-                    Err(e) => e,
-                    _ => Error::database("Failed to rename index"),
-                };
-                // A prior partial failure may have renamed it already: if
-                // the reverse rename works, the index was at `new`.
-                let retried = async {
-                    adapter.rename_index(&collection_id, new, old).await?;
-                    adapter.rename_index(&collection_id, old, new).await
-                }
-                .await;
-                match retried {
-                    Ok(renamed) => renamed,
-                    Err(_) => {
-                        return Err(Error::database(format!(
-                            "Failed to rename index '{old}' to '{new}': {}",
-                            e.message()
-                        ))
-                        .with_previous(e));
-                    }
-                }
-            }
-        };
-
-        let rollback = {
-            let adapter = adapter.clone();
-            let collection_id = collection_id.clone();
-            let (new, old) = (new.to_owned(), old.to_owned());
-            async move { adapter.rename_index(&collection_id, &new, &old).await.map(|_| ()) }.boxed()
-        };
         self.update_metadata(
-            &collection,
-            Some(Rollback::Throwing(rollback)),
-            renamed,
+            &definition,
+            Rollback::Throwing(Box::pin(async { adapter.rename_index(&id, new, old).await.map(|_| ()) })),
+            true,
             &format!("index rename '{old}' to '{new}'"),
         )
         .await?;
 
-        let purge =
-            self.with_retries(|| async { self.purge_cached_collection(&collection_id).await.map(|_| ()) }, 3, 100, 2.0);
-        purge.await?;
+        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
 
-        let _ = self.trigger(Self::EVENT_INDEX_RENAME, &renamed_index);
-        Ok(true)
+        self.trigger(Event::IndexRename, || Domain::IndexRenamed {
+            collection: id.clone(),
+            old: old.to_owned(),
+            index: renamed.clone(),
+        })
+        .await?;
+
+        Ok(())
     }
 
-    /// Deletes an index; triggers [`Database::EVENT_INDEX_DELETE`].
+    /// Removes an index (`deleteIndex()`).
     ///
-    /// PHP: `Database::deleteIndex()`.
-    pub async fn delete_index(&self, collection: &str, id: &str) -> Result<bool> {
-        let adapter = self.adapter().clone();
-        let mut collection = self.silent(|| self.get_collection(collection), None).await?;
-        let mut deleted_index = None;
-        let mut kept = Vec::new();
-        for index in documents_at(&collection, "indexes") {
-            if matches!(index.get("$id"), Some(Value::Str(i)) if i.as_bytes() == id.as_bytes()) {
-                deleted_index = Some(index);
-            } else {
-                kept.push(index);
-            }
-        }
-        let Some(deleted_index) = deleted_index else {
+    /// Fails ([`crate::Kind::NotFound`]) for a missing index, and
+    /// ([`crate::Kind::Refused`]) when the adapter does not drop it.
+    pub async fn delete_index(&self, collection: &str, key: &str) -> Result<()> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+        let mut indexes = definition.indexes()?.to_vec();
+
+        let Some(position) = index_position(&indexes, key) else {
             return Err(Error::not_found("Index not found"));
         };
 
-        let collection_id = collection.id().to_owned();
-        let mut should_rollback = false;
-        let deleted = match adapter.delete_index(&collection_id, id).await {
-            Ok(true) => {
-                should_rollback = true;
-                true
-            }
-            Ok(false) => return Err(Error::database("Failed to delete index")),
-            // Already absent from the table: deleted.
-            Err(e) if e.is_a(Kind::NotFound) => true,
-            Err(e) => return Err(e),
-        };
+        let deleted = indexes[position].clone();
 
-        set_documents(&mut collection, "indexes", kept);
+        let deleted_in_schema = self.delete_index_from_schema(&id, key).await?;
 
-        let attributes = strings_at(&deleted_index, "attributes");
-        let attribute_types = Self::index_attribute_types(&attributes, &documents_at(&collection, "attributes"));
-        let rollback = {
-            let adapter = adapter.clone();
-            let collection_id = collection_id.clone();
-            let id = id.to_owned();
-            let kind = deleted_index.get("type").map(to_text).unwrap_or_default();
-            let list = |key: &str| match deleted_index.get(key) {
-                Some(Value::Array(a)) => a.clone(),
-                _ => Array::new(),
-            };
-            let (lengths, orders) = (list("lengths"), list("orders"));
-            let ttl = deleted_index.get("ttl").map_or(1, |t| match t {
-                Value::Int(i) => *i,
-                // An `int` parameter takes a float or numeric string by value.
-                other => other.to_double() as i64,
-            });
-            async move {
-                adapter
-                    .create_index_arrays(
-                        &collection_id,
-                        &id,
-                        &kind,
-                        &attributes,
-                        &lengths,
-                        &orders,
-                        &attribute_types,
-                        &[],
-                        ttl,
-                    )
-                    .await
-                    .map(|_| ())
-            }
-            .boxed()
-        };
+        indexes.remove(position);
+        write_indexes(&mut definition, &indexes)?;
+
+        let attribute_types = index_attribute_types(&deleted, definition.attributes()?);
+        let adapter = &self.inner.adapter;
+
         self.update_metadata(
-            &collection,
-            Some(Rollback::Silent(rollback)),
-            should_rollback,
-            &format!("index deletion '{id}'"),
+            &definition,
+            Rollback::Silent(Box::pin(async {
+                adapter.create_index(&id, &deleted, &attribute_types, &[]).await.map(|_| ())
+            })),
+            deleted_in_schema,
+            &format!("index deletion '{key}'"),
         )
         .await?;
 
-        let _ = self.trigger(Self::EVENT_INDEX_DELETE, &Value::from(deleted_index));
-        Ok(deleted)
+        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+
+        self.trigger(Event::IndexDelete, || Domain::IndexDeleted { collection: id.clone(), index: deleted.clone() })
+            .await?;
+
+        Ok(())
     }
+
+    /// Validates, creates and stores indexes (`storeIndexes()`).
+    async fn store_indexes(&self, collection: &str, indexes: Vec<Index>) -> Result<Vec<Index>> {
+        let mut definition = self.silent(self.get_collection(collection)).await?;
+        let id = definition.id().to_owned();
+        let attributes = definition.attributes()?.to_vec();
+        let existing = definition.indexes()?.to_vec();
+
+        let prepared = self.prepare_indexes(&definition, &attributes, &existing, &indexes)?;
+
+        let mut created: Vec<String> = Vec::new();
+        for index in &prepared {
+            match self.create_index_in_schema(&id, index, &attributes).await {
+                Ok(true) => created.push(index.key.clone()),
+                Ok(false) => {}
+                Err(error) => {
+                    if let Err(cleanup) = self.cleanup_indexes(&id, &created, 3).await {
+                        super::console_error(format!(
+                            "Failed to roll back indexes created before the failure: {}",
+                            cleanup.message()
+                        ));
+                    }
+                    return Err(error);
+                }
+            }
+        }
+
+        let all: Vec<Index> = existing.iter().chain(prepared.iter()).cloned().collect();
+        write_indexes(&mut definition, &all)?;
+
+        let keys = prepared.iter().map(|i| i.key.as_str()).collect::<Vec<_>>().join("', '");
+
+        self.update_metadata(
+            &definition,
+            Rollback::Throwing(Box::pin(self.cleanup_indexes(&id, &created, 3))),
+            !created.is_empty(),
+            &format!("index creation '{keys}'"),
+        )
+        .await?;
+
+        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+
+        let listeners = self.listens(Event::IndexCreate);
+        if !listeners.is_empty() {
+            for index in &prepared {
+                self.dispatch(&Domain::IndexCreated { collection: id.clone(), index: index.clone() }, &listeners)
+                    .await?;
+            }
+        }
+
+        Ok(prepared)
+    }
+
+    /// Fits each index to its attributes and validates it against the
+    /// stored indexes and the ones before it (`prepareIndexes()`).
+    fn prepare_indexes(
+        &self,
+        definition: &Collection,
+        attributes: &[Attribute],
+        existing: &[Index],
+        indexes: &[Index],
+    ) -> Result<Vec<Index>> {
+        let mut keys: Vec<String> = existing.iter().map(|i| i.key.to_ascii_lowercase()).collect();
+
+        for index in indexes {
+            if index.attributes.is_empty() {
+                return Err(Error::database("Missing attributes"));
+            }
+            let key = index.key.to_ascii_lowercase();
+            if keys.contains(&key) {
+                return Err(Error::duplicate("Index already exists"));
+            }
+            keys.push(key);
+        }
+
+        let adapter = &self.inner.adapter;
+        if adapter.count_of_indexes(definition)? + indexes.len() as i64 > adapter.limits().indexes {
+            return Err(Error::limit("Index limit reached. Cannot create new index."));
+        }
+
+        let mut prepared: Vec<Index> = Vec::with_capacity(indexes.len());
+        for index in indexes {
+            let index = self.fit_index_to_attributes(index, attributes)?;
+
+            if self.is_validating() {
+                let beside: Vec<Index> = existing.iter().chain(prepared.iter()).cloned().collect();
+                let validator = self.index_validator(attributes.to_vec(), beside);
+                if !validator.check(&index)? {
+                    return Err(Error::index(validator.description()));
+                }
+            }
+
+            prepared.push(index);
+        }
+
+        Ok(prepared)
+    }
+
+    /// Creates an index in the schema (`createIndexInSchema()`): whether
+    /// this call created it, `false` when the schema already held it.
+    ///
+    /// Fails ([`crate::Kind::Unique`]) when the stored documents violate a
+    /// unique index, and ([`crate::Kind::Refused`]) when the adapter does
+    /// not create it.
+    async fn create_index_in_schema(&self, collection: &str, index: &Index, attributes: &[Attribute]) -> Result<bool> {
+        if self.reconcile_schema_only_index(collection, index).await? {
+            return Ok(false);
+        }
+
+        match self.inner.adapter.create_index(collection, index, &index_attribute_types(index, attributes), &[]).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to create index")),
+            Err(error) if error.is_a(Kind::Unique) => Err(error),
+            // The metadata holds no index under this key, so the schema's
+            // copy is an orphan of a partial failure: it is kept and the
+            // metadata written for it.
+            Err(error) if error.is_a(Kind::Duplicate) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Drops an index from the schema (`deleteIndexFromSchema()`): whether
+    /// this call dropped it, `false` when the schema no longer held it.
+    ///
+    /// Fails ([`crate::Kind::Refused`]) when the adapter does not drop it.
+    async fn delete_index_from_schema(&self, collection: &str, key: &str) -> Result<bool> {
+        match self.inner.adapter.delete_index(collection, key).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to delete index")),
+            // Already absent from the schema; the metadata is still removed.
+            Err(error) if error.is_a(Kind::NotFound) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
+
+    /// A failed rename may follow a prior partial failure whose rename
+    /// reached the schema while its metadata update and rollback failed:
+    /// renaming back and forth again proves the schema holds the index
+    /// under the new name and completes the rename
+    /// (`completePriorIndexRename()`).
+    ///
+    /// Fails with `error` when the round trip fails after a
+    /// [`crate::Kind::Duplicate`] or [`crate::Kind::NotFound`], and
+    /// ([`crate::Kind::Database`]) wrapping it otherwise.
+    async fn complete_prior_index_rename(&self, collection: &str, old: &str, new: &str, error: Error) -> Result<()> {
+        let adapter = &self.inner.adapter;
+        let completed = matches!(adapter.rename_index(collection, new, old).await, Ok(true))
+            && matches!(adapter.rename_index(collection, old, new).await, Ok(true));
+
+        if completed {
+            return Ok(());
+        }
+
+        if error.is_a(Kind::Duplicate) || error.is_a(Kind::NotFound) {
+            return Err(error);
+        }
+
+        Err(Error::database(format!("Failed to rename index '{old}' to '{new}': {}", error.message()))
+            .with_previous(error))
+    }
+
+    /// An index in the schema but not in this collection's metadata is
+    /// reused when its definition matches the request, and dropped to be
+    /// recreated otherwise; under shared tables it serves another tenant's
+    /// collection, so a mismatch is refused instead
+    /// (`reconcileSchemaOnlyIndex()`). Whether the index is reused.
+    ///
+    /// Fails ([`crate::Kind::Duplicate`]) for a shared index of another
+    /// definition.
+    async fn reconcile_schema_only_index(&self, collection: &str, index: &Index) -> Result<bool> {
+        let adapter = &self.inner.adapter;
+        if !adapter.supports(Capability::SchemaIntrospection) || (self.shared_tables() && self.is_migrating()) {
+            return Ok(false);
+        }
+
+        let id = adapter::filter(&index.key).to_ascii_lowercase();
+        if adapter
+            .limits()
+            .internal_index_keys
+            .iter()
+            .any(|internal| adapter::filter(internal).to_ascii_lowercase() == id)
+        {
+            return Ok(false);
+        }
+
+        for schema_index in self.schema_indexes(collection).await? {
+            if schema_index.name.to_ascii_lowercase() != id {
+                continue;
+            }
+
+            if self.schema_index_matches(&schema_index, index) {
+                return Ok(true);
+            }
+
+            if self.shared_tables() {
+                return Err(Error::duplicate("Index exists in the shared table with another definition"));
+            }
+
+            match adapter.delete_index(collection, &index.key).await {
+                Ok(_) => {}
+                // Already absent from the schema.
+                Err(error) if error.is_a(Kind::NotFound) => {}
+                Err(error) => return Err(error),
+            }
+
+            return Ok(false);
+        }
+
+        Ok(false)
+    }
+
+    /// Whether the schema's index is the requested one
+    /// (`schemaIndexMatches()`): the same columns (past the tenant under
+    /// shared tables), lengths and type.
+    pub(crate) fn schema_index_matches(&self, schema_index: &schema::Index, index: &Index) -> bool {
+        let mut columns: Vec<String> = schema_index.columns.iter().map(|c| c.to_ascii_lowercase()).collect();
+        let mut lengths = schema_index.lengths.clone();
+
+        if self.shared_tables() && columns.first().map(String::as_str) == Some(storage::TENANT) {
+            columns.remove(0);
+            if !lengths.is_empty() {
+                lengths.remove(0);
+            }
+        }
+
+        if columns.len() != index.attributes.len() {
+            return false;
+        }
+
+        let adapter = &self.inner.adapter;
+        for (position, attribute) in index.attributes.iter().enumerate() {
+            if columns[position].is_empty() {
+                continue;
+            }
+            if columns[position] != adapter::filter(storage::column(attribute)).to_ascii_lowercase() {
+                return false;
+            }
+            if let Some(length) = lengths.get(position).copied().flatten()
+                && length != index.lengths.get(position).copied().flatten().unwrap_or(0)
+            {
+                return false;
+            }
+        }
+
+        schema_index.kind == adapter.schema_index_type(index.kind)
+    }
+
+    /// Drops indexes created in the adapter whose metadata could not be
+    /// stored (`cleanupIndexes()`): every one, then the first failure.
+    pub(crate) async fn cleanup_indexes(&self, collection: &str, keys: &[String], attempts: u32) -> Result<()> {
+        let mut failure = None;
+        for key in keys {
+            let result = self
+                .cleanup(
+                    || async { self.inner.adapter.delete_index(collection, key).await.map(|_| ()) },
+                    "index",
+                    key,
+                    attempts,
+                )
+                .await;
+            if let Err(error) = result {
+                failure.get_or_insert(error);
+            }
+        }
+        failure.map_or(Ok(()), Err)
+    }
+}
+
+/// The position of the index stored under `key` (`indexPosition()`).
+pub(crate) fn index_position(indexes: &[Index], key: &str) -> Option<usize> {
+    indexes.iter().position(|i| i.key == key)
+}
+
+/// Index attributes by the type of the attribute they index; a dotted path
+/// into an object attribute takes the object attribute's type
+/// (`indexAttributeTypes()`).
+pub(crate) fn index_attribute_types(index: &Index, attributes: &[Attribute]) -> Vec<(String, ColumnType)> {
+    let mut types: Vec<(String, ColumnType)> = Vec::new();
+    for indexed in &index.attributes {
+        let base = indexed.split('.').next().unwrap_or("");
+        if let Some(attribute) = attributes.iter().find(|a| a.key == base) {
+            match types.iter_mut().find(|(k, _)| k == indexed) {
+                Some(entry) => entry.1 = attribute.kind,
+                None => types.push((indexed.clone(), attribute.kind)),
+            }
+        }
+    }
+    types
 }

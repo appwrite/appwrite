@@ -102,6 +102,15 @@
           "filters": []
         },
         {
+          "$id": "ordinal",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
           "$id": "teamId",
           "type": "string",
           "size": 255,
@@ -655,6 +664,15 @@
           "filters": []
         },
         {
+          "$id": "ordinal",
+          "type": "string",
+          "size": 255,
+          "required": false,
+          "signed": true,
+          "array": false,
+          "filters": []
+        },
+        {
           "$id": "teamId",
           "type": "string",
           "size": 255,
@@ -1074,6 +1092,14 @@
           "indexType": "bloom_filter"
         },
         {
+          "$id": "index-ordinal",
+          "type": "key",
+          "attributes": [
+            "ordinal"
+          ],
+          "indexType": "set(0)"
+        },
+        {
           "$id": "index-teamId",
           "type": "key",
           "attributes": [
@@ -1355,6 +1381,14 @@
           "indexType": "bloom_filter"
         },
         {
+          "$id": "index-ordinal",
+          "type": "key",
+          "attributes": [
+            "ordinal"
+          ],
+          "indexType": "set(0)"
+        },
+        {
           "$id": "index-teamId",
           "type": "key",
           "attributes": [
@@ -1519,6 +1553,7 @@
           "resourceType",
           "resourceId",
           "resourceInternalId",
+          "ordinal",
           "teamId",
           "teamInternalId",
           "country",
@@ -3078,6 +3113,7 @@
               "resourceType",
               "resourceId",
               "resourceInternalId",
+              "ordinal",
               "teamId",
               "teamInternalId",
               "country",
@@ -4326,6 +4362,7 @@
             "resourceType": null,
             "resourceId": null,
             "resourceInternalId": null,
+            "ordinal": null,
             "teamId": null,
             "teamInternalId": null,
             "country": "us",

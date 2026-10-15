@@ -1,0 +1,16 @@
+{
+  "lib": "async",
+  "description": "utopia-php/async 0.2: Promises/A+ promises over Sync, Swoole coroutine, Amp and React adapters (Promise::async, run, map, all, race, any, allSettled, delay), parallel execution of closures in worker threads or processes (Parallel over Swoole threads and processes, ext-parallel, Amp and React, with pools and configuration), timers (Timer over Swoole, Amp, React and a sync fallback), and the closure serializer (opis/closure) that ships callables to workers.",
+  "php": {
+    "src": [
+      "vendor/utopia-php/async/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/async/tests"
+    ]
+  },
+  "rust": null,
+  "not_converted": {
+    "reason": "PHP's concurrency runtime: promises over Swoole coroutines or event loops, worker threads and processes fed serialized closures, and timers. Rust has these natively: futures and tokio (async/await, futures::future::join_all and try_join_all, tokio::spawn and JoinSet, tokio::task::spawn_blocking, tokio::time), so a port would be a second, PHP-shaped async runtime. utopia-database, its only PHP user (Promise::map in the relationship hook's concurrent chunk reads, Promise::async in Mirror replication), uses futures and tokio for the same behaviour"
+  }
+}

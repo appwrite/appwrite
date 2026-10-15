@@ -1328,8 +1328,7 @@
             "getUpdatedAt": "2030-01-01T00:00:00.000+00:00"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedIndexWithLegacyMetadataIsSkipped (key index stored with the legacy type)",
@@ -2660,8 +2659,7 @@
             "getUpdatedAt": "2030-01-01T00:00:00.000+00:00"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedIndexWithLegacyMetadataIsSkipped (key index stored with lower-case orders)",
@@ -3995,8 +3993,7 @@
             "getUpdatedAt": "2030-01-01T00:00:00.000+00:00"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedIndexWithLegacyMetadataIsSkipped (key index stored with null prefixes)",

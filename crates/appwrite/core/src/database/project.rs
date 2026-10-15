@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use chrono::NaiveDateTime;
 use serde_json::{Map, Value};
-use utopia_database::{Database, Document};
+use utopia_database::{Database, Document, PermissionType};
 use utopia_validators::php;
 
 use super::documents::Attributes;
@@ -55,17 +55,15 @@ impl From<&Document> for Key {
 pub async fn owned_keys(platform: &Database, resource_type: &str, internal_id: &str) -> Result<Vec<Key>> {
     let authorization = platform.authorization();
     let documents = authorization
-        .skip(|| {
-            platform.find(
-                "keys",
-                vec![
-                    utopia_database::Query::equal("resourceType", [resource_type]),
-                    utopia_database::Query::equal("resourceInternalId", [internal_id]),
-                    utopia_database::Query::limit(super::filters::LIMIT_SUBQUERY),
-                ],
-                Database::PERMISSION_READ,
-            )
-        })
+        .skip(platform.find(
+            "keys",
+            vec![
+                utopia_database::Query::equal("resourceType", [resource_type]),
+                utopia_database::Query::equal("resourceInternalId", [internal_id]),
+                utopia_database::Query::limit(super::filters::LIMIT_SUBQUERY),
+            ],
+            PermissionType::Read,
+        ))
         .await?;
     Ok(documents.iter().map(Key::from).collect())
 }
@@ -300,11 +298,11 @@ impl Project {
     /// Roles granted `read` on the project document (`getRead()`).
     pub fn read_roles(&self) -> Vec<String> {
         let mut document = Document::default();
-        document.set(
+        let _ = document.set(
             "$permissions",
             utopia_database::value::list(self.permissions.iter().map(|p| utopia_database::Value::from(p.as_str()))),
         );
-        document.read()
+        document.permissions_by_type(PermissionType::Read).unwrap_or_default()
     }
 
     /// The project in queue messages (PHP's `ProjectContext::toArray()`):
@@ -350,16 +348,16 @@ impl From<&Document> for Project {
             region: d.string("region").unwrap_or_else(|| "default".to_owned()),
             team_id: d.string("teamId"),
             team_internal_id: d.string_or_empty("teamInternalId"),
-            permissions: d.permissions(),
+            permissions: d.permissions().unwrap_or_default(),
             created_at: d.datetime("$createdAt"),
             accessed_at: d.datetime("accessedAt"),
             services: json_or_empty("services"),
             apis: json_or_empty("apis"),
             auths: json_or_empty("auths"),
             onboarding: json_or_empty("onboarding"),
-            keys: d.documents("keys").into_iter().map(Key::from).collect(),
+            keys: d.nested("keys").into_iter().map(Key::from).collect(),
             platforms: d
-                .documents("platforms")
+                .nested("platforms")
                 .into_iter()
                 .map(|p| Platform {
                     kind: p.string_or_empty("type"),
@@ -369,7 +367,7 @@ impl From<&Document> for Project {
                 })
                 .collect(),
             webhooks: d
-                .documents("webhooks")
+                .nested("webhooks")
                 .into_iter()
                 .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
                 .collect(),
@@ -409,7 +407,7 @@ fn console_passkeys(url: &str, origins: &str) -> (bool, String, Vec<String>) {
 /// `$authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId))`.
 pub async fn load(platform: &Database, id: &str) -> Result<Option<Project>> {
     let authorization = platform.authorization();
-    let document = authorization.skip(|| platform.get_document("projects", id, Vec::new(), false)).await?;
+    let document = authorization.skip(platform.get_document("projects", id, Vec::new(), false)).await?;
     Ok(if document.is_empty() { None } else { Some(Project::from(&document)) })
 }
 
@@ -453,7 +451,7 @@ impl ProjectStore {
         if id.is_empty() || id == Project::CONSOLE {
             return Ok(Some(self.console.clone()));
         }
-        let (_, document_key) = platform.cache_base_keys("projects", Some(id));
+        let (_, document_key) = platform.cache_base_keys("projects", Some(id)).await?;
         // The generation is read before the document: a purge in between
         // changes it, so the copy kept below is never taken for current.
         let generation = match platform.cache().generation(&document_key).await {
@@ -508,20 +506,20 @@ mod tests {
     #[test]
     fn reads_a_project_document() {
         let mut key = Document::default();
-        key.set("$id", "key".into());
-        key.set("$sequence", "7".into());
-        key.set("secret", "standard_00".into());
-        key.set("scopes", utopia_database::value::list(["users.read".into()]));
+        key.put("$id", "key".into());
+        key.put("$sequence", "7".into());
+        key.put("secret", "standard_00".into());
+        key.put("scopes", utopia_database::value::list(["users.read".into()]));
         let mut platform = Document::default();
-        platform.set("type", "flutter-ios".into());
-        platform.set("hostname", "example.com".into());
+        platform.put("type", "flutter-ios".into());
+        platform.put("hostname", "example.com".into());
         let mut project = Document::default();
-        project.set("$id", "p1".into());
-        project.set("$sequence", "42".into());
-        project.set("$createdAt", "2025-03-04T10:11:12.345+00:00".into());
-        project.set("$permissions", utopia_database::value::list([r#"read("team:t")"#.into()]));
-        project.set("keys", utopia_database::value::list([key.into()]));
-        project.set("platforms", utopia_database::value::list([platform.into()]));
+        project.put("$id", "p1".into());
+        project.put("$sequence", "42".into());
+        project.put("$createdAt", "2025-03-04T10:11:12.345+00:00".into());
+        project.set("$permissions", utopia_database::value::list([r#"read("team:t")"#.into()])).unwrap();
+        project.put("keys", utopia_database::value::list([key.into()]));
+        project.put("platforms", utopia_database::value::list([platform.into()]));
         let p = Project::from(&project);
         assert_eq!(p.sequence, "42");
         assert_eq!(p.keys[0].sequence, 7);

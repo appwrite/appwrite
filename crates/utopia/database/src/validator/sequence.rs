@@ -5,9 +5,10 @@
 use php_std::value::Number;
 use utopia_validators::{Range, Type};
 
-use crate::database::Database;
+use crate::database;
 use crate::validator::accepts;
 use crate::value::Value;
+use utopia_query::schema::ColumnType;
 
 /// A sequence value: for the primary sequence (`$sequence`), a positive
 /// integer (integer id type) or a UUIDv7 string (`uuid7` id type); for
@@ -56,10 +57,10 @@ impl Sequence {
         if !self.primary {
             return true;
         }
-        match self.id_attribute_type.as_str() {
-            Database::VAR_UUID7 => matches!(value, Value::Str(s) if is_uuid7(s.as_bytes())),
-            Database::VAR_INTEGER => {
-                accepts(&Range::with_format(Number::Int(1), Number::Int(Database::MAX_BIG_INT), Type::Integer), value)
+        match ColumnType::try_from_value(&self.id_attribute_type) {
+            Some(ColumnType::Uuid7) => matches!(value, Value::Str(s) if is_uuid7(s.as_bytes())),
+            Some(ColumnType::Integer) => {
+                accepts(&Range::with_format(Number::Int(1), Number::Int(database::MAX_BIG_INT), Type::Integer), value)
             }
             _ => false,
         }

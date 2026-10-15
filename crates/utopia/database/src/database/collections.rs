@@ -1,641 +1,516 @@
-//! Databases (schemas) and collections.
+//! Collections.
 //!
-//! Area: schema.
+//! PHP: `Trait\Collections`.
 
-use super::Database;
-use super::metadata::documents_at;
-use crate::document::Document;
+use utopia_query::schema::{ColumnType, IndexType};
+
+use super::{Database, MAX_ARRAY_INDEX_LENGTH, METADATA};
+use crate::attribute::Attribute;
+use crate::capability::Capability;
+use crate::collection::{self, Collection, Update};
+use crate::document::{self, Document};
 use crate::error::{Error, Kind, Result};
-use crate::helpers::permission::Permission;
-use crate::helpers::role::Role;
+use crate::event::{Domain, Event};
+use crate::index::Index;
+use crate::permission::{Permission, PermissionType};
 use crate::query::Query;
-use crate::validator::index::{Index as IndexValidator, IndexSupport};
+use crate::role::Role;
+use crate::validator::index_definition::IndexDefinition;
 use crate::validator::permissions::Permissions;
-use crate::value::{Array, ArrayKey, Ext, Str, Value, to_text};
+use crate::value::{Array, KeyRef, Str, Value};
+
+/// The keys of a collection definition `createCollection()` sets itself
+/// rather than carrying over as metadata (`COLLECTION_RESERVED_KEYS`).
+const COLLECTION_RESERVED_KEYS: [&str; 11] = [
+    document::ID,
+    document::SEQUENCE,
+    document::COLLECTION,
+    document::TENANT,
+    document::CREATED_AT,
+    document::UPDATED_AT,
+    document::PERMISSIONS,
+    collection::NAME,
+    collection::ATTRIBUTES,
+    collection::INDEXES,
+    collection::DOCUMENT_SECURITY,
+];
+
+/// A list of strings as a PHP list value.
+pub(crate) fn string_list<S: AsRef<str>>(items: &[S]) -> Value {
+    Value::Array(Array::from_list(items.iter().map(|s| Value::Str(Str::from(s.as_ref()))).collect()))
+}
 
 impl Database {
-    /// Creates the database (schema) `database` (the current one by
-    /// default) and its `_metadata` collection; triggers
-    /// [`Database::EVENT_DATABASE_CREATE`].
+    /// Creates a collection: its storage, then its definition in the
+    /// metadata collection (`createCollection()`).
     ///
-    /// PHP: `Database::create()`.
-    pub async fn create(&self, database: Option<&str>) -> Result<bool> {
-        let database = match database {
-            Some(d) => d.to_owned(),
-            None => self.inner.adapter.database(),
-        };
-        self.inner.adapter.create(&database).await?;
-        let attributes = match Self::metadata_collection().get("attributes") {
-            Some(Value::Array(a)) => a
-                .values()
-                .map(|v| match v {
-                    Value::Ext(Ext::Document(d)) => (**d).clone(),
-                    Value::Array(a) => Document::from_array_unchecked(a.clone()),
-                    _ => Document::empty(),
-                })
-                .collect(),
-            _ => Vec::new(),
-        };
-        self.silent(|| self.create_collection(Self::METADATA, attributes, Vec::new(), None, true), None).await?;
-        let _ = self.trigger(Self::EVENT_DATABASE_CREATE, &Value::Str(Str::from(database)));
-        Ok(true)
-    }
-
-    /// Whether the database (the current one by default) exists, or, with
-    /// `collection`, whether that collection does.
-    ///
-    /// PHP: `Database::exists()`.
-    pub async fn exists(&self, database: Option<&str>, collection: Option<&str>) -> Result<bool> {
-        let database = match database {
-            Some(d) => d.to_owned(),
-            None => self.inner.adapter.database(),
-        };
-        self.inner.adapter.exists(&database, collection).await
-    }
-
-    /// The databases; triggers [`Database::EVENT_DATABASE_LIST`].
-    ///
-    /// PHP: `Database::list()`.
-    pub async fn list(&self) -> Result<Vec<Document>> {
-        let databases = self.inner.adapter.list().await?;
-        let payload = Value::Array(databases.iter().cloned().map(Value::from).collect());
-        let _ = self.trigger(Self::EVENT_DATABASE_LIST, &payload);
-        Ok(databases)
-    }
-
-    /// Drops the database (the current one by default) and flushes the
-    /// cache; triggers [`Database::EVENT_DATABASE_DELETE`].
-    ///
-    /// PHP: `Database::delete()`.
-    pub async fn delete(&self, database: Option<&str>) -> Result<bool> {
-        let database = match database {
-            Some(d) => d.to_owned(),
-            None => self.inner.adapter.database(),
-        };
-        let deleted = self.inner.adapter.delete(&database).await?;
-        let payload: Array = [
-            (ArrayKey::from("name"), Value::Str(Str::from(database))),
-            (ArrayKey::from("deleted"), Value::Bool(deleted)),
-        ]
-        .into_iter()
-        .collect();
-        let _ = self.trigger(Self::EVENT_DATABASE_DELETE, &Value::Array(payload));
-        self.cache().flush().await.map_err(|e| Error::new(Kind::Exception, e.to_string()))?;
-        Ok(deleted)
-    }
-
-    /// Creates collection `id` with its attributes and indexes (validated
-    /// against the adapter's limits), permissions (`None`: any user can
-    /// create) and document security; triggers
-    /// [`Database::EVENT_COLLECTION_CREATE`].
-    ///
-    /// PHP: `Database::createCollection()`. Validators: `Index`,
-    /// `IndexDependency`, `Permissions` (`Permissions::new(..).is_valid(..)`).
-    pub async fn create_collection(
-        &self,
-        id: &str,
-        attributes: Vec<Document>,
-        indexes: Vec<Document>,
-        permissions: Option<Vec<String>>,
-        document_security: bool,
-    ) -> Result<Document> {
-        let adapter = &self.inner.adapter;
-        let mut attributes = attributes;
-        for attribute in &mut attributes {
-            let kind = attribute.get("type").cloned().unwrap_or(Value::Null);
-            if Self::ATTRIBUTE_FILTER_TYPES.iter().any(|t| Value::Str(Str::from(*t)).loose_eq(&kind)) {
-                let existing = match attribute.get("filters") {
-                    Some(Value::Array(a)) => a.values().cloned().collect::<Vec<_>>(),
-                    Some(other) => vec![other.clone()],
-                    None => Vec::new(),
-                };
-                let mut filters: Vec<Value> = Vec::new();
-                for filter in existing.into_iter().chain([kind]) {
-                    if !filters.iter().any(|f| to_text(f) == to_text(&filter)) {
-                        filters.push(filter);
-                    }
-                }
-                attribute.set("filters", Value::Array(filters.into_iter().collect()));
-            }
+    /// Fails ([`crate::Kind::Duplicate`]) for an existing collection,
+    /// ([`crate::Kind::Limit`]) beyond the adapter's limits,
+    /// ([`crate::Kind::Structure`]) for a key the metadata collection does
+    /// not store, ([`crate::Kind::Refused`]) when the adapter does not
+    /// create the table, and as the definition validators do.
+    pub async fn create_collection(&self, collection: Collection) -> Result<Collection> {
+        let unknown: Vec<String> = collection
+            .document()
+            .keys()
+            .filter_map(|k| match k {
+                KeyRef::Str(s) if COLLECTION_RESERVED_KEYS.iter().any(|r| r.as_bytes() == s) => None,
+                KeyRef::Str(s) => Some(String::from_utf8_lossy(s).into_owned()),
+                KeyRef::Int(i) => Some(i.to_string()),
+            })
+            .collect();
+        if !unknown.is_empty() {
+            return Err(Error::structure(format!("Unknown collection keys: {}", unknown.join(", "))));
         }
 
-        let permissions = permissions.unwrap_or_else(|| vec![Permission::create(&Role::any())]);
-        let validate = self.state().validate;
-        if validate {
+        let id = collection.id().to_owned();
+        let attributes =
+            collection.attributes()?.iter().map(Database::normalise).collect::<Result<Vec<Attribute>>>()?;
+        let permissions = collection.declared_permissions()?.unwrap_or_else(|| vec![Permission::create(&Role::any())]);
+
+        let type_validator = self.type_validator();
+        for attribute in &attributes {
+            type_validator.check_type(attribute, None, None)?;
+        }
+
+        if self.is_validating() {
             let validator = Permissions::default();
-            let list = Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect());
-            if !validator.is_valid(&list) {
+            if !validator.is_valid(&string_list(&permissions)) {
                 return Err(Error::database(validator.description()));
             }
         }
 
-        let existing = self.silent(|| self.get_collection(id), None).await?;
-        if !existing.is_empty() && id != Self::METADATA {
+        if id != METADATA && self.silent(self.find_collection(&id)).await?.is_some() {
             return Err(Error::duplicate(format!("Collection {id} already exists")));
         }
 
-        if validate && adapter.support_for_ttl_indexes() {
-            let ttl = indexes
-                .iter()
-                .filter(|i| matches!(i.get("type"), Some(Value::Str(t)) if t.as_bytes() == Self::INDEX_TTL.as_bytes()))
-                .count();
-            if ttl > 1 {
-                return Err(Error::index("There can be only one TTL index in a collection"));
-            }
+        let indexes = collection.indexes()?.to_vec();
+
+        if self.is_validating()
+            && self.inner.adapter.supports(Capability::IndexTtl)
+            && indexes.iter().filter(|i| i.kind == IndexType::Ttl).count() > 1
+        {
+            return Err(Error::index("There can be only one TTL index in a collection"));
         }
 
-        let max_index_length = adapter.max_index_length();
-        let mut indexes = indexes;
-        for index in &mut indexes {
-            let mut lengths = match index.get("lengths") {
-                Some(Value::Array(a)) => a.clone(),
-                _ => Array::new(),
-            };
-            let mut orders = match index.get("orders") {
-                Some(Value::Array(a)) => a.clone(),
-                _ => Array::new(),
-            };
-            let index_attributes = match index.get("attributes") {
-                Some(Value::Array(a)) => a.iter().map(|(k, v)| (k.to_owned(), v.clone())).collect::<Vec<_>>(),
-                _ => Vec::new(),
-            };
-            for (i, attr) in index_attributes {
-                for collection_attribute in &attributes {
-                    if !collection_attribute.get("$id").is_some_and(|v| v.strict_eq(&attr)) {
-                        continue;
-                    }
-                    let kind = collection_attribute.get("type").cloned().unwrap_or(Value::Null);
-                    if Self::STRING_TYPES.iter().any(|t| Value::Str(Str::from(*t)).loose_eq(&kind)) {
-                        let length = lengths.get(&i).cloned().unwrap_or(Value::Null);
-                        let size = collection_attribute.get("size").cloned().unwrap_or(Value::Null);
-                        if length.truthy() && length.strict_eq(&size) && max_index_length > 0 {
-                            lengths.set(i.clone(), Value::Null);
-                        }
-                    }
-                    if collection_attribute.get("array").is_some_and(Value::truthy) {
-                        if max_index_length > 0 {
-                            lengths.set(i.clone(), Value::Int(Self::MAX_ARRAY_INDEX_LENGTH));
-                        }
-                        orders.set(i.clone(), Value::Null);
-                    }
-                    break;
-                }
-            }
-            index.set("lengths", Value::Array(lengths));
-            index.set("orders", Value::Array(orders));
-        }
+        let indexes = indexes
+            .iter()
+            .map(|index| self.fit_index_to_attributes(index, &attributes))
+            .collect::<Result<Vec<Index>>>()?;
 
-        let collection = Document::new(
-            [
-                (ArrayKey::from("$id"), Value::Str(Str::from(crate::helpers::id::custom(id)))),
-                (
-                    ArrayKey::from("$permissions"),
-                    Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect()),
-                ),
-                (ArrayKey::from("name"), Value::Str(Str::from(id))),
-                (ArrayKey::from("attributes"), Value::Array(attributes.iter().cloned().map(Value::from).collect())),
-                (ArrayKey::from("indexes"), Value::Array(indexes.iter().cloned().map(Value::from).collect())),
-                (ArrayKey::from("documentSecurity"), Value::Bool(document_security)),
-            ]
-            .into_iter()
-            .collect(),
+        let definition = Collection::create(
+            id.clone(),
+            collection.name(),
+            attributes.clone(),
+            indexes.clone(),
+            Some(permissions),
+            collection.document_security(),
+            Array::new(),
         )?;
 
-        if validate {
-            let validator = IndexValidator::new(
-                &attributes,
-                Vec::new(),
-                max_index_length,
-                adapter.internal_indexes_keys().iter().map(|k| (*k).to_owned()).collect(),
-                self.index_support(),
-            );
+        if self.is_validating() {
+            let validator = IndexDefinition::new(attributes.clone(), Vec::new(), self.profile());
             for index in &indexes {
-                if !validator.is_valid(&Value::from(index.clone())) {
+                if !validator.check(index)? {
                     return Err(Error::index(validator.description()));
                 }
             }
         }
 
-        if !indexes.is_empty() && adapter.count_of_indexes(&collection) > adapter.limit_for_indexes() {
-            return Err(Error::limit(format!(
-                "Index limit of {} exceeded. Cannot create collection.",
-                adapter.limit_for_indexes()
-            )));
+        let adapter = &self.inner.adapter;
+        let limits = adapter.limits();
+        if !indexes.is_empty() && adapter.count_of_indexes(&definition)? > limits.indexes {
+            return Err(Error::limit(format!("Index limit of {} exceeded. Cannot create collection.", limits.indexes)));
         }
+
         if !attributes.is_empty() {
-            if adapter.limit_for_attributes() > 0
-                && adapter.count_of_attributes(&collection) > adapter.limit_for_attributes()
-            {
+            if limits.attributes > 0 && adapter.count_of_attributes(&definition)? > limits.attributes {
                 return Err(Error::limit(format!(
                     "Attribute limit of {} exceeded. Cannot create collection.",
-                    adapter.limit_for_attributes()
+                    limits.attributes
                 )));
             }
-            if adapter.document_size_limit() > 0
-                && adapter.attribute_width(&collection)? > adapter.document_size_limit()
-            {
+            if limits.document_size > 0 && adapter.attribute_width(&definition)? > limits.document_size {
                 return Err(Error::limit(format!(
                     "Document size limit of {} exceeded. Cannot create collection.",
-                    adapter.document_size_limit()
+                    limits.document_size
                 )));
             }
         }
 
-        let mut created_physical_table = false;
-        match adapter.create_collection(id, &attributes, &indexes).await {
-            Ok(_) => created_physical_table = true,
-            Err(e) if e.is_a(Kind::Duplicate) => {
-                let reused = id == Self::METADATA
-                    || (adapter.shared_tables() && adapter.exists(&adapter.database(), Some(id)).await?);
-                if !reused {
-                    let _ = self.purge_cached_document(Self::METADATA, Some(id)).await;
-                    return Err(Error::duplicate(format!("Collection {id} already exists")).with_previous(e));
+        let created = self.create_collection_in_schema(&id, &attributes, &indexes).await?;
+
+        if id == METADATA {
+            return Ok(super::collection_definition());
+        }
+
+        let stored = match self.silent(self.create_document(METADATA, definition.into())).await {
+            Ok(stored) => stored,
+            Err(error) if error.is_a(Kind::Duplicate) => {
+                // A concurrent creator committed the metadata for this id
+                // first, so the physical table is the one its metadata
+                // describes: rolling back would drop a live collection.
+                self.purge_stale_collection_cache(&id).await;
+                return Err(Error::duplicate(format!("Collection {id} already exists")).with_previous(error));
+            }
+            Err(error) => {
+                if self.may_have_committed(&error) {
+                    return Err(error);
                 }
-            }
-            Err(e) => return Err(e),
-        }
-
-        if id == Self::METADATA {
-            return Ok(Self::metadata_collection());
-        }
-
-        let created = match self.silent(|| self.create_document(Self::METADATA, collection), None).await {
-            Ok(created) => created,
-            Err(e) if e.is_a(Kind::Duplicate) => {
-                let _ = self.purge_cached_document(Self::METADATA, Some(id)).await;
-                return Err(Error::duplicate(format!("Collection {id} already exists")).with_previous(e));
-            }
-            Err(e) => {
-                if created_physical_table {
-                    let _ = self.cleanup_collection(id, 3).await;
+                if created
+                    && !adapter.shared_tables()
+                    && let Err(cleanup) = self.cleanup_collection(&id, 3).await
+                {
+                    super::console_error(format!("Failed to rollback collection '{id}': {}", cleanup.message()));
                 }
                 return Err(Error::database(format!(
                     "Failed to create collection metadata for '{id}': {}",
-                    e.message()
+                    error.message()
                 ))
-                .with_previous(e));
+                .with_previous(error));
             }
         };
 
-        let _ = self.trigger(Self::EVENT_COLLECTION_CREATE, &Value::from(created.clone()));
-        Ok(created)
+        let stored = self.to_collection(stored)?;
+
+        self.trigger(Event::CollectionCreate, || Domain::CollectionCreated {
+            collection: stored.id().to_owned(),
+            definition: stored.clone(),
+        })
+        .await?;
+
+        Ok(stored)
     }
 
-    /// Updates a collection's permissions and document security; triggers
-    /// [`Database::EVENT_COLLECTION_UPDATE`].
+    /// Changes a collection's permissions or document security
+    /// (`updateCollection()`).
     ///
-    /// PHP: `Database::updateCollection()`.
-    pub async fn update_collection(
-        &self,
-        id: &str,
-        permissions: Vec<String>,
-        document_security: bool,
-    ) -> Result<Document> {
-        if self.state().validate {
+    /// Fails ([`crate::Kind::Database`]) for invalid permissions,
+    /// ([`crate::Kind::NotFound`]) for a missing collection (or one of
+    /// another tenant under shared tables), and as
+    /// [`Database::update_document`] does.
+    pub async fn update_collection(&self, collection: &str, update: Update) -> Result<Collection> {
+        if let Some(permissions) = &update.permissions
+            && self.is_validating()
+        {
             let validator = Permissions::default();
-            let list = Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect());
-            if !validator.is_valid(&list) {
+            if !validator.is_valid(&string_list(permissions)) {
                 return Err(Error::database(validator.description()));
             }
         }
 
-        let mut collection = self.silent(|| self.get_collection(id), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
-        if self.inner.adapter.shared_tables() && !self.is_current_tenant(&collection) {
-            return Err(Error::not_found("Collection not found"));
+        let mut definition = self.silent(self.get_own_collection(collection)).await?;
+
+        if update.permissions.is_none() && update.document_security.is_none() {
+            return Ok(definition);
         }
 
-        collection
-            .set("$permissions", Value::Array(permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect()));
-        collection.set("documentSecurity", Value::Bool(document_security));
-        let collection_id = collection.id().to_owned();
-        let collection = self.silent(|| self.update_document(Self::METADATA, &collection_id, collection), None).await?;
+        if let Some(permissions) = &update.permissions {
+            definition.set(document::PERMISSIONS, string_list(permissions))?;
+        }
 
-        let _ = self.trigger(Self::EVENT_COLLECTION_UPDATE, &Value::from(collection.clone()));
-        Ok(collection)
+        if let Some(security) = update.document_security {
+            definition.set(collection::DOCUMENT_SECURITY, Value::Bool(security))?;
+        }
+
+        let id = definition.id().to_owned();
+        let updated = self.silent(self.update_document(METADATA, &id, definition.into())).await?;
+        let updated = self.to_collection(updated)?;
+
+        self.trigger(Event::CollectionUpdate, || Domain::CollectionUpdated {
+            collection: updated.id().to_owned(),
+            definition: updated.clone(),
+        })
+        .await?;
+
+        Ok(updated)
     }
 
-    /// The collection document `id` (empty when it does not exist, or
-    /// belongs to another tenant); triggers
-    /// [`Database::EVENT_COLLECTION_READ`].
+    /// The collection's definition (`getCollection()`).
     ///
-    /// PHP: `Database::getCollection()`.
-    pub async fn get_collection(&self, id: &str) -> Result<Document> {
-        // PHP reads it with `getDocument(METADATA, $id)`, whose first step
-        // returns the metadata collection's own definition for
-        // `getDocument(METADATA, METADATA)` without a read.
-        let collection =
-            if id == Self::METADATA { Self::metadata_collection() } else { self.read_collection(id).await? };
-        if id != Self::METADATA && self.inner.adapter.shared_tables() {
-            let tenant = collection.tenant().unwrap_or(Value::Null);
-            if !matches!(tenant, Value::Null) && !tenant.loose_eq(&self.inner.adapter.tenant()) {
-                return Ok(Document::empty());
-            }
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection
+    /// (`Collection not found`).
+    pub async fn get_collection(&self, collection: &str) -> Result<Collection> {
+        match self.find_collection(collection).await? {
+            Some(c) => Ok(c),
+            None => Err(crate::Error::not_found("Collection not found")),
         }
-        let _ = self.trigger_with(Self::EVENT_COLLECTION_READ, || Value::from(collection.clone()));
-        Ok(collection)
     }
 
-    /// The cache key of collection `id`'s document, and what its read
-    /// depends on besides that entry: the relationship flag and the filters
-    /// in effect. Those are the cache's hash key, which digests every
-    /// filter's signature; with only the registry's filters, the registry
-    /// version and the disabled names say the same for less.
-    fn collection_keys(&self, id: &str) -> (String, String) {
-        if !self.inner.instance_filters.is_empty() {
-            let (_, document_key, hash_key) = self.cache_keys(Self::METADATA, Some(id), &[]);
-            return (document_key, hash_key);
-        }
-        // The filters a collection document is decoded with: those of the
-        // metadata collection's attributes and of the internal ones.
-        // Disabling others (a user's sub-queries) changes nothing here.
-        static USED: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
-            let mut used: Vec<String> = Vec::new();
-            let mut add = |filters: Option<&Value>| {
-                if let Some(Value::Array(filters)) = filters {
-                    used.extend(filters.values().map(to_text));
-                }
-            };
-            let metadata = Database::metadata_collection();
-            for attribute in super::filters::collection_attribute_refs(&metadata) {
-                add(Some(crate::validator::index(attribute, "filters")));
-            }
-            for attribute in Database::internal_attributes_const() {
-                add(attribute.get("filters"));
-            }
-            used.sort();
-            used.dedup();
-            used
-        });
-        let (_, document_key) = self.cache_base_keys(Self::METADATA, Some(id));
-        let version = Self::filters_version();
-        let s = self.state();
-        let mut disabled: Vec<&str> =
-            s.disabled_filters.iter().flatten().map(String::as_str).filter(|f| USED.iter().any(|u| u == f)).collect();
-        disabled.sort_unstable();
-        let key = format!(
-            "{document_key}|{}|{}|{version}|{}",
-            u8::from(s.resolve_relationships),
-            u8::from(s.filter),
-            disabled.join(",")
-        );
-        (document_key, key)
-    }
-
-    /// `getDocument(METADATA, $id)`, silenced: from this handle's memo
-    /// ([`Database::set_collection_memo`]), else from the process's
-    /// [`CollectionCache`] while the cached document's generation is the one
-    /// it was read at ([`Database::set_collection_cache`]), else read.
-    async fn read_collection(&self, id: &str) -> Result<Document> {
-        let (memo, shared) = {
-            let s = self.state();
-            (s.collection_memo.is_some(), s.collection_cache.clone())
-        };
-        if !memo && shared.is_none() {
-            return self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await;
-        }
-        let (document_key, hash_key) = self.collection_keys(id);
-        if memo && let Some(kept) = self.state().collection_memo.as_ref().and_then(|m| m.get(&hash_key).cloned()) {
-            return Ok(kept);
-        }
-        // The generation is read before the document: a purge in between
-        // changes it, so the copy kept below is never taken for current. A
-        // cache without generations cannot tell, so nothing is shared.
-        let cache = self.cache();
-        let generation = match &shared {
-            Some(_) if cache.leasable() => cache.generation(&document_key).await.ok(),
-            _ => None,
-        };
-        let cached = match (&shared, &generation) {
-            (Some(shared), Some(generation)) => shared.get(&hash_key, generation),
-            _ => None,
-        };
-        let collection = match cached {
-            Some(collection) => collection,
-            None => {
-                let collection = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
-                if let (Some(shared), Some(generation)) = (&shared, generation)
-                    && !collection.is_empty()
-                {
-                    shared.put(&hash_key, generation, collection.clone());
-                }
-                collection
-            }
-        };
-        if memo
-            && !collection.is_empty()
-            && let Some(kept) = self.state().collection_memo.as_mut()
-        {
-            kept.insert(hash_key, collection.clone());
-        }
-        Ok(collection)
-    }
-
-    /// A page of collections; triggers [`Database::EVENT_COLLECTION_LIST`].
-    ///
-    /// PHP: `Database::listCollections($limit = 25, $offset = 0)`.
-    pub async fn list_collections(&self, limit: i64, offset: i64) -> Result<Vec<Document>> {
-        let result = self
-            .silent(
-                || self.find(Self::METADATA, vec![Query::limit(limit), Query::offset(offset)], Self::PERMISSION_READ),
-                None,
-            )
+    /// The collection's definition, `None` when it does not exist or
+    /// belongs to another tenant under shared tables (`findCollection()`).
+    pub async fn find_collection(&self, collection: &str) -> Result<Option<Collection>> {
+        if collection == super::METADATA {
+            let definition = super::collection_definition();
+            self.trigger(Event::CollectionRead, || Domain::CollectionRead {
+                collection: definition.id().to_owned(),
+                definition: definition.clone(),
+            })
             .await?;
-        let payload = Value::Array(result.iter().cloned().map(Value::from).collect());
-        let _ = self.trigger(Self::EVENT_COLLECTION_LIST, &payload);
-        Ok(result)
+            return Ok(Some(definition));
+        }
+        let (stored, epoch) =
+            self.silent(self.get_document_with_epoch(super::METADATA, collection, Vec::new(), false)).await?;
+        if stored.id().is_empty() {
+            return Ok(None);
+        }
+        let adapter = &self.inner.adapter;
+        if adapter.shared_tables()
+            && let Some(tenant) = stored.tenant()
+            && !tenant.strict_eq(&adapter.tenant())
+        {
+            return Ok(None);
+        }
+        let mut definition = self.to_collection(stored)?;
+        definition.set_cache_epoch(epoch);
+        self.trigger(Event::CollectionRead, || Domain::CollectionRead {
+            collection: definition.id().to_owned(),
+            definition: definition.clone(),
+        })
+        .await?;
+        Ok(Some(definition))
     }
 
-    /// The size of a collection's data, in bytes.
+    /// The collections' definitions (`listCollections()`, by default 25
+    /// from offset 0).
+    pub async fn list_collections(&self, limit: i64, offset: i64) -> Result<Vec<Collection>> {
+        let result = self
+            .silent(self.find(METADATA, vec![Query::limit(limit), Query::offset(offset)], PermissionType::Read))
+            .await?;
+
+        let collections = result.into_iter().map(|d| self.to_collection(d)).collect::<Result<Vec<_>>>()?;
+
+        self.trigger(Event::CollectionList, || Domain::CollectionListed { collections: collections.clone() }).await?;
+
+        Ok(collections)
+    }
+
+    /// The size of a collection's data (`getSizeOfCollection()`).
     ///
-    /// PHP: `Database::getSizeOfCollection()`.
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection (or one
+    /// of another tenant under shared tables).
     pub async fn size_of_collection(&self, collection: &str) -> Result<i64> {
-        let collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
-        if self.inner.adapter.shared_tables() && !self.is_current_tenant(&collection) {
-            return Err(Error::not_found("Collection not found"));
-        }
-        self.inner.adapter.size_of_collection(collection.id()).await
+        let definition = self.silent(self.get_own_collection(collection)).await?;
+        self.inner.adapter.size_of_collection(definition.id()).await
     }
 
-    /// The size of a collection on disk, in bytes.
+    /// The size of a collection on disk (`getSizeOfCollectionOnDisk()`).
     ///
-    /// PHP: `Database::getSizeOfCollectionOnDisk()`.
+    /// Fails ([`crate::Kind::Database`]) under shared tables without a
+    /// tenant, and as [`Database::size_of_collection`] does.
     pub async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
         let adapter = &self.inner.adapter;
         if adapter.shared_tables() && !adapter.tenant().truthy() {
             return Err(Error::database("Missing tenant. Tenant must be set when table sharing is enabled."));
         }
-        let collection = self.silent(|| self.get_collection(collection), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
-        if adapter.shared_tables() && !self.is_current_tenant(&collection) {
-            return Err(Error::not_found("Collection not found"));
-        }
-        adapter.size_of_collection_on_disk(collection.id()).await
+        let definition = self.silent(self.get_own_collection(collection)).await?;
+        adapter.size_of_collection_on_disk(definition.id()).await
     }
 
-    /// Refreshes a collection's statistics.
-    ///
-    /// PHP: `Database::analyzeCollection()`.
+    /// Refreshes a collection's planner statistics (`analyzeCollection()`).
     pub async fn analyze_collection(&self, collection: &str) -> Result<bool> {
         self.inner.adapter.analyze_collection(collection).await
     }
 
-    /// Deletes a collection, its relationships and its metadata; triggers
-    /// [`Database::EVENT_COLLECTION_DELETE`].
+    /// Deletes a collection, its relationships and its storage
+    /// (`deleteCollection()`). When the metadata cannot be removed, the
+    /// dropped table is created again (best effort).
     ///
-    /// PHP: `Database::deleteCollection()`.
-    pub async fn delete_collection(&self, id: &str) -> Result<bool> {
-        let adapter = &self.inner.adapter;
-        let collection = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
-        if collection.is_empty() {
-            return Err(Error::not_found("Collection not found"));
-        }
-        if adapter.shared_tables() && !self.is_current_tenant(&collection) {
-            return Err(Error::not_found("Collection not found"));
+    /// Fails ([`crate::Kind::NotFound`]) for a missing collection (or one
+    /// of another tenant under shared tables), ([`crate::Kind::Refused`])
+    /// when the adapter does not drop the table, and
+    /// ([`crate::Kind::Database`]) when the metadata cannot be removed.
+    pub async fn delete_collection(&self, collection: &str) -> Result<()> {
+        let definition = self.silent(self.get_own_collection(collection)).await?;
+
+        for attribute in definition.attributes()? {
+            if attribute.kind == ColumnType::Relationship {
+                self.delete_relationship(collection, &attribute.key).await?;
+            }
         }
 
-        let relationships: Vec<Document> = documents_at(&collection, "attributes")
-            .into_iter()
-            .filter(
-                |a| matches!(a.get("type"), Some(Value::Str(t)) if t.as_bytes() == Self::VAR_RELATIONSHIP.as_bytes()),
-            )
-            .collect();
-        for relationship in &relationships {
-            self.delete_relationship(collection.id(), relationship.id()).await?;
-        }
-
-        // Re-fetch the collection: the relationship deletions changed it.
-        let current = self.silent(|| self.get_document(Self::METADATA, id, Vec::new(), false), None).await?;
-        let (current_attributes, current_indexes) = if current.is_empty() {
-            (Vec::new(), Vec::new())
-        } else {
-            (documents_at(&current, "attributes"), documents_at(&current, "indexes"))
+        let current = self.silent(self.find_collection(collection)).await?;
+        let (current_attributes, current_indexes) = match &current {
+            Some(c) => (c.attributes()?.to_vec(), c.indexes()?.to_vec()),
+            None => (Vec::new(), Vec::new()),
         };
 
-        let mut schema_deleted = false;
-        match adapter.delete_collection(id).await {
-            Ok(_) => schema_deleted = true,
-            Err(e) if e.is_a(Kind::NotFound) => {}
-            Err(e) => return Err(e),
+        if collection == METADATA {
+            self.purge_cached_collection(collection).await?;
         }
 
-        let deleted = if id == Self::METADATA {
-            true
-        } else {
-            match self.silent(|| self.delete_document(Self::METADATA, id), None).await {
-                Ok(deleted) => deleted,
-                Err(e) => {
+        let schema_deleted = self.delete_collection_from_schema(collection).await?;
+
+        let mut deleted = true;
+        if collection != METADATA {
+            match self.silent(self.delete_document(METADATA, collection)).await {
+                Ok(d) => deleted = d,
+                Err(error) => {
                     if schema_deleted {
-                        let _ = adapter.create_collection(id, &current_attributes, &current_indexes).await;
+                        // Best-effort restore; the metadata error is what the caller needs.
+                        let _ = self
+                            .inner
+                            .adapter
+                            .create_collection(collection, &current_attributes, &current_indexes)
+                            .await;
                     }
                     return Err(Error::database(format!(
-                        "Failed to persist metadata for collection deletion '{id}': {}",
-                        e.message()
+                        "Failed to persist metadata for collection deletion '{collection}': {}",
+                        error.message()
                     ))
-                    .with_previous(e));
+                    .with_previous(error));
                 }
             }
-        };
+
+            self.purge_cached_collection(collection).await?;
+        }
 
         if deleted {
-            let _ = self.trigger(Self::EVENT_COLLECTION_DELETE, &Value::from(collection.clone()));
+            self.trigger(Event::CollectionDelete, || Domain::CollectionDeleted {
+                collection: definition.id().to_owned(),
+                definition: definition.clone(),
+            })
+            .await?;
         }
-        self.purge_cached_collection(id).await?;
-        Ok(deleted)
+        Ok(())
     }
 
-    /// Whether `collection` belongs to the adapter's tenant
-    /// (`$collection->getTenant() == $this->adapter->getTenant()`).
-    pub(crate) fn is_current_tenant(&self, collection: &Document) -> bool {
-        collection.tenant().unwrap_or(Value::Null).loose_eq(&self.inner.adapter.tenant())
-    }
-
-    /// What the adapter supports, for the `Index` validator.
+    /// The collection, refused when it belongs to another tenant under
+    /// shared tables (`getOwnCollection()`).
     ///
-    /// PHP: the `$this->adapter->getSupportFor*()` arguments every
-    /// `new IndexValidator(...)` of `Database` passes.
-    pub(crate) fn index_support(&self) -> IndexSupport {
-        let a = &self.inner.adapter;
-        IndexSupport {
-            array_indexes: a.support_for_index_array(),
-            spatial_index_null: a.support_for_spatial_index_null(),
-            spatial_index_order: a.support_for_spatial_index_order(),
-            vector_indexes: a.support_for_vectors(),
-            attributes: a.support_for_attributes(),
-            multiple_fulltext_indexes: a.support_for_multiple_fulltext_indexes(),
-            identical_indexes: a.support_for_identical_indexes(),
-            object_indexes: a.support_for_object_indexes(),
-            trigram_indexes: a.support_for_trigram_index(),
-            spatial_indexes: a.support_for_spatial_attributes(),
-            key_indexes: a.support_for_index(),
-            unique_indexes: a.support_for_unique_index(),
-            fulltext_indexes: a.support_for_fulltext_index(),
-            ttl_indexes: a.support_for_ttl_indexes(),
-            objects: a.support_for_object(),
+    /// Fails ([`crate::Kind::NotFound`]) with `Collection not found`.
+    pub(crate) async fn get_own_collection(&self, collection: &str) -> Result<Collection> {
+        let definition = self.get_collection(collection).await?;
+        let adapter = &self.inner.adapter;
+        if adapter.shared_tables() && !definition.tenant().unwrap_or(Value::Null).strict_eq(&adapter.tenant()) {
+            return Err(Error::not_found("Collection not found"));
+        }
+        Ok(definition)
+    }
+
+    /// A metadata document as a [`Collection`] (`toCollection()`).
+    pub(crate) fn to_collection(&self, definition: Document) -> Result<Collection> {
+        Collection::from_array(definition.into_array())
+    }
+
+    /// The index fitted to the attributes it indexes
+    /// (`fitIndexToAttributes()`): engines that keep index lengths do not
+    /// store one equal to a string's size, and index arrays by a fixed
+    /// prefix in no order.
+    ///
+    /// Fails ([`crate::Kind::Index`]) as [`Index::with_lengths`] and
+    /// [`Index::with_orders`] do.
+    pub(crate) fn fit_index_to_attributes(&self, index: &Index, attributes: &[Attribute]) -> Result<Index> {
+        let max_index_length = self.inner.adapter.limits().index_length;
+        let mut lengths = index.lengths.clone();
+        let mut orders = index.orders.clone();
+
+        for (position, key) in index.attributes.iter().enumerate() {
+            let Some(attribute) = attributes.iter().find(|a| a.key == *key) else {
+                continue;
+            };
+
+            let length = lengths.get(position).copied().flatten();
+            if attribute.kind == ColumnType::String
+                && length.is_some_and(|l| l != 0)
+                && length == attribute.size
+                && max_index_length > 0
+            {
+                with_position(&mut lengths, position, None);
+            }
+
+            if attribute.array {
+                if max_index_length > 0 && index.kind != IndexType::Fulltext {
+                    with_position(&mut lengths, position, Some(MAX_ARRAY_INDEX_LENGTH));
+                }
+                if orders.get(position).copied().flatten().is_some() {
+                    with_position(&mut orders, position, None);
+                }
+            }
+        }
+
+        let mut index = index.clone();
+        if lengths != index.lengths {
+            index = index.with_lengths(lengths)?;
+        }
+        if orders != index.orders {
+            index = index.with_orders(orders)?;
+        }
+        Ok(index)
+    }
+
+    /// Purges the cached definition of a collection whose creation lost a
+    /// race, warning when it cannot (`purgeStaleCollectionCache()`).
+    async fn purge_stale_collection_cache(&self, collection: &str) {
+        if let Err(e) = self.purge_cached_document(METADATA, collection).await {
+            super::warning(format!("Warning: Failed to purge stale collection cache: {}", e.message()));
         }
     }
-}
 
-/// Collection documents shared by the databases of a process
-/// ([`Database::set_collection_cache`]): each is kept with the generation
-/// of its cache entry when it was read, and used while that generation is
-/// current (a purge advances it) and it is younger than [`Self::MAX_AGE`]
-/// (a cache entry that expired restarts its generation). Reading the
-/// generation is one small cache read instead of the collection document,
-/// which is large and costly to decode.
-///
-/// Not in PHP, whose `getCollection` reads the cache every time.
-#[derive(Default)]
-pub struct CollectionCache {
-    entries: std::sync::Mutex<std::collections::HashMap<String, (String, std::time::Instant, Document)>>,
-}
-
-impl CollectionCache {
-    /// How long a collection is used without being read again, whatever its
-    /// generation.
-    pub const MAX_AGE: std::time::Duration = std::time::Duration::from_secs(30);
-    /// The most collections kept (all are dropped when it is reached).
-    pub const MAX_ENTRIES: usize = 10_000;
-
-    /// An empty cache.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    fn get(&self, key: &str, generation: &str) -> Option<Document> {
-        let entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
-        let (kept, at, collection) = entries.get(key)?;
-        (kept == generation && at.elapsed() < Self::MAX_AGE).then(|| collection.clone())
-    }
-
-    fn put(&self, key: &str, generation: String, collection: Document) {
-        let mut entries = self.entries.lock().unwrap_or_else(|e| e.into_inner());
-        if entries.len() >= Self::MAX_ENTRIES {
-            entries.clear();
+    /// Creates the collection's table (`createCollectionInSchema()`):
+    /// whether this call created it, `false` when it reuses the metadata
+    /// table or a table shared with other tenants.
+    ///
+    /// Fails ([`crate::Kind::Duplicate`]) when the table exists and is
+    /// neither, and ([`crate::Kind::Refused`]) when the adapter does not
+    /// create it.
+    async fn create_collection_in_schema(&self, id: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
+        let adapter = &self.inner.adapter;
+        match adapter.create_collection(id, attributes, indexes).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to create collection")),
+            Err(error) if error.is_a(Kind::Duplicate) => {
+                // The metadata table is never dropped; under shared tables
+                // the physical table is reused across tenants.
+                if id == METADATA
+                    || (adapter.shared_tables() && adapter.collection_exists(&adapter.database(), id).await?)
+                {
+                    return Ok(false);
+                }
+                // The table exists and this process did not create it: it
+                // may belong to a peer that has not committed its metadata
+                // yet, or be an orphan. It is left as it is.
+                self.purge_stale_collection_cache(id).await;
+                Err(Error::duplicate(format!("Collection {id} already exists")).with_previous(error))
+            }
+            Err(error) => Err(error),
         }
-        entries.insert(key.to_owned(), (generation, std::time::Instant::now(), collection));
+    }
+
+    /// Drops the collection's table (`deleteCollectionFromSchema()`):
+    /// whether this call dropped it, `false` when the schema no longer held
+    /// it.
+    ///
+    /// Fails ([`crate::Kind::Refused`]) when the adapter does not drop it.
+    async fn delete_collection_from_schema(&self, collection: &str) -> Result<bool> {
+        match self.inner.adapter.delete_collection(collection).await {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(Error::refused("Failed to delete collection")),
+            // Already absent from the schema; the metadata is still removed.
+            Err(error) if error.is_a(Kind::NotFound) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
+
+    /// Drops a collection's table, with retries (`cleanupCollection()`).
+    ///
+    /// Fails as the last attempt does.
+    pub(crate) async fn cleanup_collection(&self, collection: &str, attempts: u32) -> Result<()> {
+        self.cleanup(
+            || async { self.inner.adapter.delete_collection(collection).await.map(|_| ()) },
+            "collection",
+            collection,
+            attempts,
+        )
+        .await
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_kept_collection_is_used_at_its_generation_only() {
-        let cache = CollectionCache::new();
-        let mut collection = Document::default();
-        collection.set("$id", Value::from("users"));
-        cache.put("key", "3".to_owned(), collection);
-        assert_eq!(cache.get("key", "3").map(|c| c.id().to_owned()).as_deref(), Some("users"));
-        assert!(cache.get("key", "4").is_none(), "a purge advanced the generation");
-        assert!(cache.get("other", "3").is_none());
+/// `withPosition()`: `list` padded with `None` to hold `position`, its
+/// value there replaced.
+fn with_position<T: Copy>(list: &mut Vec<Option<T>>, position: usize, value: Option<T>) {
+    if list.len() < position + 1 {
+        list.resize(position + 1, None);
     }
+    list[position] = value;
 }

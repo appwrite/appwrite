@@ -1,711 +1,860 @@
-//! Documents of the [`Redis`] adapter: reads, writes, bulk writes, upserts,
-//! sequences, deletes and increments, journalled inside transactions.
+//! Documents of the [`Redis`] adapter: writes with their journal entries,
+//! permission sets and unique checks, and reads by id.
 
-use super::{Entry, Redis, lower, raw_error, tx_error};
-use crate::adapter::Adapter;
+use std::collections::HashSet;
+
+use redis::aio::ConnectionLike;
+
+use super::unique::Write;
+use super::{Redis, lower, payload_of, relationship_keys, reply_bytes, reply_pairs, string, utf8};
+use crate::adapter::{Adapter, filter};
 use crate::change::Change;
-use crate::database::Database;
-use crate::document::Document;
-use crate::error::{Error, Result};
-use crate::helpers::id;
-use crate::query::{Method, Query};
+use crate::collection::Collection;
+use crate::database;
+use crate::document::{self, Document};
+use crate::error::{Error, Kind, Result};
+use crate::permission::PermissionType;
+use crate::query::Query;
+use crate::validator::big_int::{BigInt, Operand};
 use crate::value::{Array, KeyRef, Value, to_text};
 
-impl Redis {
-    /// Sets every relationship attribute the document lacks to `null`, so
-    /// relationship population sees them (`surfaceRelationshipAttributesUsing()`).
-    pub(super) fn surface(keys: &[String], mut document: Document) -> Document {
-        for key in keys {
-            if !document.has(key) {
-                document.set(key.as_str(), Value::Null);
+/// `empty($value)`.
+fn empty(value: Option<&Value>) -> bool {
+    value.is_none_or(|v| !v.truthy())
+}
+
+/// PHP's `array_merge($a, $b)`: string keys of `b` replace those of `a`,
+/// integer keys are appended and renumbered.
+pub(super) fn array_merge(a: Array, b: Array) -> Array {
+    let mut out = Array::with_capacity(a.len() + b.len());
+    for (k, v) in a.into_iter().chain(b) {
+        match k.as_ref() {
+            KeyRef::Int(_) => {
+                let _ = out.push(v);
+            }
+            KeyRef::Str(_) => {
+                out.set(k, v);
             }
         }
-        document
     }
+    out
+}
 
-    /// The relationship attribute keys of a collection's meta hash
-    /// (`extractRelationshipKeys()` of `readAttributesField()`); none for the
-    /// metadata collection.
-    pub(super) async fn relationship_keys(&self, collection: &str) -> Result<Vec<String>> {
-        if collection == Database::METADATA {
-            return Ok(Vec::new());
-        }
-        let meta = self.meta_key(&self.filter(collection)?);
-        let attributes = self.read_attributes(&meta).await?;
-        Ok(relationship_keys(&attributes))
+/// The letter of a permission type in permission keys (`actionLetter()`).
+pub(super) fn action_letter(action: PermissionType) -> &'static str {
+    match action {
+        PermissionType::Read => "r",
+        PermissionType::Create => "c",
+        PermissionType::Update => "u",
+        PermissionType::Delete => "d",
+        PermissionType::Write => "w",
     }
+}
 
-    /// `getDocument()`: the stored document (the null-tenant metadata row
-    /// under shared tables), hidden from other tenants, with its missing
-    /// relationship attributes set to `null` and `select` queries applied.
-    pub(super) async fn read_document(&self, collection: &Document, id: &str, queries: &[Query]) -> Result<Document> {
-        let col = self.filter(collection.id())?;
-        let mut payload: Option<Vec<u8>> =
-            self.run(redis::cmd("GET").arg(self.doc_key(&col, id, None))).await.map_err(raw_error)?;
-        if payload.as_ref().is_none_or(|p| p.is_empty()) && self.shared_tables() && col == Database::METADATA {
-            payload = self
-                .run(redis::cmd("GET").arg(self.doc_key(&col, id, Some(&Value::from("_")))))
-                .await
-                .map_err(raw_error)?;
+impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
+    // ----- Reads -----
+
+    /// `getDocument()`: the stored document the tenant may see (the
+    /// tenantless definition for the metadata collection), missing
+    /// relationship attributes as `null`, projected on the selections.
+    pub(super) async fn read_document(&self, collection: &Collection, id: &str, queries: &[Query]) -> Result<Document> {
+        let col = filter(collection.id());
+        let mut payload = self.get_payload(&self.doc_key(&col, id, None)).await?;
+        if payload.is_none() && self.shared_tables() && col == database::METADATA {
+            payload = self.get_payload(&self.doc_key(&col, id, Some(&string("_")))).await?;
         }
-        let Some(payload) = payload.filter(|p| !p.is_empty()) else {
-            return Ok(Document::default());
+        let Some(payload) = payload else {
+            return Ok(Document::empty());
         };
         let mut document = Self::decode(&payload)?;
         if self.shared_tables() {
-            let row_tenant = document.raw("$tenant").cloned().unwrap_or(Value::Null);
-            let allow_null = col == Database::METADATA && matches!(row_tenant, Value::Null);
-            if !allow_null && !row_tenant.strict_eq(&self.tenant()) {
-                return Ok(Document::default());
+            let row = document.get(document::TENANT).cloned().unwrap_or(Value::Null);
+            let tenant = self.tenant();
+            let allow_null = col == database::METADATA && matches!(row, Value::Null);
+            if !allow_null && !row.strict_eq(&tenant) {
+                return Ok(Document::empty());
             }
         }
-        if col != Database::METADATA {
-            let keys = self.relationship_keys(&col).await?;
-            document = Self::surface(&keys, document);
+        if col != database::METADATA {
+            document = self.surface(&col, document).await?;
         }
-        let selections: Vec<String> = queries
-            .iter()
-            .filter(|q| *q.method() == Method::Select)
-            .flat_map(|q| q.values().iter().map(to_text).collect::<Vec<_>>())
-            .collect();
+        let selections = super::query::selections(queries);
         if !selections.is_empty() && !selections.iter().any(|s| s == "*") {
-            let mut projected = Array::new();
-            for (field, value) in document.iter() {
-                let keep = match field {
-                    KeyRef::Str(s) => {
-                        s.starts_with(b"$") || s.starts_with(b"_") || selections.iter().any(|x| x.as_bytes() == s)
-                    }
-                    // `in_array($field, $selections, true)`: an integer key never matches.
-                    KeyRef::Int(_) => false,
-                };
-                if keep {
-                    projected.set(field.to_owned(), value.clone());
-                }
-            }
-            document = Document::new(projected)?;
+            document = super::query::project(document, &selections)?;
         }
         Ok(document)
     }
 
-    /// `createDocument()`: refuses (or, skipping duplicates, ignores) an
-    /// existing id or a unique index violation; gives a `$sequence`; stores
-    /// the document, its id and its permissions.
-    pub(super) async fn insert_document(&self, collection: &Document, mut document: Document) -> Result<Document> {
-        let col = self.filter(collection.id())?;
+    /// `surfaceRelationshipAttributes()`: the collection's relationship
+    /// attributes the document lacks, set to `null`.
+    pub(super) async fn surface(&self, collection: &str, document: Document) -> Result<Document> {
+        if collection == database::METADATA {
+            return Ok(document);
+        }
+        let keys = relationship_keys(&self.read_attributes(&self.meta_key(&filter(collection))).await?);
+        Ok(surface_using(&keys, document))
+    }
+
+    // ----- Creates -----
+
+    /// `insertDocument()`: the stored document, or (under
+    /// `ignoreDuplicates()`) `Err` of the document skipped, carrying the
+    /// stored `$sequence` when its id is taken.
+    pub(super) async fn insert_document(
+        &self,
+        collection: &Collection,
+        mut document: Document,
+    ) -> Result<std::result::Result<Document, Document>> {
+        let col = filter(collection.id());
         let mut id = document.id().to_owned();
         if id.is_empty() {
-            id = id::unique()?;
-            document.set("$id", Value::from(id.as_str()));
+            id = crate::id::unique()?;
+            document.set(document::ID, string(id.as_str()))?;
         }
         let tenant = document.tenant();
         let doc_key = self.doc_key(&col, &id, tenant.as_ref());
         let idx_key = self.idx_key(&col, tenant.as_ref());
         let seq_key = self.seq_key(&col, tenant.as_ref());
-        let perm_doc_key = self.perm_doc_key(&col, &id);
-
-        let exists: i64 = self.run(redis::cmd("EXISTS").arg(&doc_key)).await.map_err(tx_error)?;
-        if exists > 0 {
-            if self.skip_duplicates() {
-                let existing: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(&doc_key)).await.map_err(tx_error)?;
-                if let Some(existing) = existing.filter(|p| !p.is_empty()) {
-                    let existing = Self::decode(&existing)?;
-                    let sequence = existing.sequence().cloned().unwrap_or(Value::from(""));
-                    document.set("$sequence", sequence);
-                }
-                return Ok(document);
-            }
-            return Err(Error::duplicate("Document already exists"));
-        }
-        if let Err(e) = self.enforce_unique_indexes(&col, &document, None).await {
-            if e.is_a(crate::error::Kind::Duplicate) && self.skip_duplicates() {
-                return Ok(document);
-            }
-            return Err(e);
-        }
-        let sequence = self.next_sequence(&seq_key, document.sequence()).await?;
-        document.set("$sequence", Value::from(sequence.as_str()));
-
-        let payload = Self::encode(&document)?;
-        let _: () = self.run(redis::cmd("SET").arg(&doc_key).arg(payload)).await.map_err(tx_error)?;
-        let _: i64 = self.run(redis::cmd("SADD").arg(&idx_key).arg(lower(&id))).await.map_err(tx_error)?;
-        self.write_permissions(&col, &id, &document).await?;
-        self.record(Entry::CreateDoc { collection: col, id, doc_key, idx_key, perm_doc_key });
-        Ok(document)
-    }
-
-    /// The `$sequence` of a new document: the counter's next value, or the
-    /// one given (which raises the counter when higher).
-    async fn next_sequence(&self, seq_key: &str, given: Option<&Value>) -> Result<String> {
-        match given.filter(|s| s.truthy()) {
-            None => {
-                let next: i64 = self.run(redis::cmd("INCR").arg(seq_key)).await.map_err(tx_error)?;
-                Ok(next.to_string())
-            }
-            Some(sequence) => {
-                let sequence = to_text(sequence);
-                let current: Option<String> = self.run(redis::cmd("GET").arg(seq_key)).await.map_err(tx_error)?;
-                let higher = match &current {
-                    None => true,
-                    Some(c) => {
-                        crate::adapter::redis::query::int_of(&Value::from(sequence.as_str()))
-                            > crate::adapter::redis::query::int_of(&Value::from(c.as_str()))
+        let perm_doc_key = self.perm_doc_key(&col, &id, tenant.as_ref());
+        let ignoring = self.state.ignoring_duplicates().get();
+        self.tx(async move {
+            if self.exists_key(&doc_key).await? {
+                if ignoring {
+                    if let Some(existing) = self.get_payload(&doc_key).await? {
+                        let existing = Self::decode(&existing)?;
+                        let sequence = existing.sequence().cloned().unwrap_or_else(|| string(""));
+                        document.set(document::SEQUENCE, sequence)?;
                     }
-                };
-                if higher {
-                    let _: () = self.run(redis::cmd("SET").arg(seq_key).arg(&sequence)).await.map_err(tx_error)?;
+                    return Ok(Err(document));
                 }
-                Ok(sequence)
+                return Err(Error::duplicate("Document already exists"));
             }
-        }
+            if let Err(e) = self.enforce_unique(&col, &document, None).await {
+                if e.is_a(Kind::Duplicate) && ignoring {
+                    return Ok(Err(document));
+                }
+                return Err(e);
+            }
+            let sequence = self.next_sequence(&seq_key, document.sequence()).await?;
+            document.set(document::SEQUENCE, string(sequence))?;
+            let _: redis::Value = self.run(redis::cmd("SET").arg(&doc_key).arg(Self::encode(&document)?)).await?;
+            let _: i64 = self.run(redis::cmd("SADD").arg(&idx_key).arg(lower(&id))).await?;
+            self.write_permissions(&col, &id, &document).await?;
+            self.journal(
+                "createDoc",
+                vec![
+                    ("collection", col.clone().into_bytes()),
+                    ("id", id.clone().into_bytes()),
+                    ("docKey", doc_key.clone().into_bytes()),
+                    ("idxKey", idx_key.clone().into_bytes()),
+                    ("permDocKey", perm_doc_key.clone().into_bytes()),
+                ],
+            );
+            Ok(Ok(document))
+        })
+        .await
     }
 
-    /// `updateDocument()`: merges the update (operators applied) over the
-    /// stored document, refuses a taken new id or a unique index violation,
-    /// moves the document when its id changes, and rewrites its permissions
-    /// unless skipped. Under shared tables a metadata row only the null
-    /// tenant holds is updated in place.
+    /// The `$sequence` of a new document: the next of the counter when it
+    /// has none, else its own, which raises the counter when above it.
+    async fn next_sequence(&self, seq_key: &str, sequence: Option<&Value>) -> Result<String> {
+        if empty(sequence) {
+            let next: i64 = self.run(redis::cmd("INCR").arg(seq_key)).await?;
+            return Ok(next.to_string());
+        }
+        let sequence = sequence.map(to_text).unwrap_or_default();
+        let current: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(seq_key)).await?;
+        let raise = match &current {
+            None => true,
+            Some(current) => php_std::format::str_to_int(sequence.as_bytes()) > php_std::format::str_to_int(current),
+        };
+        if raise {
+            let _: redis::Value = self.run(redis::cmd("SET").arg(seq_key).arg(&sequence)).await?;
+        }
+        Ok(sequence)
+    }
+
+    // ----- Updates -----
+
+    /// `updateDocument()`: the stored document merged with the update (its
+    /// operators applied), under the update's `$id`; permissions rewritten
+    /// unless skipped. Returns the merged document.
     pub(super) async fn replace_document(
         &self,
-        collection: &Document,
+        collection: &Collection,
         id: &str,
         document: Document,
         skip_permissions: bool,
     ) -> Result<Document> {
-        let col = self.filter(collection.id())?;
+        let col = filter(collection.id());
         let mut old_key = self.doc_key(&col, id, None);
         let idx_key = self.idx_key(&col, None);
         let mut null_tenant = false;
-        if col == Database::METADATA
+        if col == database::METADATA
             && self.shared_tables()
             && !matches!(self.tenant(), Value::Null)
             && !self.exists_key(&old_key).await?
         {
-            old_key = self.doc_key(&col, id, Some(&Value::from("_")));
+            old_key = self.doc_key(&col, id, Some(&string("_")));
             null_tenant = true;
         }
-        let existing_payload: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(&old_key)).await.map_err(tx_error)?;
-        let Some(existing_payload) = existing_payload.filter(|p| !p.is_empty()) else {
-            return Err(Error::not_found("Document not found"));
-        };
-        let mut existing = Self::decode(&existing_payload)?;
-        if col != Database::METADATA {
-            let keys = self.relationship_keys(&col).await?;
-            existing = Self::surface(&keys, existing);
-        }
-        let new_id = if document.id().is_empty() { id.to_owned() } else { document.id().to_owned() };
-        let new_key = if null_tenant {
-            self.doc_key(&col, &new_id, Some(&Value::from("_")))
-        } else {
-            self.doc_key(&col, &new_id, None)
-        };
-        let idx_key = if null_tenant { self.idx_key(&col, Some(&Value::from("_"))) } else { idx_key };
-        if new_id != id {
-            let taken: i64 = self.run(redis::cmd("EXISTS").arg(&new_key)).await.map_err(tx_error)?;
-            if taken > 0 {
+        self.tx(async {
+            let Some(existing_payload) = self.get_payload(&old_key).await? else {
+                return Err(Error::not_found("Document not found"));
+            };
+            let mut existing = Self::decode(&existing_payload)?;
+            if col != database::METADATA {
+                existing = self.surface(&col, existing).await?;
+            }
+            let new_id = if document.id().is_empty() { id.to_owned() } else { document.id().to_owned() };
+            let underscore = string("_");
+            let new_key = self.doc_key(&col, &new_id, null_tenant.then_some(&underscore));
+            let effective_idx = if null_tenant { self.idx_key(&col, Some(&underscore)) } else { idx_key.clone() };
+            if new_key != old_key && self.exists_key(&new_key).await? {
                 return Err(Error::duplicate("Document already exists"));
             }
-        }
-        let resolved = self.apply_operators(document.array_copy(&[], &[]), &existing.array_copy(&[], &[]))?;
-        let mut merged = existing.array_copy(&[], &[]);
-        for (k, v) in resolved.iter() {
-            merged.set(k.to_owned(), v.clone());
-        }
-        merged.set(crate::value::ArrayKey::from("$id"), Value::from(new_id.as_str()));
-        let merged = Document::new(merged)?;
-        self.enforce_unique_indexes(&col, &merged, Some(id)).await?;
-        let payload = Self::encode(&merged)?;
-        if new_id != id {
-            let _: i64 = self.run(redis::cmd("DEL").arg(&old_key)).await.map_err(tx_error)?;
-            let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await.map_err(tx_error)?;
-        }
-        let _: () = self.run(redis::cmd("SET").arg(&new_key).arg(payload)).await.map_err(tx_error)?;
-        let _: i64 = self.run(redis::cmd("SADD").arg(&idx_key).arg(lower(&new_id))).await.map_err(tx_error)?;
-        self.record(Entry::UpdateDoc {
-            collection: col.clone(),
-            id: id.to_owned(),
-            new_id: new_id.clone(),
-            payload: existing_payload,
-            doc_key: old_key,
-            new_doc_key: Some(new_key),
-            idx_key: Some(idx_key),
-        });
-        if !skip_permissions {
-            self.clear_permissions(&col, id).await?;
+            let existing_copy = existing.array_copy();
+            let resolved = self.apply_operators(document.array_copy(), &existing_copy)?;
+            let mut merged = array_merge(existing_copy, resolved);
+            merged.set(document::ID.into(), string(new_id.as_str()));
+            let merged = Document::new(merged)?;
+            self.enforce_unique(&col, &merged, Some(id)).await?;
+            let payload = Self::encode(&merged)?;
             if new_id != id {
-                self.clear_permissions(&col, &new_id).await?;
+                let _: i64 = self.run(redis::cmd("DEL").arg(&old_key)).await?;
+                let _: i64 = self.run(redis::cmd("SREM").arg(&effective_idx).arg(lower(id))).await?;
             }
-            self.write_permissions(&col, &new_id, &merged).await?;
-        }
-        Ok(merged)
+            let _: redis::Value = self.run(redis::cmd("SET").arg(&new_key).arg(payload)).await?;
+            let _: i64 = self.run(redis::cmd("SADD").arg(&effective_idx).arg(lower(&new_id))).await?;
+            self.journal(
+                "updateDoc",
+                vec![
+                    ("collection", col.clone().into_bytes()),
+                    ("id", id.as_bytes().to_vec()),
+                    ("newId", new_id.clone().into_bytes()),
+                    ("payload", existing_payload),
+                    ("docKey", old_key.clone().into_bytes()),
+                    ("newDocKey", new_key.into_bytes()),
+                    ("idxKey", effective_idx.into_bytes()),
+                ],
+            );
+            if !skip_permissions {
+                self.clear_permissions(&col, id, None).await?;
+                if new_id != id {
+                    self.clear_permissions(&col, &new_id, None).await?;
+                }
+                self.write_permissions(&col, &new_id, &merged).await?;
+            }
+            Ok(merged)
+        })
+        .await
     }
 
-    /// `updateDocuments()`: applies the updates (operators, dates,
-    /// permissions) to each document still stored; how many were updated.
+    /// `updateDocuments()`: `updates` (its operators applied, and its
+    /// `$createdAt`, `$updatedAt` and `$permissions` when given) written onto
+    /// each stored document; the count written.
     pub(super) async fn replace_documents(
         &self,
-        collection: &Document,
+        collection: &Collection,
         updates: &Document,
-        documents: &[Document],
+        documents: Vec<Document>,
     ) -> Result<i64> {
         if documents.is_empty() {
             return Ok(0);
         }
-        let attrs = updates.attributes();
-        let created_at = updates.created_at().filter(|c| !c.is_empty() && *c != "0").map(str::to_owned);
-        let updated_at = updates.updated_at().filter(|c| !c.is_empty() && *c != "0").map(str::to_owned);
-        let has_permissions = updates.has("$permissions");
-        if attrs.is_empty() && created_at.is_none() && updated_at.is_none() && !has_permissions {
+        let changed = updates.attributes();
+        let created_at = updates.created_at().filter(|s| !s.is_empty()).map(str::to_owned);
+        let updated_at = updates.updated_at().filter(|s| !s.is_empty()).map(str::to_owned);
+        let permissions = updates.has(document::PERMISSIONS);
+        if changed.is_empty() && created_at.is_none() && updated_at.is_none() && !permissions {
             return Ok(0);
         }
-        let col = self.filter(collection.id())?;
-        let keys: Vec<String> = documents.iter().map(|d| self.doc_key(&col, d.id(), None)).collect();
-        let mut pipe = redis::pipe();
-        for key in &keys {
-            pipe.cmd("GET").arg(key);
-        }
-        let payloads: Vec<Option<Vec<u8>>> = self.pipe(&pipe).await.map_err(tx_error)?;
-        let relationship_keys = if col != Database::METADATA {
-            let meta = self.meta_key(&self.filter(&col)?);
-            relationship_keys(&self.read_attributes(&meta).await?)
-        } else {
-            Vec::new()
-        };
-        let mut count = 0;
-        for (i, document) in documents.iter().enumerate() {
-            let uid = document.id().to_owned();
-            let Some(existing_payload) = payloads.get(i).cloned().flatten().filter(|p| !p.is_empty()) else {
-                continue;
+        let col = filter(collection.id());
+        self.tx(async {
+            let doc_keys: Vec<String> = documents.iter().map(|d| self.doc_key(&col, d.id(), None)).collect();
+            let mut pipe = redis::pipe();
+            for key in &doc_keys {
+                pipe.cmd("GET").arg(key);
+            }
+            let payloads = self.pipe(&pipe).await?;
+            let keys = if col != database::METADATA {
+                relationship_keys(&self.read_attributes(&self.meta_key(&col)).await?)
+            } else {
+                Vec::new()
             };
-            let mut existing = Self::decode(&existing_payload)?;
-            if !relationship_keys.is_empty() {
-                existing = Self::surface(&relationship_keys, existing);
+            let mut writes = Vec::new();
+            for (i, doc) in documents.iter().enumerate() {
+                let Some(payload) = payload_of(payloads.get(i)) else {
+                    continue;
+                };
+                let existing = surface_using(&keys, Self::decode(&payload)?);
+                let mut merged = existing.array_copy();
+                for (attribute, value) in self.apply_operators(changed.clone(), &merged)? {
+                    merged.set(attribute, value);
+                }
+                if let Some(created_at) = &created_at {
+                    merged.set(document::CREATED_AT.into(), string(created_at.as_str()));
+                }
+                if let Some(updated_at) = &updated_at {
+                    merged.set(document::UPDATED_AT.into(), string(updated_at.as_str()));
+                }
+                if permissions {
+                    let list = updates.permissions()?;
+                    merged.set(document::PERMISSIONS.into(), crate::value::list(list.into_iter().map(string)));
+                }
+                writes.push(Write {
+                    id: doc.id().to_owned(),
+                    key: doc_keys[i].clone(),
+                    payload: Some(payload),
+                    document: Document::new(merged)?,
+                    tenant: None,
+                });
             }
-            let mut merged = existing.array_copy(&[], &[]);
-            let resolved = self.apply_operators(attrs.clone(), &merged)?;
-            for (k, v) in resolved.iter() {
-                merged.set(k.to_owned(), v.clone());
+            if !changed.is_empty() {
+                let merged: Vec<Document> = writes.iter().map(|w| w.document.clone()).collect();
+                let ids: Vec<String> = writes.iter().map(|w| w.id.clone()).collect();
+                self.enforce_unique_for(&col, &merged, &ids).await?;
             }
-            if let Some(c) = &created_at {
-                merged.set(crate::value::ArrayKey::from("$createdAt"), Value::from(c.as_str()));
-            }
-            if let Some(u) = &updated_at {
-                merged.set(crate::value::ArrayKey::from("$updatedAt"), Value::from(u.as_str()));
-            }
-            if has_permissions {
-                merged.set(
-                    crate::value::ArrayKey::from("$permissions"),
-                    Value::Array(updates.permissions().into_iter().map(|p| Value::from(p.as_str())).collect()),
+            for write in &writes {
+                let _: redis::Value =
+                    self.run(redis::cmd("SET").arg(&write.key).arg(Self::encode(&write.document)?)).await?;
+                self.journal(
+                    "updateDoc",
+                    vec![
+                        ("collection", col.clone().into_bytes()),
+                        ("id", write.id.clone().into_bytes()),
+                        ("newId", write.id.clone().into_bytes()),
+                        ("payload", write.payload.clone().unwrap_or_default()),
+                        ("docKey", write.key.clone().into_bytes()),
+                    ],
                 );
+                if permissions {
+                    self.clear_permissions(&col, &write.id, None).await?;
+                    self.write_permissions(&col, &write.id, &write.document).await?;
+                }
             }
-            let merged = Document::new(merged)?;
-            let _: () =
-                self.run(redis::cmd("SET").arg(&keys[i]).arg(Self::encode(&merged)?)).await.map_err(tx_error)?;
-            self.record(Entry::UpdateDoc {
-                collection: col.clone(),
-                id: uid.clone(),
-                new_id: uid.clone(),
-                payload: existing_payload,
-                doc_key: keys[i].clone(),
-                new_doc_key: None,
-                idx_key: None,
-            });
-            if has_permissions {
-                self.clear_permissions(&col, &uid).await?;
-                self.write_permissions(&col, &uid, &merged).await?;
-            }
-            count += 1;
-        }
-        Ok(count)
+            Ok(writes.len() as i64)
+        })
+        .await
     }
 
-    /// `upsertDocuments()`: each change updates the stored document (adding
-    /// to `attribute` when given) or creates it, journalled like the single
-    /// writes; the written documents, in order.
+    /// `upsertDocuments()`: each change's new document created, or merged
+    /// onto the stored one (with `increase`, that attribute summed), after
+    /// the batch's unique checks.
     pub(super) async fn upsert(
         &self,
-        collection: &Document,
-        attribute: &str,
+        collection: &Collection,
         changes: Vec<Change>,
+        increase: Option<&str>,
     ) -> Result<Vec<Document>> {
         if changes.is_empty() {
             return Ok(Vec::new());
         }
-        let col = self.filter(collection.id())?;
-        let mut pipe = redis::pipe();
-        for change in &changes {
-            let tenant = change.new.tenant();
-            pipe.cmd("GET").arg(self.doc_key(&col, change.new.id(), tenant.as_ref()));
-        }
-        let payloads: Vec<Option<Vec<u8>>> = self.pipe(&pipe).await.map_err(tx_error)?;
-        let relationship_keys = if col != Database::METADATA {
-            let meta = self.meta_key(&self.filter(&col)?);
-            relationship_keys(&self.read_attributes(&meta).await?)
-        } else {
-            Vec::new()
-        };
-        let mut results = Vec::with_capacity(changes.len());
-        for (i, change) in changes.into_iter().enumerate() {
-            let mut document = change.new;
-            let id = document.id().to_owned();
-            let tenant = document.tenant();
-            let doc_key = self.doc_key(&col, &id, tenant.as_ref());
-            let idx_key = self.idx_key(&col, tenant.as_ref());
-            let seq_key = self.seq_key(&col, tenant.as_ref());
-            match payloads.get(i).cloned().flatten().filter(|p| !p.is_empty()) {
-                Some(existing_payload) => {
-                    let mut existing = Self::decode(&existing_payload)?;
-                    if !relationship_keys.is_empty() {
-                        existing = Self::surface(&relationship_keys, existing);
-                    }
-                    let existing_array = existing.array_copy(&[], &[]);
-                    let resolved = self.apply_operators(document.array_copy(&[], &[]), &existing_array)?;
-                    let mut merged = existing_array;
-                    for (k, v) in resolved.iter() {
-                        merged.set(k.to_owned(), v.clone());
-                    }
-                    merged.set(crate::value::ArrayKey::from("$id"), Value::from(id.as_str()));
-                    if !attribute.is_empty() {
-                        let previous = existing.get(attribute).cloned().unwrap_or(Value::Null);
-                        let delta = document.get(attribute).cloned().unwrap_or(Value::Null);
-                        let numeric = |v: &Value| super::query::numeric(v).unwrap_or(Value::Int(0));
-                        let sum = crate::validator::operator::arith(
-                            crate::validator::operator::Arith::Add,
-                            &numeric(&previous),
-                            &numeric(&delta),
-                        )?;
-                        merged.set(crate::value::ArrayKey::normalize(attribute.into()), sum);
-                    }
-                    let merged = Document::new(merged)?;
-                    let _: () = self
-                        .run(redis::cmd("SET").arg(&doc_key).arg(Self::encode(&merged)?))
-                        .await
-                        .map_err(tx_error)?;
-                    self.record(Entry::UpdateDoc {
-                        collection: col.clone(),
-                        id: id.clone(),
-                        new_id: id.clone(),
-                        payload: existing_payload,
-                        doc_key: doc_key.clone(),
-                        new_doc_key: None,
-                        idx_key: None,
-                    });
-                    self.clear_permissions(&col, &id).await?;
-                    self.write_permissions(&col, &id, &merged).await?;
-                    results.push(merged);
-                }
-                None => {
-                    self.enforce_unique_indexes(&col, &document, None).await?;
-                    let sequence = self.next_sequence(&seq_key, document.sequence()).await?;
-                    document.set("$sequence", Value::from(sequence.as_str()));
-                    let resolved = self.apply_operators(document.array_copy(&[], &[]), &Array::new())?;
-                    for (k, v) in resolved.iter() {
-                        document.as_array_mut().set(k.to_owned(), v.clone());
-                    }
-                    let _: () = self
-                        .run(redis::cmd("SET").arg(&doc_key).arg(Self::encode(&document)?))
-                        .await
-                        .map_err(tx_error)?;
-                    let _: i64 = self.run(redis::cmd("SADD").arg(&idx_key).arg(lower(&id))).await.map_err(tx_error)?;
-                    self.write_permissions(&col, &id, &document).await?;
-                    let perm_doc_key = self.perm_doc_key(&col, &id);
-                    self.record(Entry::CreateDoc {
-                        collection: col.clone(),
-                        id: id.clone(),
-                        doc_key,
-                        idx_key,
-                        perm_doc_key,
-                    });
-                    results.push(document);
-                }
+        let col = filter(collection.id());
+        let attribute = increase.unwrap_or("");
+        self.tx(async {
+            let mut pipe = redis::pipe();
+            for change in &changes {
+                pipe.cmd("GET").arg(self.doc_key(&col, change.new.id(), change.new.tenant().as_ref()));
             }
-        }
-        Ok(results)
+            let payloads = self.pipe(&pipe).await?;
+            let keys = if col != database::METADATA {
+                relationship_keys(&self.read_attributes(&self.meta_key(&col)).await?)
+            } else {
+                Vec::new()
+            };
+            let mut writes = Vec::with_capacity(changes.len());
+            for (i, change) in changes.into_iter().enumerate() {
+                let document = change.new;
+                let id = document.id().to_owned();
+                let tenant = document.tenant();
+                let key = self.doc_key(&col, &id, tenant.as_ref());
+                let Some(payload) = payload_of(payloads.get(i)) else {
+                    writes.push(Write { id, key, payload: None, document, tenant });
+                    continue;
+                };
+                let existing = surface_using(&keys, Self::decode(&payload)?);
+                let existing_copy = existing.array_copy();
+                let resolved = self.apply_operators(document.array_copy(), &existing_copy)?;
+                let mut merged = array_merge(existing_copy, resolved);
+                merged.set(document::ID.into(), string(id.as_str()));
+                if !attribute.is_empty() {
+                    let number = |v: Option<&Value>| super::operators::numeric_or_zero(v.unwrap_or(&Value::Null));
+                    let sum = php_std::format::add(number(existing.get(attribute)), number(document.get(attribute)));
+                    merged.set(attribute.into(), super::operators::number_value(sum));
+                }
+                writes.push(Write { id, key, payload: Some(payload), document: Document::new(merged)?, tenant });
+            }
+            self.enforce_unique_in_order(&col, &writes).await?;
+            let mut results = Vec::with_capacity(writes.len());
+            for write in writes {
+                let Write { id, key, payload, mut document, tenant } = write;
+                if let Some(payload) = payload {
+                    let _: redis::Value = self.run(redis::cmd("SET").arg(&key).arg(Self::encode(&document)?)).await?;
+                    self.journal(
+                        "updateDoc",
+                        vec![
+                            ("collection", col.clone().into_bytes()),
+                            ("id", id.clone().into_bytes()),
+                            ("newId", id.clone().into_bytes()),
+                            ("payload", payload),
+                            ("docKey", key.into_bytes()),
+                        ],
+                    );
+                    self.clear_permissions(&col, &id, tenant.as_ref()).await?;
+                    self.write_permissions(&col, &id, &document).await?;
+                    results.push(document);
+                    continue;
+                }
+                let idx_key = self.idx_key(&col, tenant.as_ref());
+                let seq_key = self.seq_key(&col, tenant.as_ref());
+                let sequence = self.next_sequence(&seq_key, document.sequence()).await?;
+                document.set(document::SEQUENCE, string(sequence))?;
+                for (attr, value) in self.apply_operators(document.array_copy(), &Array::new())? {
+                    let name = match attr.as_ref() {
+                        KeyRef::Int(i) => i.to_string(),
+                        KeyRef::Str(s) => utf8(s),
+                    };
+                    document.set(name, value)?;
+                }
+                let _: redis::Value = self.run(redis::cmd("SET").arg(&key).arg(Self::encode(&document)?)).await?;
+                let _: i64 = self.run(redis::cmd("SADD").arg(&idx_key).arg(lower(&id))).await?;
+                self.write_permissions(&col, &id, &document).await?;
+                self.journal(
+                    "createDoc",
+                    vec![
+                        ("collection", col.clone().into_bytes()),
+                        ("id", id.clone().into_bytes()),
+                        ("docKey", key.into_bytes()),
+                        ("idxKey", idx_key.into_bytes()),
+                        ("permDocKey", self.perm_doc_key(&col, &id, tenant.as_ref()).into_bytes()),
+                    ],
+                );
+                results.push(document);
+            }
+            Ok(results)
+        })
+        .await
     }
 
     /// `getSequences()`: the stored `$sequence` of each document lacking one.
-    pub(super) async fn sequences(&self, collection: &str, mut documents: Vec<Document>) -> Result<Vec<Document>> {
+    pub(super) async fn sequences(
+        &self,
+        collection: &Collection,
+        mut documents: Vec<Document>,
+    ) -> Result<Vec<Document>> {
         if documents.is_empty() {
             return Ok(documents);
         }
+        let col = filter(collection.id());
         let mut pipe = redis::pipe();
-        let mut indexes = Vec::new();
-        for (index, document) in documents.iter().enumerate() {
-            if document.sequence().is_some_and(Value::truthy) {
+        let mut positions = Vec::new();
+        for (position, doc) in documents.iter().enumerate() {
+            if !empty(doc.sequence()) {
                 continue;
             }
-            pipe.cmd("GET").arg(self.doc_key(collection, document.id(), None));
-            indexes.push(index);
+            pipe.cmd("GET").arg(self.doc_key(&col, doc.id(), doc.tenant().as_ref()));
+            positions.push(position);
         }
-        if indexes.is_empty() {
+        if positions.is_empty() {
             return Ok(documents);
         }
-        let payloads: Vec<Option<Vec<u8>>> = self
+        let payloads = self
             .pipe(&pipe)
             .await
-            .map_err(|e| Error::transaction(format!("Failed to load sequences: {}", super::redis_message(&e))))?;
-        for (position, index) in indexes.into_iter().enumerate() {
-            let Some(payload) = payloads.get(position).cloned().flatten().filter(|p| !p.is_empty()) else {
+            .map_err(|e| Error::transaction(format!("Failed to load sequences: {}", e.message())).with_previous(e))?;
+        for (i, position) in positions.into_iter().enumerate() {
+            let Some(payload) = payload_of(payloads.get(i)) else {
                 continue;
             };
             let existing = Self::decode(&payload)?;
             if let Some(sequence) = existing.sequence().filter(|s| s.truthy()) {
-                documents[index].set("$sequence", Value::from(to_text(sequence).as_str()));
+                documents[position].set(document::SEQUENCE, string(to_text(sequence)))?;
             }
         }
         Ok(documents)
     }
 
-    /// `deleteDocument()`: whether a document was there to delete.
-    pub(super) async fn remove_document(&self, collection: &str, id: &str) -> Result<bool> {
-        let collection = self.filter(collection)?;
-        let doc_key = self.doc_key(&collection, id, None);
-        let idx_key = self.idx_key(&collection, None);
-        let payload: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(&doc_key)).await.map_err(tx_error)?;
-        let Some(payload) = payload.filter(|p| !p.is_empty()) else {
-            return Ok(false);
-        };
-        self.record(Entry::DeleteDoc {
-            collection: collection.clone(),
-            id: id.to_owned(),
-            payload,
-            doc_key: doc_key.clone(),
-            idx_key: idx_key.clone(),
-        });
-        self.clear_permissions(&collection, id).await?;
-        let _: i64 = self.run(redis::cmd("DEL").arg(&doc_key)).await.map_err(tx_error)?;
-        let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await.map_err(tx_error)?;
-        Ok(true)
+    // ----- Deletes -----
+
+    /// `deleteDocument()`: `false` when there is nothing stored.
+    pub(super) async fn remove_document(&self, collection: &Collection, id: &str) -> Result<bool> {
+        let col = filter(collection.id());
+        let doc_key = self.doc_key(&col, id, None);
+        let idx_key = self.idx_key(&col, None);
+        self.tx(async {
+            let Some(payload) = self.get_payload(&doc_key).await? else {
+                return Ok(false);
+            };
+            self.journal(
+                "deleteDoc",
+                vec![
+                    ("collection", col.clone().into_bytes()),
+                    ("id", id.as_bytes().to_vec()),
+                    ("payload", payload),
+                    ("docKey", doc_key.clone().into_bytes()),
+                    ("idxKey", idx_key.clone().into_bytes()),
+                ],
+            );
+            self.clear_permissions(&col, id, None).await?;
+            let _: i64 = self.run(redis::cmd("DEL").arg(&doc_key)).await?;
+            let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await?;
+            Ok(true)
+        })
+        .await
     }
 
-    /// `deleteDocuments()`: the documents with the given sequences, and the
-    /// permissions of the other ids listed; how many were deleted.
+    /// `deleteDocuments()`: the stored documents with one of `sequences`,
+    /// and the permissions of `permission_ids`; the count deleted.
     pub(super) async fn remove_documents(
         &self,
-        collection: &str,
-        sequences: &[Value],
-        permission_ids: &[String],
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
     ) -> Result<i64> {
         if sequences.is_empty() && permission_ids.is_empty() {
             return Ok(0);
         }
-        let collection = self.filter(collection)?;
-        let idx_key = self.idx_key(&collection, None);
-        let wanted: Vec<String> = sequences.iter().map(to_text).collect();
-        let ids: Vec<String> = self.run(redis::cmd("SMEMBERS").arg(&idx_key)).await.map_err(tx_error)?;
-        let keys: Vec<String> = ids.iter().map(|id| self.doc_key(&collection, id, None)).collect();
-        let mut pipe = redis::pipe();
-        for key in &keys {
-            pipe.cmd("GET").arg(key);
-        }
-        let payloads: Vec<Option<Vec<u8>>> =
-            if keys.is_empty() { Vec::new() } else { self.pipe(&pipe).await.map_err(tx_error)? };
-        // Document id => (payload, key), in the order found; a later
-        // document with the same id replaces the payload in place.
-        let mut deleted: Vec<(String, Vec<u8>, String)> = Vec::new();
-        for (position, key) in keys.iter().enumerate() {
-            let Some(payload) = payloads.get(position).cloned().flatten().filter(|p| !p.is_empty()) else {
-                continue;
-            };
-            let document = Self::decode(&payload)?;
-            let sequence = document.sequence().map(to_text).unwrap_or_default();
-            if wanted.contains(&sequence) {
-                let id = document.id().to_owned();
-                match deleted.iter_mut().find(|(d, _, _)| *d == id) {
-                    Some(entry) => {
-                        entry.1 = payload;
-                        entry.2 = key.clone();
+        let col = filter(collection.id());
+        let idx_key = self.idx_key(&col, None);
+        self.tx(async {
+            let wanted: HashSet<String> = sequences.iter().map(to_text).collect();
+            let ids = self.members(&idx_key).await?;
+            let mut pipe = redis::pipe();
+            let doc_keys: Vec<String> = ids.iter().map(|id| self.doc_key(&col, id, None)).collect();
+            for key in &doc_keys {
+                pipe.cmd("GET").arg(key);
+            }
+            let payloads = if doc_keys.is_empty() { Vec::new() } else { self.pipe(&pipe).await? };
+            let mut deleted: Vec<(String, Vec<u8>, String)> = Vec::new();
+            for (position, _) in ids.iter().enumerate() {
+                let Some(payload) = payload_of(payloads.get(position)) else {
+                    continue;
+                };
+                let document = Self::decode(&payload)?;
+                let sequence = document.sequence().map(to_text).unwrap_or_default();
+                if wanted.contains(&sequence) {
+                    let entry = (document.id().to_owned(), payload, doc_keys[position].clone());
+                    match deleted.iter_mut().find(|(id, _, _)| *id == entry.0) {
+                        Some(slot) => *slot = entry,
+                        None => deleted.push(entry),
                     }
-                    None => deleted.push((id, payload, key.clone())),
                 }
             }
-        }
-        for (id, payload, key) in &deleted {
-            self.record(Entry::DeleteDoc {
-                collection: collection.clone(),
-                id: id.clone(),
-                payload: payload.clone(),
-                doc_key: key.clone(),
-                idx_key: idx_key.clone(),
-            });
-            self.clear_permissions(&collection, id).await?;
-            let _: i64 = self.run(redis::cmd("DEL").arg(key)).await.map_err(tx_error)?;
-            let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await.map_err(tx_error)?;
-        }
-        for id in permission_ids {
-            if deleted.iter().any(|(d, _, _)| d == id) {
-                continue;
+            for (id, payload, doc_key) in &deleted {
+                self.journal(
+                    "deleteDoc",
+                    vec![
+                        ("collection", col.clone().into_bytes()),
+                        ("id", id.clone().into_bytes()),
+                        ("payload", payload.clone()),
+                        ("docKey", doc_key.clone().into_bytes()),
+                        ("idxKey", idx_key.clone().into_bytes()),
+                    ],
+                );
+                self.clear_permissions(&col, id, None).await?;
+                let _: i64 = self.run(redis::cmd("DEL").arg(doc_key)).await?;
+                let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await?;
             }
-            self.clear_permissions(&collection, id).await?;
-        }
-        Ok(deleted.len() as i64)
+            for id in &permission_ids {
+                if deleted.iter().any(|(d, _, _)| d == id) {
+                    continue;
+                }
+                self.clear_permissions(&col, id, None).await?;
+            }
+            Ok(deleted.len() as i64)
+        })
+        .await
     }
 
-    /// `increaseDocumentAttribute()`: adds `value` unless the current value
-    /// is outside the bounds (a silent no-op), and sets `$updatedAt`.
+    // ----- Increments -----
+
+    /// `increaseDocumentAttribute()`: exact for integers (and integer
+    /// strings) at any size; nothing changes when the stored value is below
+    /// `min` or above `max`.
     #[allow(clippy::too_many_arguments)]
     pub(super) async fn increase(
         &self,
-        collection: &str,
+        collection: &Collection,
         id: &str,
         attribute: &str,
-        value: &Value,
+        value: Value,
         updated_at: &str,
-        min: Option<&Value>,
-        max: Option<&Value>,
+        min: Option<Value>,
+        max: Option<Value>,
     ) -> Result<bool> {
-        let collection = self.filter(collection)?;
-        let doc_key = self.doc_key(&collection, id, None);
-        let payload: Option<Vec<u8>> = self.run(redis::cmd("GET").arg(&doc_key)).await.map_err(tx_error)?;
-        let Some(payload) = payload.filter(|p| !p.is_empty()) else {
-            return Err(Error::not_found("Document not found"));
-        };
-        let mut document = Self::decode(&payload)?;
-        let current = super::query::numeric(document.get(attribute).unwrap_or(&Value::Null)).unwrap_or(Value::Int(0));
-        if let Some(min) = min.filter(|m| !matches!(m, Value::Null))
-            && current.compare(min) < 0
-        {
-            return Ok(true);
-        }
-        if let Some(max) = max.filter(|m| !matches!(m, Value::Null))
-            && max.compare(&current) < 0
-        {
-            return Ok(true);
-        }
-        let sum = crate::validator::operator::arith(crate::validator::operator::Arith::Add, &current, value)?;
-        document.set(attribute, sum);
-        document.set("$updatedAt", Value::from(updated_at));
-        let _: () = self.run(redis::cmd("SET").arg(&doc_key).arg(Self::encode(&document)?)).await.map_err(tx_error)?;
-        self.record(Entry::UpdateDoc {
-            collection,
-            id: id.to_owned(),
-            new_id: id.to_owned(),
-            payload,
-            doc_key,
-            new_doc_key: None,
-            idx_key: None,
-        });
-        Ok(true)
+        let col = filter(collection.id());
+        let doc_key = self.doc_key(&col, id, None);
+        self.tx(async {
+            let Some(payload) = self.get_payload(&doc_key).await? else {
+                return Err(Error::not_found("Document not found"));
+            };
+            let mut document = Self::decode(&payload)?;
+            let current = document.get(attribute).cloned().unwrap_or(Value::Null);
+            let integer = |v: &Value| match v {
+                Value::Int(_) => true,
+                Value::Str(s) => BigInt::is_integer_string(s.as_bytes(), true),
+                _ => false,
+            };
+            let result = if integer(&current) && integer(&value) {
+                let current = BigInt::to_native(operand(&current)?)?;
+                let value = BigInt::to_native(operand(&value)?)?;
+                if let Some(min) = &min
+                    && BigInt::compare(&current, operand(min)?)?.is_lt()
+                {
+                    return Ok(true);
+                }
+                if let Some(max) = &max
+                    && BigInt::compare(&current, operand(max)?)?.is_gt()
+                {
+                    return Ok(true);
+                }
+                Value::from(BigInt::add(&current, &value)?)
+            } else {
+                let current = super::operators::number_value(super::operators::numeric_or_zero(&current));
+                let value = super::operators::number_value(super::operators::numeric_or_zero(&value));
+                if let Some(min) = &min
+                    && super::operators::lt(&current, min)
+                {
+                    return Ok(true);
+                }
+                if let Some(max) = &max
+                    && super::operators::lt(max, &current)
+                {
+                    return Ok(true);
+                }
+                super::operators::add_values(&current, &value)
+            };
+            document.set(attribute, result)?;
+            document.set(document::UPDATED_AT, string(updated_at))?;
+            let _: redis::Value = self.run(redis::cmd("SET").arg(&doc_key).arg(Self::encode(&document)?)).await?;
+            self.journal(
+                "updateDoc",
+                vec![
+                    ("collection", col.clone().into_bytes()),
+                    ("id", id.as_bytes().to_vec()),
+                    ("newId", id.as_bytes().to_vec()),
+                    ("payload", payload),
+                    ("docKey", doc_key.clone().into_bytes()),
+                ],
+            );
+            Ok(true)
+        })
+        .await
     }
 
-    /// Refuses a document whose unique-index values another document of the
-    /// same tenant already holds (`enforceUniqueIndexes()`); `exclude` is
-    /// the id of the document being updated.
-    pub(super) async fn enforce_unique_indexes(
-        &self,
-        collection: &str,
-        document: &Document,
-        exclude: Option<&str>,
-    ) -> Result<()> {
-        let meta = self.meta_key(collection);
-        let indexes = self.read_indexes(&meta).await?;
-        let unique: Vec<Vec<String>> = indexes
-            .iter()
-            .filter(|index| matches!(index.get_str("type"), Some(Value::Str(s)) if s.as_bytes() == Database::INDEX_UNIQUE.as_bytes()))
-            .map(|index| match index.get_str("attributes") {
-                Some(Value::Array(a)) => a.values().map(to_text).collect::<Vec<_>>(),
-                _ => Vec::new(),
-            })
-            .filter(|attributes| !attributes.is_empty())
-            .collect();
-        if unique.is_empty() {
-            return Ok(());
-        }
-        let shared = self.shared_tables();
-        let tenant = if shared {
-            document.raw("$tenant").cloned().filter(|t| !matches!(t, Value::Null)).unwrap_or_else(|| self.tenant())
-        } else {
-            Value::Null
-        };
-        let tenant_ref = shared.then_some(&tenant);
-        let signatures: Vec<(usize, Vec<u8>)> = unique
-            .iter()
-            .enumerate()
-            .filter_map(|(i, attributes)| self.signature(document, attributes, tenant_ref).map(|s| (i, s)))
-            .collect();
-        if signatures.is_empty() {
-            return Ok(());
-        }
-        let idx = self.idx_key(collection, None);
-        let ids: Vec<String> = self.run(redis::cmd("SMEMBERS").arg(&idx)).await.map_err(tx_error)?;
-        if ids.is_empty() {
-            return Ok(());
-        }
-        let exclude = exclude.map(lower);
-        let keys: Vec<String> = ids
-            .iter()
-            .filter(|id| exclude.as_ref().is_none_or(|e| lower(id) != *e))
-            .map(|id| self.doc_key(collection, id, None))
-            .collect();
-        if keys.is_empty() {
-            return Ok(());
-        }
-        let payloads: Vec<Option<Vec<u8>>> = self.run(redis::cmd("MGET").arg(&keys)).await.map_err(tx_error)?;
-        for payload in payloads.into_iter().flatten().filter(|p| !p.is_empty()) {
-            let existing = Self::decode(&payload)?;
-            if shared && !existing.raw("$tenant").cloned().unwrap_or(Value::Null).strict_eq(&tenant) {
-                continue;
-            }
-            for (i, signature) in &signatures {
-                if self.signature(&existing, &unique[*i], tenant_ref).as_ref() == Some(signature) {
-                    return Err(Error::unique("Unique index violation"));
+    // ----- Permissions -----
+
+    /// `writePermissions()`: each role's letters in the document's
+    /// permission hash, the id in each role set, the keys registered in the
+    /// collection's grant set; each grant journalled.
+    pub(super) async fn write_permissions(&self, collection: &str, id: &str, document: &Document) -> Result<()> {
+        let id = lower(id);
+        let tenant = document.tenant();
+        let mut by_role: Vec<(String, Vec<&'static str>)> = Vec::new();
+        for kind in [PermissionType::Create, PermissionType::Read, PermissionType::Update, PermissionType::Delete] {
+            for role in document.permissions_by_type(kind.as_str())? {
+                let letter = action_letter(kind);
+                match by_role.iter_mut().find(|(r, _)| *r == role) {
+                    Some((_, letters)) => letters.push(letter),
+                    None => by_role.push((role, vec![letter])),
                 }
             }
+        }
+        if by_role.is_empty() {
+            return Ok(());
+        }
+        let hash_key = self.perm_doc_key(collection, &id, tenant.as_ref());
+        let mut fields: Vec<(String, String)> = Vec::new();
+        let mut writes: Vec<(String, String, String)> = Vec::new();
+        for (role, letters) in &by_role {
+            let mut unique: Vec<&str> = Vec::new();
+            for letter in letters {
+                if !unique.contains(letter) {
+                    unique.push(letter);
+                }
+            }
+            unique.sort_unstable();
+            fields.push((role.clone(), unique.join(",")));
+            for letter in unique {
+                writes.push((
+                    role.clone(),
+                    letter.to_owned(),
+                    self.perm_key(collection, letter, role, tenant.as_ref()),
+                ));
+            }
+        }
+        let mut pipe = redis::pipe();
+        for (_, _, set_key) in &writes {
+            pipe.cmd("SADD").arg(set_key).arg(&id);
+        }
+        let mut hmset = redis::cmd("HMSET");
+        hmset.arg(&hash_key);
+        for (field, value) in &fields {
+            hmset.arg(field).arg(value);
+        }
+        pipe.add_command(hmset);
+        let mut grants = redis::cmd("SADD");
+        grants.arg(Self::grants_key(&self.ns(), collection)).arg(&hash_key);
+        for (_, _, set_key) in &writes {
+            grants.arg(set_key);
+        }
+        pipe.add_command(grants);
+        self.pipe(&pipe).await?;
+        for (role, letter, set_key) in writes {
+            self.journal(
+                "createPerm",
+                vec![
+                    ("collection", collection.as_bytes().to_vec()),
+                    ("id", id.clone().into_bytes()),
+                    ("role", role.into_bytes()),
+                    ("letter", letter.into_bytes()),
+                    ("permKey", set_key.into_bytes()),
+                    ("permDocKey", hash_key.clone().into_bytes()),
+                ],
+            );
         }
         Ok(())
     }
 
-    /// The unique-index signature of a document: `serialize()` of its
-    /// normalised values (the tenant first under shared tables); `None`
-    /// when one is `null`, which never collides.
-    pub(super) fn signature(
-        &self,
-        document: &Document,
-        attributes: &[String],
-        tenant: Option<&Value>,
-    ) -> Option<Vec<u8>> {
-        let mut signature: Vec<Value> = Vec::with_capacity(attributes.len() + 1);
-        if let Some(tenant) = tenant {
-            signature.push(tenant.clone());
+    /// `clearPermissions()`: the id removed from the role sets its hash
+    /// names, the hash dropped and unregistered; each removal journalled.
+    pub(super) async fn clear_permissions(&self, collection: &str, id: &str, tenant: Option<&Value>) -> Result<()> {
+        let id = lower(id);
+        let hash_key = self.perm_doc_key(collection, &id, tenant);
+        let reply: redis::Value = self.run(redis::cmd("HGETALL").arg(&hash_key)).await?;
+        let hash = reply_pairs(&reply);
+        if hash.is_empty() {
+            return Ok(());
         }
-        for attribute in attributes {
-            let value = self.resolve(document, attribute);
-            if matches!(value, Value::Null) {
-                return None;
+        let mut removals: Vec<(String, String, String)> = Vec::new();
+        for (role, csv) in &hash {
+            if csv.is_empty() {
+                continue;
             }
-            signature.push(normalize_index_value(value));
+            for letter in csv.split(',') {
+                removals.push((role.clone(), letter.to_owned(), self.perm_key(collection, letter, role, tenant)));
+            }
         }
-        let list = Value::Array(signature.into_iter().collect());
-        Some(php_std::serialize::serialize(&crate::value::to_plain(&list)))
+        let mut pipe = redis::pipe();
+        for (_, _, set_key) in &removals {
+            pipe.cmd("SREM").arg(set_key).arg(&id);
+        }
+        pipe.cmd("DEL").arg(&hash_key);
+        pipe.cmd("SREM").arg(Self::grants_key(&self.ns(), collection)).arg(&hash_key);
+        self.pipe(&pipe).await?;
+        for (role, letter, set_key) in removals {
+            let previous = hash.iter().find(|(r, _)| *r == role).map(|(_, v)| v.clone()).unwrap_or_default();
+            self.journal(
+                "deletePerm",
+                vec![
+                    ("collection", collection.as_bytes().to_vec()),
+                    ("id", id.clone().into_bytes()),
+                    ("role", role.into_bytes()),
+                    ("letter", letter.into_bytes()),
+                    ("previous", previous.into_bytes()),
+                    ("permKey", set_key.into_bytes()),
+                    ("permDocKey", hash_key.clone().into_bytes()),
+                ],
+            );
+        }
+        Ok(())
     }
-}
 
-/// `normalizeIndexValue()`: booleans as 0 or 1, numeric strings as numbers.
-fn normalize_index_value(value: Value) -> Value {
-    match value {
-        Value::Bool(b) => Value::Int(i64::from(b)),
-        Value::Str(ref s) if php_std::value::numeric_bytes_ex(s.as_bytes()).is_some() => {
-            super::query::numeric(&value).unwrap_or(value)
+    /// `applyPermissionFilter()`: the ids (in order) the authorization's
+    /// roles may act on with `action`; all of them when authorization is
+    /// off, none without roles.
+    pub(super) async fn permitted(
+        &self,
+        collection: &str,
+        ids: Vec<String>,
+        action: PermissionType,
+    ) -> Result<Vec<String>> {
+        if ids.is_empty() {
+            return Ok(ids);
         }
-        other => other,
-    }
-}
-
-/// The relationship attribute keys of attribute records
-/// (`extractRelationshipKeys()`).
-pub(super) fn relationship_keys(attributes: &[Array]) -> Vec<String> {
-    let mut keys = Vec::new();
-    for attribute in attributes {
-        if !matches!(attribute.get_str("type"), Some(Value::Str(s)) if s.as_bytes() == Database::VAR_RELATIONSHIP.as_bytes())
-        {
-            continue;
+        let authorization = self.authorization();
+        if !authorization.status() {
+            return Ok(ids);
         }
-        let key = match attribute.get_str("$id").filter(|v| !matches!(v, Value::Null)) {
-            Some(v) => to_text(v),
-            None => attribute.get_str("key").filter(|v| !matches!(v, Value::Null)).map(to_text).unwrap_or_default(),
+        let roles = authorization.roles();
+        if roles.is_empty() {
+            return Ok(Vec::new());
+        }
+        let letter = action_letter(action);
+        let keys: Vec<String> = roles.iter().map(|r| self.perm_key(collection, letter, &to_text(r), None)).collect();
+        let allowed: Vec<Vec<u8>> = if keys.len() == 1 {
+            self.run(redis::cmd("SMEMBERS").arg(&keys[0])).await?
+        } else {
+            self.run(redis::cmd("SUNION").arg(&keys)).await?
         };
-        if !key.is_empty() {
-            keys.push(key);
+        if allowed.is_empty() {
+            return Ok(Vec::new());
+        }
+        let allowed: HashSet<String> = allowed.iter().map(|a| utf8(a)).collect();
+        Ok(ids.into_iter().filter(|id| allowed.contains(id)).collect())
+    }
+
+    /// `loadCollectionDocuments()`: the documents of a collection the
+    /// authorization may act on with `permission` and the tenant may see,
+    /// missing relationship attributes as `null`, in id set order.
+    pub(super) async fn load(&self, collection: &str, permission: PermissionType) -> Result<Vec<Document>> {
+        let mut ids = self.members(&self.idx_key(collection, None)).await?;
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        if self.authorization().status() {
+            ids = self.permitted(collection, ids, permission).await?;
+            if ids.is_empty() {
+                return Ok(Vec::new());
+            }
+        }
+        let keys: Vec<String> = ids.iter().map(|id| self.doc_key(collection, id, None)).collect();
+        let payloads = self.mget(&keys).await?;
+        let shared = self.shared_tables();
+        let tenant = if shared { self.tenant() } else { Value::Null };
+        let allow_null = shared && collection == database::METADATA;
+        let relationships = if collection != database::METADATA {
+            relationship_keys(&self.read_attributes(&self.meta_key(&filter(collection))).await?)
+        } else {
+            Vec::new()
+        };
+        let mut documents = Vec::with_capacity(payloads.len());
+        for payload in &payloads {
+            let Some(payload) = reply_bytes(payload).filter(|p| !p.is_empty()) else {
+                continue;
+            };
+            let document = Self::decode(&payload)?;
+            if shared {
+                let row = document.get(document::TENANT).cloned().unwrap_or(Value::Null);
+                if !(row.strict_eq(&tenant) || (allow_null && matches!(row, Value::Null))) {
+                    continue;
+                }
+            }
+            documents.push(surface_using(&relationships, document));
+        }
+        Ok(documents)
+    }
+}
+
+/// A value as an `int|float|string` argument of [`BigInt`]; PHP throws a
+/// `TypeError` for anything else.
+fn operand(value: &Value) -> Result<Operand<'_>> {
+    Operand::from_value(value).ok_or_else(|| {
+        Error::new(
+            Kind::TypeError,
+            format!("BigInt argument must be of type int|float|string, {} given", value.debug_type()),
+        )
+    })
+}
+
+/// `surfaceRelationshipAttributesUsing()`: each of `keys` the document
+/// lacks, set to `null`.
+pub(super) fn surface_using(keys: &[String], mut document: Document) -> Document {
+    for key in keys {
+        if !document.has(key) {
+            document.put(key.as_str(), Value::Null);
         }
     }
-    keys
+    document
 }

@@ -108,7 +108,7 @@ async fn recovery(ctx: &mut Context, email: &str, kind: i64, secret: String, exp
     let db = ctx.db()?;
     let skipped = base::skipped(&[]);
     let profile =
-        db.skip_filters(|| db.find_one("users", vec![Query::equal("email", [email])]), Some(&skipped)).await?;
+        db.skip_filters(Some(skipped.as_slice()), db.find_one("users", vec![Query::equal("email", [email])])).await?;
     let profile = (!profile.is_empty()).then(|| User::from(&profile)).filter(|p| p.status != Some(false));
     let unique = appwrite_core::database::unique_id;
     let (user_id, internal_id) = match &profile {
@@ -119,11 +119,11 @@ async fn recovery(ctx: &mut Context, email: &str, kind: i64, secret: String, exp
     let token = base::create_token(ctx, &user_id, token).await?;
     match &profile {
         Some(p) => {
-            db.purge_cached_document("users", Some(&p.id)).await?;
+            db.purge_cached_document("users", &p.id).await?;
         }
         None => {
             let authorization = db.authorization();
-            authorization.skip(|| db.delete_document("tokens", token.id())).await?;
+            authorization.skip(db.delete_document("tokens", token.id())).await?;
         }
     }
     Ok(Recovery { profile, user_id, token, secret })
@@ -307,14 +307,14 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
             let profile_id = profile.id.clone();
             let mut updates = Document::default();
             base::password_updates(&mut updates, &hashed, &history, pwned);
-            updates.set("emailVerification", Value::Bool(true));
+            updates.put("emailVerification", Value::Bool(true));
             async move {
                 let token = db.get_document("tokens", &token_id, Vec::new(), false).await?;
                 if !db.delete_document("tokens", &token_id).await? {
                     return Ok(None);
                 }
                 let skipped = base::skipped(&[]);
-                db.skip_filters(|| db.update_document("users", &profile_id, updates), Some(&skipped)).await?;
+                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &profile_id, updates)).await?;
                 Ok(Some(token))
             }
         })
@@ -330,7 +330,7 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
     if ctx.project.auth_bool("invalidateSessions", true) {
         base::invalidate_authentication(&db, &updated, None).await?;
     }
-    db.purge_cached_document("users", Some(&updated.id)).await?;
+    db.purge_cached_document("users", &updated.id).await?;
 
     let token = Token::from(&token);
     ctx.event_param("userId", updated.id.clone());

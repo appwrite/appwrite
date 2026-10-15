@@ -1,17 +1,21 @@
 //! [`Mongo`]: the MongoDB adapter.
 //!
 //! A collection is a MongoDB collection named `<namespace>_<id>` in the
-//! adapter's database; a document is a BSON document whose internal
+//! client's database; a document is a BSON document whose internal
 //! attributes are stored under `_uid` (`$id`), `_id` (`$sequence`, a UUIDv7
-//! string), `_tenant`, `_createdAt`, `_updatedAt` and `_permissions`.
-//! Attributes need no schema: creating one is a no-op, and in schemaless
-//! mode ([`Adapter::set_support_for_attributes`] `false`) documents carry
-//! any attribute. Filters, sorts, cursors and permissions become a `find`
-//! filter; operators an aggregation pipeline update; transactions are the
-//! driver's, on a replica set.
+//! string), `_tenant`, `_createdAt`, `_updatedAt` and `_permissions`, every
+//! other `$` key under `_`, and dots in keys as `__dot__`. Attributes need no
+//! schema: creating one is a no-op, and in schemaless mode
+//! ([`Schemaless::set_schemaless`]) documents carry any attribute. Queries
+//! become `find` filters (and `$match` stages of `count` and `sum`),
+//! permissions and tenants narrow them through the read hooks
+//! ([`crate::hook::mongo`]), operators become aggregation pipeline updates,
+//! and transactions are the server's, on a replica set (a standalone server
+//! runs without).
 //!
-//! It runs on [`utopia_mongo::Client`] (the official driver) and sends the
-//! commands PHP's adapter sends through utopia-php/mongo, so collections,
+//! It runs on a [`Driver`]: [`utopia_mongo::Client`] (the official driver)
+//! in production, a test's stand-in otherwise. The commands it sends are
+//! the ones PHP's adapter sends through utopia-php/mongo, so collections,
 //! indexes and documents are the ones PHP's adapter writes.
 //!
 //! ```no_run
@@ -19,64 +23,240 @@
 //! use std::sync::Arc;
 //!
 //! use utopia_database::Adapter;
-//! use utopia_database::adapter::mongo::Mongo;
+//! use utopia_database::adapter::mongo::{Mongo, from_client};
 //! use utopia_mongo::{Client, Config};
 //!
-//! let client = Client::new(Config::new("appwrite", "localhost", 27017, "root", "password"))
-//!     .map_err(utopia_database::adapter::mongo::from_client)?;
+//! let client = Client::new(Config::new("appwrite", "localhost", 27017, "root", "password")).map_err(from_client)?;
 //! let adapter = Mongo::new(Arc::new(client)).await?;
-//! adapter.set_database("appwrite")?;
-//! adapter.set_namespace("_1")?;
+//! adapter.set_database("appwrite");
+//! adapter.set_namespace("_1");
 //! # Ok(()) }
 //! ```
 //!
 //! PHP: `Utopia\Database\Adapter\Mongo`.
 
-use std::sync::Arc;
-use std::sync::Mutex as SyncMutex;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::any::Any;
+use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
+use std::sync::{Arc, Mutex as SyncMutex};
+use std::time::Duration;
 
 use async_trait::async_trait;
 use php_std::datetime::{DateTime, TzInfo};
-use utopia_mongo::bson::doc;
+use utopia_mongo::bson::{Bson, Document as BsonDocument, doc};
 use utopia_mongo::{Client, Options, Session};
+use utopia_query::schema::{ColumnType, IndexType};
 
-use super::{Adapter, FindOptions, State};
+use super::{
+    Adapter, Casting, Connection, Find, Limits, Relationships, Schemaless, State, Timeouts, TransactionStrategy,
+    Upserts,
+};
+use crate::attribute::Attribute;
+use crate::capability::{Capabilities, Capability};
 use crate::change::Change;
-use crate::database::Database;
+use crate::collection::Collection;
+use crate::database;
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
+use crate::event::Event;
+use crate::index::Index;
 use crate::query::Query;
-use crate::value::{Array, Value};
+use crate::relationship::{self, Relationship, RelationshipSide};
+use crate::schema;
+use crate::value::{Array, ArrayKey, Str, Value};
 
 pub(crate) mod bson;
 mod casting;
 mod documents;
+pub mod driver;
 mod filters;
-mod schema;
+mod operators;
+mod schema_ops;
+
+pub use driver::{Driver, DriverResult};
+pub use filters::replace_characters;
+
+/// The batch size of the adapter's reads (`DEFAULT_BATCH_SIZE`).
+const BATCH_SIZE: i64 = 1000;
+
+/// How many times a transaction that lost a write conflict runs again
+/// (`WRITE_CONFLICT_RETRIES`).
+const WRITE_CONFLICT_RETRIES: u32 = 20;
+
+/// The shortest wait before a transaction that lost a write conflict runs
+/// again (`WRITE_CONFLICT_SLEEP`, 5 ms).
+const WRITE_CONFLICT_SLEEP: Duration = Duration::from_micros(5_000);
+
+/// MongoDB's `WriteConflict` code.
+const WRITE_CONFLICT: i64 = 112;
+
+/// How many times a commit whose result is unknown is sent again
+/// (`COMMIT_RETRIES`).
+const COMMIT_RETRIES: u64 = 3;
+
+/// The wait before each commit retry, times the retry number
+/// (`COMMIT_RETRY_SLEEP`, 50 ms).
+const COMMIT_RETRY_SLEEP: Duration = Duration::from_millis(50);
+
+/// The operators `replaceInternalIdsKeys()` leaves alone (`$operators`).
+const OPERATORS: [&str; 19] = [
+    "$eq",
+    "$ne",
+    "$lt",
+    "$lte",
+    "$gt",
+    "$gte",
+    "$in",
+    "$nin",
+    "$text",
+    "$search",
+    "$or",
+    "$and",
+    "$match",
+    "$regex",
+    "$not",
+    "$nor",
+    "$exists",
+    "$elemMatch",
+    "$all",
+];
+
+/// Server codes of a network failure (`Exception::isNetworkError()`).
+const NETWORK_ERRORS: [i64; 7] = [11600, 11601, 11602, 89, 9001, 6, 7];
+
+/// Server codes after which a commit may have applied
+/// (`Client::isUnknownTransactionCommitResult()`).
+const UNKNOWN_COMMIT_ERRORS: [i64; 10] = [50, 91, 189, 262, 9001, 10107, 11600, 11602, 13435, 13436];
 
 /// The MongoDB adapter. See the [module docs](self).
 ///
 /// PHP: `Utopia\Database\Adapter\Mongo`.
 pub struct Mongo {
     state: State,
-    client: Arc<Client>,
-    /// The session of the transaction in progress.
+    driver: Arc<dyn Driver>,
+    /// The session of the transaction in progress (`$session`).
     session: SyncMutex<Option<Session>>,
-    support_for_attributes: AtomicBool,
+    /// `$schemaless`.
+    schemaless: AtomicBool,
+    /// `$timeout`, in milliseconds.
+    timeout: AtomicI64,
+    /// Whether the server is a replica set, once a call asked.
+    replica_set: SyncMutex<Option<bool>>,
 }
 
-/// A client error as PHP's adapter lets it out: `Utopia\Mongo\Exception`
-/// (or `UnsentException`), message and code kept.
+impl std::fmt::Debug for Mongo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Mongo").field("schemaless", &self.schemaless).field("timeout", &self.timeout).finish()
+    }
+}
+
+/// A client error as the PHP adapter lets it out: `Utopia\Mongo\Exception`
+/// (its subclasses too) and `UnsentException` with message, code and error
+/// labels kept; the client's other failures as their own classes.
 pub fn from_client(e: utopia_mongo::Error) -> Error {
     let kind = match &e {
         utopia_mongo::Error::Unsent(_) => Kind::MongoUnsent,
-        utopia_mongo::Error::InvalidArgument(_) => Kind::Exception,
+        utopia_mongo::Error::InvalidArgument(_) => Kind::InvalidArgument,
         utopia_mongo::Error::Engine { class, .. } => Kind::from_php_class(class).unwrap_or(Kind::Error),
         utopia_mongo::Error::UnexpectedValue { .. } => Kind::MongoUnexpectedValue,
         _ => Kind::Mongo,
     };
-    Error::from_bytes(kind, e.message_bytes().to_vec()).with_code(e.code())
+    let labels: Vec<String> = e
+        .failure()
+        .map(|f| f.error_labels.iter().filter_map(|l| l.as_str().map(str::to_owned)).collect())
+        .unwrap_or_default();
+    let error = Error::from_bytes(kind, e.message_bytes().to_vec()).with_code(e.code());
+    if labels.is_empty() { error } else { error.with_labels(labels) }
+}
+
+/// Whether `error` is a `Utopia\Mongo\Exception` (`UnsentException` too).
+fn is_mongo(error: &Error) -> bool {
+    error.is_a(Kind::Mongo)
+}
+
+/// Whether `error` carries the server label `label`.
+fn labelled(error: &Error, label: &str) -> bool {
+    error.labels().iter().any(|l| l == label)
+}
+
+/// `Exception::isTransientError()`.
+fn is_transient_error(error: &Error) -> bool {
+    labelled(error, utopia_mongo::client::TRANSIENT_TRANSACTION_ERROR)
+        || labelled(error, utopia_mongo::client::UNKNOWN_TRANSACTION_COMMIT_RESULT)
+        || NETWORK_ERRORS.contains(&error.code())
+        || labelled(error, "RetryableWriteError")
+}
+
+/// `processException($e)`: an error mapped by its code to the database
+/// error PHP maps it to (time limits, duplicates, missing or aborted
+/// transactions, invalid operations, values out of range), or as it is.
+pub fn process_exception(e: Error) -> Error {
+    let code = e.code();
+    let mapped = |kind: Kind, message: &str| Error::new(kind, message).with_code(code).with_previous(e.clone());
+    match code {
+        50 | 262 => mapped(Kind::Timeout, "Query timed out"),
+        11000 | 11001 => match violated_index(e.message()) {
+            Some(index) if index != "_uid" && index != "_id_" => mapped(Kind::Unique, crate::error::UNIQUE_MESSAGE),
+            _ => mapped(Kind::Duplicate, "Document already exists"),
+        },
+        48 => mapped(Kind::Duplicate, "Collection already exists"),
+        85 => mapped(Kind::Duplicate, "Index already exists"),
+        251 => mapped(Kind::Transaction, "No active transaction"),
+        112 => mapped(Kind::Transaction, "Transaction aborted"),
+        14 => mapped(Kind::Type, "Invalid operation"),
+        28764 => mapped(Kind::Limit, "Value out of range"),
+        _ => e,
+    }
+}
+
+/// `getViolatedIndex($message)`: the index a duplicate key error names
+/// (`... index: <name> dup key ...`).
+pub fn violated_index(message: &str) -> Option<String> {
+    // `/index:\s*(\S+)\s+dup key/`
+    let bytes = message.as_bytes();
+    let space = |b: u8| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'\x0b' | b'\x0c');
+    let mut from = 0;
+    while let Some(at) = message[from..].find("index:") {
+        let mut i = from + at + "index:".len();
+        while i < bytes.len() && space(bytes[i]) {
+            i += 1;
+        }
+        let start = i;
+        while i < bytes.len() && !space(bytes[i]) {
+            i += 1;
+        }
+        // `\S+` backtracks: the name is the longest run of non-spaces after
+        // which spaces and `dup key` follow, else a shorter one cannot be.
+        if i > start {
+            let mut j = i;
+            while j < bytes.len() && space(bytes[j]) {
+                j += 1;
+            }
+            if j > i && bytes[j..].starts_with(b"dup key") {
+                return Some(message[start..i].to_owned());
+            }
+        }
+        from += at + 1;
+    }
+    None
+}
+
+/// The client's [`Options`] of a call: the session when one is given, and
+/// `fields`.
+fn options(session: Option<Session>, fields: BsonDocument) -> Options {
+    Options { session, fields }
+}
+
+/// A database error wrapping `previous` with its code (`new
+/// DatabaseException($message, $previous->getCode(), $previous)`).
+fn wrapped(message: String, previous: Error) -> Error {
+    Error::database(message).with_code(previous.code()).with_previous(previous)
+}
+
+/// A [`DateTime`] of `value` (`new \DateTime($value)`), PHP's failure as
+/// its class.
+fn date(value: &[u8]) -> Result<DateTime> {
+    DateTime::new(value, None, &TzInfo::utc())
+        .map_err(|e| Error::new(Kind::from_php_class(e.php_class()).unwrap_or(Kind::Exception), e.message()))
 }
 
 impl Mongo {
@@ -84,20 +264,27 @@ impl Mongo {
     ///
     /// PHP: `new Mongo($client)`.
     pub async fn new(client: Arc<Client>) -> Result<Mongo> {
-        client.connect().await.map_err(from_client)?;
+        Mongo::with_driver(client).await
+    }
+
+    /// The adapter over `driver`, which it connects.
+    ///
+    /// PHP: `new Mongo($client)` with a client of another class.
+    pub async fn with_driver(driver: Arc<dyn Driver>) -> Result<Mongo> {
+        driver.connect().await.map_err(from_client)?;
         Ok(Mongo {
             state: State::default(),
-            client,
+            driver,
             session: SyncMutex::new(None),
-            support_for_attributes: AtomicBool::new(true),
+            schemaless: AtomicBool::new(false),
+            timeout: AtomicI64::new(0),
+            replica_set: SyncMutex::new(None),
         })
     }
 
-    /// The client the adapter runs on.
-    ///
-    /// PHP: `getDriver()`.
-    pub fn driver(&self) -> &Arc<Client> {
-        &self.client
+    /// The driver the adapter runs on (`getDriver()`).
+    pub fn driver(&self) -> &Arc<dyn Driver> {
+        &self.driver
     }
 
     fn session(&self) -> Option<Session> {
@@ -117,195 +304,170 @@ impl Mongo {
     }
 
     /// `getNamespace() . '_' . filter($collection)`: a collection's name.
-    fn name(&self, collection: &str) -> Result<String> {
-        Ok(format!("{}_{}", self.namespace(), self.filter(collection)?))
+    fn name(&self, collection: &str) -> String {
+        format!("{}_{}", self.namespace(), super::filter(collection))
     }
 
-    /// `getTransactionOptions($options)`: the session of the transaction
-    /// in progress, if any, with `fields`.
-    fn options(&self, fields: utopia_mongo::bson::Document) -> Options {
-        let session = if self.depth() > 0 { self.session() } else { None };
-        Options { session, fields }
+    /// `getTransactionOptions()`: the session of the transaction in
+    /// progress, if any.
+    fn transaction_session(&self) -> Option<Session> {
+        if self.depth() > 0 { self.session() } else { None }
     }
 
-    /// `endSessions([$this->session])`, errors ignored where PHP ignores them.
-    async fn end_session(&self, session: &Option<Session>) -> Result<()> {
-        if let Some(session) = session {
-            self.client.end_sessions(std::slice::from_ref(session), doc! {}).await.map_err(from_client)?;
+    /// `getTransactionOptions($options)` as client options.
+    fn options(&self, fields: BsonDocument) -> Options {
+        options(self.transaction_session(), fields)
+    }
+
+    /// A client failure as the adapter rethrows it from its
+    /// `catch (MongoException $e)` blocks: mapped by
+    /// [`process_exception`]; the client's other failures as they are.
+    fn mongo(&self, e: utopia_mongo::Error) -> Error {
+        let e = from_client(e);
+        if is_mongo(&e) { process_exception(e) } else { e }
+    }
+
+    /// `isReplicaSet()`, remembered for [`Adapter::is_retryable`].
+    async fn is_replica_set(&self) -> Result<bool> {
+        let known = self.driver.is_replica_set().await.map_err(from_client)?;
+        *self.replica_set.lock().unwrap_or_else(|e| e.into_inner()) = Some(known);
+        Ok(known)
+    }
+
+    /// `endSession()`: ends the transaction's session (best effort) and
+    /// forgets it.
+    async fn end_session(&self) {
+        if let Some(session) = self.session() {
+            let _ = self.driver.end_sessions(std::slice::from_ref(&session)).await;
         }
-        Ok(())
+        self.set_session(None);
     }
 
-    /// `processException($e)`: a client error as the database error PHP
-    /// maps it to (timeouts, duplicates, missing transactions, invalid
-    /// operations, an undefined power), or passed through.
-    pub fn process_exception(&self, e: utopia_mongo::Error) -> Error {
-        let code = e.code();
-        let previous = from_client(e.clone());
-        let mapped =
-            |kind: Kind, message: &str| Error::new(kind, message).with_code(code).with_previous(previous.clone());
-        match code {
-            50 | 262 => mapped(Kind::Timeout, "Query timed out"),
-            11000 | 11001 => match self.violated_index(e.message()) {
-                Some(index) if index != "_uid" && index != "_id_" => mapped(Kind::Unique, "Unique index violation"),
-                _ => mapped(Kind::Duplicate, "Document already exists"),
-            },
-            48 => mapped(Kind::Duplicate, "Collection already exists"),
-            85 => mapped(Kind::Duplicate, "Index already exists"),
-            251 => mapped(Kind::Transaction, "No active transaction"),
-            112 => mapped(Kind::Transaction, "Transaction aborted"),
-            14 => mapped(Kind::Type, "Invalid operation"),
-            28764 => mapped(Kind::Limit, "Value out of range"),
-            _ => previous,
+    /// `isUnknownCommitResult($error)`: whether a commit reached the server
+    /// but its result is unknown.
+    fn is_unknown_commit_result(error: &Error) -> bool {
+        if !is_mongo(error) || error.kind() == Kind::MongoUnsent {
+            return false;
         }
+        if labelled(error, utopia_mongo::client::TRANSIENT_TRANSACTION_ERROR) {
+            return false;
+        }
+        labelled(error, utopia_mongo::client::UNKNOWN_TRANSACTION_COMMIT_RESULT)
+            || NETWORK_ERRORS.contains(&error.code())
+            || UNKNOWN_COMMIT_ERRORS.contains(&error.code())
+            || error.message().contains(utopia_mongo::client::UNKNOWN_TRANSACTION_COMMIT_RESULT)
     }
 
-    /// `processException($e)` of an error that is already the database's
-    /// (codes of a passed-through client error still map).
-    fn process(&self, e: Error) -> Error {
-        if !matches!(e.kind(), Kind::Mongo | Kind::MongoUnsent) {
-            return e;
+    /// `isAbortedCommit($error)`: whether the server reports the
+    /// transaction aborted.
+    fn is_aborted_commit(error: &Error) -> bool {
+        is_mongo(error)
+            && (labelled(error, utopia_mongo::client::TRANSIENT_TRANSACTION_ERROR)
+                || process_exception(error.clone()).kind() == Kind::Transaction)
+    }
+
+    /// `commit($session)`: commits, sending only the commit again while its
+    /// result is unknown.
+    async fn commit(&self, session: &Session) -> Result<()> {
+        let Err(e) = self.driver.commit_transaction(session, BsonDocument::new()).await else { return Ok(()) };
+        let error = from_client(e);
+        if Self::is_unknown_commit_result(&error) {
+            return self.retry_commit(session, error).await;
         }
-        let failure = utopia_mongo::Failure::new(e.message(), e.code());
-        let client = if e.kind() == Kind::MongoUnsent {
-            utopia_mongo::Error::Unsent(Box::new(failure))
+        if !is_mongo(&error) {
+            return Err(wrapped(error.message().to_owned(), error));
+        }
+        Err(process_exception(error))
+    }
+
+    /// `retryCommit($session, $unknown)`.
+    async fn retry_commit(&self, session: &Session, unknown: Error) -> Result<()> {
+        for retry in 1..=COMMIT_RETRIES {
+            tokio::time::sleep(COMMIT_RETRY_SLEEP * retry as u32).await;
+            let concern = doc! { "writeConcern": { "w": "majority", "wtimeout": 10_000 } };
+            match self.driver.commit_transaction(session, concern).await {
+                Ok(()) => return Ok(()),
+                Err(e) => {
+                    let error = from_client(e);
+                    if error.kind() == Kind::MongoUnsent || Self::is_unknown_commit_result(&error) {
+                        continue;
+                    }
+                    if Self::is_aborted_commit(&error) {
+                        return Err(Error::transaction("The transaction was aborted while its commit was retried")
+                            .with_previous(error));
+                    }
+                    break;
+                }
+            }
+        }
+        Err(Error::new(Kind::Unconfirmed, "Failed to commit transaction: the commit could not be confirmed")
+            .with_previous(unknown))
+    }
+
+    /// `getTenantFilters($collection, $tenants)`: the `_tenant` filter of a
+    /// shared collection: the tenant (or `tenants`), plus `null` for the
+    /// metadata collection, `$in` when there are several; `null` without
+    /// shared tables or a tenant.
+    pub fn tenant_filters(&self, collection: &str, tenants: &[Value]) -> Value {
+        if !self.shared_tables() {
+            return Value::Null;
+        }
+        let mut values: Vec<Value> = Vec::new();
+        if tenants.is_empty() {
+            let tenant = self.tenant();
+            if !matches!(tenant, Value::Null) {
+                values.push(tenant);
+            }
         } else {
-            utopia_mongo::Error::Exception(Box::new(failure))
-        };
-        self.process_exception(client)
-    }
-
-    /// `getViolatedIndex($message)`: the index a duplicate key error names
-    /// (`... index: _uid dup key: ...`).
-    pub fn violated_index(&self, message: &str) -> Option<String> {
-        use php_std::pcre::Value as P;
-        let found = php_std::pcre::preg_match(br"/index:\s*(\S+)\s+dup key/", message.as_bytes(), 0, 0).ok()?.value;
-        if found.result != P::Int(1) {
-            return None;
+            values.extend(tenants.iter().cloned());
         }
-        match found.matches?.entries().get(1) {
-            Some((_, P::Str(s))) => Some(String::from_utf8_lossy(s).into_owned()),
-            _ => None,
+        if collection == database::METADATA && !values.is_empty() {
+            values.push(Value::Null);
+            return filters::assoc([("$in", Value::Array(values.into_iter().collect()))]);
+        }
+        match values.len() {
+            0 => Value::Null,
+            1 => values.remove(0),
+            _ => filters::assoc([("$in", Value::Array(values.into_iter().collect()))]),
         }
     }
 
-    /// `permissionStrings($type)`: `<type>("<role>")` for each role of the
-    /// authorization, the strings documents' `_permissions` hold.
-    pub fn permission_strings(&self, kind: &str) -> Vec<String> {
-        Self::permission_strings_of(&self.authorization(), kind)
+    /// `applyTenantFilter($filters, $collection)`.
+    fn apply_tenant_filter(&self, filters: Array, collection: &str) -> Array {
+        use crate::hook::mongo::Read;
+        let hook = crate::hook::mongo::Tenant::new(self.shared_tables(), |c: &str| self.tenant_filters(c, &[]));
+        hook.apply_filters(filters, collection, crate::permission::PermissionType::Read)
     }
 
-    /// [`Mongo::permission_strings`] for `authorization`'s roles.
-    pub fn permission_strings_of(authorization: &crate::Authorization, kind: &str) -> Vec<String> {
-        authorization.roles().iter().map(|role| format!("{kind}(\"{}\")", crate::value::to_text(role))).collect()
+    /// `applyReadFilters($filters, $collection, $forPermission)`: the tenant
+    /// filter, then the permission hook.
+    fn apply_read_filters(
+        &self,
+        filters: Array,
+        collection: &str,
+        permission: crate::permission::PermissionType,
+    ) -> Array {
+        use crate::hook::mongo::Read;
+        let filters = self.apply_tenant_filter(filters, collection);
+        let hooks: [Box<dyn Read>; 1] = [Box::new(crate::hook::mongo::Permission::new(self.authorization()))];
+        hooks.iter().fold(filters, |filters, hook| hook.apply_filters(filters, collection, permission))
+    }
+
+    /// `getOrder($order)`: `1` ascending, `-1` descending.
+    ///
+    /// Fails ([`Kind::Query`]) for a random order.
+    fn order(order: utopia_query::OrderDirection) -> Result<i64> {
+        match order {
+            utopia_query::OrderDirection::Asc => Ok(1),
+            utopia_query::OrderDirection::Desc => Ok(-1),
+            utopia_query::OrderDirection::Random => Err(Error::query("Random order is not supported by this adapter")),
+        }
     }
 
     /// `getInternalKeyForAttribute($attribute)`: the stored name of an
     /// internal attribute (`$id` is `_uid`, `$sequence` is `_id`, ...).
     pub fn internal_key(attribute: &str) -> &str {
-        match attribute {
-            "$id" => "_uid",
-            "$sequence" => "_id",
-            "$collection" => "_collection",
-            "$tenant" => "_tenant",
-            "$createdAt" => "_createdAt",
-            "$updatedAt" => "_updatedAt",
-            "$deletedAt" => "_deletedAt",
-            "$permissions" => "_permissions",
-            other => other,
-        }
-    }
-
-    /// `getOrder($order)`: `1` for `ASC`, `-1` for `DESC` (any case).
-    fn order(order: &str) -> Result<i32> {
-        match order.to_ascii_uppercase().as_str() {
-            Database::ORDER_ASC => Ok(1),
-            Database::ORDER_DESC => Ok(-1),
-            _ => Err(Error::database(format!(
-                "Unknown sort order:{order}. Must be one of {}, {}",
-                Database::ORDER_ASC,
-                Database::ORDER_DESC
-            ))),
-        }
-    }
-
-    /// `getTenantFilters($collection, $tenants)`: the `_tenant` filter of a
-    /// shared collection: the tenant (or `tenants`), plus `null` for the
-    /// metadata collection, `$in` when more than one.
-    pub fn tenant_filters(&self, collection: &str, tenants: &[Value]) -> Value {
-        if !self.shared_tables() {
-            return Value::Array(Array::new());
-        }
-        let mut values: Vec<Value> = if tenants.is_empty() { vec![self.tenant()] } else { tenants.to_vec() };
-        if collection == Database::METADATA {
-            values.push(Value::Null);
-        }
-        if values.len() == 1 {
-            return values.remove(0);
-        }
-        let mut filter = Array::new();
-        filter.set("$in".into(), Value::Array(values.into_iter().collect()));
-        Value::Array(filter)
-    }
-
-    /// `getSupportForTTLIndexes()` and the other capability getters PHP's
-    /// Mongo adds over the trait's: `listCollections()`, the raw reply
-    /// values of `listCollections`.
-    ///
-    /// PHP: `listCollections()`.
-    pub async fn list_collections(&self) -> Result<Vec<Value>> {
-        let reply = self
-            .client
-            .list_collection_names(utopia_mongo::bson::Document::new(), Options::new())
-            .await
-            .map_err(from_client)?;
-        Ok(reply.iter().map(|(_, v)| bson::decode(v)).collect())
-    }
-
-    /// `quote($string)`: `''` (MongoDB has no identifiers to quote).
-    pub fn quote(&self, _string: &str) -> String {
-        String::new()
-    }
-
-    /// `execute($stmt)`: `true` (MongoDB has no statements).
-    pub fn execute(&self) -> bool {
-        true
-    }
-
-    /// `isExtendedISODatetime($value)`: whether a string is an ISO 8601
-    /// date and time with a zone (`Z` or `+hh:mm`) and an optional fraction
-    /// (`YYYY-MM-DDTHH:mm:ss[.f+](Z|+HH:MM)`).
-    pub fn is_extended_iso_datetime(value: &[u8]) -> bool {
-        let len = value.len();
-        if len < 20 {
-            return false;
-        }
-        if value[4] != b'-' || value[7] != b'-' || value[10] != b'T' || value[13] != b':' || value[16] != b':' {
-            return false;
-        }
-        let has_z = value[len - 1] == b'Z';
-        let has_offset = len >= 25 && matches!(value[len - 6], b'+' | b'-') && value[len - 3] == b':';
-        if !has_z && !has_offset {
-            return false;
-        }
-        if has_offset && len > 31 {
-            return false;
-        }
-        if has_z && len > 26 {
-            return false;
-        }
-        let mut digits: Vec<usize> = vec![0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18];
-        let time_end = if has_z { len - 1 } else { len - 6 };
-        if time_end > 19 {
-            if value[19] != b'.' || time_end < 21 {
-                return false;
-            }
-            digits.extend(20..time_end);
-        }
-        if has_offset {
-            digits.extend([len - 5, len - 4, len - 2, len - 1]);
-        }
-        digits.iter().all(|i| value[*i].is_ascii_digit())
+        crate::storage::column(attribute)
     }
 
     /// `escapeMongoFieldName($name)`: a leading `$` as `_`, dots as `__dot__`.
@@ -317,140 +479,39 @@ impl Mongo {
         if name.contains('.') { name.replace('.', "__dot__") } else { name }
     }
 
-    async fn is_replica_set(&self) -> Result<bool> {
-        self.client.is_replica_set().await.map_err(from_client)
+    /// `shouldAddTenantToIndex($type)`: every index but a TTL one leads with
+    /// `_tenant` under shared tables.
+    fn should_add_tenant_to_index(&self, kind: IndexType) -> bool {
+        self.shared_tables() && kind != IndexType::Ttl
     }
 
-    /// `startTransaction()`.
-    async fn start_transaction_impl(&self) -> Result<bool> {
-        if !self.is_replica_set().await? {
-            return Ok(true);
-        }
-        let started = async {
-            if self.depth() == 0 && self.session().is_none() {
-                let session = self.client.start_session(doc! {}).await?;
-                self.set_session(Some(session.clone()));
-                self.client.start_transaction(&session, doc! {}).await?;
-            }
-            Ok::<_, utopia_mongo::Error>(())
-        }
-        .await;
-        if let Err(e) = started {
-            self.set_session(None);
-            self.set_depth(0);
-            let code = e.code();
-            return Err(Error::database(format!("Failed to start transaction: {}", e.message()))
-                .with_code(code)
-                .with_previous(from_client(e)));
-        }
-        self.set_depth(self.depth() + 1);
-        Ok(true)
+    /// The timeout reads run under (`$this->timeout`).
+    fn read_timeout(&self) -> i64 {
+        self.timeout.load(Ordering::Relaxed)
     }
 
-    /// `commitTransaction()`.
-    async fn commit_transaction_impl(&self) -> Result<bool> {
-        if !self.is_replica_set().await? {
-            return Ok(true);
+    /// `isRetryable()` of the base adapter.
+    fn base_is_retryable(&self, failure: &Error) -> bool {
+        let mut cause = Some(failure);
+        while let Some(c) = cause {
+            if c.is_a(Kind::Transaction) {
+                return true;
+            }
+            if c.is_a(Kind::Database) && c.kind() != Kind::Database {
+                return false;
+            }
+            if self.is_transient(c) {
+                return true;
+            }
+            cause = c.previous();
         }
-        let outcome: Result<bool> = async {
-            if self.depth() == 0 {
-                return Ok(false);
-            }
-            self.set_depth(self.depth() - 1);
-            if self.depth() > 0 {
-                return Ok(true);
-            }
-            let Some(session) = self.session() else { return Ok(false) };
-            let committed = self.client.commit_transaction(&session, doc! {}).await;
-            let result = match committed {
-                Ok(_) => Ok(true),
-                Err(e) => {
-                    let e = self.process_exception(e);
-                    if e.kind() == Kind::Transaction {
-                        self.end_session(&Some(session.clone())).await?;
-                        self.set_session(None);
-                        self.set_depth(0);
-                        return Ok(true);
-                    }
-                    Err(e)
-                }
-            };
-            // finally
-            if let Some(current) = self.session() {
-                self.end_session(&Some(current)).await?;
-            }
-            self.set_session(None);
-            result
-        }
-        .await;
-        match outcome {
-            Ok(done) => Ok(done),
-            Err(e) => {
-                let session = self.session();
-                let _ = self.end_session(&session).await;
-                self.set_session(None);
-                self.set_depth(0);
-                Err(Error::database(format!("Failed to commit transaction: {}", e.message()))
-                    .with_code(e.code())
-                    .with_previous(e))
-            }
-        }
+        false
     }
 
-    /// `rollbackTransaction()`.
-    async fn rollback_transaction_impl(&self) -> Result<bool> {
-        if !self.is_replica_set().await? {
-            return Ok(true);
-        }
-        let outcome: Result<bool> = async {
-            if self.depth() == 0 {
-                return Ok(false);
-            }
-            self.set_depth(self.depth() - 1);
-            if self.depth() > 0 {
-                return Ok(true);
-            }
-            let Some(session) = self.session() else { return Ok(false) };
-            let aborted = self.client.abort_transaction(&session, doc! {}).await;
-            let result = match aborted {
-                Ok(_) => Ok(true),
-                Err(e) => {
-                    let e = self.process_exception(e);
-                    if e.kind() == Kind::Transaction { Ok(true) } else { Err(e) }
-                }
-            };
-            // finally
-            self.end_session(&Some(session)).await?;
-            self.set_session(None);
-            result
-        }
-        .await;
-        match outcome {
-            Ok(done) => Ok(done),
-            Err(e) => {
-                let session = self.session();
-                let _ = self.end_session(&session).await;
-                self.set_session(None);
-                self.set_depth(0);
-                Err(Error::database(format!("Failed to rollback transaction: {}", e.message()))
-                    .with_code(e.code())
-                    .with_previous(e))
-            }
-        }
-    }
-}
-
-/// `is_null($value)`.
-fn null(value: &Value) -> bool {
-    matches!(value, Value::Null)
-}
-
-/// `\count($collection->getAttribute($key) ?? [])`.
-fn count_of(collection: &Document, key: &str) -> i64 {
-    match collection.get(key) {
-        Some(Value::Array(a)) => a.len() as i64,
-        Some(Value::Ext(crate::value::Ext::Document(d))) => d.len() as i64,
-        _ => 0,
+    /// The attributes of `collection` followed by every internal one
+    /// (`collectionAttributesWithInternal()`).
+    fn attributes_with_internal(collection: &Collection) -> Result<Vec<Attribute>> {
+        collection.attributes_with(database::internal_attributes(true))
     }
 }
 
@@ -460,86 +521,265 @@ impl Adapter for Mongo {
         &self.state
     }
 
-    /// `getHostname()`: the client's host.
-    fn hostname(&self) -> String {
-        self.client.host().to_owned()
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 
-    fn set_timeout(&self, milliseconds: i64, _event: &str) -> Result<()> {
-        self.state.lock().timeout = milliseconds;
-        Ok(())
+    fn capabilities(&self) -> Capabilities {
+        Capabilities::of(&[
+            Capability::IndexKey,
+            Capability::IndexArray,
+            Capability::IndexUnique,
+            Capability::Objects,
+            Capability::IndexFulltext,
+            Capability::IndexTtl,
+            Capability::Caching,
+            Capability::Operators,
+            Capability::TransactionRetries,
+        ])
     }
 
-    fn clear_timeout(&self, event: &str) {
-        self.before(event, "timeout", None);
-        self.state.lock().timeout = 0;
+    /// `supports()`: [`Capability::DefinedAttributes`] unless schemaless.
+    fn supports(&self, capability: Capability) -> bool {
+        if capability == Capability::DefinedAttributes {
+            return !self.schemaless.load(Ordering::Relaxed);
+        }
+        self.capabilities().contains(capability)
     }
 
-    async fn bypass_transaction(&self) -> Result<bool> {
-        Ok(!self.is_replica_set().await? || self.depth() > 0 || self.skip_duplicates())
+    /// `limits()`: collections hold any number of attributes and documents
+    /// of any width, so both caps are 0.
+    fn limits(&self) -> Arc<Limits> {
+        if let Some(limits) = self.state.lock().limits.clone() {
+            return limits;
+        }
+        let min = date(b"-9999-01-01 00:00:00").unwrap_or_else(|_| unreachable!("a valid date"));
+        let max = date(super::MAX_DATETIME.as_bytes()).unwrap_or_else(|_| unreachable!("a valid date"));
+        let limits = Arc::new(Limits {
+            string: 2_147_483_647,
+            varchar: 2_147_483_647,
+            integer: 4_294_967_295,
+            big_integer: database::MAX_BIG_INT,
+            attributes: 0,
+            indexes: 64,
+            default_attributes: database::internal_attributes(true).len() as i64,
+            default_indexes: database::INTERNAL_INDEXES.len() as i64,
+            index_length: 1024,
+            uid_length: 255,
+            document_size: 0,
+            min_date_time: min,
+            max_date_time: max,
+            id_type: ColumnType::Uuid7,
+            keywords: Vec::new(),
+            internal_index_keys: Vec::new(),
+        });
+        self.state.lock().limits = Some(limits.clone());
+        limits
     }
 
-    fn rethrows_rollback_failure(&self) -> bool {
-        false
+    fn casting(&self) -> Option<&dyn Casting> {
+        Some(self)
     }
 
+    fn connection(&self) -> Option<&dyn Connection> {
+        Some(self)
+    }
+
+    fn relationships(&self) -> Option<&dyn Relationships> {
+        Some(self)
+    }
+
+    fn schemaless(&self) -> Option<&dyn Schemaless> {
+        Some(self)
+    }
+
+    fn timeouts(&self) -> Option<&dyn Timeouts> {
+        Some(self)
+    }
+
+    fn upserts(&self) -> Option<&dyn Upserts> {
+        Some(self)
+    }
+
+    // ---- Transactions --------------------------------------------------
+
+    /// `startTransaction()`: a session and its transaction, or one more
+    /// level of nesting; nothing on a standalone server.
     async fn start_transaction(&self) -> Result<bool> {
-        self.start_transaction_impl().await
+        if !self.is_replica_set().await? {
+            return Ok(true);
+        }
+        let started: Result<()> = async {
+            if self.depth() == 0 && self.session().is_none() {
+                let session = self.driver.start_session().await.map_err(from_client)?;
+                self.set_session(Some(session.clone()));
+                self.driver.start_transaction(&session).await.map_err(from_client)?;
+            }
+            self.set_depth(self.depth() + 1);
+            Ok(())
+        }
+        .await;
+        if let Err(e) = started {
+            self.set_session(None);
+            self.set_depth(0);
+            return Err(wrapped(format!("Failed to start transaction: {}", e.message()), e));
+        }
+        Ok(true)
     }
 
+    /// `commitTransaction()`: one level less of nesting, and the commit at
+    /// the outermost.
+    ///
+    /// Fails ([`Kind::Unconfirmed`]) when the commit was sent but its result
+    /// could not be confirmed, and ([`Kind::Database`]) otherwise, with a
+    /// [`Kind::Transaction`] cause when the server reports it aborted.
     async fn commit_transaction(&self) -> Result<bool> {
-        self.commit_transaction_impl().await
+        if !self.is_replica_set().await? {
+            return Ok(true);
+        }
+        let outcome: Result<bool> = async {
+            if self.depth() == 0 {
+                return Ok(false);
+            }
+            self.set_depth(self.depth() - 1);
+            if self.depth() > 0 {
+                return Ok(true);
+            }
+            let Some(session) = self.session() else { return Ok(false) };
+            let committed = self.commit(&session).await;
+            self.end_session().await;
+            committed.map(|()| true)
+        }
+        .await;
+        match outcome {
+            Ok(done) => Ok(done),
+            Err(e) => {
+                self.end_session().await;
+                self.set_depth(0);
+                if e.kind() == Kind::Unconfirmed {
+                    return Err(e);
+                }
+                Err(wrapped(format!("Failed to commit transaction: {}", e.message()), e))
+            }
+        }
     }
 
+    /// `rollbackTransaction()`: one level less of nesting, and the abort at
+    /// the outermost; a transaction the server already aborted counts as
+    /// rolled back.
     async fn rollback_transaction(&self) -> Result<bool> {
-        self.rollback_transaction_impl().await
+        if !self.is_replica_set().await? {
+            return Ok(true);
+        }
+        let outcome: Result<bool> = async {
+            if self.depth() == 0 {
+                return Ok(false);
+            }
+            self.set_depth(self.depth() - 1);
+            if self.depth() > 0 {
+                return Ok(true);
+            }
+            let Some(session) = self.session() else { return Ok(false) };
+            let aborted = match self.driver.abort_transaction(&session).await {
+                Ok(()) => Ok(true),
+                Err(e) => {
+                    let e = process_exception(from_client(e));
+                    if e.kind() == Kind::Transaction { Ok(true) } else { Err(e) }
+                }
+            };
+            self.end_session().await;
+            aborted
+        }
+        .await;
+        match outcome {
+            Ok(done) => Ok(done),
+            Err(e) => {
+                self.end_session().await;
+                self.set_depth(0);
+                Err(wrapped(format!("Failed to rollback transaction: {}", e.message()), e))
+            }
+        }
     }
 
-    /// `ping()`.
-    async fn ping(&self) -> Result<bool> {
-        let reply = self.client.query(doc! { "ping": 1, "skipReadConcern": true }, None).await.map_err(from_client)?;
-        Ok(match reply {
-            utopia_mongo::Reply::Document(d) => match d.get("ok") {
-                Some(ok) => bson::decode(ok).truthy(),
-                None => false,
-            },
-            utopia_mongo::Reply::Count(n) => bson::decode(&n).truthy(),
+    /// What `withTransaction()` does after a failed attempt's rollback: the
+    /// session ended and the nesting reset.
+    async fn abandon_transaction(&self) {
+        self.end_session().await;
+        self.set_depth(0);
+    }
+
+    /// `withTransaction()`: the callback alone on a standalone server, in a
+    /// transaction already open, or while duplicates are ignored (an upsert
+    /// with `$setOnInsert` hits write conflicts under a transaction's
+    /// snapshot); otherwise a session per attempt, write conflicts retried
+    /// up to 20 times.
+    async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
+        if !self.is_replica_set().await? || self.depth() > 0 || self.state.ignoring_duplicates().get() {
+            return Ok(TransactionStrategy::Direct);
+        }
+        Ok(TransactionStrategy::Sessions {
+            conflict_code: WRITE_CONFLICT,
+            conflict_retries: WRITE_CONFLICT_RETRIES,
+            conflict_wait: WRITE_CONFLICT_SLEEP,
         })
     }
 
-    async fn reconnect(&self) -> Result<()> {
-        self.client.connect().await.map_err(from_client)?;
-        Ok(())
+    /// `isRetryable()`: the base adapter's answer, and only on a replica set
+    /// (a standalone server runs no transaction to retry). Before any call
+    /// asked the server, it is taken to be a replica set.
+    fn is_retryable(&self, failure: &Error) -> bool {
+        self.base_is_retryable(failure) && self.replica_set.lock().unwrap_or_else(|e| e.into_inner()).unwrap_or(true)
     }
 
-    async fn connection_id(&self) -> Result<String> {
-        Ok("0".to_owned())
+    /// `isTransient()`: a MongoDB error the server labels transient, a
+    /// network error, one never sent, or one mapped to an aborted
+    /// transaction; else a lost connection.
+    fn is_transient(&self, error: &Error) -> bool {
+        if is_mongo(error)
+            && (error.kind() == Kind::MongoUnsent
+                || is_transient_error(error)
+                || process_exception(error.clone()).kind() == Kind::Transaction)
+        {
+            return true;
+        }
+        crate::connection::is_lost(error)
     }
+
+    // ---- Databases -----------------------------------------------------
 
     async fn create(&self, _name: &str) -> Result<bool> {
         Ok(true)
     }
 
-    async fn exists(&self, database: &str, collection: Option<&str>) -> Result<bool> {
-        self.exists_impl(database, collection).await
+    async fn update(&self, name: &str, new: &str) -> Result<bool> {
+        self.rename_database(name, new).await
+    }
+
+    async fn exists(&self, database: &str) -> Result<bool> {
+        Ok(self.database_names().await?.contains(&super::filter(database)))
+    }
+
+    async fn collection_exists(&self, database: &str, collection: &str) -> Result<bool> {
+        Ok(self.collection_exists_in(database, collection).await)
     }
 
     async fn list(&self) -> Result<Vec<Document>> {
-        self.list_impl().await
+        self.list_databases().await
     }
 
     async fn delete(&self, name: &str) -> Result<bool> {
-        self.client.drop_database(doc! {}, Some(name)).await.map_err(from_client)?;
+        self.driver.drop_database(BsonDocument::new(), Some(&super::filter(name))).await.map_err(from_client)?;
         Ok(true)
     }
 
-    async fn create_collection(&self, name: &str, attributes: &[Document], indexes: &[Document]) -> Result<bool> {
-        self.create_collection_impl(name, attributes, indexes).await
+    // ---- Collections ---------------------------------------------------
+
+    async fn create_collection(&self, collection: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
+        self.create_collection_impl(collection, attributes, indexes).await
     }
 
-    async fn delete_collection(&self, id: &str) -> Result<bool> {
-        let name = self.name(id)?;
-        self.client.drop_collection(&name, Options::new()).await.map_err(from_client)
+    async fn delete_collection(&self, collection: &str) -> Result<bool> {
+        self.driver.drop_collection(&self.name(collection), Options::new()).await.map_err(from_client)
     }
 
     async fn analyze_collection(&self, _collection: &str) -> Result<bool> {
@@ -554,129 +794,79 @@ impl Adapter for Mongo {
         self.size_of_collection_impl(collection).await
     }
 
-    async fn schema_attributes(&self, _collection: &str) -> Result<Vec<Document>> {
-        Ok(Vec::new())
+    fn attribute_width(&self, _collection: &Collection) -> Result<i64> {
+        Ok(0)
     }
 
-    async fn schema_indexes(&self, _collection: &str) -> Result<Vec<Document>> {
-        Ok(Vec::new())
-    }
+    // ---- Attributes ----------------------------------------------------
 
-    async fn create_attribute(
-        &self,
-        _collection: &str,
-        _id: &str,
-        _kind: &str,
-        _size: i64,
-        _signed: bool,
-        _array: bool,
-        _required: bool,
-    ) -> Result<bool> {
+    async fn create_attribute(&self, _collection: &str, _attribute: &Attribute) -> Result<bool> {
         Ok(true)
     }
 
-    async fn create_attributes(&self, _collection: &str, _attributes: &[Array]) -> Result<bool> {
+    async fn create_attributes(&self, _collection: &str, _attributes: &[Attribute]) -> Result<bool> {
         Ok(true)
     }
 
-    async fn update_attribute(
-        &self,
-        collection: &str,
-        id: &str,
-        _kind: &str,
-        _size: i64,
-        _signed: bool,
-        _array: bool,
-        new_key: Option<&str>,
-        _required: bool,
-    ) -> Result<bool> {
-        match new_key {
-            Some(new) if !(new.is_empty() || new == "0") && new != id => {
-                self.rename_attribute(collection, id, new).await
-            }
-            _ => Ok(true),
+    async fn update_attribute(&self, collection: &str, key: &str, attribute: &Attribute) -> Result<bool> {
+        if attribute.key != key {
+            return self.rename_attribute(collection, key, &attribute.key).await;
         }
+        Ok(true)
     }
 
-    async fn delete_attribute(&self, collection: &str, id: &str) -> Result<bool> {
-        self.delete_attribute_impl(collection, id).await
+    async fn delete_attribute(&self, collection: &str, key: &str) -> Result<bool> {
+        let field = Self::escape_field_name(Self::internal_key(key));
+        self.driver
+            .update(&self.name(collection), BsonDocument::new(), doc! { "$unset": { field: "" } }, Options::new(), true)
+            .await
+            .map_err(from_client)?;
+        Ok(true)
     }
 
     async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
-        self.rename_attribute_impl(collection, old, new).await
-    }
-
-    async fn create_relationship(
-        &self,
-        _collection: &str,
-        _related_collection: &str,
-        _kind: &str,
-        _two_way: bool,
-        _id: &str,
-        _two_way_key: &str,
-    ) -> Result<bool> {
+        let from = Self::escape_field_name(Self::internal_key(old));
+        let to = Self::escape_field_name(Self::internal_key(new));
+        self.driver
+            .update(
+                &self.name(collection),
+                BsonDocument::new(),
+                doc! { "$rename": { from: to } },
+                self.options(BsonDocument::new()),
+                true,
+            )
+            .await
+            .map_err(from_client)?;
         Ok(true)
     }
 
-    async fn update_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-        new_key: Option<&str>,
-        new_two_way_key: Option<&str>,
-    ) -> Result<bool> {
-        self.update_relationship_impl(
-            collection,
-            related_collection,
-            kind,
-            two_way,
-            key,
-            two_way_key,
-            side,
-            new_key,
-            new_two_way_key,
-        )
-        .await
+    async fn schema_attributes(&self, _collection: &str) -> Result<Vec<schema::Column>> {
+        Ok(Vec::new())
     }
 
-    async fn delete_relationship(
-        &self,
-        collection: &str,
-        related_collection: &str,
-        kind: &str,
-        two_way: bool,
-        key: &str,
-        two_way_key: &str,
-        side: &str,
-    ) -> Result<bool> {
-        self.delete_relationship_impl(collection, related_collection, kind, two_way, key, two_way_key, side).await
+    async fn schema_indexes(&self, _collection: &str) -> Result<Vec<schema::Index>> {
+        Ok(Vec::new())
     }
+
+    fn column_type(&self, _attribute: &Attribute) -> Result<Option<String>> {
+        Ok(None)
+    }
+
+    // ---- Indexes -------------------------------------------------------
 
     async fn create_index(
         &self,
         collection: &str,
-        id: &str,
-        kind: &str,
-        attributes: &[String],
-        lengths: &[Value],
-        orders: &[Value],
-        attribute_types: &[(String, String)],
-        collation: &[String],
-        ttl: i64,
+        index: &Index,
+        attribute_types: &[(String, ColumnType)],
+        collation: &[(String, String)],
     ) -> Result<bool> {
-        self.create_index_impl(collection, id, kind, attributes, lengths, orders, attribute_types, collation, ttl).await
+        self.create_index_impl(collection, index, attribute_types, !collation.is_empty()).await
     }
 
-    async fn delete_index(&self, collection: &str, id: &str) -> Result<bool> {
-        let name = self.name(collection)?;
-        let id = self.filter(id)?;
-        self.client
-            .drop_indexes(&name, utopia_mongo::bson::Bson::Array(vec![id.into()]), Options::new())
+    async fn delete_index(&self, collection: &str, key: &str) -> Result<bool> {
+        self.driver
+            .drop_indexes(&self.name(collection), vec![super::filter(key)], Options::new())
             .await
             .map_err(from_client)?;
         Ok(true)
@@ -686,27 +876,29 @@ impl Adapter for Mongo {
         self.rename_index_impl(collection, old, new).await
     }
 
-    async fn get_document(
-        &self,
-        collection: &Document,
-        id: &str,
-        queries: &[Query],
-        for_update: bool,
-    ) -> Result<Document> {
-        self.get_document_impl(collection, id, queries, for_update).await
-    }
+    // ---- Documents -----------------------------------------------------
 
-    async fn create_document(&self, collection: &Document, document: Document) -> Result<Document> {
+    async fn create_document(&self, collection: &Collection, document: Document) -> Result<Document> {
         self.create_document_impl(collection, document).await
     }
 
-    async fn create_documents(&self, collection: &Document, documents: Vec<Document>) -> Result<Vec<Document>> {
+    async fn create_documents(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
         self.create_documents_impl(collection, documents).await
+    }
+
+    async fn get_document(
+        &self,
+        collection: &Collection,
+        id: &str,
+        queries: Vec<Query>,
+        _for_update: bool,
+    ) -> Result<Document> {
+        self.get_document_impl(collection, id, &queries).await
     }
 
     async fn update_document(
         &self,
-        collection: &Document,
+        collection: &Collection,
         id: &str,
         document: Document,
         _skip_permissions: bool,
@@ -714,310 +906,191 @@ impl Adapter for Mongo {
         self.update_document_impl(collection, id, document).await
     }
 
-    async fn update_documents(&self, collection: &Document, updates: &Document, documents: &[Document]) -> Result<i64> {
-        self.update_documents_impl(collection, updates, documents).await
-    }
-
-    async fn upsert_documents(
+    async fn update_documents(
         &self,
-        collection: &Document,
-        attribute: &str,
-        changes: Vec<Change>,
-    ) -> Result<Vec<Document>> {
-        self.upsert_documents_impl(collection, attribute, changes).await
-    }
-
-    async fn get_sequences(&self, collection: &str, documents: Vec<Document>) -> Result<Vec<Document>> {
-        self.get_sequences_impl(collection, documents).await
-    }
-
-    async fn delete_document(&self, collection: &str, id: &str) -> Result<bool> {
-        self.delete_document_impl(collection, id).await
-    }
-
-    async fn delete_documents(&self, collection: &str, sequences: &[Value], permission_ids: &[String]) -> Result<i64> {
-        self.delete_documents_impl(collection, sequences, permission_ids).await
+        collection: &Collection,
+        updates: &Document,
+        documents: Vec<Document>,
+        _skip_permissions: &[String],
+    ) -> Result<i64> {
+        self.update_documents_impl(collection, updates, &documents).await
     }
 
     async fn increase_document_attribute(
         &self,
-        collection: &str,
+        collection: &Collection,
         id: &str,
         attribute: &str,
-        value: &Value,
+        value: Value,
         updated_at: &str,
-        min: Option<&Value>,
-        max: Option<&Value>,
+        min: Option<Value>,
+        max: Option<Value>,
     ) -> Result<bool> {
         self.increase_document_attribute_impl(collection, id, attribute, value, updated_at, min, max).await
     }
 
-    async fn find(&self, collection: &Document, queries: &[Query], options: FindOptions<'_>) -> Result<Vec<Document>> {
+    async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool> {
+        self.delete_document_impl(collection, id).await
+    }
+
+    async fn delete_documents(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        _permission_ids: Vec<String>,
+    ) -> Result<i64> {
+        self.delete_documents_impl(collection, sequences).await
+    }
+
+    async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         self.find_impl(collection, queries, options).await
     }
 
-    async fn sum(&self, collection: &Document, attribute: &str, queries: &[Query], max: Option<i64>) -> Result<Value> {
-        self.sum_impl(collection, attribute, queries, max).await
-    }
-
-    async fn count(&self, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {
+    async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64> {
         self.count_impl(collection, queries, max).await
     }
 
-    fn casting_before(&self, collection: &Document, document: Document) -> Result<Document> {
-        self.casting_before_impl(collection, document)
+    async fn sum(
+        &self,
+        collection: &Collection,
+        attribute: &str,
+        queries: Vec<Query>,
+        max: Option<i64>,
+    ) -> Result<Value> {
+        self.sum_impl(collection, attribute, queries, max).await
     }
 
-    fn casting_after(&self, collection: &Document, document: Document) -> Result<Document> {
-        self.casting_after_impl(collection, document)
+    async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
+        self.get_sequences_impl(collection, documents).await
+    }
+}
+
+impl Schemaless for Mongo {
+    fn set_schemaless(&self, schemaless: bool) {
+        self.schemaless.store(schemaless, Ordering::Relaxed);
     }
 
-    /// `setUTCDatetime($value)`: a `MongoDB\BSON\UTCDateTime` of the date.
-    fn set_utc_datetime(&self, value: &str) -> Result<Value> {
-        casting::utc_datetime(value.as_bytes())
+    fn is_schemaless(&self) -> bool {
+        self.schemaless.load(Ordering::Relaxed)
+    }
+}
+
+impl Timeouts for Mongo {
+    /// `setTimeout()`: one timeout for every read, whatever the event.
+    fn set_timeout(&self, milliseconds: i64, _event: Event) -> Result<()> {
+        self.timeout.store(milliseconds, Ordering::Relaxed);
+        Ok(())
     }
 
-    fn decode_point(&self, _wkb: &[u8]) -> Result<Value> {
-        Ok(Value::Array(Array::new()))
+    /// `clearTimeout()`: no timeout, whatever the event.
+    fn clear_timeout(&self, _event: Event) {
+        self.timeout.store(0, Ordering::Relaxed);
     }
 
-    fn decode_linestring(&self, _wkb: &[u8]) -> Result<Value> {
-        Ok(Value::Array(Array::new()))
+    fn timeout(&self, _event: Event) -> i64 {
+        self.read_timeout()
+    }
+}
+
+#[async_trait]
+impl Connection for Mongo {
+    /// `ping()`: whether the server answers `ok`.
+    async fn ping(&self) -> Result<bool> {
+        let reply =
+            self.driver.query(None, doc! { "ping": 1, "skipReadConcern": true }, None).await.map_err(from_client)?;
+        Ok(match reply {
+            utopia_mongo::Reply::Document(d) => d.get("ok").is_some_and(|ok| bson::decode(ok).truthy()),
+            utopia_mongo::Reply::Count(_) => false,
+        })
     }
 
-    fn decode_polygon(&self, _wkb: &[u8]) -> Result<Value> {
-        Ok(Value::Array(Array::new()))
+    async fn reconnect(&self) -> Result<()> {
+        self.driver.connect().await.map_err(from_client)
     }
 
-    fn tenant_query(&self, _collection: &str, _alias: &str) -> String {
-        String::new()
+    /// `id()`: the wire protocol has no connection id, so the driver's
+    /// address names the connection, unique only while it lives.
+    async fn id(&self) -> Result<String> {
+        Ok((Arc::as_ptr(&self.driver) as *const () as usize).to_string())
     }
 
-    fn limit_for_string(&self) -> i64 {
-        2147483647
+    async fn hostname(&self) -> Result<String> {
+        Ok(self.driver.host())
+    }
+}
+
+#[async_trait]
+impl Relationships for Mongo {
+    /// A no-op: relationships are virtual.
+    async fn create_relationship(&self, _collection: &str, _relationship: &Relationship) -> Result<bool> {
+        Ok(true)
     }
 
-    fn limit_for_int(&self) -> i64 {
-        4294967295
+    async fn update_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+        update: &relationship::Update,
+    ) -> Result<bool> {
+        self.update_relationship_impl(collection, relationship, side, update).await
     }
 
-    fn limit_for_big_int(&self) -> i64 {
-        Database::MAX_BIG_INT
+    async fn delete_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+    ) -> Result<bool> {
+        self.delete_relationship_impl(collection, relationship, side).await
+    }
+}
+
+#[async_trait]
+impl Upserts for Mongo {
+    async fn upsert_document(&self, collection: &Collection, change: Change) -> Result<Document> {
+        let mut documents = self.upsert_documents_impl(collection, vec![change], None).await?;
+        Ok(documents.remove(0))
     }
 
-    fn limit_for_attributes(&self) -> i64 {
-        0
+    async fn upsert_documents(
+        &self,
+        collection: &Collection,
+        changes: Vec<Change>,
+        increase: Option<&str>,
+    ) -> Result<Vec<Document>> {
+        self.upsert_documents_impl(collection, changes, increase).await
     }
+}
 
-    fn limit_for_indexes(&self) -> i64 {
-        64
-    }
+/// `$array[$key]` key of a string.
+pub(crate) fn key(name: &str) -> ArrayKey {
+    ArrayKey::normalize(Str::from(name))
+}
 
-    fn max_index_length(&self) -> i64 {
-        1024
-    }
+/// A string value.
+pub(crate) fn text(value: &str) -> Value {
+    Value::Str(Str::from(value))
+}
 
-    fn max_varchar_length(&self) -> i64 {
-        2147483647
-    }
-
-    fn max_uid_length(&self) -> i64 {
-        255
-    }
-
-    /// `getMinDateTime()`: `-9999-01-01 00:00:00`.
-    fn min_date_time(&self) -> DateTime {
-        DateTime::new(b"-9999-01-01 00:00:00", None, &TzInfo::utc()).unwrap_or_else(|_| unreachable!("a valid date"))
-    }
-
-    fn id_attribute_type(&self) -> &'static str {
-        Database::VAR_UUID7
-    }
-
-    fn count_of_attributes(&self, collection: &Document) -> i64 {
-        count_of(collection, "attributes") + self.count_of_default_attributes()
-    }
-
-    fn count_of_indexes(&self, collection: &Document) -> i64 {
-        count_of(collection, "indexes") + self.count_of_default_indexes()
-    }
-
-    fn count_of_default_attributes(&self) -> i64 {
-        Database::internal_attributes_const().len() as i64
-    }
-
-    fn count_of_default_indexes(&self) -> i64 {
-        Database::INTERNAL_INDEXES.len() as i64
-    }
-
-    fn document_size_limit(&self) -> i64 {
-        0
-    }
-
-    fn attribute_width(&self, _collection: &Document) -> Result<i64> {
-        Ok(0)
-    }
-
-    fn keywords(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn internal_indexes_keys(&self) -> &'static [&'static str] {
-        &[]
-    }
-
-    fn support_for_schemas(&self) -> bool {
-        false
-    }
-    fn support_for_attributes(&self) -> bool {
-        self.support_for_attributes.load(Ordering::Relaxed)
-    }
-    fn set_support_for_attributes(&self, support: bool) -> bool {
-        self.support_for_attributes.store(support, Ordering::Relaxed);
-        support
-    }
-    fn support_for_schema_attributes(&self) -> bool {
-        false
-    }
-    fn support_for_schema_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_index(&self) -> bool {
-        true
-    }
-    fn support_for_index_array(&self) -> bool {
-        true
-    }
-    fn support_for_cast_index_array(&self) -> bool {
-        false
-    }
-    fn support_for_unique_index(&self) -> bool {
-        true
-    }
-    fn support_for_fulltext_index(&self) -> bool {
-        true
-    }
-    fn support_for_fulltext_wildcard_index(&self) -> bool {
-        false
-    }
-    fn support_for_casting(&self) -> bool {
-        false
-    }
-    fn support_for_query_contains(&self) -> bool {
-        false
-    }
-    fn support_for_timeouts(&self) -> bool {
-        true
-    }
-    fn support_for_relationships(&self) -> bool {
-        true
-    }
-    fn support_for_update_lock(&self) -> bool {
-        false
-    }
-    fn support_for_batch_operations(&self) -> bool {
-        false
-    }
-    fn support_for_attribute_resizing(&self) -> bool {
-        false
-    }
-    fn support_for_get_connection_id(&self) -> bool {
-        false
-    }
-    fn support_for_upserts(&self) -> bool {
-        true
-    }
-    fn support_for_upsert_on_unique_index(&self) -> bool {
-        false
-    }
-    fn support_for_vectors(&self) -> bool {
-        false
-    }
-    fn support_for_cache_skip_on_failure(&self) -> bool {
-        false
-    }
-    fn support_for_caching(&self) -> bool {
-        true
-    }
-    fn support_for_reconnection(&self) -> bool {
-        false
-    }
-    fn support_for_hostname(&self) -> bool {
-        true
-    }
-    fn support_for_batch_create_attributes(&self) -> bool {
-        true
-    }
-    fn support_for_spatial_attributes(&self) -> bool {
-        false
-    }
-    fn support_for_object(&self) -> bool {
-        true
-    }
-    fn support_for_object_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_spatial_index_null(&self) -> bool {
-        false
-    }
-    fn support_for_operators(&self) -> bool {
-        true
-    }
-    fn support_for_optional_spatial_attribute_with_existing_rows(&self) -> bool {
-        false
-    }
-    fn support_for_spatial_index_order(&self) -> bool {
-        false
-    }
-    fn support_for_spatial_axis_order(&self) -> bool {
-        false
-    }
-    fn support_for_boundary_inclusive_contains(&self) -> bool {
-        false
-    }
-    fn support_for_distance_between_multi_dimension_geometry_in_meters(&self) -> bool {
-        false
-    }
-    fn support_for_multiple_fulltext_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_identical_indexes(&self) -> bool {
-        false
-    }
-    fn support_for_order_random(&self) -> bool {
-        false
-    }
-    fn support_for_internal_casting(&self) -> bool {
-        true
-    }
-    fn support_for_utc_casting(&self) -> bool {
-        true
-    }
-    fn support_for_integer_booleans(&self) -> bool {
-        false
-    }
-    fn support_for_alter_locks(&self) -> bool {
-        false
-    }
-    fn support_non_utf_characters(&self) -> bool {
-        false
-    }
-    fn support_for_trigram_index(&self) -> bool {
-        false
-    }
-    fn support_for_pcre_regex(&self) -> bool {
-        true
-    }
-    fn support_for_posix_regex(&self) -> bool {
-        false
-    }
-    fn support_for_ttl_indexes(&self) -> bool {
-        true
-    }
-    fn support_for_transaction_retries(&self) -> bool {
-        false
-    }
-    fn support_for_nested_transactions(&self) -> bool {
-        false
-    }
+/// `$reply->cursor->firstBatch` (or `nextBatch`) as the documents it holds,
+/// and the cursor's id (`0` and missing ids are `None`).
+pub(crate) fn batch(reply: &BsonDocument, field: &str) -> (Vec<Value>, Option<i64>) {
+    let Ok(cursor) = reply.get_document("cursor") else { return (Vec::new(), None) };
+    let rows = match cursor.get(field) {
+        Some(Bson::Array(items)) => items.iter().map(bson::decode).collect(),
+        _ => Vec::new(),
+    };
+    let id = match cursor.get("id") {
+        None | Some(Bson::Null) => None,
+        Some(id) => match bson::decode(id) {
+            Value::Int(0) => None,
+            Value::Int(i) => Some(i),
+            Value::Float(f) => Some(php_std::format::Arg::Float(f).to_int()).filter(|i| *i != 0),
+            Value::Bool(b) => Some(i64::from(b)).filter(|i| *i != 0),
+            Value::Str(s) => Some(php_std::format::Arg::Str(s.as_bytes()).to_int()).filter(|i| *i != 0),
+            _ => None,
+        },
+    };
+    (rows, id)
 }

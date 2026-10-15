@@ -2,28 +2,27 @@
 //!
 //! PHP: `Utopia\Database\Validator\Query\Offset`.
 
-use php_std::value::Number;
-use utopia_validators::{Numeric, Range, Type, Validator as _};
+use utopia_query::{Method, Value as QValue};
+use utopia_validators::{Numeric, Range};
 
-use crate::query::{Method, Query};
-use crate::validator::query::base::{INVALID_QUERY, MethodType, query_validator};
-use crate::validator::{Message, accepts};
+use crate::validator::Message;
+use crate::validator::query::base::{INVALID_QUERY, MethodType, query_of, query_validator, rejection};
 use crate::value::Value;
 
-/// An `offset` query whose value is a number between 0 and `max_offset`.
+/// An `offset` query whose value is a number from 0 to `max_offset`.
 ///
 /// ```
-/// use utopia_database::query::{Method, Query};
+/// use utopia_database::Query;
 /// use utopia_database::validator::query::offset::Offset;
-/// use utopia_database::value::Value;
 ///
 /// let offset = Offset::new(5000);
-/// assert!(offset.check(&Query::new(Method::Offset, "", vec![Value::Int(0)])));
-/// assert!(!offset.check(&Query::new(Method::Offset, "", vec![Value::Int(-1)])));
+/// assert!(offset.check(&Query::offset(0)));
+/// assert!(!offset.check(&Query::offset(-1)));
+/// assert_eq!(offset.description(), "Invalid offset: Value must be a valid range between 0 and 5,000");
 /// ```
 ///
 /// PHP: `Utopia\Database\Validator\Query\Offset` (`new Offset($maxOffset)`).
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Offset {
     max_offset: i64,
     message: Message,
@@ -32,14 +31,14 @@ pub struct Offset {
 impl Default for Offset {
     /// `new Offset()`: up to `PHP_INT_MAX`.
     fn default() -> Self {
-        Self::new(i64::MAX)
+        Offset::new(i64::MAX)
     }
 }
 
 impl Offset {
     /// `new Offset($maxOffset)`.
     pub fn new(max_offset: i64) -> Self {
-        Self { max_offset, message: Message::new(INVALID_QUERY) }
+        Offset { max_offset, message: Message::new(INVALID_QUERY) }
     }
 
     /// `getDescription()`.
@@ -47,21 +46,24 @@ impl Offset {
         self.message.get()
     }
 
-    /// `isValid($query)`. A value that is not a number is reported as an
-    /// `Invalid limit`, as PHP does.
-    pub fn check(&self, query: &Query) -> bool {
-        if query.method() != &Method::Offset {
-            self.message.set(format!("Query method invalid: {}", query.method()));
+    /// `isValid($value)`: anything but a query is refused.
+    pub fn is_valid(&self, value: &Value) -> bool {
+        query_of(value).is_some_and(|q| self.check(q))
+    }
+
+    /// `isValid($query)`.
+    pub fn check(&self, query: &utopia_query::Query) -> bool {
+        if query.method() != Method::Offset {
+            self.message.set(format!("Query method invalid: {}", query.method().as_str()));
             return false;
         }
-        let offset = query.value().unwrap_or(&Value::Null);
-        if !accepts(&Numeric, offset) {
-            self.message.set(format!("Invalid limit: {}", Numeric.description()));
+        let offset = query.value().unwrap_or(&QValue::Null);
+        if let Some(message) = rejection(&Numeric, offset) {
+            self.message.set(format!("Invalid offset: {message}"));
             return false;
         }
-        let range = Range::with_format(Number::Int(0), Number::Int(self.max_offset), Type::Integer);
-        if !accepts(&range, offset) {
-            self.message.set(format!("Invalid offset: {}", range.description()));
+        if let Some(message) = rejection(&Range::new(0, self.max_offset), offset) {
+            self.message.set(format!("Invalid offset: {message}"));
             return false;
         }
         true

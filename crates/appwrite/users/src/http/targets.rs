@@ -1,7 +1,8 @@
 //! Messaging targets of a user.
 
 use serde_json::{Value, json};
-use utopia_database::{Database, Document, Kind, Query, Value as DbValue};
+use utopia_database::PermissionType;
+use utopia_database::{Document, Kind, Query, Value as DbValue};
 use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{Text, Validator, WhiteList, php};
@@ -51,24 +52,24 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
     let mut target = Document::default();
-    target.set("$id", DbValue::from(target_id.as_str()));
-    target.set("$permissions", base::owner_permissions(&user.id));
-    target.set("providerId", text(provider.as_ref().map(|p| p.id.as_str())));
-    target.set(
+    target.put("$id", DbValue::from(target_id.as_str()));
+    target.set("$permissions", base::owner_permissions(&user.id))?;
+    target.put("providerId", text(provider.as_ref().map(|p| p.id.as_str())));
+    target.put(
         "providerInternalId",
         provider.as_ref().map(|p| documents::internal_id(p.sequence)).unwrap_or(DbValue::Null),
     );
-    target.set("providerType", DbValue::from(provider_type.as_str()));
-    target.set("userId", DbValue::from(user_id.as_str()));
-    target.set("userInternalId", documents::internal_id(user.sequence));
-    target.set("identifier", DbValue::from(identifier.as_str()));
-    target.set("name", text(Some(name.as_str()).filter(|n| !n.is_empty())));
+    target.put("providerType", DbValue::from(provider_type.as_str()));
+    target.put("userId", DbValue::from(user_id.as_str()));
+    target.put("userInternalId", documents::internal_id(user.sequence));
+    target.put("identifier", DbValue::from(identifier.as_str()));
+    target.put("name", text(Some(name.as_str()).filter(|n| !n.is_empty())));
     let target = match db.create_document("targets", target).await {
         Ok(target) => Target::from(&target),
         Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserTargetAlreadyExists)),
         Err(e) => return Err(e.into()),
     };
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("targetId", target.id.clone());
     Ok(ctx.created(&TargetModel { target: &target }))
@@ -83,7 +84,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     queries.push(Query::equal("userId", [user_id.as_str()]));
     let db = ctx.db()?;
     base::resolve_cursor(&db, "targets", &mut queries, "Target").await?;
-    let targets = db.find("targets", queries.clone(), Database::PERMISSION_READ).await?;
+    let targets = db.find("targets", queries.clone(), PermissionType::Read).await?;
     let total = if include_total { db.count("targets", queries, Some(LIMIT_COUNT)).await? } else { 0 };
     let targets: Vec<Target> = documents::all(&targets);
     Ok(ctx.ok(&TargetListModel { total, targets: &targets }))
@@ -134,8 +135,8 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let truthy = |s: &str| php::truthy(&Value::String(s.to_owned()));
     if truthy(&identifier) {
         validate_identifier(&target.string_or_empty("providerType"), &identifier)?;
-        target.set("identifier", DbValue::from(identifier.as_str()));
-        target.set("expired", DbValue::Bool(false));
+        target.put("identifier", DbValue::from(identifier.as_str()));
+        target.put("expired", DbValue::Bool(false));
     }
     if truthy(&provider_id) {
         let Some(p) = provider(ctx, &provider_id).await? else {
@@ -144,15 +145,15 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         if target.string("providerType").as_deref() != Some(p.kind.as_str()) {
             return Err(Error::new(ErrorType::ProviderIncorrectType));
         }
-        target.set("providerId", DbValue::from(p.id.as_str()));
-        target.set("providerInternalId", documents::internal_id(p.sequence));
+        target.put("providerId", DbValue::from(p.id.as_str()));
+        target.put("providerInternalId", documents::internal_id(p.sequence));
     }
     if truthy(&name) {
-        target.set("name", DbValue::from(name.as_str()));
+        target.put("name", DbValue::from(name.as_str()));
     }
     let mut updates = Document::default();
     for key in ["identifier", "expired", "providerId", "providerInternalId", "name"] {
-        updates.set(key, target.get(key).cloned().unwrap_or(DbValue::Null));
+        updates.put(key, target.get(key).cloned().unwrap_or(DbValue::Null));
     }
     let db = ctx.db()?;
     let updated = match db.update_document("targets", target.id(), updates).await {
@@ -160,7 +161,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserTargetAlreadyExists)),
         Err(e) => return Err(e.into()),
     };
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("targetId", updated.id.clone());
     Ok(ctx.ok(&TargetModel { target: &updated }))
@@ -174,7 +175,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let target = Target::from(&owned_target(ctx, &user.id, &target_id).await?);
     let db = ctx.db()?;
     db.delete_document("targets", &target.id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let document = json!({
         "$id": target.id,
         "$sequence": target.sequence.to_string(),

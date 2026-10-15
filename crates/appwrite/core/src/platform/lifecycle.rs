@@ -436,7 +436,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         ctx.authorization.add_role(r);
     }
     if !authorization {
-        ctx.authorization.set_default_status(false);
+        ctx.authorization.set_status(false);
     }
 
     // Admin requests must be able to read the project.
@@ -532,9 +532,9 @@ async fn rule_domain(
     let rule = if state.config.rules_md5 {
         use md5::{Digest, Md5};
         let id = hex::encode(Md5::digest(domain.as_bytes()));
-        authorization.skip(|| platform_db.get_document("rules", &id, Vec::new(), false)).await?
+        authorization.skip(platform_db.get_document("rules", &id, Vec::new(), false)).await?
     } else {
-        authorization.skip(|| platform_db.find_one("rules", vec![Query::equal("domain", [domain.as_str()])])).await?
+        authorization.skip(platform_db.find_one("rules", vec![Query::equal("domain", [domain.as_str()])])).await?
     };
     if rule.is_empty() {
         return Ok(None);
@@ -554,9 +554,8 @@ async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<
         return Ok(None);
     }
     let authorization = platform_db.authorization();
-    let team = authorization
-        .skip(|| platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])]))
-        .await?;
+    let team =
+        authorization.skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])])).await?;
     Ok(if team.is_empty() { None } else { Some(team.id().to_owned()) })
 }
 
@@ -565,12 +564,12 @@ async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<
 async fn impersonated(db: &Database, id: &str, email: &str, phone: &str) -> Result<Option<User>> {
     let authorization = db.authorization();
     let document = if !id.is_empty() {
-        authorization.skip(|| db.get_document("users", id, Vec::new(), false)).await?
+        authorization.skip(db.get_document("users", id, Vec::new(), false)).await?
     } else if !email.is_empty() {
         let email = email.to_lowercase();
-        authorization.skip(|| db.find_one("users", vec![Query::equal("email", [email.as_str()])])).await?
+        authorization.skip(db.find_one("users", vec![Query::equal("email", [email.as_str()])])).await?
     } else if !phone.is_empty() {
-        authorization.skip(|| db.find_one("users", vec![Query::equal("phone", [phone])])).await?
+        authorization.skip(db.find_one("users", vec![Query::equal("phone", [phone])])).await?
     } else {
         Document::default()
     };
@@ -723,7 +722,7 @@ async fn account_key_user(ctx: &mut Context) -> Result<()> {
     }
     let platform = ctx.platform_db()?;
     let authorization = platform.authorization();
-    let Some(user) = authorization.skip(|| documents::load_user(&platform, &user_id)).await? else {
+    let Some(user) = authorization.skip(documents::load_user(&platform, &user_id)).await? else {
         return Ok(());
     };
     let keys = project::owned_keys(&platform, "users", &user.sequence.to_string()).await?;
@@ -776,11 +775,11 @@ fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project
             .lock
             .try_with_key(&lock_key, async move {
                 let mut updates = Document::default();
-                updates.set("accessedAt", datetime::value(&now));
+                updates.put("accessedAt", datetime::value(&now));
                 if new_sdk {
                     let mut sdks = key.sdks.clone();
                     sdks.push(sdk);
-                    updates.set("sdks", list(sdks.iter().map(|s| utopia_database::Value::from(s.as_str()))));
+                    updates.put("sdks", list(sdks.iter().map(|s| utopia_database::Value::from(s.as_str()))));
                 }
                 match db.update_document("keys", &key.id, updates).await {
                     Ok(_) => {
@@ -790,7 +789,7 @@ fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project
                             KeyOwner::User { id, .. } => ("users", id.as_str()),
                             KeyOwner::Team { id, .. } => ("teams", id.as_str()),
                         };
-                        let purged = db.authorization().skip(|| db.purge_cached_document(collection, Some(id))).await;
+                        let purged = db.authorization().skip(db.purge_cached_document(collection, id)).await;
                         if let Err(e) = purged {
                             tracing::warn!(error = %e, collection, "key owner cache purge failed");
                         }
@@ -823,10 +822,11 @@ async fn track_access(ctx: &mut Context) {
                 .lock
                 .try_with_key(&key, async move {
                     let mut updates = Document::default();
-                    updates.set("accessedAt", datetime::value(&now));
+                    updates.put("accessedAt", datetime::value(&now));
                     let skipped = filters::names(filters::PROJECTS_SUBQUERIES);
-                    let updated =
-                        db.skip_filters(|| db.update_document("projects", &project.id, updates), Some(&skipped)).await;
+                    let updated = db
+                        .skip_filters(Some(skipped.as_slice()), db.update_document("projects", &project.id, updates))
+                        .await;
                     match updated {
                         Ok(_) => state2.projects.forget(&project.id),
                         Err(e) => tracing::warn!(error = %e, "project access update failed"),
@@ -858,9 +858,10 @@ async fn track_access(ctx: &mut Context) {
         .lock
         .try_with_key(&lock_key, async move {
             let mut updates = Document::default();
-            updates.set("accessedAt", datetime::value(&now));
+            updates.put("accessedAt", datetime::value(&now));
             let skipped = filters::names(filters::USERS_SUBQUERIES);
-            let updated = db.skip_filters(|| db.update_document("users", &user_id, updates), Some(&skipped)).await;
+            let updated =
+                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &user_id, updates)).await;
             if let Err(e) = updated {
                 tracing::warn!(error = %e, "user access update failed");
             }

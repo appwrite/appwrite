@@ -1232,8 +1232,7 @@
             "$collection": "_metadata"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testOverwriteWithoutAUsableSourceActionKeepsTheDestinationAction (unknown)",
@@ -2466,8 +2465,7 @@
             "$collection": "_metadata"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testOverwriteWithAKnownSourceActionStillUpdatesBothSides",
@@ -3700,8 +3698,7 @@
             "$collection": "_metadata"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testARelationshipWithARetiredDeleteActionIsRejected (set default)",
@@ -4452,8 +4449,7 @@
           },
           "expect": []
         }
-      ],
-      "blocked": "utopia-database 8.x: Relationship::fromArray() rejects an onDelete outside cascade, restrict and setNull (\"Unsupported relationship onDelete action ...\"), so createRelationship() fails"
+      ]
     },
     {
       "name": "testARelationshipWithARetiredDeleteActionIsRejected (no action)",
@@ -5204,8 +5200,7 @@
           },
           "expect": []
         }
-      ],
-      "blocked": "utopia-database 8.x: Relationship::fromArray() rejects an onDelete outside cascade, restrict and setNull (\"Unsupported relationship onDelete action ...\"), so createRelationship() fails"
+      ]
     }
   ]
 }

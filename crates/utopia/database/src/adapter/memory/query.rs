@@ -6,34 +6,35 @@
 //! `matchesFulltext`, `tokenize`, `matchesRegex`, `looseEquals`,
 //! `decodeArrayValue`, `matchesObject`, `decodeObjectValue`,
 //! `jsonContains`, `wrapScalarObjectValue`, `buildPermissionAllowSet`,
-//! `applyOrdering`, `applyCursor`, `extractSelections`.
+//! `applyOrdering`, `applyCursor`.
 
 use php_std::pcre;
+use utopia_query::{CursorDirection, Method, OrderDirection};
 
-use super::documents::decode_json_like;
-use super::operators::{ge, gt, le, lt, numeric};
-use super::store::{self, k, s};
-use super::{Ctx, Store};
-use crate::adapter::FindOptions;
-use crate::database::Database;
-use crate::document::Document;
+use super::documents::{decode_json_like, map_attribute, selections};
+use super::operators::{self, ge, gt, is_numeric, le, lt, numeric};
+use super::store::{self, k, key_of};
+use super::{Ctx, Store, filter};
+use crate::adapter::{CursorBoundary, Find};
+use crate::collection::Collection;
+use crate::database::METADATA;
+use crate::document::{self, Document};
 use crate::error::{Error, Result};
-use crate::query::{Method, Query};
-use crate::value::{Array, ArrayKey, Str, Value};
+use crate::permission::PermissionType;
+use crate::query::Query;
+use crate::storage;
+use crate::value::{Array, ArrayKey, Value, from_query};
 
-/// `looseEquals($a, $b)`: identical, or numbers equal after `+ 0` (an
-/// integer never equals a float).
+/// `looseEquals($a, $b)`: identical, or numbers equal with `==`.
 fn loose_equals(a: &Value, b: &Value) -> bool {
     if a.strict_eq(b) {
         return true;
     }
-    match (numeric(a), numeric(b)) {
-        (Some(x), Some(y)) => x.strict_eq(&y),
-        _ => false,
-    }
+    is_numeric(a) && is_numeric(b) && a.loose_eq(b)
 }
 
-/// `decodeArrayValue($value)`.
+/// `decodeArrayValue($value)` / `decodeObjectValue($value)`: an array, or
+/// JSON text of one.
 fn decode_array_value(value: &Value) -> Option<Array> {
     match value {
         Value::Array(a) => Some(a.clone()),
@@ -43,12 +44,7 @@ fn decode_array_value(value: &Value) -> Option<Array> {
 
 /// `stripos($haystack, $needle) !== false`.
 fn contains_ci(haystack: &[u8], needle: &[u8]) -> bool {
-    if needle.is_empty() {
-        return true;
-    }
-    let haystack = haystack.to_ascii_lowercase();
-    let needle = needle.to_ascii_lowercase();
-    haystack.windows(needle.len()).any(|w| w == needle.as_slice())
+    matches!(php_std::string::stripos(haystack, needle, 0), Ok(Some(_)))
 }
 
 /// `tokenize($text)`: lower-cased words (letters, digits, `*`).
@@ -107,7 +103,7 @@ fn matches_fulltext(haystack: &[u8], needle: &[u8]) -> bool {
     false
 }
 
-/// `matchesRegex($value, $pattern)`: `preg_match('#pattern#u', ...)`.
+/// `matchesRegex($value, $pattern)`: `@preg_match('#pattern#u', ...) === 1`.
 fn matches_regex(value: &[u8], pattern: &[u8]) -> bool {
     let mut delimited = b"#".to_vec();
     delimited.extend_from_slice(&php_std::string::str_replace(b"#", b"\\#", pattern).0);
@@ -115,7 +111,7 @@ fn matches_regex(value: &[u8], pattern: &[u8]) -> bool {
     matches!(pcre::preg_match_bare(&delimited, value), Ok(r) if matches!(r.value, pcre::Value::Int(1)))
 }
 
-/// `jsonContains($haystack, $candidate)`.
+/// `jsonContains($haystack, $candidate)`: PostgreSQL's `@>`.
 fn json_contains(haystack: &Value, candidate: &Value) -> bool {
     if let Value::Array(h) = haystack
         && h.is_list()
@@ -130,20 +126,22 @@ fn json_contains(haystack: &Value, candidate: &Value) -> bool {
     if let (Value::Array(h), Value::Array(c)) = (haystack, candidate) {
         for (key, value) in c.iter() {
             match h.get(&key.to_owned()) {
-                Some(v) => {
-                    if !json_contains(v, value) {
-                        return false;
-                    }
-                }
-                None => return false,
+                Some(v) if json_contains(v, value) => {}
+                _ => return false,
             }
         }
         return true;
     }
-    loose_equals(haystack, candidate) && (haystack.strict_eq(candidate) || numeric(haystack).is_some())
+    if haystack.strict_eq(candidate) {
+        return true;
+    }
+    match (numeric(haystack), numeric(candidate)) {
+        (Some(a), Some(b)) => a.strict_eq(&b),
+        _ => false,
+    }
 }
 
-/// `wrapScalarObjectValue($candidate)`.
+/// `wrapScalarObjectValue($candidate)`: `['k' => 'v']` as `['k' => ['v']]`.
 fn wrap_scalar(candidate: &Value) -> Value {
     let Value::Array(c) = candidate else { return candidate.clone() };
     if c.len() != 1 {
@@ -154,24 +152,14 @@ fn wrap_scalar(candidate: &Value) -> Value {
         return candidate.clone();
     }
     let mut out = Array::new();
-    out.set(key.to_owned(), Value::Array([value.clone()].into_iter().collect()));
+    out.set(key.to_owned(), Value::Array(Array::from_list(vec![value.clone()])));
     Value::Array(out)
 }
 
-/// `decodeObjectValue($value)`.
-fn decode_object_value(value: &Value) -> Option<Value> {
-    match value {
-        Value::Null => None,
-        Value::Array(_) => Some(value.clone()),
-        _ => Some(decode_json_like(value).map(Value::Array).unwrap_or_else(|| value.clone())),
-    }
-}
-
 /// `matchesObject($value, $query)`.
-fn matches_object(value: &Value, query: &Query) -> Result<bool> {
-    let haystack = decode_object_value(value);
-    let values = query.values();
-    Ok(match query.method() {
+fn matches_object(value: &Value, method: Method, values: &[Value]) -> Result<bool> {
+    let haystack = decode_array_value(value).map(Value::Array);
+    Ok(match method {
         Method::Equal => haystack.is_some_and(|h| values.iter().any(|c| json_contains(&h, c))),
         Method::NotEqual => haystack.is_some_and(|h| !values.iter().any(|c| json_contains(&h, c))),
         Method::Contains | Method::ContainsAny => {
@@ -195,126 +183,142 @@ fn at(values: &[Value], i: usize) -> Value {
     values.get(i).cloned().unwrap_or(Value::Null)
 }
 
-impl Store {
-    /// `matches($row, $query)`.
-    fn matches(&self, ctx: &Ctx, row: &Array, query: &Query) -> Result<bool> {
-        let method = query.method();
-        if *method == Method::And {
-            for sub in query.values() {
-                match crate::value::as_query(sub) {
-                    Some(q) if self.matches(ctx, row, q)? => {}
-                    _ => return Ok(false),
-                }
-            }
-            return Ok(true);
-        }
-        if *method == Method::Or {
-            for sub in query.values() {
-                if let Some(q) = crate::value::as_query(sub)
-                    && self.matches(ctx, row, q)?
-                {
-                    return Ok(true);
-                }
-            }
-            return Ok(false);
-        }
-        let attribute = query.attribute();
-        let object = query.is_object_attribute() && !attribute.contains('.');
-        let value = self.resolve_attribute_value(ctx, row, attribute);
-        let values = query.values();
-        if object {
-            return matches_object(&value, query);
-        }
-        let null = matches!(value, Value::Null);
-        let string_pair = |a: &Value, b: &Value| match (a, b) {
-            (Value::Str(a), Value::Str(b)) => Some((a.as_bytes().to_vec(), b.as_bytes().to_vec())),
-            _ => None,
-        };
-        Ok(match method {
-            Method::Equal => values.iter().any(|c| loose_equals(&value, c)),
-            Method::NotEqual => !null && !values.iter().any(|c| loose_equals(&value, c)),
-            Method::LessThan => !null && lt(&value, &at(values, 0)),
-            Method::LessThanEqual => !null && le(&value, &at(values, 0)),
-            Method::GreaterThan => !null && gt(&value, &at(values, 0)),
-            Method::GreaterThanEqual => !null && ge(&value, &at(values, 0)),
-            Method::IsNull => null,
-            Method::IsNotNull => !null,
-            Method::Between => !null && ge(&value, &at(values, 0)) && le(&value, &at(values, 1)),
-            Method::NotBetween => !null && (lt(&value, &at(values, 0)) || gt(&value, &at(values, 1))),
-            Method::StartsWith => string_pair(&value, &at(values, 0)).is_some_and(|(v, n)| v.starts_with(&n)),
-            Method::NotStartsWith => {
-                !null && !string_pair(&value, &at(values, 0)).is_some_and(|(v, n)| v.starts_with(&n))
-            }
-            Method::EndsWith => string_pair(&value, &at(values, 0)).is_some_and(|(v, n)| v.ends_with(&n)),
-            Method::NotEndsWith => !null && !string_pair(&value, &at(values, 0)).is_some_and(|(v, n)| v.ends_with(&n)),
-            Method::Contains | Method::ContainsAny => {
-                let haystack = decode_array_value(&value);
-                match (haystack, &value) {
-                    (None, Value::Str(v)) => values.iter().any(|n| match n {
-                        Value::Str(n) => contains_ci(v.as_bytes(), n.as_bytes()),
-                        _ => false,
-                    }),
-                    (Some(h), _) => values.iter().any(|n| h.values().any(|item| loose_equals(item, n))),
-                    (None, _) => false,
-                }
-            }
-            Method::NotContains => {
-                if null {
-                    return Ok(false);
-                }
-                let contains = Query::new(Method::Contains, attribute, values.to_vec());
-                !self.matches(ctx, row, &contains)?
-            }
-            Method::ContainsAll => match decode_array_value(&value) {
-                Some(h) => values.iter().all(|n| h.values().any(|item| loose_equals(item, n))),
-                None => false,
-            },
-            Method::Search => {
-                let Value::Str(v) = &value else { return Ok(false) };
-                let needle = at(values, 0).to_php_string().map_err(Error::from)?;
-                !needle.is_empty() && matches_fulltext(v.as_bytes(), needle.as_bytes())
-            }
-            Method::NotSearch => {
-                if null {
-                    return Ok(false);
-                }
-                let Value::Str(v) = &value else { return Ok(true) };
-                let needle = at(values, 0).to_php_string().map_err(Error::from)?;
-                needle.is_empty() || !matches_fulltext(v.as_bytes(), needle.as_bytes())
-            }
-            Method::Regex => {
-                let Value::Str(v) = &value else { return Ok(false) };
-                let pattern = at(values, 0).to_php_string().map_err(Error::from)?;
-                matches_regex(v.as_bytes(), pattern.as_bytes())
-            }
-            other => {
-                return Err(Error::database(format!(
-                    "Query method not implemented in the Memory adapter: {}",
-                    other.as_str()
-                )));
-            }
-        })
+/// The containment of `contains` and `containsAny`: an array (or JSON
+/// text of one) holding a needle, or a string holding a string needle
+/// case-insensitively.
+fn contains(value: &Value, values: &[Value]) -> bool {
+    let haystack = decode_array_value(value);
+    match (haystack, value) {
+        (None, Value::Str(v)) => values.iter().any(|n| match n {
+            Value::Str(n) => contains_ci(v.as_bytes(), n.as_bytes()),
+            _ => false,
+        }),
+        (Some(h), _) => values.iter().any(|n| h.values().any(|item| loose_equals(item, n))),
+        (None, _) => false,
     }
+}
 
-    /// `buildPermissionAllowSet($key, $forPermission)`: the documents the
-    /// roles may access (`None` with authorization off).
-    fn permission_allow_set(&self, ctx: &Ctx, key: &ArrayKey, for_permission: &str) -> Option<Array> {
+/// `matches($row, $query)`.
+fn matches(row: &Array, query: &utopia_query::Query) -> Result<bool> {
+    let method = query.method();
+    if method == Method::And {
+        for sub in query.values().values() {
+            match sub {
+                utopia_query::Value::Ext(utopia_query::Object::Query(q)) if matches(row, q)? => {}
+                _ => return Ok(false),
+            }
+        }
+        return Ok(true);
+    }
+    if method == Method::Or {
+        for sub in query.values().values() {
+            if let utopia_query::Value::Ext(utopia_query::Object::Query(q)) = sub
+                && matches(row, q)?
+            {
+                return Ok(true);
+            }
+        }
+        return Ok(false);
+    }
+    let attribute = query.attribute();
+    let object = query.attribute_type() == "object" && !attribute.contains('.');
+    let value = Store::resolve_attribute_value(row, attribute);
+    let values: Vec<Value> = query.values().values().map(from_query).collect();
+    if object {
+        return matches_object(&value, method, &values);
+    }
+    let null = matches!(value, Value::Null);
+    let string_pair = |a: &Value, b: &Value| match (a, b) {
+        (Value::Str(a), Value::Str(b)) => Some((a.as_bytes().to_vec(), b.as_bytes().to_vec())),
+        _ => None,
+    };
+    Ok(match method {
+        Method::Equal => !null && values.iter().any(|c| !matches!(c, Value::Null) && loose_equals(&value, c)),
+        Method::NotEqual => {
+            if null {
+                return Ok(false);
+            }
+            for candidate in &values {
+                if matches!(candidate, Value::Null) || loose_equals(&value, candidate) {
+                    return Ok(false);
+                }
+            }
+            true
+        }
+        Method::LessThan => !null && lt(&value, &at(&values, 0)),
+        Method::LessThanEqual => !null && le(&value, &at(&values, 0)),
+        Method::GreaterThan => !null && gt(&value, &at(&values, 0)),
+        Method::GreaterThanEqual => !null && ge(&value, &at(&values, 0)),
+        Method::IsNull => null,
+        Method::IsNotNull => !null,
+        Method::Between => !null && ge(&value, &at(&values, 0)) && le(&value, &at(&values, 1)),
+        Method::NotBetween => !null && (lt(&value, &at(&values, 0)) || gt(&value, &at(&values, 1))),
+        Method::StartsWith => string_pair(&value, &at(&values, 0)).is_some_and(|(v, n)| v.starts_with(&n)),
+        Method::NotStartsWith => !null && !string_pair(&value, &at(&values, 0)).is_some_and(|(v, n)| v.starts_with(&n)),
+        Method::EndsWith => string_pair(&value, &at(&values, 0)).is_some_and(|(v, n)| v.ends_with(&n)),
+        Method::NotEndsWith => !null && !string_pair(&value, &at(&values, 0)).is_some_and(|(v, n)| v.ends_with(&n)),
+        Method::Contains | Method::ContainsAny => contains(&value, &values),
+        Method::NotContains => !null && !contains(&value, &values),
+        Method::ContainsAll => match decode_array_value(&value) {
+            Some(h) => values.iter().all(|n| h.values().any(|item| loose_equals(item, n))),
+            None => false,
+        },
+        Method::Search => {
+            let Value::Str(v) = &value else { return Ok(false) };
+            match at(&values, 0) {
+                Value::Str(n) if !n.is_empty() => matches_fulltext(v.as_bytes(), n.as_bytes()),
+                _ => false,
+            }
+        }
+        Method::NotSearch => {
+            if null {
+                return Ok(false);
+            }
+            let Value::Str(v) = &value else { return Ok(true) };
+            match at(&values, 0) {
+                Value::Str(n) if !n.is_empty() => !matches_fulltext(v.as_bytes(), n.as_bytes()),
+                _ => true,
+            }
+        }
+        Method::Regex => {
+            let Value::Str(v) = &value else { return Ok(false) };
+            match at(&values, 0) {
+                Value::Str(p) => matches_regex(v.as_bytes(), p.as_bytes()),
+                _ => false,
+            }
+        }
+        other => {
+            return Err(Error::database(format!(
+                "Query method not implemented in the Memory adapter: {}",
+                other.as_str()
+            )));
+        }
+    })
+}
+
+impl Store {
+    /// `buildPermissionAllowSet($key, $forPermission, $tenant)`: the
+    /// documents the roles may access (`None` with authorization off).
+    fn permission_allow_set(&self, ctx: &Ctx, key: &ArrayKey, for_permission: &str, tenant: &Value) -> Option<Array> {
         if !ctx.authorization.status() {
             return None;
         }
-        let roles = ctx.authorization.roles();
+        let roles = ctx.authorization.role_names();
         let mut allowed = Array::new();
         let Some(Value::Array(by_type)) = store::get(&self.by_permission, &[key.clone(), k(for_permission)]) else {
             return Some(allowed);
         };
-        let bucket =
-            if matches!(ctx.tenant, Value::Null) { "__null__".to_owned() } else { crate::value::to_text(&ctx.tenant) };
+        let bucket = if matches!(tenant, Value::Null) {
+            k("__null__")
+        } else {
+            key_of(&Value::Str(tenant.to_php_string().unwrap_or_default()))
+        };
         let buckets: Vec<&Value> =
-            if ctx.shared { by_type.get(&k(&bucket)).into_iter().collect() } else { by_type.values().collect() };
+            if ctx.shared { by_type.get(&bucket).into_iter().collect() } else { by_type.values().collect() };
         for bucket in buckets {
             let Value::Array(bucket) = bucket else { continue };
             for role in &roles {
-                if let Some(Value::Array(documents)) = bucket.get(&super::store::key_of(role)) {
+                if let Some(Value::Array(documents)) = bucket.get(&k(role)) {
                     for document in documents.keys() {
                         allowed.set(document.to_owned(), Value::Bool(true));
                     }
@@ -324,7 +328,9 @@ impl Store {
         Some(allowed)
     }
 
-    /// `fusedFilter($key, $collectionId, $queries, $forPermission)`.
+    /// `fusedFilter($key, $collectionId, $queries, $forPermission)`: the rows
+    /// of the tenant (and, for the metadata collection, the tenantless
+    /// ones) the roles may access and every filter matches.
     fn fused_filter(
         &self,
         ctx: &Ctx,
@@ -355,26 +361,32 @@ impl Store {
                 )
             })
             .collect();
-        let allow_null_tenant = ctx.shared && collection == Database::METADATA;
-        let allowed = self.permission_allow_set(ctx, key, for_permission);
+        let tenant = if ctx.shared { ctx.tenant.clone() } else { Value::Null };
+        let allow_null_tenant = ctx.shared && collection == METADATA;
+        let allowed = self.permission_allow_set(ctx, key, for_permission, &tenant);
+        let tenantless =
+            if allow_null_tenant { self.permission_allow_set(ctx, key, for_permission, &Value::Null) } else { None };
         let mut out = Vec::new();
         for row in documents.values() {
             let Value::Array(row) = row else { continue };
+            let mut row_allowed = allowed.as_ref();
             if ctx.shared {
-                let tenant = row.get_str("_tenant").cloned().unwrap_or(Value::Null);
-                if !(tenant.strict_eq(&ctx.tenant) || (allow_null_tenant && matches!(tenant, Value::Null))) {
+                let row_tenant = row.get_str(storage::TENANT).cloned().unwrap_or(Value::Null);
+                if allow_null_tenant && matches!(row_tenant, Value::Null) {
+                    row_allowed = tenantless.as_ref();
+                } else if !row_tenant.strict_eq(&tenant) {
                     continue;
                 }
             }
-            if let Some(allowed) = &allowed {
-                let uid = row.get_str("_uid").cloned().unwrap_or(s(""));
-                if !store::isset(allowed, &[super::store::key_of(&uid)]) {
-                    continue;
+            if let Some(allowed) = row_allowed {
+                match row.get_str(storage::UID) {
+                    Some(uid @ Value::Str(_)) if store::isset(allowed, &[key_of(uid)]) => {}
+                    _ => continue,
                 }
             }
             let mut matched = true;
             for query in &effective {
-                if !self.matches(ctx, row, query)? {
+                if !matches(row, query)? {
                     matched = false;
                     break;
                 }
@@ -387,60 +399,62 @@ impl Store {
     }
 
     /// `find($collection, $queries, ...)`.
-    pub(super) fn find(
+    pub(crate) fn find(
         &self,
         ctx: &Ctx,
-        collection: &Document,
+        collection: &Collection,
         queries: &[Query],
-        options: &FindOptions<'_>,
+        options: &Find,
     ) -> Result<Vec<Document>> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
         }
-        let rows = self.fused_filter(ctx, &key, collection.id(), queries, options.for_permission)?;
-        let rows = apply_ordering(rows, options.order_attributes, options.order_types, options.cursor_direction);
-        let mut rows =
-            apply_cursor(rows, options.order_attributes, options.order_types, options.cursor, options.cursor_direction);
+        let rows = self.fused_filter(ctx, &key, collection.id(), queries, options.for_permission.as_str())?;
+        let rows = apply_ordering(rows, &options.order_attributes, &options.order_types, options.cursor_direction);
+        let mut rows = apply_cursor(
+            rows,
+            &options.order_attributes,
+            &options.order_types,
+            &options.cursor,
+            options.cursor_direction,
+        );
         if let Some(offset) = options.offset {
             rows = slice(rows, offset, None);
         }
         if let Some(limit) = options.limit {
             rows = slice(rows, 0, Some(limit));
         }
-        let selections: Vec<Value> = queries
-            .iter()
-            .filter(|q| *q.method() == Method::Select)
-            .flat_map(|q| q.values().iter().filter(|v| matches!(v, Value::Str(_))).cloned())
-            .collect();
+        let selections = selections(queries);
         let mut results = Vec::with_capacity(rows.len());
         for row in &rows {
-            results.push(Document::new(self.row_to_document(row, Some(&selections), Some(&key)))?);
+            results.push(Document::from_storage(self.row_to_document(row, Some(&selections), Some(&key)))?);
         }
-        if options.cursor_direction == Database::CURSOR_BEFORE {
+        if options.cursor_direction == CursorDirection::Before {
             results.reverse();
         }
         Ok(results)
     }
 
     /// `count($collection, $queries, $max)`.
-    pub(super) fn count(&self, ctx: &Ctx, collection: &Document, queries: &[Query], max: Option<i64>) -> Result<i64> {
+    pub(crate) fn count(&self, ctx: &Ctx, collection: &Collection, queries: &[Query], max: Option<i64>) -> Result<i64> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
         }
-        let mut rows = self.fused_filter(ctx, &key, collection.id(), queries, Database::PERMISSION_READ)?;
+        let mut rows = self.fused_filter(ctx, &key, collection.id(), queries, PermissionType::Read.as_str())?;
         if let Some(max) = max {
             rows = slice(rows, 0, Some(max));
         }
         Ok(rows.len() as i64)
     }
 
-    /// `sum($collection, $attribute, $queries, $max)`.
-    pub(super) fn sum(
+    /// `sum($collection, $attribute, $queries, $max)`: an integer, or a
+    /// float when a summed value is one.
+    pub(crate) fn sum(
         &self,
         ctx: &Ctx,
-        collection: &Document,
+        collection: &Collection,
         attribute: &str,
         queries: &[Query],
         max: Option<i64>,
@@ -449,21 +463,21 @@ impl Store {
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));
         }
-        let mut rows = self.fused_filter(ctx, &key, collection.id(), queries, Database::PERMISSION_READ)?;
+        let mut rows = self.fused_filter(ctx, &key, collection.id(), queries, PermissionType::Read.as_str())?;
         if let Some(max) = max {
             rows = slice(rows, 0, Some(max));
         }
         let mut sum = Value::Int(0);
         let mut is_float = false;
-        let column = k(&super::filter(attribute));
+        let column = k(&filter(attribute));
         for row in &rows {
-            let Some(v) = row.get(&column).filter(|v| !matches!(v, Value::Null)) else { continue };
+            let Some(v) = row.get(&column).filter(|v| is_numeric(v)) else { continue };
             if matches!(v, Value::Float(_)) {
                 is_float = true;
             }
-            sum = super::operators::add(&sum, v)?;
+            sum = operators::add(&sum, v)?;
         }
-        Ok(if is_float { Value::Float(sum.to_double()) } else { Value::Int(super::operators::to_long(&sum)) })
+        Ok(if is_float { Value::Float(sum.to_double()) } else { Value::Int(operators::to_long(&sum)) })
     }
 }
 
@@ -479,8 +493,8 @@ fn slice(rows: Vec<Array>, offset: i64, length: Option<i64>) -> Vec<Array> {
     rows.into_iter().skip(start as usize).take((end - start).max(0) as usize).collect()
 }
 
-/// `usort($items, $cmp)`: the engine's sort, made stable by the items'
-/// positions when `cmp` returns 0.
+/// `usort($items, $cmp)`: the engine's sort, made stable (as PHP 8's is) by
+/// the items' positions when `cmp` returns 0.
 fn usort<T>(items: Vec<T>, cmp: impl Fn(&T, &T) -> i32) -> Vec<T> {
     let mut indexed: Vec<(usize, T)> = items.into_iter().enumerate().collect();
     php_std::sort::zend_sort(&mut indexed, &mut |a, b| {
@@ -496,24 +510,43 @@ fn usort<T>(items: Vec<T>, cmp: impl Fn(&T, &T) -> i32) -> Vec<T> {
     indexed.into_iter().map(|(_, t)| t).collect()
 }
 
-/// `applyOrdering($rows, $orderAttributes, $orderTypes, $cursorDirection)`.
-fn apply_ordering(rows: Vec<Array>, attributes: &[String], types: &[String], direction: &str) -> Vec<Array> {
-    if types.iter().any(|t| t == Database::ORDER_RANDOM) {
-        let mut rows = rows;
-        let n = rows.len();
-        for i in (1..n).rev() {
-            let mut r = [0u8; 8];
-            let _ = getrandom::fill(&mut r);
-            let j = (u64::from_le_bytes(r) % (i as u64 + 1)) as usize;
-            rows.swap(i, j);
-        }
-        return rows;
+/// `shuffle($rows)`.
+fn shuffle(mut rows: Vec<Array>) -> Vec<Array> {
+    let n = rows.len();
+    for i in (1..n).rev() {
+        let mut r = [0u8; 8];
+        let _ = getrandom::fill(&mut r);
+        let j = (u64::from_le_bytes(r) % (i as u64 + 1)) as usize;
+        rows.swap(i, j);
     }
-    let reverse = direction == Database::CURSOR_BEFORE;
+    rows
+}
+
+/// The direction of an order, flipped for a read before the cursor.
+fn direction(types: &[OrderDirection], i: usize, reverse: bool) -> OrderDirection {
+    let ty = types.get(i).copied().unwrap_or(OrderDirection::Asc);
+    if !reverse {
+        return ty;
+    }
+    if ty == OrderDirection::Asc { OrderDirection::Desc } else { OrderDirection::Asc }
+}
+
+/// `applyOrdering($rows, $orderAttributes, $orderTypes, $cursorDirection)`:
+/// by sequence without an order, `null` first ascending.
+fn apply_ordering(
+    rows: Vec<Array>,
+    attributes: &[String],
+    types: &[OrderDirection],
+    cursor: CursorDirection,
+) -> Vec<Array> {
+    if types.contains(&OrderDirection::Random) {
+        return shuffle(rows);
+    }
+    let reverse = cursor == CursorDirection::Before;
     if attributes.is_empty() {
         return usort(rows, |a, b| {
-            let av = a.get_str("_id").cloned().unwrap_or(Value::Int(0));
-            let bv = b.get_str("_id").cloned().unwrap_or(Value::Int(0));
+            let av = a.get_str(storage::SEQUENCE).cloned().unwrap_or(Value::Int(0));
+            let bv = b.get_str(storage::SEQUENCE).cloned().unwrap_or(Value::Int(0));
             if av.strict_eq(&bv) {
                 return 0;
             }
@@ -525,15 +558,12 @@ fn apply_ordering(rows: Vec<Array>, attributes: &[String], types: &[String], dir
         .iter()
         .enumerate()
         .map(|(i, attribute)| {
-            let mut ty = types.get(i).map(String::as_str).unwrap_or(Database::ORDER_ASC);
-            if reverse {
-                ty = if ty == Database::ORDER_ASC { Database::ORDER_DESC } else { Database::ORDER_ASC };
-            }
-            (k(&Store::map_attribute(attribute)), if ty == Database::ORDER_ASC { 1 } else { -1 })
+            let sign = if direction(types, i, reverse) == OrderDirection::Asc { 1 } else { -1 };
+            (k(&map_attribute(attribute)), sign)
         })
         .collect();
     usort(rows, |a, b| {
-        for (column, direction) in &columns {
+        for (column, sign) in &columns {
             let av = a.get(column).cloned().unwrap_or(Value::Null);
             let bv = b.get(column).cloned().unwrap_or(Value::Null);
             if av.strict_eq(&bv) {
@@ -548,62 +578,61 @@ fn apply_ordering(rows: Vec<Array>, attributes: &[String], types: &[String], dir
             } else {
                 1
             };
-            return cmp * direction;
+            return cmp * sign;
         }
         0
     })
 }
 
-/// `applyCursor($rows, $orderAttributes, $orderTypes, $cursor, $cursorDirection)`.
+/// `applyCursor($rows, $orderAttributes, $orderTypes, $cursor, $cursorDirection)`:
+/// the rows past the cursor on the first order attribute that differs.
 fn apply_cursor(
     rows: Vec<Array>,
     attributes: &[String],
-    types: &[String],
+    types: &[OrderDirection],
     cursor: &Array,
-    direction: &str,
+    direction_of: CursorDirection,
 ) -> Vec<Array> {
     if cursor.is_empty() {
         return rows;
     }
-    let (attributes, types): (Vec<String>, Vec<String>) = if attributes.is_empty() {
-        (vec!["$sequence".to_owned()], vec![Database::ORDER_ASC.to_owned()])
+    let (attributes, types): (Vec<String>, Vec<OrderDirection>) = if attributes.is_empty() {
+        (vec![document::SEQUENCE.to_owned()], vec![OrderDirection::Asc])
     } else {
         (attributes.to_vec(), types.to_vec())
     };
-    let reverse = direction == Database::CURSOR_BEFORE;
-    let resolved: Vec<(ArrayKey, bool, Value)> = attributes
+    let reverse = direction_of == CursorDirection::Before;
+    let resolved: Vec<CursorBoundary> = attributes
         .iter()
         .enumerate()
-        .map(|(i, attribute)| {
-            let mut ty = types.get(i).map(String::as_str).unwrap_or(Database::ORDER_ASC);
-            if reverse {
-                ty = if ty == Database::ORDER_ASC { Database::ORDER_DESC } else { Database::ORDER_ASC };
-            }
-            let reference =
-                cursor.get(&ArrayKey::normalize(Str::from(attribute.as_str()))).cloned().unwrap_or(Value::Null);
-            (k(&Store::map_attribute(attribute)), ty == Database::ORDER_ASC, reference)
+        .map(|(i, attribute)| CursorBoundary {
+            field: map_attribute(attribute),
+            direction: direction(&types, i, reverse),
+            reference: cursor.get(&k(attribute)).cloned().unwrap_or(Value::Null),
         })
         .collect();
     let mut out = Vec::new();
     'rows: for row in rows {
-        for (column, asc, reference) in &resolved {
-            let current = row.get(column).cloned().unwrap_or(Value::Null);
+        for entry in &resolved {
+            let current = row.get(&k(&entry.field)).cloned().unwrap_or(Value::Null);
+            let reference = &entry.reference;
+            let ascending = entry.direction == OrderDirection::Asc;
             if current.strict_eq(reference) {
                 continue;
             }
             if matches!(current, Value::Null) {
-                if !asc {
+                if !ascending {
                     out.push(row);
                 }
                 continue 'rows;
             }
             if matches!(reference, Value::Null) {
-                if *asc {
+                if ascending {
                     out.push(row);
                 }
                 continue 'rows;
             }
-            if if *asc { gt(&current, reference) } else { lt(&current, reference) } {
+            if if ascending { gt(&current, reference) } else { lt(&current, reference) } {
                 out.push(row);
             }
             continue 'rows;

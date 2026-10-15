@@ -10,8 +10,8 @@ use chrono::NaiveDateTime;
 use serde_json::{Map, Value as Json, json};
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
-use utopia_database::helpers::permission::Permission;
-use utopia_database::helpers::role::Role;
+use utopia_database::Permission;
+use utopia_database::Role;
 use utopia_database::value::list;
 use utopia_database::{Document, Value};
 use utopia_emails::Email;
@@ -267,15 +267,15 @@ pub fn skipped(keep: &[&str]) -> Vec<String> {
 /// `getDocument('users', $id)` with authorization skipped.
 pub async fn load_user(ctx: &mut Context, id: &str) -> Result<Option<User>> {
     let db = ctx.db()?;
-    db.authorization().skip(|| documents::load_user(&db, id)).await
+    db.authorization().skip(documents::load_user(&db, id)).await
 }
 
 /// The user's tokens (the `subQueryTokens` filter) as `(id, type, secret, expire)`.
 pub async fn user_tokens(ctx: &mut Context, user: &User) -> Result<Vec<Document>> {
     let db = ctx.db()?;
     let mut document = Document::default();
-    document.set("$id", Value::from(user.id.as_str()));
-    document.set("$sequence", Value::from(user.sequence.to_string().as_str()));
+    document.put("$id", Value::from(user.id.as_str()));
+    document.put("$sequence", Value::from(user.sequence.to_string().as_str()));
     let tokens = filters::sub_query(&db, "subQueryTokens", &document).await?;
     Ok(match tokens {
         Value::Array(items) => items.values().filter_map(utopia_database::value::as_document).cloned().collect(),
@@ -311,11 +311,11 @@ impl Metadata {
     /// Sets the `emailCanonical` and `emailIs*` attributes.
     pub fn apply(&self, document: &mut Document) {
         let flag = |b: Option<bool>| b.map(Value::Bool).unwrap_or(Value::Null);
-        document.set("emailCanonical", text(self.canonical.as_deref()));
-        document.set("emailIsCanonical", flag(self.is_canonical));
-        document.set("emailIsCorporate", flag(self.is_corporate));
-        document.set("emailIsDisposable", flag(self.is_disposable));
-        document.set("emailIsFree", flag(self.is_free));
+        document.put("emailCanonical", text(self.canonical.as_deref()));
+        document.put("emailIsCanonical", flag(self.is_canonical));
+        document.put("emailIsCorporate", flag(self.is_corporate));
+        document.put("emailIsDisposable", flag(self.is_disposable));
+        document.put("emailIsFree", flag(self.is_free));
     }
 }
 
@@ -371,27 +371,27 @@ pub async fn check_user_limit(ctx: &mut Context, console_error: bool) -> Result<
 /// A new user's document: the attributes every sign-up sets.
 pub fn new_user(user_id: &str) -> Document {
     let mut user = Document::default();
-    user.set("$id", Value::from(user_id));
-    user.set("$permissions", user_permissions(user_id));
-    user.set("emailVerification", Value::Bool(false));
-    user.set("status", Value::Bool(true));
-    user.set("registration", datetime::value(&datetime::now()));
-    user.set("reset", Value::Bool(false));
-    user.set("prefs", Value::Object(Default::default()));
-    user.set("sessions", Value::Null);
-    user.set("tokens", Value::Null);
-    user.set("memberships", Value::Null);
-    user.set("accessedAt", datetime::value(&datetime::now()));
+    user.put("$id", Value::from(user_id));
+    user.put("$permissions", user_permissions(user_id));
+    user.put("emailVerification", Value::Bool(false));
+    user.put("status", Value::Bool(true));
+    user.put("registration", datetime::value(&datetime::now()));
+    user.put("reset", Value::Bool(false));
+    user.put("prefs", Value::Object(Default::default()));
+    user.put("sessions", Value::Null);
+    user.put("tokens", Value::Null);
+    user.put("memberships", Value::Null);
+    user.put("accessedAt", datetime::value(&datetime::now()));
     user
 }
 
 /// The proof's name and options on a user without a password.
 pub fn set_default_hash(user: &mut Document) {
     let hash = proof();
-    user.set("password", Value::Null);
-    user.set("hash", Value::from(hash.name()));
-    user.set("hashOptions", hash_options(hash.as_ref()));
-    user.set("passwordUpdate", Value::Null);
+    user.put("password", Value::Null);
+    user.put("hash", Value::from(hash.name()));
+    user.put("hashOptions", hash_options(hash.as_ref()));
+    user.put("passwordUpdate", Value::Null);
 }
 
 /// `createDocument('users', $user)` over the injected user, with authorization skipped; a
@@ -401,7 +401,7 @@ pub async fn create_user(ctx: &mut Context, user: Document) -> Result<User> {
     let db = ctx.db()?;
     let skipped = skipped(&[]);
     let created =
-        db.authorization().skip(|| db.skip_filters(|| db.create_document("users", user), Some(&skipped))).await;
+        db.authorization().skip(db.skip_filters(Some(skipped.as_slice()), db.create_document("users", user))).await;
     match created {
         Ok(created) => Ok(User::from(&created)),
         Err(e) if e.is_a(utopia_database::Kind::Duplicate) => Err(Error::new(ErrorType::UserAlreadyExists)),
@@ -419,7 +419,7 @@ pub async fn over_signed_in(ctx: &mut Context, user: Document) -> Result<Documen
     let skipped = skipped(&[]);
     let mut base = db
         .authorization()
-        .skip(|| db.skip_filters(|| db.get_document("users", &id, Vec::new(), false), Some(&skipped)))
+        .skip(db.skip_filters(Some(skipped.as_slice()), db.get_document("users", &id, Vec::new(), false)))
         .await?;
     if base.is_empty() {
         return Ok(user);
@@ -430,18 +430,18 @@ pub async fn over_signed_in(ctx: &mut Context, user: Document) -> Result<Documen
     for key in filters::USERS_SUBQUERIES.iter().filter_map(|f| f.strip_prefix("subQuery")) {
         base.remove(&key.to_lowercase());
     }
-    base.set_many(user.into_array());
+    base.set_many(user.into_array())?;
     Ok(base)
 }
 
 /// A messaging target for the user (`email`, `sms`).
 pub fn new_target(user: &User, provider_type: &str, identifier: &str) -> Document {
     let mut target = Document::default();
-    target.set("$permissions", owner_permissions(&user.id));
-    target.set("userId", Value::from(user.id.as_str()));
-    target.set("userInternalId", documents::internal_id(user.sequence));
-    target.set("providerType", Value::from(provider_type));
-    target.set("identifier", Value::from(identifier));
+    target.put("$permissions", owner_permissions(&user.id));
+    target.put("userId", Value::from(user.id.as_str()));
+    target.put("userInternalId", documents::internal_id(user.sequence));
+    target.put("providerType", Value::from(provider_type));
+    target.put("identifier", Value::from(identifier));
     target
 }
 
@@ -455,7 +455,7 @@ pub async fn create_target(
 ) -> Result<Option<documents::Target>> {
     let db = ctx.db()?;
     let created =
-        db.authorization().skip(|| db.create_document("targets", new_target(user, provider_type, identifier))).await;
+        db.authorization().skip(db.create_document("targets", new_target(user, provider_type, identifier))).await;
     match created {
         Ok(target) => Ok(Some(documents::Target::from(&target))),
         Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
@@ -485,44 +485,44 @@ pub async fn new_session(
     let string = |s: &Option<String>| text(s.as_deref());
     let float = |f: Option<f64>| f.map(Value::Float).unwrap_or(Value::Null);
     let mut session = Document::default();
-    session.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-    session.set("userId", Value::from(user.id.as_str()));
-    session.set("userInternalId", documents::internal_id(user.sequence));
-    session.set("provider", Value::from(provider));
-    session.set("secret", Value::from(token_hash(secret)?.as_str()));
-    session.set("userAgent", Value::from(user_agent.as_str()));
-    session.set("ip", Value::from(ctx.ip.as_str()));
-    session.set("factors", documents::strings(&factors.iter().map(|f| (*f).to_owned()).collect::<Vec<_>>()));
-    session.set("countryCode", Value::from(geo.country_code.to_lowercase().as_str()));
-    session.set(
+    session.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+    session.put("userId", Value::from(user.id.as_str()));
+    session.put("userInternalId", documents::internal_id(user.sequence));
+    session.put("provider", Value::from(provider));
+    session.put("secret", Value::from(token_hash(secret)?.as_str()));
+    session.put("userAgent", Value::from(user_agent.as_str()));
+    session.put("ip", Value::from(ctx.ip.as_str()));
+    session.put("factors", documents::strings(&factors.iter().map(|f| (*f).to_owned()).collect::<Vec<_>>()));
+    session.put("countryCode", Value::from(geo.country_code.to_lowercase().as_str()));
+    session.put(
         "continentCode",
         if geo.continent_code == "--" { Value::Null } else { Value::from(geo.continent_code.as_str()) },
     );
-    session.set("latitude", float(geo.latitude));
-    session.set("longitude", float(geo.longitude));
-    session.set("timeZone", string(&geo.time_zone));
-    session.set("weatherCode", string(&geo.weather_code));
-    session.set("postalCode", string(&geo.postal_code));
-    session.set("autonomousSystemNumber", string(&geo.autonomous_system_number));
-    session.set("autonomousSystemOrganization", string(&geo.autonomous_system_organization));
-    session.set("connectionType", string(&geo.connection_type));
-    session.set("connectionUsageType", string(&geo.connection_usage_type));
-    session.set("connectionOrganization", string(&geo.connection_organization));
-    session.set("isp", string(&geo.isp));
-    session.set("expire", datetime::value(expire));
-    session.set("osCode", Value::from(detected.os_code.as_str()));
-    session.set("osName", Value::from(detected.os_name.as_str()));
-    session.set("osVersion", Value::from(detected.os_version.as_str()));
-    session.set("clientType", Value::from(detected.client_type.as_str()));
-    session.set("clientCode", Value::from(detected.client_code.as_str()));
-    session.set("clientName", Value::from(detected.client_name.as_str()));
-    session.set("clientVersion", Value::from(detected.client_version.as_str()));
-    session.set("clientEngine", Value::from(detected.client_engine.as_str()));
-    session.set("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
-    session.set("deviceName", text(detected.device_name.as_deref()));
-    session.set("deviceBrand", text(detected.device_brand.as_deref()));
-    session.set("deviceModel", text(detected.device_model.as_deref()));
-    session.set("$permissions", owner_permissions(&user.id));
+    session.put("latitude", float(geo.latitude));
+    session.put("longitude", float(geo.longitude));
+    session.put("timeZone", string(&geo.time_zone));
+    session.put("weatherCode", string(&geo.weather_code));
+    session.put("postalCode", string(&geo.postal_code));
+    session.put("autonomousSystemNumber", string(&geo.autonomous_system_number));
+    session.put("autonomousSystemOrganization", string(&geo.autonomous_system_organization));
+    session.put("connectionType", string(&geo.connection_type));
+    session.put("connectionUsageType", string(&geo.connection_usage_type));
+    session.put("connectionOrganization", string(&geo.connection_organization));
+    session.put("isp", string(&geo.isp));
+    session.put("expire", datetime::value(expire));
+    session.put("osCode", Value::from(detected.os_code.as_str()));
+    session.put("osName", Value::from(detected.os_name.as_str()));
+    session.put("osVersion", Value::from(detected.os_version.as_str()));
+    session.put("clientType", Value::from(detected.client_type.as_str()));
+    session.put("clientCode", Value::from(detected.client_code.as_str()));
+    session.put("clientName", Value::from(detected.client_name.as_str()));
+    session.put("clientVersion", Value::from(detected.client_version.as_str()));
+    session.put("clientEngine", Value::from(detected.client_engine.as_str()));
+    session.put("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
+    session.put("deviceName", text(detected.device_name.as_deref()));
+    session.put("deviceBrand", text(detected.device_brand.as_deref()));
+    session.put("deviceModel", text(detected.device_model.as_deref()));
+    session.set("$permissions", owner_permissions(&user.id))?;
     Ok(session)
 }
 

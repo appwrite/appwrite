@@ -2,7 +2,7 @@
 //!
 //! PHP: `Utopia\Database\Validator\UID`.
 
-use crate::database::Database;
+use crate::database;
 use crate::validator::key::Key;
 use crate::value::Value;
 
@@ -26,7 +26,7 @@ pub struct Uid {
 impl Default for Uid {
     /// `new UID()`: at most 36 characters.
     fn default() -> Self {
-        Self::new(Database::MAX_UID_DEFAULT_LENGTH)
+        Self::new(database::MAX_UID_DEFAULT_LENGTH)
     }
 }
 
@@ -39,7 +39,7 @@ impl Uid {
     /// `getDescription()`.
     pub fn description(&self) -> String {
         format!(
-            "UID must contain at most {} chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+            "UID must contain at most {} chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
             self.key.max_length()
         )
     }

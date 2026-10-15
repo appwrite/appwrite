@@ -19,10 +19,9 @@ use utopia_audit::schema::Sql;
 use utopia_audit::{Adapter, Audit, Log, Page, Query, Range, query};
 use utopia_cache::{Cache, None as NoCache};
 use utopia_client::{Request, Response};
-use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::memory::Memory;
-use utopia_database::adapter::sqlite::Sqlite;
-use utopia_database::{Authorization, Database};
+use utopia_database::adapter::sql::{Engine, Sql as SqlAdapter};
+use utopia_database::{Database, Index};
 use utopia_query::{Method, Object, Value as QValue};
 
 use crate::adapter::{Fault, OpResult, Outcome, Session, bytes_value, float_value};
@@ -815,8 +814,8 @@ async fn database(a: &Json, session: &mut Session) -> R<Outcome> {
     let engine = args(a, "engine").and_then(Json::as_str).unwrap_or("mariadb").to_owned();
     let adapter: Arc<dyn utopia_database::Adapter> = match engine.as_str() {
         "mariadb" => {
-            let url = session.service("database-mariadb")?.to_owned();
-            match MariaDB::connect_as(&url, Flavor::MariaDB).await {
+            let (dsn, user, pass) = mysql_dsn(session.service("database-mariadb")?);
+            match SqlAdapter::connect(Engine::MariaDb, &dsn, Some(&user), Some(&pass)).await {
                 Ok(adapter) => Arc::new(adapter),
                 Err(e) => return Ok(Outcome::err_bytes(e.php_class(), e.message_bytes())),
             }
@@ -824,7 +823,7 @@ async fn database(a: &Json, session: &mut Session) -> R<Outcome> {
         "sqlite" => {
             let dir = format!("/tmp/compat-fs/{}", session.ns);
             std::fs::create_dir_all(&dir).map_err(|e| Fault::new(format!("database.new: {e}")))?;
-            match Sqlite::open(&format!("{dir}/audit.sqlite")) {
+            match SqlAdapter::connect(Engine::Sqlite, &format!("sqlite:{dir}/audit.sqlite"), None, None).await {
                 Ok(adapter) => Arc::new(adapter),
                 Err(e) => return Ok(Outcome::err_bytes(e.php_class(), e.message_bytes())),
             }
@@ -832,14 +831,13 @@ async fn database(a: &Json, session: &mut Session) -> R<Outcome> {
         "memory" => Arc::new(Memory::new()),
         other => return fault(format!("unknown engine {other}")),
     };
-    let db = Database::new(adapter, Arc::new(Cache::from_dyn(Arc::new(NoCache))), Vec::new());
-    db.set_authorization(Arc::new(Authorization::new()));
+    let db = Database::new(adapter, Arc::new(Cache::from_dyn(Arc::new(NoCache))));
     let name = args(a, "database").and_then(Json::as_str).unwrap_or(&session.ns).to_owned();
     let namespace = args(a, "namespace").and_then(Json::as_str).unwrap_or("namespace").to_owned();
     let setup = async {
-        db.set_database(&name)?;
-        db.set_namespace(&namespace)?;
-        if a.get("create").and_then(Json::as_bool).unwrap_or(true) && !db.exists(Some(&name), None).await? {
+        db.set_database(&name);
+        db.set_namespace(&namespace);
+        if a.get("create").and_then(Json::as_bool).unwrap_or(true) && !db.exists(Some(&name)).await? {
             db.create(None).await?;
         }
         Ok::<_, utopia_database::Error>(())
@@ -870,8 +868,24 @@ fn audit_adapter<'a>(a: &Json, session: &'a Session) -> R<&'a AnyAdapter> {
     session.get::<AnyAdapter>(handle)
 }
 
-fn attribute_json(attribute: &utopia_audit::schema::Attribute) -> Json {
-    encode_array(&attribute.to_array())
+/// `mysql://user:pass@host:port` as PDO's DSN (`mysql:host=..;port=..;charset=utf8mb4`), user and password.
+fn mysql_dsn(url: &str) -> (String, String, String) {
+    let rest = url.strip_prefix("mysql://").unwrap_or(url).trim_end_matches('/');
+    let (auth, host) = rest.rsplit_once('@').unwrap_or(("", rest));
+    let (user, pass) = auth.split_once(':').unwrap_or((auth, ""));
+    let (host, port) = host.rsplit_once(':').unwrap_or((host, "3306"));
+    (format!("mysql:host={host};port={port};charset=utf8mb4"), user.to_owned(), pass.to_owned())
+}
+
+/// An attribute as PHP's adapter reports it (`toDocument()->getArrayCopy()`).
+fn attribute_json(attribute: &utopia_audit::schema::Attribute) -> Result<Json, Fault> {
+    let document = attribute.to_document().map_err(|e| Fault::new(e.message()))?;
+    Ok(encode_array(&document.array_copy()))
+}
+
+/// An index as PHP's adapter reports it (`toDocument()->getArrayCopy()`).
+fn index_json(index: &Index) -> Json {
+    encode_array(&index.to_document().array_copy())
 }
 
 /// `adapter.<method>` on any adapter.
@@ -1007,20 +1021,19 @@ async fn call_adapter<T: Adapter + Sql + ?Sized>(adapter: &T, sql: &T, method: &
             let queries = tri!(queries(a.get("queries")));
             outcome(adapter.count(&queries, int(a, "max")?).await, Json::from)
         }
-        "get_attributes" => Outcome::Ok(Json::Array(sql.attributes().iter().map(attribute_json).collect())),
-        "get_indexes" => Outcome::Ok(Json::Array(sql.indexes().iter().map(|i| encode_array(&i.to_array())).collect())),
-        "get_attribute_documents" => outcome(sql.attribute_documents(), |docs| {
-            Json::Array(
-                docs.iter().map(|d| crate::libs::database::codec::encode_array(&d.array_copy(&[], &[]))).collect(),
-            )
-        }),
-        "get_index_documents" => outcome(sql.index_documents(), |docs| {
-            Json::Array(
-                docs.iter().map(|d| crate::libs::database::codec::encode_array(&d.array_copy(&[], &[]))).collect(),
-            )
-        }),
+        "get_attributes" => {
+            Outcome::Ok(Json::Array(sql.attributes().iter().map(attribute_json).collect::<Result<_, _>>()?))
+        }
+        "get_indexes" => Outcome::Ok(Json::Array(sql.indexes().iter().map(index_json).collect())),
+        "get_attribute_documents" => {
+            Outcome::Ok(Json::Array(sql.attribute_documents().iter().map(attribute_json).collect::<Result<_, _>>()?))
+        }
+        "get_index_documents" => Outcome::Ok(Json::Array(sql.index_documents().iter().map(index_json).collect())),
         "get_collection_name" => Outcome::ok(sql.collection_name()),
-        "get_attribute" => Outcome::Ok(sql.attribute(&string(a, "id")?).map_or(Json::Null, attribute_json)),
+        "get_attribute" => match sql.attribute(&string(a, "id")?) {
+            Some(attribute) => Outcome::Ok(attribute_json(attribute)?),
+            None => Outcome::Ok(Json::Null),
+        },
         "get_column_definition" => outcome(sql.column_definition(&string(a, "id")?), Json::String),
         "get_all_column_definitions" => {
             outcome(sql.column_definitions(), |d| Json::Array(d.into_iter().map(Json::String).collect()))
