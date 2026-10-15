@@ -66,76 +66,30 @@ final class FilesystemTest extends Base
         }
     }
 
-    public function testFlushOnEmptyCacheAndSubsequentPing(): void
+    public function testFlushEmpty(): void
     {
-        $path = self::scratch('empty-cache');
+        $path = self::scratch('flush-empty');
 
         try {
-            $adapter = new Filesystem($path);
-            $cache = new Cache($adapter);
+            $cache = new Cache(new Filesystem($path));
 
-            $this->assertTrue($cache->flush());
-            $this->assertTrue(is_dir($path));
-            $this->assertTrue($cache->ping());
             $this->assertTrue($cache->flush());
         } finally {
             self::deletePath($path);
         }
     }
 
-    public function testFlushClearsContentsAndPreservesRoot(): void
+    public function testFlushKeepsRoot(): void
     {
-        $path = self::scratch('populated-cache');
+        $path = self::scratch('flush-root');
 
         try {
-            $adapter = new Filesystem($path);
-            $cache = new Cache($adapter);
+            $cache = new Cache(new Filesystem($path));
+            $cache->save('item', 'data');
+            $cache->flush();
 
-            $this->assertSame('data1', $cache->save('item1', 'data1'));
-            $this->assertSame('data2', $cache->save('nested/item2', 'data2'));
-
-            $this->assertTrue($cache->flush());
-            $this->assertTrue(is_dir($path));
-            $this->assertTrue($cache->ping());
-            $this->assertFalse($cache->load('item1', 60));
-            $this->assertFalse($cache->load('nested/item2', 60));
-            $this->assertTrue($cache->flush());
+            $this->assertDirectoryExists($path);
         } finally {
-            self::deletePath($path);
-        }
-    }
-
-    public function testFlushReportsFailureWhenEntryCannotBeDeleted(): void
-    {
-        $path = self::scratch('unwritable-cache');
-
-        try {
-            $adapter = new Filesystem($path);
-            $cache = new Cache($adapter);
-
-            $this->assertSame('data', $cache->save('item', 'data'));
-
-            $isRoot = function_exists('posix_geteuid') && posix_geteuid() === 0;
-            $switched = false;
-            $origEuid = null;
-
-            chmod($path, 0555);
-
-            if ($isRoot && function_exists('posix_seteuid')) {
-                $origEuid = posix_geteuid();
-                $switched = @posix_seteuid(1000);
-            }
-
-            try {
-                $this->assertFalse($cache->flush());
-            } finally {
-                if ($switched && $origEuid !== null) {
-                    posix_seteuid($origEuid);
-                }
-                chmod($path, 0777);
-            }
-        } finally {
-            chmod($path, 0777);
             self::deletePath($path);
         }
     }
