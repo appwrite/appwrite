@@ -15,6 +15,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -156,7 +157,7 @@ class XList extends Action
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
                     static fn (array $row): Document => new Document($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
+                    $this->assertRepresentable($dbForDatabases->aggregate($collectionTableId, $queries)),
                 ),
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
                 default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
@@ -242,6 +243,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_OUT_OF_RANGE, previous: $e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
@@ -273,6 +276,24 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     * @throws Exception
+     */
+    private function assertRepresentable(array $rows): array
+    {
+        foreach ($rows as $row) {
+            foreach ($row as $value) {
+                if (\is_float($value) && !\is_finite($value)) {
+                    throw new Exception(Exception::DATABASE_QUERY_OUT_OF_RANGE);
+                }
+            }
+        }
+
+        return $rows;
     }
 
     /**

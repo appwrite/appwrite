@@ -51,6 +51,41 @@ trait RejectedValues
         $this->assertSame(1, $matched['body']['total']);
     }
 
+    public function testAggregateOverflowIsRejected(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collectionId = $this->createRejectedValuesCollection($databaseId, 'aggregateOverflow');
+
+        $created = $this->createAttribute($databaseId, $collectionId, 'float', [
+            'key' => 'score',
+            'required' => true,
+        ]);
+        $this->assertSame(202, $created['headers']['status-code'], $created['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'score');
+
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['score' => 1e308]);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['score' => 1e308]);
+
+        $overflows = $this->getConsoleVariables()['_APP_DB_ADAPTER'] === 'postgresql';
+
+        foreach ([Query::sum('score', 'total'), Query::stddev('score', 'spread')] as $aggregate) {
+            $response = $this->listRejectedValues($databaseId, $collectionId, [$aggregate->toString()]);
+            $method = $aggregate->getMethod()->value;
+
+            $this->assertContains($response['headers']['status-code'], [200, 400], "{$method}: " . ($response['body']['message'] ?? ''));
+            if ($overflows) {
+                $this->assertSame(400, $response['headers']['status-code'], "{$method} overflows a double on this database");
+            }
+            if ($response['headers']['status-code'] === 400) {
+                $this->assertSame(Exception::DATABASE_QUERY_OUT_OF_RANGE, $response['body']['type'], $method);
+            }
+        }
+    }
+
     private function createRejectedValuesCollection(string $databaseId, string $name): string
     {
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getRejectedValuesKeyHeaders(), [
