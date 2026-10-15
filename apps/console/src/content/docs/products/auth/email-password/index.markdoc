@@ -60,6 +60,8 @@ console.log(result);
 
 After logging in, the email can be verified through the account create verification route. The user doesn't need to be verified to log in, but you can restrict resource access to verified users only using permissions through the `user([USER_ID], "verified")` role.
 
+To verify the email with a 6-digit code instead of a link, follow [Verify with a code](/docs/products/auth/verify-user#verify-with-code).
+
 First, send a verification email. Specify a redirect URL which users will be redirected to. The verification secrets will be appended as query parameters to the redirect URL. In this example, the redirect URL is `https://example.com/verify`.
 
 ```client-web
@@ -111,6 +113,10 @@ promise.then(function (response) {
 
 # Password Recovery {% #password-recovery %}
 
+Users who forget their password can reset it with a link or with a code. A link opens a password reset page that you host. A code lets the user reset the password without leaving your app, which suits mobile and desktop apps.
+
+## Recover with a link {% #recover-with-link %}
+
 If a user forgets their password, they can initiate a password recovery flow to recover their password. The Create Password Recovery endpoint sends the user an email with a temporary secret key for password reset. When the user clicks the confirmation link, they are redirected back to the password reset URL with the secret key and email address values attached to the URL as query strings.
 
 Only redirect URLs to domains added as a platform on your Appwrite Console will be accepted. URLs not added as a platform are rejected to protect against redirect attacks.
@@ -153,6 +159,119 @@ promise.then(function (response) {
     console.log(error); // Failure
 });
 ```
+
+## Recover with a code {% #recover-with-code %}
+
+To recover a password with a code, send a recovery email to the user's address. Appwrite emails the user a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createRecoveryOTP({
+    email: 'email@example.com'
+});
+
+const userId = token.userId;
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+final token = await account.createRecoveryOTP(
+    email: 'email@example.com',
+);
+
+final userId = token.userId;
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let account = Account(client)
+
+let token = try await account.createRecoveryOTP(
+    email: "email@example.com"
+)
+
+let userId = token.userId
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val account = Account(client)
+
+val token = account.createRecoveryOTP(
+    email = "email@example.com"
+)
+
+val userId = token.userId
+```
+{% /multicode %}
+
+If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. This response looks the same in both cases, so it doesn't reveal whether an account exists. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
+
+Next, ask the user for the code from the email and a new password. Confirm the reset by passing the user ID, the code as the `secret`, and the new password.
+
+{% multicode %}
+```client-web
+const response = await account.updateRecoveryOTP({
+    userId,
+    secret: '<CODE>',
+    password: '<NEW_PASSWORD>'
+});
+```
+
+```client-flutter
+final response = await account.updateRecoveryOTP(
+    userId: userId,
+    secret: '<CODE>',
+    password: '<NEW_PASSWORD>',
+);
+```
+
+```client-apple
+let response = try await account.updateRecoveryOTP(
+    userId: userId,
+    secret: "<CODE>",
+    password: "<NEW_PASSWORD>"
+)
+```
+
+```client-android-kotlin
+val response = account.updateRecoveryOTP(
+    userId = userId,
+    secret = "<CODE>",
+    password = "<NEW_PASSWORD>"
+)
+```
+{% /multicode %}
+
+Appwrite checks the new password against the password policies your project has turned on: [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), [password history](/docs/products/auth/security#password-history), and the option to reject [breached passwords](/docs/products/auth/security#breached-passwords). A code that is wrong, has expired, or was already used fails with `user_invalid_token`. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
+
+To add a security phrase to the email and the returned token, set `phrase` to `true` when you send the code, the same way as when you [verify an email with a code](/docs/products/auth/verify-user#verify-with-code).
 
 # Security {% #security %}
 
