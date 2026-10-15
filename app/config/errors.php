@@ -1500,7 +1500,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'description' => 'Message with the requested ID has no recipients (topics, users, targets, or emails).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [

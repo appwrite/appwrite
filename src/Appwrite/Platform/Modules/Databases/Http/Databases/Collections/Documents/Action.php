@@ -504,6 +504,14 @@ abstract class Action extends DatabasesAction
         $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
         $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
         foreach ($documents as $document) {
             $document->removeAttribute('$collection');
             $document->removeAttribute('$tenant');
@@ -511,7 +519,7 @@ abstract class Action extends DatabasesAction
             $queueForEvents
                 ->setParam('documentId', $document->getId())
                 ->setParam('rowId', $document->getId())
-                ->setPayload($document->getArrayCopy());
+                ->setPayload($document->getArrayCopy(), sensitive: $relationships);
 
             $queueForRealtime
                 ->from($queueForEvents)
