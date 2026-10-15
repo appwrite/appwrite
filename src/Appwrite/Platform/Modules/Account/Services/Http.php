@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Services;
 
+use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Create as CreateAuthenticator;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Delete as DeleteAuthenticator;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Update as UpdateAuthenticator;
@@ -12,7 +13,6 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as C
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
-use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Create as CreatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Delete as DeletePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Get as GetPasskey;

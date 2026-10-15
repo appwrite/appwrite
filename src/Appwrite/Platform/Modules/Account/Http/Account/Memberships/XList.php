@@ -88,7 +88,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $memberships = array_map(function ($membership) use ($dbForProject, $user) {
                 $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
