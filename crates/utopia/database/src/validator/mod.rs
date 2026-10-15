@@ -22,6 +22,12 @@
 //! | `Validator\Operator` | [`operator::Operator`] |
 //! | `Validator\PartialStructure` | [`partial_structure::PartialStructure`] |
 //! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
+//! | `Validator\Queries\Base` | [`queries::base::Queries`] (lists of [`queries::base::QueryEntry`]) |
+//! | `Validator\Queries\Document`, `Documents`, `Indexed`, `Narrow` | [`queries::document::Document`], [`queries::documents::Documents`], [`queries::indexed::Indexed`], [`queries::narrow::Narrow`] |
+//! | `Validator\Query\Base` | [`query::base::QueryValidator`] (trait), [`query::base::MethodType`] (`METHOD_TYPE_*`) |
+//! | `Validator\Query\Aggregate`, `Cursor`, `Distinct`, `Filter` | [`query::aggregate::Aggregate`], [`query::cursor::Cursor`], [`query::distinct::Distinct`], [`query::filter::Filter`] |
+//! | `Validator\Query\GroupBy`, `Having`, `Join`, `Limit`, `Offset`, `Order`, `Select` | [`query::group_by::GroupBy`], [`query::having::Having`], [`query::join::Join`], [`query::limit::Limit`], [`query::offset::Offset`], [`query::order::Order`], [`query::select::Select`] |
+//! | `Validator\Query\Joined\Collection`, `Joined\Attributes` | [`query::joined::collection::Collection`] (with [`query::joined::collection::Definition`]), [`query::joined::attributes::Joins`] |
 //! | `Validator\Sequence` | [`sequence::Sequence`] |
 //! | `Validator\Spatial` | [`spatial::Spatial`] |
 //! | `Validator\Structure` (formats: `addFormat`, `hasFormat`, `getFormat`, `removeFormat`) | [`structure::Structure`], [`structure::formats`] |
@@ -56,6 +62,8 @@ pub mod object_value;
 pub mod operator;
 pub mod partial_structure;
 pub mod permissions;
+pub mod queries;
+pub mod query;
 pub mod roles;
 pub mod sequence;
 pub mod spatial;
