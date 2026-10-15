@@ -65,6 +65,25 @@ fn cursor_value(cursor: &Array, attribute: &str) -> Value {
     cursor.get_str(attribute).cloned().unwrap_or(Value::Null)
 }
 
+/// A cursor value as `Query::lessThan()` / `greaterThan()` take it
+/// (`string|int|float|bool`): PHP refuses `null` and a list with a
+/// `TypeError` from the call at `Adapter/SQL.php` line `less_line` (the
+/// `greaterThan()` one follows two lines later).
+fn comparable(value: &Value, direction: OrderDirection, less_line: u32) -> Result<utopia_query::Value> {
+    if matches!(value, Value::Null | Value::Array(_) | Value::Object(_) | Value::Ext(_)) {
+        let (method, line) =
+            if direction == OrderDirection::Desc { ("lessThan", less_line) } else { ("greaterThan", less_line + 2) };
+        return Err(crate::error::Error::new(
+            crate::error::Kind::TypeError,
+            format!(
+                "Utopia\\Query\\Query::{method}(): Argument #2 ($value) must be of type string|int|float|bool, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line {line}",
+                value.debug_type()
+            ),
+        ));
+    }
+    Ok(crate::value::to_query(value))
+}
+
 /// The direction an order runs in, flipped before a cursor.
 fn directed(order_type: OrderDirection, cursor_direction: CursorDirection) -> OrderDirection {
     if cursor_direction == CursorDirection::Before {
@@ -102,22 +121,21 @@ impl Sql {
         let attribute = self.quote(&self.filter(&column));
         let quoted_alias = self.quote(alias);
 
-        let vector: Vec<Value> = match query.values().values().next() {
+        // `array_map()` keeps the keys: a map is encoded as a JSON object,
+        // which the engine then refuses (`Adapter/Postgres.php` line 1836).
+        let vector: Array = match query.values().values().next() {
             Some(utopia_query::Value::Array(values)) => values
-                .values()
-                .map(|v| {
+                .iter()
+                .map(|(k, v)| {
                     let v = crate::value::from_query(v);
-                    Value::Float(if super::is_numeric(&v) { v.to_double() } else { 0.0 })
+                    (k.to_owned(), Value::Float(if super::is_numeric(&v) { v.to_double() } else { 0.0 }))
                 })
                 .collect(),
-            _ => Vec::new(),
+            _ => Array::new(),
         };
-        let vector = php_std::json::encode(
-            &Value::Array(vector.into_iter().collect()),
-            php_std::json::Flags::NONE,
-            php_std::json::DEFAULT_DEPTH,
-        )
-        .unwrap_or_default();
+        let vector =
+            php_std::json::encode(&Value::Array(vector), php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH)
+                .unwrap_or_default();
 
         let expression = match query.method() {
             Method::VectorDot => format!("({quoted_alias}.{attribute} <#> ?::vector)"),
@@ -213,16 +231,17 @@ impl Sql {
         cursor_direction: CursorDirection,
         join_aliases: &[String],
         nullable: bool,
-    ) {
+    ) -> Result<()> {
         if cursor.is_empty() {
-            return;
+            return Ok(());
         }
         let conditions =
-            self.cursor_conditions(order_attributes, order_types, cursor, cursor_direction, join_aliases, nullable);
+            self.cursor_conditions(order_attributes, order_types, cursor, cursor_direction, join_aliases, nullable)?;
         if conditions.is_empty() {
-            return;
+            return Ok(());
         }
         builder.filter(vec![any_of(conditions).into_inner()]);
+        Ok(())
     }
 
     /// `cursorConditions()`: one condition per order position.
@@ -234,7 +253,7 @@ impl Sql {
         cursor_direction: CursorDirection,
         join_aliases: &[String],
         nullable: bool,
-    ) -> Vec<Query> {
+    ) -> Result<Vec<Query>> {
         let mut conditions = Vec::new();
         for (i, original) in order_attributes.iter().enumerate() {
             let kind = order_type(order_types, i);
@@ -245,7 +264,7 @@ impl Sql {
             let internal = self.qualify_order_attribute(original, join_aliases);
 
             if !nullable && order_attributes.len() == 1 && i == 0 && original == crate::document::SEQUENCE {
-                let value = crate::value::to_query(&cursor_value(cursor, original));
+                let value = comparable(&cursor_value(cursor, original), direction, 5442)?;
                 conditions.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {
@@ -266,7 +285,7 @@ impl Sql {
                     None => continue,
                 }
             } else {
-                let value = crate::value::to_query(&value);
+                let value = comparable(&value, direction, 5467)?;
                 and.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {
@@ -275,7 +294,7 @@ impl Sql {
             }
             conditions.push(all_of(and));
         }
-        conditions
+        Ok(conditions)
     }
 
     /// `cursorEquality()`: the rows tied with the cursor on an attribute.
@@ -507,7 +526,7 @@ impl Sql {
                 cursor_direction,
                 join_aliases,
                 true,
-            );
+            )?;
             let equalities = bound
                 .order_attributes
                 .iter()
@@ -612,4 +631,31 @@ fn is_main_row_condition(query: &utopia_query::Query, join_aliases: &[String]) -
 fn join_alias_of<'a>(attribute: &str, join_aliases: &'a [String]) -> Option<&'a str> {
     let (prefix, _) = attribute.split_once('.')?;
     join_aliases.iter().find(|a| *a == prefix).map(String::as_str)
+}
+
+#[cfg(all(test, feature = "sqlite"))]
+mod tests {
+    use utopia_query::{Method, Value as Q};
+
+    use super::super::super::pdo::Pdo;
+    use super::super::super::{Engine, Sql};
+    use crate::query::Query;
+
+    /// `getVectorOrderRaw()` maps the vector with `array_map()`, which keeps
+    /// the keys: a map is bound as a JSON object (`Adapter/Postgres.php`
+    /// line 1836), a list as a JSON array.
+    #[tokio::test]
+    async fn a_vector_order_keeps_the_vectors_keys() {
+        let pdo = Pdo::connect("sqlite::memory:", None, None).await.unwrap();
+        let sql = Sql::new(Engine::Postgres, pdo);
+        let binding = |vector: Q| {
+            let values = std::iter::once(vector).collect();
+            let mut query = Query::from(utopia_query::Query::new(Method::VectorCosine, "emb", values, ""));
+            sql.vector_order_raw(&mut query, "t").unwrap().bindings
+        };
+        let map: utopia_query::Array = [(php_std::ArrayKey::from("a"), Q::Int(1))].into_iter().collect();
+        assert_eq!(binding(Q::Array(map)), [Q::Str("{\"a\":1}".into())]);
+        let list = utopia_query::Array::from_list(vec![Q::Int(1), Q::Str("x".into())]);
+        assert_eq!(binding(Q::Array(list)), [Q::Str("[1,0]".into())]);
+    }
 }

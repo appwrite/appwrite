@@ -397,7 +397,7 @@ impl Sql {
                 cursor_direction,
                 &join_aliases,
                 true,
-            );
+            )?;
 
             let mut right = self.new_builder(&name, alias, true, Vec::new(), unindexed)?;
             let right_projected = self
@@ -435,7 +435,7 @@ impl Sql {
                 cursor_direction,
                 &join_aliases,
                 true,
-            );
+            )?;
 
             union(&mut left, &mut right, !has_distinct)?;
             self.apply_find_page(
@@ -555,7 +555,7 @@ impl Sql {
                     cursor_direction,
                     &join_aliases,
                     has_joins,
-                );
+                )?;
             }
 
             if let Some(vector) = vector_distance.as_ref().filter(|_| !has_aggregation && !has_distinct) {

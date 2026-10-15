@@ -295,7 +295,7 @@ impl Sql {
                 cursor_direction,
                 &join_aliases,
                 false,
-            );
+            )?;
             halves.push(half);
         }
 
