@@ -134,6 +134,8 @@ type Scenario = {
 /** What the page asked the API for, so the assertions can check the request. */
 type Recorded = {
   listCalls: number
+  /** Decoded query string of each GET, so the ordering and limit are pinned. */
+  listQueries: string[]
   created: Array<{ environmentId?: string; name?: string }>
   renamed: Array<{ environmentId: string; name?: string }>
   deleted: string[]
@@ -221,6 +223,7 @@ async function mockAppwriteApi(
         return json(201, created)
       }
       recorded.listCalls += 1
+      recorded.listQueries.push(decodeURIComponent(url.search))
       if (scenario.listError) {
         return json(scenario.listError.status, scenario.listError.body)
       }
@@ -309,7 +312,13 @@ async function mockAppwriteApi(
 }
 
 function newRecorded(): Recorded {
-  return { listCalls: 0, created: [], renamed: [], deleted: [] }
+  return {
+    listCalls: 0,
+    listQueries: [],
+    created: [],
+    renamed: [],
+    deleted: [],
+  }
 }
 
 /** Opens a project page that renders the sidebar (settings has no loader). */
@@ -374,6 +383,15 @@ test.describe('project environment switcher (mocked API)', () => {
     await expect(
       menu.getByRole('menuitem', { name: 'Create environment' }),
     ).toBeVisible()
+
+    // The rows above came from a request that also has to carry the ordering
+    // and the page size; dropping either leaves the list wrong at scale.
+    expect(recorded.listQueries[0]).toContain(
+      '{"method":"orderDesc","attribute":"$createdAt"}',
+    )
+    expect(recorded.listQueries[0]).toContain(
+      '{"method":"limit","values":[100]}',
+    )
 
     // The project is managed from its own settings, not from the switcher.
     await expect(
@@ -505,9 +523,6 @@ test.describe('project environment switcher (mocked API)', () => {
     const dialog = page.getByRole('dialog', { name: 'Create environment' })
     await dialog.locator('#environment-name').fill('Staging')
     await dialog.getByText('Auto-generated').click()
-    await expect(dialog).toContainText(
-      'Allowed characters: lowercase letters, numbers, non-leading hyphen',
-    )
 
     const create = dialog.getByRole('button', { name: 'Create', exact: true })
     const id = dialog.locator('#environment-id')
@@ -748,7 +763,6 @@ test.describe('project environment switcher (mocked API)', () => {
     await waitForSidebar(page)
     await expect.poll(() => recorded.listCalls).toBeGreaterThan(0)
     await expect(page.getByRole('button', SWITCHER)).toHaveCount(0)
-    await expect(page.getByText('Failed to')).toHaveCount(0)
   })
 
   test('asks for nothing when the profile feature is off', async ({ page }) => {

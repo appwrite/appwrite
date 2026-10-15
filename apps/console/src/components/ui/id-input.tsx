@@ -2,7 +2,8 @@ import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { isValidProjectEnvironmentId } from '@/lib/project-environments'
+import { isValidProjectId } from '@/lib/project-id'
+import { useT } from '@/lib/i18n/translate'
 import { Info } from 'lucide-react'
 
 export interface IdInputProps {
@@ -64,12 +65,6 @@ function validateDedicatedId(id: string): boolean {
   return /^[A-Za-z0-9]+$/.test(id)
 }
 
-/**
- * Mirrors the server-side `ProjectId` validator (projects and environments).
- * Shared with the create dialog so the input and the form agree on the rule.
- */
-const validateProjectId = isValidProjectEnvironmentId
-
 export function IdInput({
   value,
   onChange,
@@ -80,11 +75,12 @@ export function IdInput({
   id,
   idFormat = 'default',
 }: IdInputProps) {
+  const t = useT()
   const validateId =
     idFormat === 'dedicated'
       ? validateDedicatedId
       : idFormat === 'project'
-        ? validateProjectId
+        ? isValidProjectId
         : validateDefaultId
   const idHelpText =
     idFormat === 'dedicated'
@@ -97,10 +93,8 @@ export function IdInput({
   const [error, setError] = React.useState<string | null>(null)
 
   // Sync input value with prop value. `error` is deliberately not touched
-  // here: `handleToggle` already clears it when the panel opens, and an effect
-  // keyed on `value` cleared it on the render right after every keystroke, so
-  // a controlled caller (one that echoes `onChange` back as `value`) never saw
-  // the "Invalid ID format" message below.
+  // here: `handleToggle` already clears it on open, and clearing it on `value`
+  // wiped the message a keystroke had just set for every controlled caller.
   React.useEffect(() => {
     setInputValue(value || '')
   }, [value])
@@ -111,7 +105,8 @@ export function IdInput({
 
     // Validate as user types
     if (newValue.length > maxLength) {
-      setError(`ID must be ${maxLength} characters or less`)
+      // The counter next to the field carries the number.
+      setError('ID is too long')
     } else if (newValue && !validateId(newValue)) {
       setError('Invalid ID format')
     } else {
@@ -135,7 +130,7 @@ export function IdInput({
   }
 
   // Display value: show custom ID if set, otherwise show "Auto-generated"
-  const displayValue = value || 'Auto-generated'
+  const displayValue = value || t('Auto-generated')
 
   return (
     <div className="space-y-2">
@@ -180,12 +175,14 @@ export function IdInput({
                 </span>
               </div>
             </div>
-            {error && <p className="text-[12px] text-destructive">{error}</p>}
+            {error && (
+              <p className="text-[12px] text-destructive">{t(error)}</p>
+            )}
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
-            <p className="text-[12px] text-muted-foreground">{idHelpText}</p>
+            <p className="text-[12px] text-muted-foreground">{t(idHelpText)}</p>
           </div>
         </div>
       )}

@@ -43,13 +43,15 @@ export function RenameEnvironmentDialog({
   )
 
   // Opening is what seeds the field, so a rename that failed does not reset
-  // what the user typed while the dialog stays open.
+  // what the user typed while the dialog stays open. Keyed on the id, not the
+  // object: the parent rebuilds the option on every list refetch.
   useEffect(() => {
     if (open) {
       setName(environment?.name ?? '')
       setError(null)
     }
-  }, [open, environment])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seeded by id, not name
+  }, [open, environment?.id])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!updateEnvironmentMutation.isPending) {

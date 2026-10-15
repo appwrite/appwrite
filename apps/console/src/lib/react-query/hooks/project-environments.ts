@@ -18,10 +18,9 @@ import { useMemo } from 'react'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
-import { PROJECT_NAME_MAX_LENGTH } from './projects'
 
 /** One page covers the per-plan environment cap many times over. */
-export const PROJECT_ENVIRONMENTS_LIMIT = 100
+const PROJECT_ENVIRONMENTS_LIMIT = 100
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -30,16 +29,11 @@ export const PROJECT_ENVIRONMENTS_LIMIT = 100
 /**
  * Query function to fetch the environments of a project
  *
- * This is extracted so it can be reused in both hooks and route loaders.
- *
  * @param projectId - The project ID
  * @param region - The project region
  * @returns Environments with total count
  */
-export async function fetchProjectEnvironments(
-  projectId: string,
-  region?: string,
-) {
+async function fetchProjectEnvironments(projectId: string, region?: string) {
   if (!projectId) {
     return { environments: [] as Models.Project[], total: 0 }
   }
@@ -60,8 +54,8 @@ export async function fetchProjectEnvironments(
   }
 }
 
-/** Query options for a project's environments (for route loader prefetch). */
-export function projectEnvironmentsQueryOptions(
+/** Query options for a project's environments. */
+function projectEnvironmentsQueryOptions(
   projectId: string | null | undefined,
   region?: string,
 ) {
@@ -132,19 +126,10 @@ export function useCreateProjectEnvironment(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      const trimmedName = name.trim()
-      if (!trimmedName) {
-        throw new Error('Environment name is required')
-      }
-      if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
-        throw new Error(
-          `Environment name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`,
-        )
-      }
 
       return await sdk.forProject(projectId, region).project.createEnvironment({
         environmentId: environmentId?.trim() || ID.unique(),
-        name: trimmedName,
+        name: name.trim(),
       })
     },
     onSuccess: async () => {
@@ -181,19 +166,10 @@ export function useUpdateProjectEnvironment(
       if (!environmentId) {
         throw new Error('Environment ID is required')
       }
-      const trimmedName = name.trim()
-      if (!trimmedName) {
-        throw new Error('Environment name is required')
-      }
-      if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
-        throw new Error(
-          `Environment name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`,
-        )
-      }
 
       return await sdk
         .forProject(projectId, region)
-        .project.updateEnvironment({ environmentId, name: trimmedName })
+        .project.updateEnvironment({ environmentId, name: name.trim() })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({

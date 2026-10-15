@@ -13,21 +13,13 @@ export interface ProjectEnvironmentOption {
 }
 
 /**
- * `environmentId` on POST /v1/project/environments is validated server-side by
- * `ProjectId`: a-z, 0-9 and hyphen, no leading hyphen, at most 36 chars.
+ * The switcher's rows. The project itself is always the first one, so there is
+ * always something selected.
  */
-export const PROJECT_ENVIRONMENT_ID_MAX_LENGTH = 36
-
-/**
- * Mirrors `Appwrite\Utopia\Database\Validator\ProjectId`, which validates both
- * project ids and environment ids. An empty id counts as valid because the
- * create dialog reads it as "auto-generate" and sends `ID.unique()` instead.
- */
-export function isValidProjectEnvironmentId(environmentId: string): boolean {
-  if (!environmentId) return true
-  if (environmentId.length > PROJECT_ENVIRONMENT_ID_MAX_LENGTH) return false
-  return /^[a-z0-9][a-z0-9-]*$/.test(environmentId)
-}
+export type ProjectEnvironmentOptions = readonly [
+  ProjectEnvironmentOption,
+  ...ProjectEnvironmentOption[],
+]
 
 /**
  * Dot colors for the switcher. The project itself always takes the first one;
@@ -91,15 +83,15 @@ export function writeStoredProjectEnvironmentId(
 }
 
 /**
- * Resolve a stored selection against the rows the switcher lists. `options`
- * always starts with the project itself, which is the fallback for an id no
- * row matches. `isStale` marks exactly that case: the stored environment is
- * gone (deleted here or on another device) and the id should be dropped.
+ * Resolve a stored selection against the rows the switcher lists. The project
+ * itself is `options[0]`, which is the fallback for an id no row matches.
+ * `isStale` marks exactly that case: the stored environment is gone (deleted
+ * here or on another device) and the id should be dropped.
  */
 export function resolveProjectEnvironmentSelection(
-  options: readonly ProjectEnvironmentOption[],
+  options: ProjectEnvironmentOptions,
   selectedEnvironmentId: string | null,
-): { selected: ProjectEnvironmentOption | undefined; isStale: boolean } {
+): { selected: ProjectEnvironmentOption; isStale: boolean } {
   const match = selectedEnvironmentId
     ? options.find((option) => option.id === selectedEnvironmentId)
     : undefined

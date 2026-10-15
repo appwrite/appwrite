@@ -16,10 +16,7 @@ import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
 } from '@/lib/react-query/hooks'
-import {
-  isValidProjectEnvironmentId,
-  PROJECT_ENVIRONMENT_ID_MAX_LENGTH,
-} from '@/lib/project-environments'
+import { isValidProjectId, PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
@@ -93,7 +90,7 @@ export function CreateEnvironmentDialog({
   // `IdInput` reports a bad id inline but still hands it up, so the dialog is
   // what keeps a server-side `ProjectId` rejection from being the first signal.
   const trimmedEnvironmentId = environmentId?.trim() ?? ''
-  const isEnvironmentIdValid = isValidProjectEnvironmentId(trimmedEnvironmentId)
+  const isEnvironmentIdValid = isValidProjectId(trimmedEnvironmentId)
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -106,15 +103,15 @@ export function CreateEnvironmentDialog({
     }
 
     setErrors(newErrors)
-    // An invalid id is reported inline by `IdInput` and already disables
-    // Create, so here it only has to stop the request.
-    return Object.keys(newErrors).length === 0 && isEnvironmentIdValid
+    return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!validate()) {
+    // An invalid id is reported inline by `IdInput` and already disables
+    // Create; this only stops a submit that got past the disabled button.
+    if (!isEnvironmentIdValid || !validate()) {
       return
     }
 
@@ -180,7 +177,7 @@ export function CreateEnvironmentDialog({
                 value={environmentId}
                 onChange={setEnvironmentId}
                 idFormat="project"
-                maxLength={PROJECT_ENVIRONMENT_ID_MAX_LENGTH}
+                maxLength={PROJECT_ID_MAX_LENGTH}
                 disabled={createEnvironmentMutation.isPending}
                 placeholder={t('Leave blank to auto-generate')}
               />

@@ -22,6 +22,7 @@ import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/
 import {
   projectEnvironmentDotClass,
   type ProjectEnvironmentOption,
+  type ProjectEnvironmentOptions,
   resolveProjectEnvironmentSelection,
   useProjectEnvironmentSelection,
 } from '@/lib/project-environments'
@@ -92,7 +93,7 @@ export function EnvironmentSwitcher({
 
   // The project itself is the default environment: it is the parent of every
   // environment and is never one of the rows the list endpoint returns.
-  const options = useMemo<ProjectEnvironmentOption[]>(
+  const options = useMemo<ProjectEnvironmentOptions>(
     () => [
       {
         id: projectId,
@@ -108,10 +109,10 @@ export function EnvironmentSwitcher({
     [projectId, project?.name, environments],
   )
 
-  const { selected: resolvedSelection, isStale } =
-    resolveProjectEnvironmentSelection(options, selectedEnvironmentId)
-  // `options` always starts with the project, so a selection always resolves.
-  const selected = resolvedSelection!
+  const { selected, isStale } = resolveProjectEnvironmentSelection(
+    options,
+    selectedEnvironmentId,
+  )
 
   // A stored id can outlive its environment (deleted here or on another
   // device), so drop it once a loaded list says it is gone. Only a successful
@@ -287,13 +288,9 @@ export function EnvironmentSwitcher({
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         title="Delete environment"
-        description={
-          <>
-            {t(
-              'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.',
-            )}
-          </>
-        }
+        description={t(
+          'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.',
+        )}
         confirmValue={selected.name.trim() || selected.id}
         confirmPlaceholder="Enter environment name"
         onConfirm={handleConfirmDelete}
