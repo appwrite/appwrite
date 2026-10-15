@@ -250,6 +250,11 @@ class Create extends Action
                         throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
                     }
 
+                    // The chunk count and size were fixed by the first chunk.
+                    if ((int) $deployment->getAttribute('sourceSize', 0) !== $fileSize) {
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
