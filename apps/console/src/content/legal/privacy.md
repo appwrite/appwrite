@@ -124,6 +124,9 @@ This section describes how we handle data we receive from your Google account wh
 ### What Google data we access
 When you sign in with Google, we receive from your Google account your name, email address, email verification status, profile picture, and your Google account identifier. We request only the `email`, `profile`, and `openid` OAuth scopes. We do not request access to any other Google data, such as your Gmail, Drive, Calendar, or contacts.
 
+### Google sign-in tokens
+When you sign in with Google, Google also gives us an access token and a refresh token. We store both in encrypted form with your account and your Console session. We use them only to keep your Console session active and to refresh your profile picture from Google. Tokens stored with a session are deleted when you sign out of that session, and tokens stored with your account are deleted when you delete your account. You can also revoke them at any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), after which they stop working.
+
 ### How we use it
 We use this information to create and secure your Appwrite account, to sign you in to the Console, and to display your name and profile picture in the Console.
 
