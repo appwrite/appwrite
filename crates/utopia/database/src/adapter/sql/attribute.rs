@@ -502,8 +502,7 @@ impl Sql {
             }
         }
         let sql = format!("ALTER TABLE {} DROP COLUMN `{id}`", self.table(&name));
-        let mut prepared = self.sqlite_prepare(&sql, Some(Event::AttributeDelete)).await?;
-        match self.execute(&mut prepared).await {
+        match self.sqlite_run(&sql, Some(Event::AttributeDelete)).await {
             Ok(done) => Ok(done),
             Err(e) if e.message().contains("no such column") => Ok(true),
             Err(e) => Err(e),

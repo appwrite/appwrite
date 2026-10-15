@@ -291,8 +291,7 @@ impl Sql {
             return Ok(true);
         }
         let sql = self.sqlite_index_sql(&name, &id, index.kind, &index.attributes)?;
-        let mut prepared = self.sqlite_prepare(&sql, Some(event)).await?;
-        self.execute(&mut prepared).await.map_err(|e| self.process_exception(e))
+        self.sqlite_run(&sql, Some(event)).await.map_err(|e| self.process_exception(e))
     }
 
     /// SQLite `getSqlIndex()`.
@@ -437,6 +436,14 @@ impl Sql {
         }
     }
 
+    /// `$this->execute($this->prepare($sql, event: $event))`: SQLite
+    /// compiles a statement when it is prepared, so a statement on a missing
+    /// table, column or index fails here, where PHP's callers catch it.
+    pub(crate) async fn sqlite_run(&self, sql: &str, event: Option<Event>) -> Result<bool> {
+        let mut prepared = self.sqlite_prepare(sql, event).await?;
+        self.execute(&mut prepared).await
+    }
+
     /// `deleteIndex()`
     pub(crate) async fn delete_index(&self, collection: &str, key: &str) -> Result<bool> {
         self.delete_index_with_event(collection, key, Event::IndexDelete).await
@@ -484,8 +491,7 @@ impl Sql {
                     return Ok(true);
                 }
                 let sql = format!("DROP INDEX `{regular}`");
-                let mut prepared = self.sqlite_prepare(&sql, Some(event)).await?;
-                match self.execute(&mut prepared).await {
+                match self.sqlite_run(&sql, Some(event)).await {
                     Ok(done) => Ok(done),
                     Err(e) if e.message().contains("no such index") => Ok(true),
                     Err(e) => Err(e),

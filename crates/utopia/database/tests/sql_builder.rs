@@ -32,7 +32,7 @@ fn on_array(mut query: Query) -> Query {
 }
 
 fn strings(values: &[&str]) -> Array {
-    list(values.iter().map(|v| string(v)))
+    list(values.iter().copied().map(string))
 }
 
 /// The database error a builder error carries, as the adapters read it.

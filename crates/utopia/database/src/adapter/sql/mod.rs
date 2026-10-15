@@ -113,8 +113,9 @@ impl Engine {
     }
 }
 
-/// SQLite's FTS5 table of each attribute (`None` when it has none).
-pub(crate) type FtsTables = Vec<(String, Option<String>)>;
+/// SQLite's FTS5 table of each attribute of a collection (`null` when none
+/// covers it), as `$ftsTableCache` keeps it per table prefix.
+pub(crate) type FtsAttributeMap = Vec<(String, Option<String>)>;
 
 /// The state PHP's subclasses keep besides the base's.
 #[derive(Debug, Default)]
@@ -125,7 +126,7 @@ pub(crate) struct EngineState {
     /// transaction (`None` when unknown after a rollback to a savepoint).
     pub local_timeout: Option<i64>,
     /// SQLite `$ftsTableCache`: attribute → FTS5 table, per table prefix.
-    pub fts_tables: Vec<(String, FtsTables)>,
+    pub fts_tables: Vec<(String, FtsAttributeMap)>,
     /// SQLite `$emulateMySQL`.
     pub emulate_mysql: bool,
     /// The metadata the statement comments were last written for, and the
