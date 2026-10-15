@@ -118,7 +118,7 @@ class TransactionState
             return $dbForDatabases->find($collectionId, $queries);
         }
 
-        $this->assertNotAggregated($queries);
+        $this->assertOverlayable($queries);
 
         $staged = $this->getTransactionState($transactionId)[$collectionId] ?? [];
         $documents = [];
@@ -199,7 +199,7 @@ class TransactionState
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
-        $this->assertNotAggregated($queries);
+        $this->assertOverlayable($queries);
 
         $state = $this->getTransactionState($transactionId);
         $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
@@ -245,16 +245,40 @@ class TransactionState
     }
 
     /**
-     * Staged changes overlay documents by ID, and an aggregated row has none to overlay.
+     * Staged changes overlay rows by document ID, and an aggregated row, or a distinct row that leaves out $id, has none.
      *
      * @param array<Query> $queries
      * @throws Exception\Query
      */
-    private function assertNotAggregated(array $queries): void
+    private function assertOverlayable(array $queries): void
     {
-        if (Query::groupByType($queries)->isAggregation()) {
+        $parsed = Query::groupByType($queries);
+
+        if ($parsed->isAggregation()) {
             throw new Exception\Query("Aggregate and groupBy queries cannot read a transaction's uncommitted changes. Run them outside the transaction.");
         }
+
+        if ($parsed->distinct && !$this->selectsId($parsed->selections)) {
+            throw new Exception\Query("Distinct queries cannot read a transaction's uncommitted changes unless they select \$id. Select \$id or run them outside the transaction.");
+        }
+    }
+
+    /**
+     * @param array<Query> $selections
+     */
+    private function selectsId(array $selections): bool
+    {
+        if ($selections === []) {
+            return true;
+        }
+
+        foreach ($selections as $selection) {
+            if (\array_intersect(['*', '$id'], $selection->getValues()) !== []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

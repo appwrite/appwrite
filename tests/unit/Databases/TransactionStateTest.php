@@ -126,6 +126,39 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(3, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
     }
 
+    public function testDistinctWithoutIdInsideATransactionIsRejected(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Ada']);
+        $queries = [Query::select(['name']), Query::distinct()];
+
+        foreach ([
+            'list' => fn (): mixed => $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries),
+            'count' => fn (): mixed => $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries),
+        ] as $read => $call) {
+            try {
+                $call();
+                $this->fail("A distinct {$read} without \$id has no document to overlay a staged change on, so it must be refused");
+            } catch (QueryException $error) {
+                $this->assertStringContainsString('Distinct queries', $error->getMessage(), $read);
+            }
+        }
+    }
+
+    public function testDistinctSelectingIdInsideATransactionOverlaysStagedChanges(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Ada']);
+        $this->stage($transaction, 'update', 'ada', ['name' => 'Ada Lovelace']);
+        $this->stage($transaction, 'delete', 'bob', []);
+        $queries = [Query::select(['$id', 'name']), Query::distinct()];
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries);
+
+        $this->assertSame([['ada', 'Ada Lovelace', null], ['cy', 'Ada', null]], $this->project($rows));
+        $this->assertSame(\count($rows), $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
+    }
+
     /**
      * @return list<Query>
      */
