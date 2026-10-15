@@ -589,7 +589,9 @@ services:
       - _APP_CONSOLE_BITBUCKET_APP_ID
       - _APP_CONSOLE_BITBUCKET_SECRET
       - _APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS
-      - _APP_RULES_FORMAT
+      # No _APP_RULES_FORMAT: the PHP API is not given it either, so both
+      # find custom domain rules by domain (.env's `md5` would make Rust
+      # look them up by ID instead).
       - _APP_SMS_FROM
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE

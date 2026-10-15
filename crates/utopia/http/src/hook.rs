@@ -80,6 +80,27 @@ where
     })
 }
 
+/// A validated param as the action receives it (`Http::coerce()`): a loose
+/// boolean (`"true"`, `"1"`, `1`, `"false"`, `"0"`, `0`) checked by a
+/// boolean validator (also inside `Nullable`) becomes that boolean; any other
+/// value is left as it is.
+pub fn coerce(value: &Value, validator: &dyn Validator) -> Value {
+    match loose_boolean(value) {
+        Some(b) if validator.kind() == Type::Boolean && !validator.is_array() => Value::Bool(b),
+        _ => value.clone(),
+    }
+}
+
+fn loose_boolean(value: &Value) -> Option<bool> {
+    match value {
+        Value::String(s) if s == "true" || s == "1" => Some(true),
+        Value::String(s) if s == "false" || s == "0" => Some(false),
+        Value::Number(n) if n.as_i64() == Some(1) => Some(true),
+        Value::Number(n) if n.as_i64() == Some(0) => Some(false),
+        _ => None,
+    }
+}
+
 /// A container of resources by name, falling back to a parent container.
 ///
 /// The application's static resources are the parent of every request's
@@ -651,19 +672,12 @@ impl Http {
         Ok((args, injected))
     }
 
-    /// `coerce()`: a loose boolean (`"true"`, `"1"`, `1`, `"false"`, `"0"`,
-    /// `0`) checked by a boolean validator (also inside `Nullable`) becomes
-    /// that boolean; any other value is left as it is.
+    /// `coerce()`: see [`coerce`].
     fn coerce(&self, param: &Param, context: &Resources, value: Value) -> Result<Value> {
-        let boolean = match &value {
-            Value::String(s) if s == "true" || s == "1" => true,
-            Value::String(s) if s == "false" || s == "0" => false,
-            Value::Number(n) if n.as_i64() == Some(1) => true,
-            Value::Number(n) if n.as_i64() == Some(0) => false,
-            _ => return Ok(value),
-        };
-        let validator = self.validator(param, context)?;
-        Ok(if validator.kind() == Type::Boolean && !validator.is_array() { Value::Bool(boolean) } else { value })
+        if loose_boolean(&value).is_none() {
+            return Ok(value);
+        }
+        Ok(coerce(&value, self.validator(param, context)?.as_ref()))
     }
 
     fn validator(&self, param: &Param, context: &Resources) -> Result<Arc<dyn Validator>> {

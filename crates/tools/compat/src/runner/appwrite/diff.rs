@@ -1659,6 +1659,11 @@ fn effect(args: &[String]) -> Option<Value> {
             json!({"publish": args.get(1), "message": args.get(2).map(|m| serde_json::from_str::<Value>(m).unwrap_or(Value::String(m.clone())))}),
         ),
         "DEL" | "UNLINK" => Some(json!({"purge": &args[1..]})),
+        // A collection's cache owners are random tokens (`<time>.<hex>`),
+        // released when the write that registered them is done.
+        "HDEL" if args.get(1).is_some_and(|k| k.ends_with("#owners")) => {
+            Some(json!({"purge": args.get(1), "fields": args[2..].iter().map(|_| "{owner}").collect::<Vec<_>>()}))
+        }
         "HDEL" => Some(json!({"purge": args.get(1), "fields": &args[2..]})),
         _ => None,
     }
@@ -1950,7 +1955,12 @@ impl Normalizer {
                                 ("$sequence", _) if project => Value::String("{seq}".into()),
                                 // Any other row's sequence: with shared tables the
                                 // twins' rows share one counter, so they interleave.
-                                ("$sequence", Value::String(v)) => Value::String(self.number(v.clone(), "sequence")),
+                                // Numbered per collection: a user and a target may
+                                // share a sequence in one twin and not the other.
+                                ("$sequence", Value::String(v)) => {
+                                    let collection = o.get("$collection").and_then(Value::as_str).unwrap_or("");
+                                    Value::String(self.number(format!("{collection}:{v}"), "sequence"))
+                                }
                                 (k, Value::String(v))
                                     if k.starts_with("project") && k.ends_with("InternalId") && *v == self.sequence =>
                                 {
@@ -1964,6 +1974,22 @@ impl Normalizer {
                                     if owned && *v == self.account_sequence =>
                                 {
                                     Value::String("{account-seq}".into())
+                                }
+                                // Shared tables: a row's tenant is the twin's project.
+                                ("$tenant", Value::String(v)) if *v == self.sequence => Value::String("{seq}".into()),
+                                ("$tenant", Value::Number(v)) if v.to_string() == self.sequence => {
+                                    Value::String("{seq}".into())
+                                }
+                                // Any other row's sequence named by a reference (a
+                                // session's `userInternalId`): numbered as the
+                                // `$sequence` of the collection it names (`users`).
+                                (k, Value::String(v))
+                                    if k.ends_with("InternalId")
+                                        && !v.is_empty()
+                                        && v.bytes().all(|b| b.is_ascii_digit()) =>
+                                {
+                                    let collection = format!("{}s", k.trim_end_matches("InternalId"));
+                                    Value::String(self.number(format!("{collection}:{v}"), "sequence"))
                                 }
                                 ("timestamp", Value::Number(_)) => Value::String("{timestamp}".into()),
                                 (k, Value::String(code)) if one_time_code(k, x) => {
