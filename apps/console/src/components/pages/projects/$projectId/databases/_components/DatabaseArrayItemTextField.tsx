@@ -6,11 +6,11 @@ import { useT } from '@/lib/i18n/translate'
 
 /** Full-width array item textarea; overrides ui/Textarea field-sizing-content shrink. */
 export const DATABASE_ARRAY_ITEM_TEXTAREA_CLASS =
-  'field-sizing-fixed w-full min-h-[36px] max-h-[600px] resize-none rounded-none border-0 bg-transparent ps-3 pe-3 py-2 text-[13px] text-start shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
+  'field-sizing-fixed w-full min-h-[36px] max-h-[600px] resize-y rounded-none border-0 bg-transparent ps-3 pe-3 py-2 text-[13px] text-start shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
 
 /** Row-edit scalar textarea; same field-sizing fix as array items. */
 export const DATABASE_ROW_TEXTAREA_CLASS =
-  'field-sizing-fixed w-full min-h-[36px] max-h-[600px] resize-none text-[13px] text-start'
+  'field-sizing-fixed w-full min-h-[36px] max-h-[600px] resize-y text-[13px] text-start'
 
 /** Reserve space for the null/counter overlay on the inline-end side (follows field dir). */
 export const DATABASE_ROW_FIELD_COUNTER_PADDING = 'pb-8 pe-28'

@@ -1017,6 +1017,11 @@ final class NatsBrokerTest extends TestCase
             // What JetStream answers while no peer leads the stream: a server
             // restarting, draining or evicted. It lasts as long as the election.
             yield "{$call}, no responders while the stream elects a leader" => ['no-responders', $batch, 2];
+            // A reconnect forgets what was provisioned, so in a rolling restart the
+            // next publish first re-provisions -- on a socket the next server to
+            // restart closes.
+            yield "{$call}, socket closed on the provisioning request" => ['setup', $batch, 1];
+            yield "{$call}, socket closed on the provisioning request twice" => ['setup', $batch, 2];
         }
     }
 
@@ -1049,6 +1054,19 @@ final class NatsBrokerTest extends TestCase
                 preg_match_all('/^SUB (\S+) (\d+)\r$/m', $data, $subs, PREG_SET_ORDER);
                 foreach ($subs as [, $subject, $sid]) {
                     $this->state->inboxes[$subject] = $sid;
+                }
+
+                if ($this->fault === 'setup') {
+                    $provisioning = str_contains($data, 'PUB $JS.API.STREAM.CREATE.')
+                        || str_contains($data, 'PUB $JS.API.STREAM.UPDATE.')
+                        || str_contains($data, 'PUB $JS.API.CONSUMER.CREATE.');
+                    if ($this->state->faults > 0 && $provisioning) {
+                        --$this->state->faults;
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+
+                    return $this->inner->write($data);
                 }
 
                 if ($this->state->faults > 0 && preg_match('/^H?PUB q\.\S+ (\S+) /m', $data, $publish) === 1) {

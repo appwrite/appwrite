@@ -18,6 +18,7 @@ trait PoliciesBase
             'password-strength' => ['min', 'uppercase', 'lowercase', 'number', 'symbols'],
             'password-personal-data' => ['enabled'],
             'password-pwned' => ['enabled', 'sessions', 'users'],
+            'password-rotation' => ['enabled', 'maxAge'],
             'session-alert' => ['enabled'],
             'session-duration' => ['duration'],
             'session-invalidation' => ['enabled'],
@@ -379,6 +380,127 @@ trait PoliciesBase
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-dictionary', $this->buildHeaders(), []);
 
         $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdatePasswordRotationPolicy(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => true,
+                'maxAge' => 2592000,
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($this->getProject()['$id'], $response['body']['$id']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(200, $policy['headers']['status-code']);
+            $this->assertTrue($policy['body']['enabled']);
+            $this->assertSame(2592000, $policy['body']['maxAge']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 5184000,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertTrue($policy['body']['enabled']);
+            $this->assertSame(5184000, $policy['body']['maxAge']);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => false,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertFalse($policy['body']['enabled']);
+            $this->assertSame(5184000, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'enabled' => false,
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyInvalidParameters(): void
+    {
+        foreach ([
+            ['enabled' => 'invalid'],
+            ['maxAge' => 0],
+            ['maxAge' => -1],
+            ['maxAge' => 1.5],
+            ['maxAge' => 'invalid'],
+        ] as $params) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), $params);
+
+            $this->assertSame(400, $response['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyMin(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 86400,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(86400, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyMax(): void
+    {
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 315360000,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $policy = $this->getPolicy('password-rotation');
+            $this->assertSame(315360000, $policy['body']['maxAge']);
+        } finally {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+                'maxAge' => 31536000,
+            ]);
+        }
+    }
+
+    public function testUpdatePasswordRotationPolicyBelowMin(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+            'maxAge' => 86399,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdatePasswordRotationPolicyAboveMax(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(), [
+            'maxAge' => 315360001,
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testUpdatePasswordRotationPolicyWithoutAuth(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->buildHeaders(false), [
+            'enabled' => true,
+            'maxAge' => 2592000,
+        ]);
+
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 
     // =========================================================================
