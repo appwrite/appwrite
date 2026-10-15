@@ -8,11 +8,15 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\System\System;
 use Utopia\Validator\IP;
 
@@ -110,17 +114,20 @@ class Get extends Action
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
-            'supportForRelationships' => $adapter->getSupportForRelationships(),
-            'supportForOperators' => $adapter->getSupportForOperators(),
-            'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
-            'supportForSpatialIndexNull' => $adapter->getSupportForSpatialIndexNull(),
-            'supportForFulltextWildcard' => $adapter->getSupportForFulltextWildcardIndex(),
-            'supportForMultipleFulltextIndexes' => $adapter->getSupportForMultipleFulltextIndexes(),
-            'supportForTrigramIndex' => $adapter->getSupportForTrigramIndex(),
-            'supportForAttributeResizing' => $adapter->getSupportForAttributeResizing(),
-            'supportForSchemas' => $adapter->getSupportForSchemas(),
-            'maxIndexLength' => $adapter->getMaxIndexLength(),
-            'supportForIntegerIds' => $adapter->getIdAttributeType() === 'integer',
+            'supportForAttributes' => $adapter->supports(Capability::DefinedAttributes),
+            'supportForRelationships' => $adapter->hasFeature(FeatureRelationships::class),
+            'supportForOperators' => $adapter->supports(Capability::Operators),
+            'supportForSpatials' => $adapter->hasFeature(FeatureSpatial::class),
+            'supportForAggregations' => $adapter->supports(Capability::Aggregations),
+            'supportForJoins' => $adapter->supports(Capability::Joins),
+            'supportForSpatialIndexNull' => $adapter->supports(Capability::IndexSpatialNull),
+            'supportForFulltextWildcard' => $adapter->supports(Capability::IndexFulltextWildcard),
+            'supportForMultipleFulltextIndexes' => $adapter->supports(Capability::IndexFulltextMultiple),
+            'supportForTrigramIndex' => $adapter->supports(Capability::IndexTrigram),
+            'supportForAttributeResizing' => $adapter->supports(Capability::AttributeResizing),
+            'supportForSchemas' => $adapter->supports(Capability::Schemas),
+            'maxIndexLength' => $adapter->limits()->indexLength,
+            'supportForIntegerIds' => $adapter->limits()->idType === ColumnType::Integer,
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

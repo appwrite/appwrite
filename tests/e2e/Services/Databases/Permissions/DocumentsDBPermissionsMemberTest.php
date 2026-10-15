@@ -10,9 +10,9 @@ use Tests\E2E\Scopes\ApiDocumentsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class DocumentsDBPermissionsMemberTest extends Scope
 {
@@ -35,15 +35,15 @@ final class DocumentsDBPermissionsMemberTest extends Scope
     {
         yield [[Permission::read(Role::any())], 1, 1, 1];
         yield [[Permission::read(Role::users())], 1, 1, 1];
-        yield [[Permission::read(Role::user(ID::custom('random')))], 1, 1, 0];
-        yield [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 1, 1, 0];
-        yield [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
-        yield [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
+        yield [[Permission::read(Role::user(Id::custom('random')))], 1, 1, 0];
+        yield [[Permission::read(Role::user(Id::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 1, 1, 0];
+        yield [[Permission::read(Role::user(Id::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
+        yield [[Permission::read(Role::user(Id::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0];
         yield [[Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 0];
         yield [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 1];
         yield [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1];
-        yield [[Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1];
-        yield [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1];
+        yield [[Permission::read(Role::user(Id::custom('user1')))], 1, 1, 1];
+        yield [[Permission::read(Role::user(Id::custom('user1'))), Permission::read(Role::user(Id::custom('user1')))], 1, 1, 1];
         yield [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1];
     }
 
@@ -65,7 +65,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getDatabaseUrl(),
             $this->getServerHeader(),
             [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Test Database',
             ]
         );
@@ -78,7 +78,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -97,7 +97,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Private Movies',
                 'permissions' => [
                     Permission::read(Role::users()),
@@ -116,7 +116,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Document Only Movies',
                 'permissions' => [],
                 $this->getSecurityParam() => true,
@@ -147,7 +147,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getRecordUrl($databaseId, $collections['public']),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -161,7 +161,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getRecordUrl($databaseId, $collections['private']),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -175,7 +175,7 @@ final class DocumentsDBPermissionsMemberTest extends Scope
             $this->getRecordUrl($databaseId, $collections['doconly']),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],

@@ -60,8 +60,8 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteTable',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -88,7 +88,7 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "Failed to remove $type from DB");
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForEvents
@@ -99,7 +99,6 @@ class Delete extends Action
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_COLLECTION,
             database: $database,
             collection: $this->isCollectionsAPI() ? $collection : null,

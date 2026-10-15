@@ -93,6 +93,10 @@ You select the topology during installation:
 
 The installer writes a `docker-compose.yml` that only contains the services for the topology you selected. When you [upgrade](/docs/advanced/self-hosting/production/updates), Appwrite detects the topology of your existing installation from your Compose file and keeps it.
 
+{% info title="Kubernetes" %}
+The [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes#worker-topologies) sets the topology with `workers.mode`. Besides `combined` and `separate`, it offers `grouped`, which runs one Deployment per group of queues you define.
+{% /info %}
+
 # Switching topologies {% #switching %}
 
 To switch an existing installation, run the [upgrade command](/docs/advanced/self-hosting/production/updates) with the `--topology` parameter from the directory that contains your `appwrite` folder:

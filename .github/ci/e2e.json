@@ -53,6 +53,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
         "app/controllers/api/account.php",
+        "src/Appwrite/Network/Validator/Origin.php",
+        "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
         "src/Appwrite/Auth/OIDC/",
         "src/Appwrite/Auth/Passkey/",
@@ -363,6 +365,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
         "packages/vcs/",
         "packages/detector/"
       ]

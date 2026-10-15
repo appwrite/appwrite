@@ -8,10 +8,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -241,7 +241,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertNotSame($initialSubscriptionId, $mintedId);
         $this->assertNotEmpty($mintedId);
 
-        $explicitNewId = ID::unique();
+        $explicitNewId = Id::unique();
         $qExplicit = [Query::equal('status', ['explicit'])->toString()];
         $rExplicit = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $explicitNewId,
@@ -415,7 +415,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
 
         // Unknown subscriptionId upserts as a new subscription.
-        $ghostId = ID::unique();
+        $ghostId = Id::unique();
         $ghost = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $ghostId,
             'channels' => ['account'],
@@ -806,7 +806,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Query Message Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -816,7 +816,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Query Message Test Collection',
             'permissions' => [
                 Permission::create(Role::user($userId)),
@@ -844,8 +844,8 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
-        $otherDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
+        $otherDocumentId = Id::unique();
 
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
@@ -911,14 +911,14 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1015,7 +1015,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Spiderman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1077,7 +1077,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Spiderman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1122,7 +1122,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
 
         // create — must be filtered out (never reaches the token bucket).
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Ironman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1200,7 +1200,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail ACL DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -1209,7 +1209,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // documentSecurity ON and NO read(any) at the collection level, so the only read
         // grant comes from the document's own (restricted) permission.
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Secrets',
             'documentSecurity' => true,
             'permissions' => [Permission::create(Role::any())],
@@ -1233,7 +1233,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // Read restricted to a user that is NOT the console user → the console viewer
         // could never read this document directly, yet the tail must surface its event.
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'top secret'],
             'permissions' => [Permission::read(Role::user('not-the-console-user'))],
         ]);
