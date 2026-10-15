@@ -32,10 +32,5 @@
     },
     "scripts": {
         "test": "phpunit --configuration phpunit.xml --testsuite unit"
-    },
-    "extra": {
-        "utopia": {
-            "category": "platform"
-        }
     }
 }

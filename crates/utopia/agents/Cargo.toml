@@ -25,4 +25,5 @@ chrono.workspace = true
 tokio = { workspace = true, features = ["rt", "macros"] }
 
 [package.metadata.utopia]
+category = "integrations"
 php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

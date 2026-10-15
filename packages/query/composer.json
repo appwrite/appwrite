@@ -31,10 +31,5 @@
     },
     "require-dev": {
         "mongodb/mongodb": "^2.0"
-    },
-    "extra": {
-        "utopia": {
-            "category": "data"
-        }
     }
 }

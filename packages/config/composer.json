@@ -31,10 +31,5 @@
         "ext-yaml": "Required only for the YAML parser"
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "extra": {
-        "utopia": {
-            "category": "platform"
-        }
-    }
+    "prefer-stable": true
 }

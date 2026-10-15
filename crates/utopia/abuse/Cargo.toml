@@ -33,4 +33,5 @@ tokio = { workspace = true, features = ["sync", "time"] }
 tokio = { workspace = true, features = ["rt", "macros", "sync"] }
 
 [package.metadata.utopia]
+category = "security"
 php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

@@ -44,6 +44,7 @@
   "external": {
     "database": "data",
     "migration": "integrations",
-    "mongo": "data"
+    "mongo": "data",
+    "psr7": "servers"
   }
 }

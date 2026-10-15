@@ -50,10 +50,5 @@
     },
     "suggest": {
         "ext-swoole": "Required by the Swoole adapter"
-    },
-    "extra": {
-        "utopia": {
-            "category": "servers"
-        }
     }
 }

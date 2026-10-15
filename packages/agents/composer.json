@@ -42,10 +42,5 @@
         "utopia-php/console": "^0.2",
         "utopia-php/pools": "^2.0",
         "utopia-php/psr7": "^0.2.1"
-    },
-    "extra": {
-        "utopia": {
-            "category": "integrations"
-        }
     }
 }

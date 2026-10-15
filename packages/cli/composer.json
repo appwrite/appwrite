@@ -31,10 +31,5 @@
     },
     "require-dev": {
         "swoole/ide-helper": "6.*"
-    },
-    "extra": {
-        "utopia": {
-            "category": "platform"
-        }
     }
 }

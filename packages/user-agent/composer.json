@@ -27,10 +27,5 @@
     "scripts": {
         "test": "phpunit",
         "bench": "php benchmark/benchmark.php"
-    },
-    "extra": {
-        "utopia": {
-            "category": "utilities"
-        }
     }
 }

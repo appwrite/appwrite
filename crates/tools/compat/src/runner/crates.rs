@@ -77,6 +77,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
     let categories: Value =
         read_json(&root.join("crates/categories.json")).ok_or("crates/categories.json is missing or invalid")?;
     let version = workspace_version(root);
+
     let mut libraries: BTreeMap<String, Library> = BTreeMap::new();
 
     // PHP packages in the monorepo.
@@ -155,6 +156,15 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 dir,
                 group: group.to_owned(),
             });
+        }
+    }
+
+    // A library whose manifests name no category takes the one
+    // `crates/categories.json` gives it (`external`: Composer packages, and
+    // PHP packages whose manifests must stay as they are, e.g. psr7).
+    for lib in libraries.values_mut() {
+        if lib.category.is_none() {
+            lib.category = categories["external"][lib.slug.as_str()].as_str().map(str::to_owned);
         }
     }
 

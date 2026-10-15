@@ -12,4 +12,5 @@ publish.workspace = true
 thiserror.workspace = true
 
 [package.metadata.utopia]
+category = "platform"
 php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

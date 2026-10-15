@@ -31,4 +31,5 @@ tokio-tungstenite = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 
 [package.metadata.utopia]
+category = "servers"
 php-sync = "8dcc039b80b2606a78505e96201f55240acae70c"

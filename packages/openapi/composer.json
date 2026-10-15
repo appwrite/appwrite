@@ -22,10 +22,5 @@
     },
     "config": {
         "sort-packages": true
-    },
-    "extra": {
-        "utopia": {
-            "category": "utilities"
-        }
     }
 }

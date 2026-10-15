@@ -26,10 +26,5 @@
     },
     "scripts": {
         "test": "phpunit"
-    },
-    "extra": {
-        "utopia": {
-            "category": "utilities"
-        }
     }
 }

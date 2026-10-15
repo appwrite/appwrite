@@ -36,10 +36,5 @@
         "sort-packages": true
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "extra": {
-        "utopia": {
-            "category": "transport"
-        }
-    }
+    "prefer-stable": true
 }

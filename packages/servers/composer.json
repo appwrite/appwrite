@@ -34,10 +34,5 @@
         "php": ">=8.5",
         "utopia-php/di": "^0.3",
         "utopia-php/validators": "^2.0"
-    },
-    "extra": {
-        "utopia": {
-            "category": "servers"
-        }
     }
 }

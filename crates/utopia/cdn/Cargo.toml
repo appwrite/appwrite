@@ -19,4 +19,5 @@ utopia-client.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 
 [package.metadata.utopia]
+category = "integrations"
 php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

@@ -42,4 +42,5 @@ utopia-telemetry.workspace = true
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }
 
 [package.metadata.utopia]
+category = "data"
 php-sync = "bf7bd52d83df090e06824cf3c1d0a996f28e5f8b"

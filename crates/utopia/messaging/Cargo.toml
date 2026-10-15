@@ -36,4 +36,5 @@ hyper = { workspace = true, features = ["client", "server", "http2"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "io-util"] }
 
 [package.metadata.utopia]
+category = "integrations"
 php-sync = "52f82b9cd50d88a7f99d9914835135e36578544f"

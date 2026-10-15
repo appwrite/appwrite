@@ -42,10 +42,5 @@
         "sort-packages": true
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "extra": {
-        "utopia": {
-            "category": "platform"
-        }
-    }
+    "prefer-stable": true
 }

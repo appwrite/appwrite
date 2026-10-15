@@ -26,10 +26,5 @@
     },
     "require": {
         "php": ">=8.0"
-    },
-    "extra": {
-        "utopia": {
-            "category": "transport"
-        }
     }
 }

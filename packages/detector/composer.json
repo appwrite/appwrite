@@ -27,10 +27,5 @@
         "php": ">=8.0",
         "ext-json": "*",
         "ext-yaml": "*"
-    },
-    "extra": {
-        "utopia": {
-            "category": "utilities"
-        }
     }
 }
