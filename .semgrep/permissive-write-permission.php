@@ -1,7 +1,7 @@
 <?php
 
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 $permissions = [
     // ok: php.appwrite.permissive-write-permission

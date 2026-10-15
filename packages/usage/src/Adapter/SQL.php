@@ -2,7 +2,8 @@
 
 namespace Utopia\Usage\Adapter;
 
-use Utopia\Database\Document;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 use Utopia\Usage\Adapter;
 use Utopia\Usage\Metric;
 
@@ -29,7 +30,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for event metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getEventAttributes(): array
     {
@@ -39,7 +40,7 @@ abstract class SQL extends Adapter
     /**
      * Get attribute definitions for gauge metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getGaugeAttributes(): array
     {
@@ -50,7 +51,7 @@ abstract class SQL extends Adapter
      * Get attribute definitions for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getAttributes(string $type = 'event'): array
     {
@@ -58,20 +59,20 @@ abstract class SQL extends Adapter
     }
 
     /**
-     * Get attribute documents for a specific type.
+     * Get attribute models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Document>
+     * @return list<Attribute>
      */
     public function getAttributeDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $attribute) => new Document($attribute), $this->getAttributes($type));
+        return array_map(Attribute::fromArray(...), $this->getAttributes($type));
     }
 
     /**
      * Get index definitions for event metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getEventIndexes(): array
     {
@@ -81,7 +82,7 @@ abstract class SQL extends Adapter
     /**
      * Get index definitions for gauge metrics.
      *
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getGaugeIndexes(): array
     {
@@ -92,7 +93,7 @@ abstract class SQL extends Adapter
      * Get index definitions for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<int, array<string, mixed>>
+     * @return list<array<string, mixed>>
      */
     public function getIndexes(string $type = 'event'): array
     {
@@ -100,14 +101,14 @@ abstract class SQL extends Adapter
     }
 
     /**
-     * Get index documents for a specific type.
+     * Get index models for a specific type.
      *
      * @param string $type 'event' or 'gauge'
-     * @return array<Document>
+     * @return list<Index>
      */
     public function getIndexDocuments(string $type = 'event'): array
     {
-        return array_map(static fn (array $index) => new Document($index), $this->getIndexes($type));
+        return array_map(Index::fromArray(...), $this->getIndexes($type));
     }
 
     /**
