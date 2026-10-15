@@ -1,36 +1,44 @@
 {
-  "updated": "2026-10-15T16:30:00Z",
+  "updated": "2026-10-15T17:16:00Z",
   "tasks": [
     {
-      "id": "db8-compat-rust",
-      "title": "Database 8: Rust side of the compat harness",
+      "id": "db8-php-enter",
+      "title": "Database 8: PHP harness registry bug and flaky recordings",
       "area": "Database 8",
       "status": "progress",
-      "note": "The new op vocabulary (object.new/call/get, adapter.call, the 8.x database.* ops) dispatched onto the Rust database, the old ops removed, per-case registry isolation, then the five shards (postgres, mysql, sqlite, mongo, redis) run locally.",
-      "updated": "2026-10-15T16:30:00Z"
+      "note": "Core::enter() wipes a case's formats and filters before every op when the case has no db.open (about 230 sqlite Unit differences), and some recordings hold PHP load flakes (\"transaction was lost\", \"Failed to persist metadata\"). Fix enter(), re-record both.",
+      "updated": "2026-10-15T17:16:00Z"
     },
     {
-      "id": "audit-cursor",
-      "title": "Audit: the last compat difference",
+      "id": "db8-mirror",
+      "title": "Database 8: Mirror in Rust",
       "area": "Database 8",
       "status": "progress",
-      "note": "value::from_query turns any Row into a Document; PHP treats a non-Document cursor (Utopia\\Audit\\Log) as invalid and throws Exception\\Query. Fixed with the compat harness.",
-      "updated": "2026-10-15T16:30:00Z"
+      "note": "Mirror and Mirroring filters, the last unported part of the library: 55 sqlite Unit faults and every Mirror case on the redis shard.",
+      "updated": "2026-10-15T17:16:00Z"
     },
     {
-      "id": "db8-push",
-      "title": "Push the database 8 merge and get CI green",
+      "id": "db8-identity",
+      "title": "Database 8: the remaining PHP-vs-Rust differences",
+      "area": "Database 8",
+      "status": "progress",
+      "note": "PHP object identity (createDocument mutating its input), TypeErrors on garbage adapter input, enum objects in documents, and recorder artifacts (unmasked connection ids, STAT4, REGEXP).",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "db8-green",
+      "title": "Database lanes and the Rust unit tests green in CI",
       "area": "Database 8",
       "status": "blocked",
-      "note": "db8-final holds the whole port merged into feat/rust-utopia-conversion. Waits on the Rust compat harness; then the database lanes, migration, audit, usage and the Users parity diff run locally before one push. CI's database lanes and Users (Rust) stay red until then.",
-      "updated": "2026-10-15T16:30:00Z"
+      "note": "The Rust unit tests replay every recorded case; database has 401 differences left (the three tasks above), so Checks / Rust and the database-* lanes stay red until they land.",
+      "updated": "2026-10-15T17:16:00Z"
     },
     {
       "id": "php-image",
       "title": "Rebuild the local PHP image",
       "area": "Environment",
       "status": "todo",
-      "note": "main moved packages/query and packages/migration after the appwrite image was built, so new PHP processes fail in init.php. Rebuilt once the agents using the containers finish.",
+      "note": "main moved packages/query and packages/migration after the appwrite image was built, so new PHP processes fail in init.php. Needed before the Users parity diff can run locally again.",
       "updated": "2026-10-15T16:30:00Z"
     },
     {
@@ -88,6 +96,30 @@
       "status": "todo",
       "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "db8-push",
+      "title": "Push the database 8 merge and get CI green",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Pushed as c78de73e6c: the whole database 8 port merged into feat/rust-utopia-conversion. Users (Rust) parity and the PHP database 7 PHPStan errors are fixed by it.",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "db8-compat-rust",
+      "title": "Database 8: Rust side of the compat harness",
+      "area": "Database 8",
+      "status": "done",
+      "note": "The new op vocabulary dispatched onto the Rust database 8, the old ops removed, per-case registry isolation, a session leak fixed. mongo: 3,480 cases with 0 differences; every library but database replays clean. 12 parity fixes in the database and query crates.",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "audit-cursor",
+      "title": "Audit: the last compat difference",
+      "area": "Database 8",
+      "status": "done",
+      "note": "value::from_query makes Documents only of document classes, as PHP's cursor validator does.",
+      "updated": "2026-10-15T17:16:00Z"
     },
     {
       "id": "db8-core",
