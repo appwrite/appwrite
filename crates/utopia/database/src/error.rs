@@ -64,6 +64,9 @@ struct Driver {
     /// The driver's own error code of a [`Kind::Pdo`] error
     /// (`PDOException::$errorInfo[1]`, such as MySQL's `2006`).
     code: Option<i64>,
+    /// The server's error labels of a [`Kind::Mongo`] error
+    /// (`Utopia\Mongo\Exception::getErrorLabels()`).
+    labels: Vec<String>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -391,6 +394,19 @@ impl Error {
     /// one.
     pub fn driver_code(&self) -> Option<i64> {
         self.driver.as_ref().and_then(|d| d.code)
+    }
+
+    /// The same error with the server's error labels (a MongoDB error's
+    /// `TransientTransactionError`, `UnknownTransactionCommitResult`, ...).
+    pub fn with_labels(mut self, labels: Vec<String>) -> Self {
+        self.driver.get_or_insert_default().labels = labels;
+        self
+    }
+
+    /// The server's error labels (`getErrorLabels()`); empty when the error
+    /// carries none.
+    pub fn labels(&self) -> &[String] {
+        self.driver.as_ref().map_or(&[], |d| d.labels.as_slice())
     }
 
     /// The same error wrapping `previous`.

@@ -18,6 +18,7 @@
 //! | `Hook\Nested` | [`Nested`] |
 //! | `Hook\Queries` | [`Queries`] |
 //! | `Hook\Attachable` | [`Attachable`] |
+//! | `Hook\Mongo\{Read, Permission, Tenant}` | [`mongo::Read`], [`mongo::Permission`], [`mongo::Tenant`] |
 //!
 //! The implementations the database layer provides: [`Permissions`]
 //! (`Hook\Permissions`) and [`relationships::Relationships`]
@@ -29,6 +30,8 @@ pub mod permissions;
 pub mod relationships;
 
 pub use permissions::Permissions;
+
+pub mod mongo;
 
 use async_trait::async_trait;
 

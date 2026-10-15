@@ -1,0 +1,903 @@
+{
+    "documents": [
+        {
+            "$id": "a",
+            "title": "The quick brown fox",
+            "n": 5,
+            "f": 1.5,
+            "s": "10",
+            "tags": [
+                "red",
+                "blue"
+            ],
+            "meta": {
+                "size": 3,
+                "tag": "x"
+            },
+            "json": "{\"k\":[1,2]}"
+        },
+        {
+            "$id": "b",
+            "title": "Lazy dog sleeps",
+            "n": 10,
+            "f": 2.0,
+            "s": "9",
+            "tags": [
+                "green"
+            ],
+            "meta": {
+                "size": 7
+            },
+            "json": "[1,2,3]"
+        },
+        {
+            "$id": "c",
+            "title": "quick-silver Über straße",
+            "n": -3,
+            "f": null,
+            "s": "abc",
+            "tags": [],
+            "meta": null
+        },
+        {
+            "$id": "d",
+            "title": null,
+            "n": 5,
+            "f": 5,
+            "s": "5.0",
+            "tags": [
+                "red"
+            ],
+            "meta": {
+                "size": "3"
+            }
+        },
+        {
+            "$id": "E",
+            "title": "Brown bears #1",
+            "n": 0,
+            "f": 0.0,
+            "s": "",
+            "tags": [
+                "RED",
+                "red"
+            ],
+            "meta": {
+                "size": 3.0,
+                "deep": {
+                    "x": 1
+                }
+            }
+        },
+        {
+            "$id": "f",
+            "title": "fox",
+            "n": 100,
+            "f": -1.25,
+            "s": "1e2",
+            "tags": [
+                "blue",
+                "green",
+                "red"
+            ]
+        }
+    ],
+    "finds": [
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"n\",\"values\":[5]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"n\",\"values\":[\"5\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"f\",\"values\":[2]}"
+            ],
+            "result": [
+                "ok",
+                []
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"s\",\"values\":[10]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"s\",\"values\":[\"5\"]}"
+            ],
+            "result": [
+                "ok",
+                []
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"title\",\"values\":[\"fox\",\"Lazy dog sleeps\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notEqual\",\"attribute\":\"n\",\"values\":[5]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"lessThan\",\"attribute\":\"n\",\"values\":[5]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"lessThanEqual\",\"attribute\":\"s\",\"values\":[\"9\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"greaterThan\",\"attribute\":\"f\",\"values\":[1]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"greaterThanEqual\",\"attribute\":\"title\",\"values\":[\"L\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"between\",\"attribute\":\"n\",\"values\":[0,10]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notBetween\",\"attribute\":\"n\",\"values\":[0,10]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"startsWith\",\"attribute\":\"title\",\"values\":[\"quick\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notStartsWith\",\"attribute\":\"title\",\"values\":[\"quick\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"endsWith\",\"attribute\":\"title\",\"values\":[\"fox\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notEndsWith\",\"attribute\":\"title\",\"values\":[\"fox\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"contains\",\"attribute\":\"tags\",\"values\":[\"red\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"contains\",\"attribute\":\"title\",\"values\":[\"QUICK\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"containsAny\",\"attribute\":\"tags\",\"values\":[\"green\",\"RED\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"containsAll\",\"attribute\":\"tags\",\"values\":[\"red\",\"blue\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notContains\",\"attribute\":\"tags\",\"values\":[\"red\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"contains\",\"attribute\":\"json\",\"values\":[2]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"search\",\"attribute\":\"title\",\"values\":[\"quick\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"search\",\"attribute\":\"title\",\"values\":[\"\\\"brown fox\\\"\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"search\",\"attribute\":\"title\",\"values\":[\"bro* über\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"search\",\"attribute\":\"title\",\"values\":[\"STRASSE straße\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"notSearch\",\"attribute\":\"title\",\"values\":[\"fox\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"regex\",\"attribute\":\"title\",\"values\":[\"^[A-Z].*#\\\\d$\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"regex\",\"attribute\":\"title\",\"values\":[\"(?i)über\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"isNull\",\"attribute\":\"title\",\"values\":[]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"isNotNull\",\"attribute\":\"f\",\"values\":[]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"isNull\",\"attribute\":\"missing\",\"values\":[]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"meta.size\",\"values\":[3]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"greaterThan\",\"attribute\":\"meta.size\",\"values\":[2]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"meta.deep.x\",\"values\":[1]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"json.k\",\"values\":[[1,2]]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"n\",\"values\":[0]},{\"method\":\"lessThan\",\"attribute\":\"f\",\"values\":[0]}]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"n\",\"values\":[5]},{\"method\":\"isNotNull\",\"attribute\":\"title\",\"values\":[]}]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"$id\",\"values\":[\"e\"]}"
+            ],
+            "result": [
+                "ok",
+                []
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"equal\",\"attribute\":\"$id\",\"values\":[\"E\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"select\",\"values\":[\"title\",\"n\"]}",
+                "{\"method\":\"equal\",\"attribute\":\"$id\",\"values\":[\"a\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "queries": [
+                "{\"method\":\"select\",\"values\":[\"*\"]}",
+                "{\"method\":\"equal\",\"attribute\":\"$id\",\"values\":[\"b\"]}"
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "ASC"
+                ],
+                [
+                    "f",
+                    "DESC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "title",
+                    "ASC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "title",
+                    "DESC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "s",
+                    "ASC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "f",
+                    "ASC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "meta.size",
+                    "DESC"
+                ],
+                [
+                    "n",
+                    "ASC"
+                ]
+            ],
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"d\",\"title\":null,\"n\":5,\"f\":5,\"s\":\"5.0\",\"tags\":[\"red\"],\"meta\":{\"size\":\"3\"},\"$permissions\":[],\"$sequence\":\"4\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "ASC"
+                ]
+            ],
+            "cursor": {
+                "n": 5
+            },
+            "direction": "after",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "ASC"
+                ]
+            ],
+            "cursor": {
+                "n": 5
+            },
+            "direction": "before",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}",
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "DESC"
+                ]
+            ],
+            "cursor": {
+                "n": 5
+            },
+            "direction": "after",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "title",
+                    "ASC"
+                ]
+            ],
+            "cursor": {
+                "title": null
+            },
+            "direction": "after",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"f\",\"title\":\"fox\",\"n\":100,\"f\":-1.25,\"s\":\"1e2\",\"tags\":[\"blue\",\"green\",\"red\"],\"$permissions\":[],\"$sequence\":\"6\"}",
+                    "{\"$id\":\"c\",\"title\":\"quick-silver Über straße\",\"n\":-3,\"f\":null,\"s\":\"abc\",\"tags\":[],\"meta\":null,\"$permissions\":[],\"$sequence\":\"3\"}"
+                ]
+            ]
+        },
+        {
+            "order": [],
+            "cursor": {
+                "$sequence": "3"
+            },
+            "direction": "before",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "ASC"
+                ]
+            ],
+            "limit": 2,
+            "offset": 1,
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"E\",\"title\":\"Brown bears #1\",\"n\":0,\"f\":0.0,\"s\":\"\",\"tags\":[\"RED\",\"red\"],\"meta\":{\"size\":3.0,\"deep\":{\"x\":1}},\"$permissions\":[],\"$sequence\":\"5\"}",
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}"
+                ]
+            ]
+        },
+        {
+            "order": [
+                [
+                    "n",
+                    "ASC"
+                ]
+            ],
+            "limit": 2,
+            "offset": 1,
+            "direction": "before",
+            "result": [
+                "ok",
+                [
+                    "{\"$id\":\"a\",\"title\":\"The quick brown fox\",\"n\":5,\"f\":1.5,\"s\":\"10\",\"tags\":[\"red\",\"blue\"],\"meta\":{\"size\":3,\"tag\":\"x\"},\"json\":\"{\\\"k\\\":[1,2]}\",\"$permissions\":[],\"$sequence\":\"1\"}",
+                    "{\"$id\":\"b\",\"title\":\"Lazy dog sleeps\",\"n\":10,\"f\":2.0,\"s\":\"9\",\"tags\":[\"green\"],\"meta\":{\"size\":7},\"json\":\"[1,2,3]\",\"$permissions\":[],\"$sequence\":\"2\"}"
+                ]
+            ]
+        },
+        {
+            "order": [],
+            "limit": 0,
+            "result": [
+                "ok",
+                []
+            ]
+        },
+        {
+            "sum": "n",
+            "result": [
+                "ok",
+                "117"
+            ]
+        },
+        {
+            "sum": "f",
+            "result": [
+                "ok",
+                "7.25"
+            ]
+        },
+        {
+            "sum": "s",
+            "result": [
+                "ok",
+                "124"
+            ]
+        },
+        {
+            "sum": "meta.size",
+            "result": [
+                "ok",
+                "16.0"
+            ]
+        },
+        {
+            "count": [
+                "{\"method\":\"greaterThan\",\"attribute\":\"n\",\"values\":[1]}"
+            ],
+            "max": 2,
+            "result": [
+                "ok",
+                "2"
+            ]
+        }
+    ]
+}
