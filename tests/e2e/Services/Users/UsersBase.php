@@ -1006,6 +1006,13 @@ trait UsersBase
             'queries' => ['{"method":"equal","attribute":"name.x","values":["a"]}'],
         ]);
 
+        if (!$this->getSupportForAttributes()) {
+            $this->assertSame(200, $response['headers']['status-code'], 'A schemaless engine reads a nested path on a plain attribute as matching nothing');
+            $this->assertSame(0, $response['body']['total']);
+
+            return;
+        }
+
         $this->assertSame(400, $response['headers']['status-code'], $response['body']['message'] ?? '');
         $this->assertSame('general_query_invalid', $response['body']['type']);
     }

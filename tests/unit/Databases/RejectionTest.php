@@ -60,6 +60,22 @@ final class RejectionTest extends TestCase
         $this->assertNull(Rejection::fromThrowable($error));
     }
 
+    public function testAnUnknownColumnIsTheCallersFaultWhenTheySentQueries(): void
+    {
+        $error = new NotFoundException('Attribute not found', 0, new DriverException('42S22', 1054, "Unknown column 'name.x' in 'where clause'"));
+
+        $this->assertSame(Rejection::Column, Rejection::fromQueries($error, ['{"method":"equal","attribute":"name.x","values":["a"]}']));
+    }
+
+    public function testAnUnknownColumnIsTheServersFaultWhenTheCallerSentNoQueries(): void
+    {
+        $mariadb = new NotFoundException('Attribute not found', 0, new DriverException('42S22', 1054, "Unknown column 'region' in 'field list'"));
+        $postgres = new DriverException('42703', 7, 'ERROR: column "region" does not exist');
+
+        $this->assertNull(Rejection::fromQueries($mariadb, []));
+        $this->assertNull(Rejection::fromQueries($postgres, []));
+    }
+
     public function testColumnIsAnInvalidQuery(): void
     {
         $this->assertSame(Exception::GENERAL_QUERY_INVALID, Rejection::Column->getType());

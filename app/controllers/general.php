@@ -1304,7 +1304,8 @@ Http::error()
                 $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);
                 break;
             default:
-                $rejection = Rejection::fromThrowable($error);
+                $queries = $route !== null && \array_key_exists('queries', $route->getParams()) ? $request->getParam('queries', []) : [];
+                $rejection = Rejection::fromQueries($error, \is_array($queries) ? $queries : []);
                 if ($rejection !== null) {
                     $error = new AppwriteException($rejection->getType(), $rejection->getMessage(), previous: $error);
                 }

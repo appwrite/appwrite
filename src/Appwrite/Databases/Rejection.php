@@ -27,6 +27,14 @@ enum Rejection
         };
     }
 
+    /**
+     * @param array<mixed> $queries the caller's queries; without any, the fault is the server's
+     */
+    public static function fromQueries(Throwable $error, array $queries): ?self
+    {
+        return $queries === [] ? null : self::fromThrowable($error);
+    }
+
     public function getType(): string
     {
         return match ($this) {
