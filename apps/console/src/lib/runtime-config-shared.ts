@@ -10,6 +10,7 @@
 
 export interface RuntimeConfig {
   appwriteEndpoint: string
+  appwriteVersion: string
   consoleProfile: string
   /** HMAC key for the console fingerprint token. Public (ships to the browser). */
   fingerprintKey: string
@@ -114,6 +115,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
   const read = (key: string) => readEnvValue(env, key)
   return {
     appwriteEndpoint: readAppwriteEndpointFromEnv(env),
+    appwriteVersion: read('VITE_APPWRITE_VERSION'),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
     fingerprintKey:
       read('VITE_CONSOLE_FINGERPRINT_KEY') ||

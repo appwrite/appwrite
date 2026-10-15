@@ -411,6 +411,25 @@ class Deletes extends Action
     }
 
     /**
+     * Stop a deleted project's schedules, and leave removing them to the sweep.
+     *
+     * The schedulers sync from the rows whose resourceUpdatedAt moved, and a
+     * removed row never moves: its entry keeps firing from memory until the next
+     * full snapshot, minutes later, into a worker that can no longer find the
+     * project. A deactivated row reaches them on their next sync, and
+     * deleteSchedules() removes it once it is older than the retention.
+     */
+    protected function deactivateSchedules(Database $dbForPlatform, string $projectId): void
+    {
+        $dbForPlatform->updateDocuments('schedules', new Document([
+            'active' => false,
+            'resourceUpdatedAt' => DateTime::now(),
+        ]), [
+            Query::equal('projectId', [$projectId]),
+        ]);
+    }
+
+    /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param string $datetime
@@ -848,14 +867,11 @@ class Deletes extends Action
             Console::error('Failed to delete VCS comments: ' . $th->getMessage());
         }
 
-        // Delete Schedules
+        // Stop Schedules
         try {
-            $this->deleteByGroup('schedules', [
-                Query::equal('projectId', [$projectId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
+            $this->deactivateSchedules($dbForPlatform, $projectId);
         } catch (Throwable $th) {
-            Console::error('Failed to delete schedules: ' . $th->getMessage());
+            Console::error('Failed to deactivate schedules: ' . $th->getMessage());
         }
 
         // Delete Notifications
