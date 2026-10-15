@@ -72,6 +72,7 @@ pub fn fresh() {
     for name in super::objects::take_formats() {
         formats::remove(&name);
     }
+    Database::reset_filters();
     register_canonical();
 }
 
