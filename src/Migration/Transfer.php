@@ -229,12 +229,15 @@ class Transfer
         $this->destination->setSource($source);
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function getStatusCounters(): array
     {
         $status = [];
 
-        foreach ($this->resources as $resource) {
-            $status[$resource] = [
+        foreach ($this->resources as $requestedType) {
+            $status[$requestedType] = [
                 Resource::STATUS_PENDING => 0,
                 Resource::STATUS_SUCCESS => 0,
                 Resource::STATUS_ERROR => 0,
@@ -245,72 +248,69 @@ class Transfer
         }
 
         if ($this->source->previousReport) {
-            foreach ($this->source->previousReport as $resource => $data) {
-                if ($resource != 'size' && $resource != 'version' && isset($status[$resource])) {
-                    $status[$resource]['pending'] = $data;
+            foreach ($this->source->previousReport as $reportedType => $reportedTotal) {
+                if ($reportedType != 'size' && $reportedType != 'version' && isset($status[$reportedType])) {
+                    $status[$reportedType][Resource::STATUS_PENDING] = $reportedTotal;
                 }
             }
         }
 
-        foreach ($this->cache->getAll() as $resourceType => $resources) {
-            foreach ($resources as $k => $resource) {
-                if (($resourceType === Resource::TYPE_ROW || $resourceType === Resource::TYPE_DOCUMENT) && is_string($resource)) {
-                    // Only report status for resource types that were requested,
-                    // mirroring the isset() guard below. Row/document counts can be
-                    // aggregated into the cache for an unrequested type, which would
-                    // otherwise read an unseeded 'pending' key and leave a phantom,
-                    // non-empty counter.
-                    if (!isset($status[$resourceType])) {
+        foreach ($this->cache->getAll() as $cachedType => $entries) {
+            $isRecordType = $cachedType === Resource::TYPE_ROW || $cachedType === Resource::TYPE_DOCUMENT;
+
+            foreach ($entries as $key => $entry) {
+                if ($isRecordType && \is_string($entry)) {
+                    if (!isset($status[$cachedType])) {
                         continue;
                     }
 
-                    $resource = intval($resource);
+                    $count = \intval($entry);
+                    $status[$cachedType][$key] = $count;
 
-                    $status[$resourceType][$k] = $resource;
-
-                    if ($status[$resourceType]['pending'] > 0) {
-                        $status[$resourceType]['pending'] -= \min($status[$resourceType]['pending'], $resource);
+                    if ($status[$cachedType][Resource::STATUS_PENDING] > 0) {
+                        $status[$cachedType][Resource::STATUS_PENDING] -= \min($status[$cachedType][Resource::STATUS_PENDING], $count);
                     }
 
                     continue;
                 }
 
-                if (isset($status[$resource->getName()])) {
-                    $status[$resource->getName()][$resource->getStatus()]++;
+                $resourceType = $entry->getName();
 
-                    if ($status[$resource->getName()]['pending'] > 0) {
-                        $status[$resource->getName()]['pending']--;
-                    }
+                if (!isset($status[$resourceType])) {
+                    continue;
+                }
+
+                $status[$resourceType][$entry->getStatus()]++;
+
+                if ($status[$resourceType][Resource::STATUS_PENDING] > 0) {
+                    $status[$resourceType][Resource::STATUS_PENDING]--;
                 }
             }
         }
 
-        // Process Destination Errors
         foreach ($this->destination->getErrors() as $error) {
             if (isset($status[$error->getResourceGroup()])) {
                 $status[$error->getResourceGroup()][Resource::STATUS_ERROR]++;
             }
         }
 
-        // Process source errors
         foreach ($this->source->getErrors() as $error) {
             if (isset($status[$error->getResourceGroup()])) {
                 $status[$error->getResourceGroup()][Resource::STATUS_ERROR]++;
             }
         }
 
-        // Remove all empty resources
-        foreach ($status as $resource => $data) {
+        foreach ($status as $statusType => $counters) {
             $allEmpty = true;
 
-            foreach ($data as $count) {
-                if ($count > 0) {
+            foreach ($counters as $counter) {
+                if ($counter > 0) {
                     $allEmpty = false;
                 }
             }
 
             if ($allEmpty) {
-                unset($status[$resource]);
+                unset($status[$statusType]);
             }
         }
 

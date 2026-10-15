@@ -23,6 +23,9 @@ class Site extends Resource
      * @param string $specification
      * @param string $activeDeployment
      * @param string $buildSpecification
+     * @param string $startCommand
+     * @param int $deploymentRetention
+     * @param array<string> $scopes
      */
     public function __construct(
         string $id,
@@ -39,7 +42,10 @@ class Site extends Resource
         private readonly string $fallbackFile = '',
         private readonly string $specification = '',
         private readonly string $activeDeployment = '',
-        private readonly string $buildSpecification = ''
+        private readonly string $buildSpecification = '',
+        private readonly string $startCommand = '',
+        private readonly int $deploymentRetention = 0,
+        private readonly array $scopes = []
     ) {
         $this->id = $id;
     }
@@ -65,7 +71,10 @@ class Site extends Resource
             $array['fallbackFile'] ?? '',
             $array['runtimeSpecification'] ?? $array['specification'] ?? '',
             $array['activeDeployment'] ?? '',
-            $array['buildSpecification'] ?? $array['specification'] ?? ''
+            $array['buildSpecification'] ?? $array['specification'] ?? '',
+            $array['startCommand'] ?? '',
+            $array['deploymentRetention'] ?? 0,
+            $array['scopes'] ?? []
         );
     }
 
@@ -91,6 +100,9 @@ class Site extends Resource
             'runtimeSpecification' => $this->specification,
             'activeDeployment' => $this->activeDeployment,
             'buildSpecification' => $this->buildSpecification,
+            'startCommand' => $this->startCommand,
+            'deploymentRetention' => $this->deploymentRetention,
+            'scopes' => $this->scopes,
         ];
     }
 
@@ -177,5 +189,23 @@ class Site extends Resource
     public function getActiveDeployment(): string
     {
         return $this->activeDeployment;
+    }
+
+    public function getStartCommand(): string
+    {
+        return $this->startCommand;
+    }
+
+    public function getDeploymentRetention(): int
+    {
+        return $this->deploymentRetention;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getScopes(): array
+    {
+        return $this->scopes;
     }
 }

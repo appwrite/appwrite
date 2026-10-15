@@ -25,18 +25,20 @@
         "test": "./vendor/bin/phpunit",
         "lint": "./vendor/bin/pint --test",
         "format": "./vendor/bin/pint",
-        "check": "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+        "check": "./vendor/bin/phpstan analyse --level 3 src tests bin --memory-limit 2G"
     },
     "require": {
         "php": ">=8.5",
         "ext-curl": "*",
         "ext-openssl": "*",
-        "appwrite/appwrite": "^30.0",
-        "utopia-php/database": "^7.0.0",
+        "appwrite/appwrite": "^30.2.2",
+        "utopia-php/database": "^8.1.2",
         "utopia-php/storage": "4.*",
         "utopia-php/dsn": "0.2.*",
         "halaxa/json-machine": "^1.2",
-        "utopia-php/client": "^0.4.1"
+        "psr/http-client": "^1.0",
+        "utopia-php/client": "^0.6",
+        "utopia-php/psr7": "^0.2.1"
     },
     "require-dev": {
         "ext-pdo": "*",

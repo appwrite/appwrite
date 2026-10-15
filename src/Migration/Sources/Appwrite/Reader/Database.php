@@ -2,6 +2,7 @@
 
 namespace Utopia\Migration\Sources\Appwrite\Reader;
 
+use Utopia\Database\Capability;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Exception as DatabaseException;
@@ -16,6 +17,7 @@ use Utopia\Migration\Resources\Database\Index as IndexResource;
 use Utopia\Migration\Resources\Database\Row as RowResource;
 use Utopia\Migration\Resources\Database\Table as TableResource;
 use Utopia\Migration\Sources\Appwrite\Reader;
+use Utopia\Query\Schema\ColumnType;
 
 /**
  * @implements Reader<Query>
@@ -259,13 +261,18 @@ class Database implements Reader
         }
 
         foreach ($columns as $column) {
-            if ($column['type'] !== UtopiaDatabase::VAR_RELATIONSHIP) {
+            if ($column['type'] !== ColumnType::Relationship->value) {
                 continue;
             }
 
             $options = $column['options'];
-            foreach ($options as $key => $value) {
-                $column[$key] = $value;
+            if ($options instanceof UtopiaDocument) {
+                $options = $options->getArrayCopy();
+            }
+            if (\is_array($options)) {
+                foreach ($options as $key => $value) {
+                    $column[$key] = $value;
+                }
             }
 
             unset($column['options']);
@@ -492,7 +499,7 @@ class Database implements Reader
 
     public function getSupportForAttributes(): bool
     {
-        return $this->dbForProject->getAdapter()->getSupportForAttributes();
+        return $this->dbForProject->getAdapter()->supports(Capability::DefinedAttributes);
     }
 
     /**

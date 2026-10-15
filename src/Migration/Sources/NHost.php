@@ -772,9 +772,9 @@ class NHost extends Source
 
             foreach ($targets as $target) {
                 if (str_contains($target, ' ')) {
-                    $target = \explode(' ', $target);
-                    $columns[] = $target[0];
-                    $order[] = $target[1];
+                    [$column, $direction] = \explode(' ', $target);
+                    $columns[] = $column;
+                    $order[] = $direction;
                 } else {
                     $columns[] = $target;
                     $order[] = 'ASC';

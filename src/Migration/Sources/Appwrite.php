@@ -21,6 +21,7 @@ use Override;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\DateTime as UtopiaDateTime;
 use Utopia\Database\Document as UtopiaDocument;
+use Utopia\Database\RelationshipSide;
 use Utopia\Migration\Exception;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Auth\AuthMethods;
@@ -88,6 +89,7 @@ use Utopia\Migration\Sources\Appwrite\Reader;
 use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Transfer;
+use Utopia\Query\Schema\ColumnType;
 
 class Appwrite extends Source
 {
@@ -121,7 +123,7 @@ class Appwrite extends Source
     private ?string $resourceChildId = null;
 
     /**
-     * @var callable(UtopiaDocument|null $database): UtopiaDatabase
+     * @var callable(?UtopiaDocument): UtopiaDatabase
      */
     protected mixed $getDatabasesDB;
 
@@ -141,7 +143,9 @@ class Appwrite extends Source
         $this->client
             ->setEndpoint($endpoint)
             ->setProject($projectId)
-            ->setKey($key);
+            ->setKey($key)
+            ->setConnectTimeout(static::CONNECT_TIMEOUT)
+            ->setTimeout(static::REQUEST_TIMEOUT);
 
         $this->users = new Users($this->client);
         $this->teams = new Teams($this->client);
@@ -602,8 +606,8 @@ class Appwrite extends Source
         if (\in_array(Resource::TYPE_ENVIRONMENT_VARIABLE, $resources)) {
             $report[Resource::TYPE_ENVIRONMENT_VARIABLE] = 0;
             foreach ($functions as $function) {
-                // function model contains `vars`, we don't need to fetch the list again.
-                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += count($function->vars ?? []);
+                // A function list's `vars` also holds a site's variables when the two share an internal ID.
+                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += $this->functions->listVariables($function->id)->total;
             }
         }
     }
@@ -801,6 +805,12 @@ class Appwrite extends Source
         $sessionLimit = $this->project->getPolicy(ProjectPolicyId::SESSIONLIMIT());
         $userLimit = $this->project->getPolicy(ProjectPolicyId::USERLIMIT());
         $membershipPrivacy = $this->project->getPolicy(ProjectPolicyId::MEMBERSHIPPRIVACY());
+        $passwordStrength = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDSTRENGTH());
+        $mfaFactors = $this->getPolicyIfSupported(ProjectPolicyId::MFAFACTORS());
+        $denyAliasedEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYALIASEDEMAIL());
+        $denyDisposableEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYDISPOSABLEEMAIL());
+        $denyFreeEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYFREEEMAIL());
+        $denyCorporateEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYCORPORATEEMAIL());
 
         $policies = new Policies(
             $this->projectId,
@@ -817,9 +827,45 @@ class Appwrite extends Source
             $membershipPrivacy->userName,
             $membershipPrivacy->userMFA,
             $membershipPrivacy->userPhone,
+            $membershipPrivacy->userAccessedAt,
+            $passwordStrength === null ? null : [
+                'min' => $passwordStrength->min,
+                'uppercase' => $passwordStrength->uppercase,
+                'lowercase' => $passwordStrength->lowercase,
+                'number' => $passwordStrength->number,
+                'symbols' => $passwordStrength->symbols,
+            ],
+            $mfaFactors === null ? null : [
+                'totp' => $mfaFactors->totp,
+                'email' => $mfaFactors->email,
+                'phone' => $mfaFactors->phone,
+                'custom' => $mfaFactors->custom,
+            ],
+            $denyAliasedEmail?->enabled,
+            $denyDisposableEmail?->enabled,
+            $denyFreeEmail?->enabled,
+            $denyCorporateEmail?->enabled,
         );
 
         $this->callback([$policies]);
+    }
+
+    /**
+     * A source older than a policy rejects its ID, so the policy is left to the destination.
+     *
+     * @throws AppwriteException
+     */
+    private function getPolicyIfSupported(ProjectPolicyId $policyId): mixed
+    {
+        try {
+            return $this->project->getPolicy($policyId);
+        } catch (AppwriteException $e) {
+            if ($e->getCode() === 400 || $e->getCode() === 404) {
+                return null;
+            }
+
+            throw $e;
+        }
     }
 
     private function exportAuthMethods(): void
@@ -1292,8 +1338,8 @@ class Appwrite extends Source
 
                 foreach ($response as $column) {
                     if (
-                        $column['type'] === UtopiaDatabase::VAR_RELATIONSHIP
-                        && $column['side'] === UtopiaDatabase::RELATION_SIDE_CHILD
+                        $column['type'] === ColumnType::Relationship->value
+                        && $column['side'] === RelationshipSide::Child->value
                     ) {
                         continue;
                     }
@@ -1463,7 +1509,7 @@ class Appwrite extends Source
                     unset($row['$tableId']);
                     unset($row['$table']);
 
-                    $row = self::getRecord($table->getDatabase()->getType(), [
+                    $record = self::getRecord($table->getDatabase()->getType(), [
                         'id' => $id,
                         'table' => [
                             'id' => $table->getId(),
@@ -1481,8 +1527,8 @@ class Appwrite extends Source
                         'permissions' => $permissions
                     ]);
 
-                    $rows[] = $row;
-                    $lastRow = $row;
+                    $rows[] = $record;
+                    $lastRow = $record;
                 }
 
                 $this->callback($rows);
@@ -1546,7 +1592,7 @@ class Appwrite extends Source
         $convertedBuckets = [];
 
         foreach ($buckets->buckets as $bucket) {
-            $bucket = new Bucket(
+            $convertedBuckets[] = new Bucket(
                 $bucket->id,
                 $bucket->name,
                 $bucket->permissions,
@@ -1560,7 +1606,6 @@ class Appwrite extends Source
                 false,
                 $bucket->transformations ?? false,
             );
-            $convertedBuckets[] = $bucket;
         }
 
         if (empty($convertedBuckets)) {
@@ -1603,6 +1648,7 @@ class Appwrite extends Source
                             $file->mimeType,
                             $file->permissions,
                             $file->sizeOriginal,
+                            folder: $file->folder,
                         ));
                     } catch (\Throwable $e) {
                         $this->addError(new Exception(
@@ -2208,17 +2254,20 @@ class Appwrite extends Source
                     $function->scopes ?? [],
                     $function->runtimeSpecification ?: '',
                     $function->buildSpecification ?: '',
+                    $function->interval ?? 0,
+                    $function->deploymentRetention,
                 );
                 $functions[] = $convertedFunc;
 
                 $convertedResources[] = $convertedFunc;
 
-                foreach ($function->vars as $var) {
+                foreach ($this->functions->listVariables($function->id)->variables as $var) {
                     $convertedResources[] = new EnvVar(
                         $var->id,
                         $convertedFunc,
                         $var->key,
                         $var->value,
+                        $var->secret,
                     );
                 }
             }
@@ -2792,7 +2841,10 @@ class Appwrite extends Source
                     $site->fallbackFile ?? '',
                     $site->runtimeSpecification ?: '',
                     $site->deploymentId ?? '',
-                    $site->buildSpecification ?: ''
+                    $site->buildSpecification ?: '',
+                    $site->startCommand,
+                    $site->deploymentRetention,
+                    $site->scopes,
                 );
                 $sites[] = $convertedSite;
                 $convertedResources[] = $convertedSite;
@@ -2803,7 +2855,8 @@ class Appwrite extends Source
                         $var->id,
                         $convertedSite,
                         $var->key,
-                        $var->value
+                        $var->value,
+                        $var->secret,
                     );
                 }
             }

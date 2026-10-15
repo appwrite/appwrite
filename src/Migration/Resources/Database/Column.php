@@ -86,6 +86,10 @@ abstract class Column extends Resource
         $type = \is_string($column['type'] ?? null) ? $column['type'] : '';
         $format = \is_string($column['format'] ?? null) ? $column['format'] : '';
 
+        if ($type === 'biginteger') {
+            $type = self::TYPE_BIG_INT;
+        }
+
         if (isset(self::FORMAT_SIZES[$type])) {
             $format = $type;
             $type = self::TYPE_STRING;

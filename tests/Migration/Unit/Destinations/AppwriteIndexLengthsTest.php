@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Attribute as UtopiaAttribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
@@ -18,6 +20,8 @@ use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\Resources\Database\Index;
 use Utopia\Migration\Resources\Database\Table;
 use Utopia\Migration\Transfer;
+use Utopia\Query\OrderDirection;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Tests\Unit\Adapters\MockSource;
 
 /**
@@ -175,7 +179,7 @@ final class AppwriteIndexLengthsTest extends TestCase
             type: 'key',
             columns: ['reference', 'channel'],
             lengths: $withLengths,
-            orders: ['ASC', 'ASC'],
+            orders: [OrderDirection::Asc->value, OrderDirection::Asc->value],
             createdAt: $updatedAt,
             updatedAt: $updatedAt,
         );
@@ -188,14 +192,14 @@ final class AppwriteIndexLengthsTest extends TestCase
             getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
             collectionStructure: [
                 'attributes' => [
-                    $this->attributeArray('databaseInternalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-                    $this->attributeArray('databaseId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-                    $this->attributeArray('name', UtopiaDatabase::VAR_STRING, size: 256),
-                    $this->attributeArray('enabled', UtopiaDatabase::VAR_BOOLEAN, default: true),
-                    $this->attributeArray('documentSecurity', UtopiaDatabase::VAR_BOOLEAN, default: false),
-                    $this->attributeArray('search', UtopiaDatabase::VAR_STRING, size: 16384),
-                    $this->attributeArray('attributes', UtopiaDatabase::VAR_STRING, size: 16384, filters: ['subQueryAttributes']),
-                    $this->attributeArray('indexes', UtopiaDatabase::VAR_STRING, size: 16384, filters: ['subQueryIndexes']),
+                    $this->attributeArray('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                    $this->attributeArray('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                    $this->attributeArray('name', ColumnType::String, size: 256),
+                    $this->attributeArray('enabled', ColumnType::Boolean, default: true),
+                    $this->attributeArray('documentSecurity', ColumnType::Boolean, default: false),
+                    $this->attributeArray('search', ColumnType::String, size: 16384),
+                    $this->attributeArray('attributes', ColumnType::String, size: 16384, filters: ['subQueryAttributes']),
+                    $this->attributeArray('indexes', ColumnType::String, size: 16384, filters: ['subQueryIndexes']),
                 ],
                 'indexes' => [],
             ],
@@ -244,48 +248,57 @@ final class AppwriteIndexLengthsTest extends TestCase
             ->setNamespace('_project');
         $database->create();
 
-        $database->createCollection('databases', [
-            $this->attribute('name', UtopiaDatabase::VAR_STRING, required: true, size: 256),
-            $this->attribute('enabled', UtopiaDatabase::VAR_BOOLEAN, default: true),
-            $this->attribute('search', UtopiaDatabase::VAR_STRING, size: 16384),
-            $this->attribute('originalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('type', UtopiaDatabase::VAR_STRING, default: 'tablesdb', size: 128),
-            $this->attribute('database', UtopiaDatabase::VAR_STRING, size: 2000),
-        ]);
+        $database->createCollection(Collection::create(
+            id: 'databases',
+            attributes: [
+                $this->attribute('name', ColumnType::String, required: true, size: 256),
+                $this->attribute('enabled', ColumnType::Boolean, default: true),
+                $this->attribute('search', ColumnType::String, size: 16384),
+                $this->attribute('originalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('type', ColumnType::String, default: 'tablesdb', size: 128),
+                $this->attribute('database', ColumnType::String, size: 2000),
+            ],
+        ));
 
-        $database->createCollection('attributes', [
-            $this->attribute('key', UtopiaDatabase::VAR_STRING, size: 256),
-            $this->attribute('databaseInternalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('databaseId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('collectionInternalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('collectionId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('type', UtopiaDatabase::VAR_STRING, size: 256),
-            $this->attribute('status', UtopiaDatabase::VAR_STRING, size: 64),
-            $this->attribute('size', UtopiaDatabase::VAR_INTEGER),
-            $this->attribute('required', UtopiaDatabase::VAR_BOOLEAN, default: false),
-            $this->attribute('signed', UtopiaDatabase::VAR_BOOLEAN, default: true),
-            $this->attribute('default', UtopiaDatabase::VAR_STRING, size: 16384),
-            $this->attribute('array', UtopiaDatabase::VAR_BOOLEAN, default: false),
-            $this->attribute('format', UtopiaDatabase::VAR_STRING, size: 64),
-            $this->attribute('formatOptions', UtopiaDatabase::VAR_STRING, size: 16384, filters: ['json']),
-            $this->attribute('filters', UtopiaDatabase::VAR_STRING, size: 64, array: true),
-            $this->attribute('options', UtopiaDatabase::VAR_STRING, size: 16384, filters: ['json']),
-            $this->attribute('error', UtopiaDatabase::VAR_STRING, size: 2048),
-        ]);
+        $database->createCollection(Collection::create(
+            id: 'attributes',
+            attributes: [
+                $this->attribute('key', ColumnType::String, size: 256),
+                $this->attribute('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('collectionInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('collectionId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('type', ColumnType::String, size: 256),
+                $this->attribute('status', ColumnType::String, size: 64),
+                $this->attribute('size', ColumnType::Integer),
+                $this->attribute('required', ColumnType::Boolean, default: false),
+                $this->attribute('signed', ColumnType::Boolean, default: true),
+                $this->attribute('default', ColumnType::String, size: 16384),
+                $this->attribute('array', ColumnType::Boolean, default: false),
+                $this->attribute('format', ColumnType::String, size: 64),
+                $this->attribute('formatOptions', ColumnType::String, size: 16384, filters: ['json']),
+                $this->attribute('filters', ColumnType::String, size: 64, array: true),
+                $this->attribute('options', ColumnType::String, size: 16384, filters: ['json']),
+                $this->attribute('error', ColumnType::String, size: 2048),
+            ],
+        ));
 
-        $database->createCollection('indexes', [
-            $this->attribute('key', UtopiaDatabase::VAR_STRING, size: 256),
-            $this->attribute('status', UtopiaDatabase::VAR_STRING, size: 64),
-            $this->attribute('databaseInternalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('databaseId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('collectionInternalId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('collectionId', UtopiaDatabase::VAR_STRING, size: UtopiaDatabase::LENGTH_KEY),
-            $this->attribute('type', UtopiaDatabase::VAR_STRING, size: 16),
-            $this->attribute('attributes', UtopiaDatabase::VAR_STRING, size: 256, array: true),
-            $this->attribute('lengths', UtopiaDatabase::VAR_INTEGER, array: true),
-            $this->attribute('orders', UtopiaDatabase::VAR_STRING, size: 4, array: true),
-            $this->attribute('error', UtopiaDatabase::VAR_STRING, size: 2048),
-        ]);
+        $database->createCollection(Collection::create(
+            id: 'indexes',
+            attributes: [
+                $this->attribute('key', ColumnType::String, size: 256),
+                $this->attribute('status', ColumnType::String, size: 64),
+                $this->attribute('databaseInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('databaseId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('collectionInternalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('collectionId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('type', ColumnType::String, size: 16),
+                $this->attribute('attributes', ColumnType::String, size: 256, array: true),
+                $this->attribute('lengths', ColumnType::Integer, array: true),
+                $this->attribute('orders', ColumnType::String, size: 4, array: true),
+                $this->attribute('error', ColumnType::String, size: 2048),
+            ],
+        ));
 
         return $database;
     }
@@ -296,7 +309,7 @@ final class AppwriteIndexLengthsTest extends TestCase
      */
     private function attributeArray(
         string $id,
-        string $type,
+        ColumnType $type,
         bool $required = false,
         mixed $default = null,
         int $size = 0,
@@ -305,7 +318,7 @@ final class AppwriteIndexLengthsTest extends TestCase
     ): array {
         return [
             '$id' => $id,
-            'type' => $type,
+            'type' => $type->value,
             'size' => $size,
             'required' => $required,
             'default' => $default,
@@ -320,14 +333,22 @@ final class AppwriteIndexLengthsTest extends TestCase
      */
     private function attribute(
         string $id,
-        string $type,
+        ColumnType $type,
         bool $required = false,
         mixed $default = null,
         int $size = 0,
         bool $array = false,
         array $filters = [],
-    ): UtopiaDocument {
-        return new UtopiaDocument($this->attributeArray($id, $type, $required, $default, $size, $array, $filters));
+    ): UtopiaAttribute {
+        return UtopiaAttribute::fromArray([
+            'key' => $id,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'filters' => $filters,
+        ]);
     }
 
     /**

@@ -28,6 +28,7 @@ RUN set -ex \
 
 COPY ./src /app/src
 COPY ./tests /app/src/tests
+COPY ./bin /app/bin
 
 COPY --from=composer /app/vendor /app/vendor
 

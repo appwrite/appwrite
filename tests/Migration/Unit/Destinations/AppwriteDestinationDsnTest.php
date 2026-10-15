@@ -1,98 +1,171 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Tests\Unit\Destinations;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Attribute as UtopiaAttribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Destinations\OnDuplicate;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
+use Utopia\Migration\Transfer;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Tests\Unit\Adapters\MockSource;
 
 /**
  * Regression for PR #151: the destination must never write the source's DSN
- * into `_databases.database`. With no resolver, the value must be blank so
- * the runtime falls back to the destination project's DSN. With a resolver,
- * the resolver's value must be written and the source's value ignored.
+ * into `_databases.database`. With no resolver the migrated row must be blank,
+ * so the runtime falls back to the destination project's own DSN. With a
+ * resolver the row must carry the resolver's value and nothing of the source's.
  *
  * Reproduces the comuneo-pre-production incident where post-migration
  * `_databases.database` rows pointed at the source's host (db11) and
  * destination reads hit `Table 'appwrite._<tenant>__metadata' doesn't exist`.
  */
-class AppwriteDestinationDsnTest extends TestCase
+final class AppwriteDestinationDsnTest extends TestCase
 {
-    public function testWithoutResolverReturnsEmptyString(): void
+    private const SOURCE_DSN = 'database_db_fra1_self_hosted_11_0';
+
+    private const DATABASE_ID = 'src-database';
+
+    public function testWithoutAResolverTheMigratedRowCarriesNoDsn(): void
     {
-        $destination = $this->makeDestination(getDatabaseDSN: null);
-        $resource = $this->makeResource(sourceDsn: 'database_db_fra1_self_hosted_11_0');
+        $database = $this->transferDatabase(getDatabaseDSN: null);
 
-        $resolved = $this->invokeResolver($destination, $resource);
-
-        $this->assertSame('', $resolved, 'Without a resolver the destination must not propagate the source DSN.');
+        $this->assertSame(
+            '',
+            $this->migratedDsn($database),
+            'Without a resolver the destination must not propagate the source DSN.',
+        );
     }
 
-    public function testWithResolverUsesItsReturnValue(): void
+    public function testWithAResolverTheMigratedRowCarriesItsValue(): void
     {
         $expected = 'appwrite://database_db_fra1_self_hosted_17_0?database=appwrite&namespace=_1';
-        $destination = $this->makeDestination(
-            getDatabaseDSN: fn (DatabaseResource $r): string => $expected,
+
+        $database = $this->transferDatabase(
+            getDatabaseDSN: static fn (DatabaseResource $resource): string => $expected,
         );
-        $resource = $this->makeResource(sourceDsn: 'database_db_fra1_self_hosted_11_0');
 
-        $resolved = $this->invokeResolver($destination, $resource);
-
+        $resolved = $this->migratedDsn($database);
         $this->assertSame($expected, $resolved);
-        $this->assertNotSame($resource->getDatabase(), $resolved, 'Source DSN must not leak through the resolver path.');
+        $this->assertNotSame(self::SOURCE_DSN, $resolved, 'Source DSN must not leak through the resolver path.');
     }
 
-    public function testResolverReceivesTheResource(): void
+    public function testTheResolverIsHandedTheDatabaseBeingMigrated(): void
     {
-        $captured = null;
-        $destination = $this->makeDestination(
-            getDatabaseDSN: function (DatabaseResource $r) use (&$captured): string {
-                $captured = $r;
-                return 'resolved';
-            },
+        $database = $this->transferDatabase(
+            getDatabaseDSN: static fn (DatabaseResource $resource): string => 'resolved://'
+                . $resource->getId()
+                . '/'
+                . $resource->getDatabase(),
         );
-        $resource = $this->makeResource(sourceDsn: 'src');
 
-        $this->invokeResolver($destination, $resource);
-
-        $this->assertSame($resource, $captured);
+        $this->assertSame(
+            'resolved://' . self::DATABASE_ID . '/' . self::SOURCE_DSN,
+            $this->migratedDsn($database),
+        );
     }
 
-    private function makeDestination(?callable $getDatabaseDSN): AppwriteDestination
+    private function transferDatabase(?callable $getDatabaseDSN): UtopiaDatabase
     {
-        return new AppwriteDestination(
+        $database = $this->projectDatabase();
+
+        $source = new MockSource();
+        $source->pushMockResource(new DatabaseResource(
+            id: self::DATABASE_ID,
+            name: 'src',
+            type: 'legacy',
+            database: self::SOURCE_DSN,
+        ));
+
+        $destination = new AppwriteDestination(
             project: 'destination-project',
             endpoint: 'http://example.test/v1',
             key: 'test-key',
-            dbForProject: $this->createStub(UtopiaDatabase::class),
-            getDatabasesDB: fn (UtopiaDocument $database): UtopiaDatabase => $this->createStub(UtopiaDatabase::class),
+            dbForProject: $database,
+            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
             collectionStructure: ['attributes' => [], 'indexes' => []],
-            dbForPlatform: $this->createStub(UtopiaDatabase::class),
+            dbForPlatform: $database,
             projectInternalId: '1',
             onDuplicate: OnDuplicate::Fail,
             getDatabaseDSN: $getDatabaseDSN,
         );
-    }
 
-    private function makeResource(string $sourceDsn): DatabaseResource
-    {
-        return new DatabaseResource(
-            id: 'src-database',
-            name: 'src',
-            type: 'legacy',
-            database: $sourceDsn,
+        $transfer = new Transfer($source, $destination);
+        $database->getAuthorization()->skip(
+            static function () use ($transfer): void {
+                $transfer->run([Resource::TYPE_DATABASE], static function (): void {
+                });
+            },
         );
+
+        $this->assertSame(
+            [],
+            \array_map(static fn ($error): string => $error->getMessage(), $destination->getErrors()),
+        );
+
+        return $database;
     }
 
-    private function invokeResolver(AppwriteDestination $destination, DatabaseResource $resource): string
+    private function migratedDsn(UtopiaDatabase $database): mixed
     {
-        $method = (new ReflectionClass(AppwriteDestination::class))->getMethod('resolveDestinationDsn');
-        /** @var string $value */
-        $value = $method->invoke($destination, $resource);
-        return $value;
+        $row = $database->getAuthorization()->skip(
+            static fn (): UtopiaDocument => $database->getDocument('databases', self::DATABASE_ID),
+        );
+
+        $this->assertFalse($row->isEmpty(), 'The migrated database must be written to the destination metadata');
+
+        return $row->getAttribute('database');
+    }
+
+    private function projectDatabase(): UtopiaDatabase
+    {
+        $database = new UtopiaDatabase(
+            new MemoryAdapter(),
+            new Cache(new MemoryCache()),
+        );
+        $database
+            ->setDatabase('appwrite')
+            ->setNamespace('_project');
+        $database->create();
+
+        $database->createCollection(Collection::create(
+            id: 'databases',
+            attributes: [
+                $this->attribute('name', ColumnType::String, required: true, size: 256),
+                $this->attribute('enabled', ColumnType::Boolean, default: true),
+                $this->attribute('search', ColumnType::String, size: 16384),
+                $this->attribute('originalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
+                $this->attribute('type', ColumnType::String, default: 'tablesdb', size: 128),
+                $this->attribute('database', ColumnType::String, size: 2000),
+            ],
+        ));
+
+        return $database;
+    }
+
+    private function attribute(
+        string $id,
+        ColumnType $type,
+        bool $required = false,
+        mixed $default = null,
+        int $size = 0,
+    ): UtopiaAttribute {
+        return UtopiaAttribute::fromArray([
+            'key' => $id,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+        ]);
     }
 }

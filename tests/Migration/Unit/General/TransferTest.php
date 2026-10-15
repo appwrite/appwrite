@@ -6,6 +6,7 @@ use Override;
 use PHPUnit\Framework\TestCase;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database;
+use Utopia\Migration\Resources\Database\Document;
 use Utopia\Migration\Resources\Database\Row;
 use Utopia\Migration\Resources\Database\Table;
 use Utopia\Migration\Transfer;
@@ -361,5 +362,106 @@ class TransferTest extends TestCase
 
         $this->assertArrayNotHasKey(Resource::TYPE_ROW, $counters);
         $this->assertSame([], $counters);
+    }
+
+    public function testStatusCountersMergeResourcesAndRowCountsForRequestedTypesOnly(): void
+    {
+        $database = new Database('database', 'Database');
+        $table = new Table($database, 'Table', 'table');
+        $this->source->pushMockResource($database);
+        $this->source->pushMockResource($table);
+        $this->source->pushMockResource(new Row('first', $table));
+        $this->source->pushMockResource(new Row('second', $table));
+
+        $this->transfer->run(
+            [Resource::TYPE_DATABASE, Resource::TYPE_ROW],
+            static function (): void {
+            },
+        );
+
+        $failedRow = new Row('third', $table);
+        $failedRow->setStatus(Resource::STATUS_ERROR);
+        $unrequestedTable = new Table($database, 'Unrequested', 'unrequested');
+        $unrequestedTable->setStatus(Resource::STATUS_SUCCESS);
+        $unrequestedDocument = new Document('document', $table);
+        $unrequestedDocument->setStatus(Resource::STATUS_SUCCESS);
+
+        $cache = $this->transfer->getCache();
+        $cache->add($failedRow);
+        $cache->add($unrequestedTable);
+        $cache->add($unrequestedDocument);
+
+        $this->source->previousReport = [
+            Resource::TYPE_DATABASE => 3,
+            Resource::TYPE_ROW => 2,
+            Resource::TYPE_USER => 4,
+            'size' => 9,
+            'version' => '1.0.0',
+        ];
+
+        $this->assertSame([
+            Resource::TYPE_DATABASE => [
+                Resource::STATUS_PENDING => 2,
+                Resource::STATUS_SUCCESS => 1,
+                Resource::STATUS_ERROR => 0,
+                Resource::STATUS_SKIPPED => 0,
+                Resource::STATUS_PROCESSING => 0,
+                Resource::STATUS_WARNING => 0,
+            ],
+            Resource::TYPE_ROW => [
+                Resource::STATUS_PENDING => 0,
+                Resource::STATUS_SUCCESS => 2,
+                Resource::STATUS_ERROR => 1,
+                Resource::STATUS_SKIPPED => 0,
+                Resource::STATUS_PROCESSING => 0,
+                Resource::STATUS_WARNING => 0,
+            ],
+        ], $this->transfer->getStatusCounters());
+    }
+
+    public function testStatusCountersAreEmptyWhenRequestedTypesHaveNoActivity(): void
+    {
+        $this->transfer->run(
+            [Resource::TYPE_DATABASE, Resource::TYPE_ROW],
+            static function (): void {
+            },
+        );
+
+        $this->assertSame([], $this->transfer->getStatusCounters());
+    }
+
+    public function testStatusCountersReportRowCountsUnderUnseededStatuses(): void
+    {
+        $database = new Database('database', 'Database');
+        $table = new Table($database, 'Table', 'table');
+        $this->source->pushMockResource($database);
+        $this->source->pushMockResource($table);
+
+        $this->transfer->run(
+            [Resource::TYPE_DATABASE, Resource::TYPE_ROW],
+            static function (): void {
+            },
+        );
+
+        $cache = $this->transfer->getCache();
+
+        foreach (['first', 'second'] as $rowId) {
+            $row = new Row($rowId, $table);
+            $row->setStatus(Resource::STATUS_DISREGARDED);
+            $cache->add($row);
+        }
+
+        $counters = $this->transfer->getStatusCounters();
+
+        $this->assertSame([
+            Resource::STATUS_PENDING => 0,
+            Resource::STATUS_SUCCESS => 0,
+            Resource::STATUS_ERROR => 0,
+            Resource::STATUS_SKIPPED => 0,
+            Resource::STATUS_PROCESSING => 0,
+            Resource::STATUS_WARNING => 0,
+            Resource::STATUS_DISREGARDED => 2,
+        ], $counters[Resource::TYPE_ROW]);
+        $this->assertSame(1, $counters[Resource::TYPE_DATABASE][Resource::STATUS_SUCCESS]);
     }
 }

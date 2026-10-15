@@ -11,7 +11,8 @@ class EnvVar extends Resource
         string $id,
         private readonly Func $func,
         private readonly string $key,
-        private readonly string $value
+        private readonly string $value,
+        private readonly bool $secret = false
     ) {
         $this->id = $id;
     }
@@ -26,7 +27,8 @@ class EnvVar extends Resource
             $array['id'],
             Func::fromArray($array['func']),
             $array['key'],
-            $array['value']
+            $array['value'],
+            (bool) ($array['secret'] ?? false)
         );
     }
 
@@ -40,6 +42,7 @@ class EnvVar extends Resource
             'func' => $this->func,
             'key' => $this->key,
             'value' => $this->value,
+            'secret' => $this->secret,
         ];
     }
 
@@ -66,5 +69,10 @@ class EnvVar extends Resource
     public function getValue(): string
     {
         return $this->value;
+    }
+
+    public function isSecret(): bool
+    {
+        return $this->secret;
     }
 }

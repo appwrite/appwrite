@@ -106,4 +106,12 @@ class ColumnTest extends TestCase
             Column::resolve(['key' => 'unknown']),
         );
     }
+
+    public function testQueryLibBigIntegerAliasBecomesBigint(): void
+    {
+        $this->assertSame(
+            ['type' => Column::TYPE_BIG_INT, 'format' => '', 'size' => 0],
+            Column::resolve(['key' => 'total', 'type' => 'biginteger']),
+        );
+    }
 }

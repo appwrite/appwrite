@@ -91,7 +91,7 @@ class MockSource extends Source
 
     public function getMockResourcesByType(string $group, string $type): array
     {
-        return array_values($this->mockResources[$group][$type]) ?? [];
+        return array_values($this->mockResources[$group][$type] ?? []);
     }
 
     public function getMockResourceById(string $group, string $type, string $id): ?Resource
@@ -117,9 +117,7 @@ class MockSource extends Source
             return;
         }
 
-        $resources = $this->getMockResourcesByType($group, $type) ?? [];
-        $this->callback($resources);
-        return;
+        $this->callback($this->getMockResourcesByType($group, $type));
     }
 
     public static function getName(): string

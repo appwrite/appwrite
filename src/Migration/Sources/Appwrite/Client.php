@@ -5,7 +5,7 @@ namespace Utopia\Migration\Sources\Appwrite;
 use Appwrite\Client as Base;
 use Override;
 use Utopia\Client\Adapter\Curl\Client as Curl;
-use Utopia\Client as HttpClient;
+use Utopia\Client\Client as HttpClient;
 use Utopia\Migration\Sources\Appwrite\Client\RedirectRefusal;
 
 class Client extends Base
@@ -20,7 +20,8 @@ class Client extends Base
     /**
      * The resolver receives the endpoint URL and returns the CURLOPT_RESOLVE
      * entries ("host:port:address[,address]") every connection must use. It
-     * throws to refuse the endpoint.
+     * throws to refuse the endpoint. While a resolver is set, requests never go
+     * through a proxy, which would resolve the host itself.
      *
      * @param  (\Closure(string): array<string>)|null  $resolver
      */
@@ -44,6 +45,7 @@ class Client extends Base
 
         if ($this->resolver !== null) {
             $options[CURLOPT_RESOLVE] = ($this->resolver)($this->endpoint);
+            $options[CURLOPT_PROXY] = '';
         }
 
         $adapter = (new Curl(options: $options))->withConnectionReuse();

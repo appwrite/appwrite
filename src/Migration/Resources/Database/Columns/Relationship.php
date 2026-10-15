@@ -2,7 +2,8 @@
 
 namespace Utopia\Migration\Resources\Database\Columns;
 
-use Utopia\Database\Database;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipSide;
 use Utopia\Migration\Resources\Database\Column;
 use Utopia\Migration\Resources\Database\Table;
 
@@ -15,8 +16,8 @@ class Relationship extends Column
         string  $relationType,
         bool    $twoWay = false,
         ?string $twoWayKey = null,
-        string  $onDelete = Database::RELATION_MUTATE_RESTRICT,
-        string  $side = Database::RELATION_SIDE_PARENT,
+        string  $onDelete = RelationshipDeleteAction::Restrict->value,
+        string  $side = RelationshipSide::Parent->value,
         string  $createdAt = '',
         string  $updatedAt = ''
     ) {

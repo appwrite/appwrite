@@ -12,7 +12,7 @@ abstract class Source extends Target
     protected $transferCallback;
 
     /**
-     * @var array<string, int>
+     * @var array<string, int|string>
      */
     public array $previousReport = [];
 

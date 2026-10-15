@@ -240,11 +240,11 @@ class CSV extends Destination
         $parts = [];
 
         foreach ($fields as $field) {
-            $field = (string)$field;
-            if (\strpbrk($field, $this->delimiter . "\n\r" . $this->enclosure) !== false) {
-                $parts[] = $this->enclosure . \str_replace($this->enclosure, $this->enclosure . $this->enclosure, $field) . $this->enclosure;
+            $text = (string) $field;
+            if (\strpbrk($text, $this->delimiter . "\n\r" . $this->enclosure) !== false) {
+                $parts[] = $this->enclosure . \str_replace($this->enclosure, $this->enclosure . $this->enclosure, $text) . $this->enclosure;
             } else {
-                $parts[] = $field;
+                $parts[] = $text;
             }
         }
 
