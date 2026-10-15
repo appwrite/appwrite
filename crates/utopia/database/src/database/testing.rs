@@ -177,6 +177,11 @@ pub(crate) enum Call {
         collection: Collection,
         documents: Vec<Document>,
     },
+    UpsertDocuments {
+        collection: Collection,
+        changes: Vec<Change>,
+        increase: Option<String>,
+    },
 }
 
 impl Call {
@@ -219,6 +224,7 @@ impl Call {
             Call::Count { .. } => "count",
             Call::Sum { .. } => "sum",
             Call::GetSequences { .. } => "getSequences",
+            Call::UpsertDocuments { .. } => "upsertDocuments",
         }
     }
 }
@@ -246,6 +252,7 @@ pub(crate) struct StubAdapter {
     limits: Mutex<Arc<Limits>>,
     handler: Mutex<Option<Handler>>,
     calls: Mutex<Vec<Call>>,
+    upserts: Mutex<bool>,
 }
 
 /// The limits PHP's stubs give (`new Limits(...)` of the unit tests).
@@ -284,6 +291,7 @@ impl Default for StubAdapter {
             limits: Mutex::new(Arc::new(limits())),
             handler: Mutex::new(None),
             calls: Mutex::new(Vec::new()),
+            upserts: Mutex::new(false),
         }
     }
 }
@@ -311,6 +319,14 @@ impl StubAdapter {
     pub(crate) fn support(&self, capability: Capability) -> &Self {
         let mut c = self.capabilities.lock().unwrap();
         *c = c.with(capability);
+        self
+    }
+
+    /// Implements the upserts feature (`Feature\Upserts`): its calls are
+    /// recorded and answered like the others, by default with each change's
+    /// new document.
+    pub(crate) fn support_upserts(&self) -> &Self {
+        *self.upserts.lock().unwrap() = true;
         self
     }
 
@@ -395,6 +411,10 @@ impl Adapter for StubAdapter {
 
     fn limits(&self) -> Arc<Limits> {
         self.limits.lock().unwrap().clone()
+    }
+
+    fn upserts(&self) -> Option<&dyn crate::adapter::Upserts> {
+        if *self.upserts.lock().unwrap() { Some(self) } else { None }
     }
 
     async fn start_transaction(&self) -> Result<bool> {
@@ -706,6 +726,29 @@ pub(crate) fn uncached(adapter: Arc<StubAdapter>) -> Database {
 /// Runs a future to completion on a current-thread runtime.
 pub(crate) fn block_on<F: std::future::Future>(future: F) -> F::Output {
     tokio::runtime::Builder::new_current_thread().enable_all().build().expect("a runtime").block_on(future)
+}
+
+#[async_trait]
+impl crate::adapter::Upserts for StubAdapter {
+    async fn upsert_document(&self, collection: &Collection, change: Change) -> Result<Document> {
+        let mut documents = self.upsert_documents(collection, vec![change], None).await?;
+        Ok(documents.pop().unwrap_or_default())
+    }
+
+    async fn upsert_documents(
+        &self,
+        collection: &Collection,
+        changes: Vec<Change>,
+        increase: Option<&str>,
+    ) -> Result<Vec<Document>> {
+        let written: Vec<Document> = changes.iter().map(|c| c.new.clone()).collect();
+        let reply = self.call(Call::UpsertDocuments {
+            collection: collection.clone(),
+            changes,
+            increase: increase.map(str::to_owned),
+        });
+        documents_reply(reply, written)
+    }
 }
 
 /// An `Adapter` upsert feature for stubs that need one.

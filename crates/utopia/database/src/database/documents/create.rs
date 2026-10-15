@@ -583,3 +583,7 @@ pub(crate) fn holds_related_document(collection: &Collection, document: &Documen
     }
     Ok(false)
 }
+
+#[cfg(test)]
+#[path = "writes_tests.rs"]
+mod tests;

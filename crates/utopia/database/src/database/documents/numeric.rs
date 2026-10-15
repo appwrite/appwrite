@@ -139,7 +139,8 @@ impl Database {
         };
         let maximum = native_number(&bounds.max)?;
         let minimum = native_number(&bounds.min)?;
-        let gt = |a: &Value, b: &Value| a.compare(b) > 0;
+        // PHP evaluates `$a > $b` as `$b < $a`, which matters for NaN.
+        let gt = |a: &Value, b: &Value| b.compare(a) < 0;
         let lt = |a: &Value, b: &Value| a.compare(b) < 0;
         let zero = Value::Int(0);
 
@@ -313,8 +314,8 @@ impl Database {
                             let ordering = compare(&result, b)?;
                             if increase { ordering == Ordering::Greater } else { ordering == Ordering::Less }
                         } else {
-                            let ordering = result.compare(b);
-                            if increase { ordering > 0 } else { ordering < 0 }
+                            // `$result > $max` is `$max < $result`.
+                            if increase { b.compare(&result) < 0 } else { result.compare(b) < 0 }
                         };
                         if crossed {
                             let which = if increase { "maximum" } else { "minimum" };
@@ -463,7 +464,8 @@ pub(crate) fn assert_positive_change(value: &Value) -> Result<()> {
             Value::Str(s) if BigInt::is_integer_string(s.as_bytes(), true) => {
                 BigInt::compare(Operand::Str(s.as_bytes()), 0)? == Ordering::Greater
             }
-            other => other.to_double() > 0.0,
+            // `(float) $value <= 0` refuses; NaN passes, as in PHP.
+            other => !matches!(other.to_double().partial_cmp(&0.0), Some(Ordering::Less | Ordering::Equal)),
         };
     if !positive {
         return Err(Error::type_error("Value must be numeric and greater than 0"));
