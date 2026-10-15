@@ -320,6 +320,10 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
             return true;
         } catch (Exception) {
+            if ($this->redis->isConnected()) {
+                $this->redis->close();
+            }
+
             return false;
         }
     }
@@ -366,6 +370,12 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
                     throw $th;
                 }
 
+                // phpredis leaves the socket open when a script reply times out, and
+                // the next command would read that reply as its own
+                if ($this->redis->isConnected()) {
+                    $this->redis->close();
+                }
+
                 $attempts++;
 
                 if ($attempts >= $maxAttempts) {
@@ -398,6 +408,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             'went away',
             'socket',
             'read error on connection',
+            'protocol error', // how phpredis reports a timed-out script reply
             'connection lost',
             'timed out',
             'timeout',
