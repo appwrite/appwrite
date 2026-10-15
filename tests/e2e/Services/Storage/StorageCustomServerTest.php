@@ -575,82 +575,87 @@ final class StorageCustomServerTest extends Scope
 
     public function testChunkedUploadRejectsChangedTotal(): void
     {
-        $bucketId = $this->createChunkedUploadBucket('Changed Total Bucket');
+        $bucketId = $this->setupBucket()['bucketId'];
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($bucketId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $resumeId ?? Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'chunk.txt'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        };
+
         $chunkSize = 5 * 1024 * 1024;
         $totalSize = $chunkSize + 1024;
 
-        $first = $this->uploadChunk($bucketId, 'unique()', '', \str_repeat('a', $chunkSize), 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize);
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
         $this->assertEquals(201, $first['headers']['status-code']);
         $fileId = $first['body']['$id'];
 
-        // The second chunk announces a different total than the first.
-        $second = $this->uploadChunk($bucketId, $fileId, $fileId, \str_repeat('b', 1024), 'bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . ($totalSize + 1));
+        /**
+         * Test for FAILURE
+         * The second chunk announces a different total than the first.
+         */
+        $second = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . ($totalSize + 1), str_repeat('b', 1024), $fileId);
         $this->assertEquals(400, $second['headers']['status-code']);
         $this->assertEquals('storage_invalid_content_range', $second['body']['type']);
     }
 
     public function testChunkedUploadRejectsShortChunk(): void
     {
-        $bucketId = $this->createChunkedUploadBucket('Short Chunk Bucket');
+        $bucketId = $this->setupBucket()['bucketId'];
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($bucketId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $resumeId ?? Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'chunk.txt'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+        };
+
         $chunkSize = 5 * 1024 * 1024;
         $totalSize = $chunkSize + 1024;
 
-        $first = $this->uploadChunk($bucketId, 'unique()', '', \str_repeat('a', $chunkSize), 'bytes 0-' . ($chunkSize - 1) . '/' . $totalSize);
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
         $this->assertEquals(201, $first['headers']['status-code']);
         $fileId = $first['body']['$id'];
 
-        // The last chunk carries fewer bytes than its range announces.
-        $second = $this->uploadChunk($bucketId, $fileId, $fileId, \str_repeat('b', 10), 'bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize);
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $second = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $fileId);
         $this->assertEquals(400, $second['headers']['status-code']);
         $this->assertEquals('storage_invalid_content_range', $second['body']['type']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, \array_merge([
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
-    }
-
-    private function createChunkedUploadBucket(string $name): string
-    {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'bucketId' => Id::unique(),
-            'name' => $name,
-            'fileSecurity' => true,
-            'antivirus' => false,
-            'permissions' => [
-                Permission::create(Role::any()),
-                Permission::read(Role::any()),
-            ],
-        ]);
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-
-        return $bucket['body']['$id'];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function uploadChunk(string $bucketId, string $fileId, string $resumeId, string $bytes, string $range): array
-    {
-        $headers = [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'content-range' => $range,
-        ];
-        if ($resumeId !== '') {
-            $headers['x-appwrite-id'] = $resumeId;
-        }
-
-        return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
-            'fileId' => $fileId,
-            'file' => new CURLFile('data://text/plain;base64,' . \base64_encode($bytes), 'text/plain', 'chunk.txt'),
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
     }
 }
