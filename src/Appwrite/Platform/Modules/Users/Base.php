@@ -13,10 +13,11 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
+use Utopia\Database\SetType;
 use Utopia\Emails\Email;
 
 class Base extends Action
@@ -41,8 +42,8 @@ class Base extends Action
 
         try {
             $userId = $userId == 'unique()'
-                ? ID::unique()
-                : ID::custom($userId);
+                ? Id::unique()
+                : Id::custom($userId);
 
             if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
                 $personalDataValidator = new PersonalData(
@@ -171,7 +172,7 @@ class Base extends Action
                         Query::equal('identifier', [$email]),
                     ]);
                     if (!$existingTarget->isEmpty()) {
-                        $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                        $user->setAttribute('targets', $existingTarget, SetType::Append);
                     }
                 }
             }
@@ -195,7 +196,7 @@ class Base extends Action
                         Query::equal('identifier', [$phone]),
                     ]);
                     if (!$existingTarget->isEmpty()) {
-                        $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                        $user->setAttribute('targets', $existingTarget, SetType::Append);
                     }
                 }
             }

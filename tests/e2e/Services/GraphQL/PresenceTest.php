@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PresenceTest extends Scope
 {
@@ -33,11 +33,11 @@ final class PresenceTest extends Scope
                 }
                 GQL,
             'variables' => [
-                'presenceId' => ID::unique(),
+                'presenceId' => Id::unique(),
                 'userId' => $user['$id'],
                 'status' => 'online',
                 'metadata' => [
-                    'testRunId' => ID::unique(),
+                    'testRunId' => Id::unique(),
                 ],
             ],
         ];

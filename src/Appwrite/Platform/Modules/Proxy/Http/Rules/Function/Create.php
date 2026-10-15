@@ -14,7 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -66,7 +66,7 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
@@ -126,7 +126,7 @@ class Create extends Action
             ]);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : Id::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 

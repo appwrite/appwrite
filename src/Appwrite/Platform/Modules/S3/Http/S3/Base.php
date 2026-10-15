@@ -19,11 +19,12 @@ use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
@@ -191,7 +192,7 @@ abstract class Base extends Action
             'name' => $existing->getAttribute('name', ''),
         ];
         // Stage each upload independently; destination identity is chosen only at locked completion.
-        $fileId = ID::unique();
+        $fileId = Id::unique();
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, 0);
         $path = $this->path($deviceForFiles, $bucket, $fileId, $name);
@@ -520,31 +521,8 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
         }
 
-        $attributes = [];
-        foreach ($files['attributes'] as $attribute) {
-            $attributes[] = new Document([
-                '$id' => $attribute['$id'],
-                'type' => $attribute['type'],
-                'size' => $attribute['size'],
-                'required' => $attribute['required'],
-                'signed' => $attribute['signed'],
-                'array' => $attribute['array'],
-                'filters' => $attribute['filters'],
-                'default' => $attribute['default'] ?? null,
-                'format' => $attribute['format'] ?? '',
-            ]);
-        }
-
-        $indexes = [];
-        foreach ($files['indexes'] as $index) {
-            $indexes[] = new Document([
-                '$id' => $index['$id'],
-                'type' => $index['type'],
-                'attributes' => $index['attributes'],
-                'lengths' => $index['lengths'] ?? [],
-                'orders' => $index['orders'] ?? [],
-            ]);
-        }
+        $attributes = $files['attributes'];
+        $indexes = $files['indexes'];
 
         $permissions = Permission::aggregate(null) ?? [];
 
@@ -570,7 +548,13 @@ abstract class Base extends Action
 
         try {
             $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: false));
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createCollection(Collection::create(
+                id: 'bucket_' . $bucket->getSequence(),
+                attributes: $attributes,
+                indexes: $indexes,
+                permissions: $permissions,
+                documentSecurity: false,
+            )));
         } catch (\Throwable $error) {
             // Roll back the bucket document so a failed collection creation does
             // not leave an unusable bucket with no backing collection.
@@ -586,14 +570,14 @@ abstract class Base extends Action
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
-        $fileId = $existing?->getId() ?: ID::unique();
+        $fileId = $existing?->getId() ?: Id::unique();
         $folder = $object['folder'];
         $name = $object['name'];
         $this->validateFileConstraints($bucket, $name, \strlen($body));
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)
-            : $this->path($deviceForFiles, $bucket, ID::unique(), $name);
+            : $this->path($deviceForFiles, $bucket, Id::unique(), $name);
         $contentType = $this->contentType($name, $contentType, $body);
         $etag = \md5($body);
 
@@ -622,7 +606,7 @@ abstract class Base extends Action
                 ));
             } else {
                 $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getSequence(), new Document([
-                    '$id' => ID::custom($fileId),
+                    '$id' => Id::custom($fileId),
                     '$permissions' => [],
                     'bucketId' => $bucket->getId(),
                     'bucketInternalId' => $bucket->getSequence(),
@@ -682,7 +666,7 @@ abstract class Base extends Action
     {
         $contentType = $this->contentType($name, $contentType);
         $document = new Document([
-            '$id' => ID::custom($fileId),
+            '$id' => Id::custom($fileId),
             '$permissions' => [],
             'bucketId' => $bucket->getId(),
             'bucketInternalId' => $bucket->getSequence(),
