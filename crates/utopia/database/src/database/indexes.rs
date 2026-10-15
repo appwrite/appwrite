@@ -366,7 +366,7 @@ impl Database {
     /// Whether the schema's index is the requested one
     /// (`schemaIndexMatches()`): the same columns (past the tenant under
     /// shared tables), lengths and type.
-    fn schema_index_matches(&self, schema_index: &schema::Index, index: &Index) -> bool {
+    pub(crate) fn schema_index_matches(&self, schema_index: &schema::Index, index: &Index) -> bool {
         let mut columns: Vec<String> = schema_index.columns.iter().map(|c| c.to_ascii_lowercase()).collect();
         let mut lengths = schema_index.lengths.clone();
 

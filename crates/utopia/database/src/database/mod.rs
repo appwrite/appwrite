@@ -61,6 +61,8 @@ mod transactions;
 #[cfg(test)]
 mod core_tests;
 #[cfg(test)]
+mod schema_tests;
+#[cfg(test)]
 pub(crate) mod testing;
 
 use std::collections::HashMap;
