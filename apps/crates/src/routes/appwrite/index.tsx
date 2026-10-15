@@ -1,6 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
+import { FACTS } from '@/lib/facts'
 import { BOARD, COLUMNS } from '@/lib/tasks'
 import { Bar, MigrationGate, ServiceBadge, SourceLink, Stat } from '@/components/Appwrite'
 import { Measured } from '@/components/Bench'
@@ -189,7 +190,17 @@ function Overview() {
           ) : null}
         </Section>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link to="/appwrite/facts" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
+            <span className="flex items-center justify-between text-[14px] font-medium">
+              Facts and figures
+              <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground" />
+            </span>
+            <span className="text-[12.5px] text-muted-foreground">
+              The project in numbers: what was converted, how it was proven, how it performs and how it was built. Last changed{' '}
+              <Time date={FACTS.updated} />.
+            </span>
+          </Link>
           <Link to="/appwrite/tasks" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
             <span className="flex items-center justify-between text-[14px] font-medium">
               Task board

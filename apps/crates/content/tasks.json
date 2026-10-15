@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-15T18:18:00Z",
+  "updated": "2026-10-15T19:14:00Z",
   "tasks": [
+    {
+      "id": "db8-recordings",
+      "title": "Database 8: the last recording fixes",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-15T19:14:00Z",
+      "note": "Re-record Unit-WithCacheTest from the committed core.php, mask the SQLite connection id and one $sequence, the SQLSchemaBuilder stack overflow, and join tie order under load."
+    },
     {
       "id": "db8-mirror",
       "title": "Database 8: Mirror in Rust",
@@ -8,14 +16,6 @@
       "status": "progress",
       "note": "Mirror and Mirroring filters, the last unported part of the library: 55 sqlite Unit faults and every Mirror case on the redis shard.",
       "updated": "2026-10-15T17:16:00Z"
-    },
-    {
-      "id": "db8-identity",
-      "title": "Database 8: the remaining PHP-vs-Rust differences",
-      "area": "Database 8",
-      "status": "progress",
-      "note": "PHP object identity (createDocument mutating its input), TypeErrors on garbage adapter input, enum objects in documents, and recorder artifacts (unmasked connection ids, STAT4, REGEXP). Plus two cases the PHP fix surfaced: Query\\Method::Relationship missing in Rust, and the query-cache filter-signature hash.",
-      "updated": "2026-10-15T18:18:00Z"
     },
     {
       "id": "db8-green",
@@ -88,6 +88,22 @@
       "status": "todo",
       "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "facts-page",
+      "title": "Facts and figures page",
+      "area": "Docs",
+      "status": "done",
+      "updated": "2026-10-15T19:14:00Z",
+      "note": "/appwrite/facts: the project in numbers for the write-up, kept current with the board."
+    },
+    {
+      "id": "db8-identity",
+      "title": "Database 8: the remaining PHP-vs-Rust differences",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Object identity, garbage-input TypeErrors, enums in documents, the Relationship query type and the recorder artifacts fixed on the Rust side: the database replay went from 324 failing steps to 80 (55 Mirror, 20 a SQLite join under load, 5 left).",
+      "updated": "2026-10-15T19:14:00Z"
     },
     {
       "id": "db8-php-enter",
