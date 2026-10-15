@@ -60,6 +60,18 @@ impl Input {
     pub fn new(action: impl Into<Action>, permissions: Vec<String>) -> Self {
         Self { action: action.into().0, permissions }
     }
+
+    /// Replaces the action (`setAction()`).
+    pub fn set_action(&mut self, action: impl Into<Action>) -> &mut Self {
+        self.action = action.into().0;
+        self
+    }
+
+    /// Replaces the permissions (`setPermissions()`).
+    pub fn set_permissions(&mut self, permissions: Vec<String>) -> &mut Self {
+        self.permissions = permissions;
+        self
+    }
 }
 
 /// An action of an [`Input`]: a [`PermissionType`] or a name.
