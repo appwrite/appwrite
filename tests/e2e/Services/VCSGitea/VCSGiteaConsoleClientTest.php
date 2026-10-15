@@ -9,7 +9,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -719,7 +718,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $after = $this->client->call(Client::METHOD_GET, $path, $headers, [
             'queries' => [
                 Query::limit(1)->toString(),
-                Query::cursorAfter(new Document(['$id' => $names[0]]))->toString(),
+                '{"method":"cursorAfter","values":["' . $names[0] . '"]}',
             ],
         ]);
         $this->assertEquals(200, $after['headers']['status-code'], \json_encode($after['body']));
@@ -728,7 +727,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $before = $this->client->call(Client::METHOD_GET, $path, $headers, [
             'queries' => [
                 Query::limit(1)->toString(),
-                Query::cursorBefore(new Document(['$id' => $names[2]]))->toString(),
+                '{"method":"cursorBefore","values":["' . $names[2] . '"]}',
             ],
         ]);
         $this->assertEquals(200, $before['headers']['status-code'], \json_encode($before['body']));
