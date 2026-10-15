@@ -19,7 +19,7 @@ use utopia_database::index::Index;
 use utopia_database::profiler::Log;
 use utopia_database::relationship::{self, Relationship};
 use utopia_database::schema;
-use utopia_database::value::{self, Array, Value};
+use utopia_database::value::{self, Value};
 
 use super::codec;
 use super::ctx::{R, fault};

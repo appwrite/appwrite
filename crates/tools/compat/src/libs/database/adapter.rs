@@ -698,7 +698,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         },
         // ----- Builders -----
         "builder" => match adapter.query_builder() {
-            Some(q) => object(BuilderObj(Arc::new(std::sync::Mutex::new(q.builder()?)))),
+            Some(q) => object(BuilderObj(Arc::new(std::sync::Mutex::new(q.builder()?)), None)),
             None => return fault(format!("{} has no method `builder`", open::adapter_class(&**adapter))),
         },
         "schema" => match adapter.query_builder() {

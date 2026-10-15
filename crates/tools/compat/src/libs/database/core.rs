@@ -11,7 +11,7 @@ use super::convert::{IntoObj, object, strings};
 use super::ctx::{R, fault};
 use super::database::{self, AuthorizationObj, ProfilerObj};
 use super::obj::Obj;
-use super::{codec, fixtures, objects, open};
+use super::{fixtures, objects, open};
 
 /// `fooBarBaz` from `foo_bar_baz` (the inverse of `Core::snake`).
 pub fn camel(snake: &str) -> String {
