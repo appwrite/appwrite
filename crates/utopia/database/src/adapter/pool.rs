@@ -162,11 +162,17 @@ struct Answers {
 /// The answers of each live pool (PHP's `WeakMap` keyed by the pool).
 static ANSWERS: Mutex<Vec<Registered>> = Mutex::new(Vec::new());
 
+/// Whether a pool (as `Any`) is the registered one.
+type IsPool = dyn Fn(&dyn Any) -> bool + Send;
+
+/// A synchronous call on an adapter.
+type SyncCall<'a, R> = Box<dyn FnOnce(&dyn Adapter) -> Result<R> + 'a>;
+
 /// A pool's answers, with whether the pool still exists and whether a
 /// pool is it.
 struct Registered {
     alive: Box<dyn Fn() -> bool + Send>,
-    is: Box<dyn Fn(&dyn Any) -> bool + Send>,
+    is: Box<IsPool>,
     answers: Arc<Answers>,
 }
 
@@ -632,7 +638,7 @@ impl<S: utopia_pools::Adapter<Pooled>> Pool<S> {
         f: impl FnOnce(&dyn Adapter) -> Result<R>,
     ) -> Result<R> {
         let ignoring = self.state.ignoring_duplicates().get();
-        let invoke = |adapter: &dyn Adapter, f: Box<dyn FnOnce(&dyn Adapter) -> Result<R> + '_>| {
+        let invoke = |adapter: &dyn Adapter, f: SyncCall<'_, R>| {
             if ignoring { adapter.state().ignoring_duplicates().with_sync(true, || f(adapter)) } else { f(adapter) }
         };
         if let Some(pinned) = pinned {

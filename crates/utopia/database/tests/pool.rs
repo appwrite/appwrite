@@ -456,13 +456,12 @@ fn observe(snapshot: &probe::Snapshot, what: &str) -> String {
     }
 }
 
+/// A change, what it is observed as, and the expected observation.
+type SyncChange = (&'static str, Box<dyn Fn(&Pool<Backing>) + Send + Sync>, &'static str, String);
+
 /// `PoolSyncTest::changes()`: a change, what it is observed as, and the
 /// expected observation.
-fn changes(
-    second: &Arc<dyn Transform>,
-    other: &Arc<Profiler>,
-    first: &Arc<dyn Transform>,
-) -> Vec<(&'static str, Box<dyn Fn(&Pool<Backing>) + Send + Sync>, &'static str, String)> {
+fn changes(second: &Arc<dyn Transform>, other: &Arc<Profiler>, first: &Arc<dyn Transform>) -> Vec<SyncChange> {
     let (s1, s2, s3) = (second.clone(), second.clone(), other.clone());
     let f = first.clone();
     vec![
