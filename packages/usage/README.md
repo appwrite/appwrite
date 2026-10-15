@@ -52,7 +52,8 @@ $adapter = new ClickHouse(
 );
 
 $usage = new Usage($adapter);
-$usage->setup(); // Creates events, gauges, and daily MV tables
+$usage->setup(); // Creates events, gauges, and daily MV tables, then applies retention
+$usage->migrate(); // Adds what an existing schema lacks, leaving retention as it is
 ```
 
 ### Using Database Adapter
