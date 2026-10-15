@@ -27,7 +27,15 @@ fn keys(attributes: &[Attribute]) -> Vec<String> {
 fn find_collection_returns_the_stored_collection() {
     block_on(async {
         let (_, db) = memory().await;
-        let books = Collection::create("books", "Books", vec![Attribute::string("title", 64)], Vec::new(), None, true, Array::new());
+        let books = Collection::create(
+            "books",
+            "Books",
+            vec![Attribute::string("title", 64)],
+            Vec::new(),
+            None,
+            true,
+            Array::new(),
+        );
         db.create_collection(books.unwrap()).await.unwrap();
         let found = db.find_collection("books").await.unwrap().unwrap();
         assert_eq!(found.id(), "books");
@@ -84,7 +92,8 @@ fn update_collection_changes_only_the_given_fields() {
     block_on(async {
         let (_, db) = memory().await;
         let permissions = vec![Permission::read(&Role::any())];
-        let books = Collection::create("books", "", Vec::new(), Vec::new(), Some(permissions.clone()), true, Array::new());
+        let books =
+            Collection::create("books", "", Vec::new(), Vec::new(), Some(permissions.clone()), true, Array::new());
         db.create_collection(books.unwrap()).await.unwrap();
 
         let updated =
@@ -161,7 +170,8 @@ fn the_metadata_collection_is_defined() {
     assert!(!definition.document_security());
     assert!(definition.indexes().unwrap().is_empty());
     assert!(!definition.is_set("externalId"));
-    let shapes: Vec<(String, ColumnType, Option<i64>, bool, Vec<String>)> = definition
+    type Shape = (String, ColumnType, Option<i64>, bool, Vec<String>);
+    let shapes: Vec<Shape> = definition
         .attributes()
         .unwrap()
         .iter()
@@ -205,7 +215,10 @@ fn internal_attributes_follow_the_shared_tables_setting() {
         let names = |db: &crate::database::Database| keys(db.internal_attributes());
         assert_eq!(names(&db), ["$id", "$sequence", "$collection", "$createdAt", "$updatedAt", "$permissions"]);
         db.set_shared_tables(true);
-        assert_eq!(names(&db), ["$id", "$sequence", "$collection", "$tenant", "$createdAt", "$updatedAt", "$permissions"]);
+        assert_eq!(
+            names(&db),
+            ["$id", "$sequence", "$collection", "$tenant", "$createdAt", "$updatedAt", "$permissions"]
+        );
         db.set_shared_tables(false);
         assert!(!names(&db).contains(&"$tenant".to_owned()));
     });
@@ -228,13 +241,90 @@ fn internal_attributes_keep_their_stored_shape() {
         let s = |v: &str| Value::Str(Str::from(v));
         let list = |items: Vec<Value>| Value::Array(Array::from_list(items));
         let expected = vec![
-            ("$id", vec![s("string"), Value::Int(LENGTH_KEY), Value::Bool(true), Value::Null, Value::Bool(true), Value::Bool(false), list(vec![])]),
-            ("$sequence", vec![s("id"), Value::Int(0), Value::Bool(true), Value::Null, Value::Bool(true), Value::Bool(false), list(vec![])]),
-            ("$collection", vec![s("string"), Value::Int(LENGTH_KEY), Value::Bool(true), Value::Null, Value::Bool(true), Value::Bool(false), list(vec![])]),
-            ("$tenant", vec![s("id"), Value::Int(0), Value::Bool(false), Value::Null, Value::Bool(true), Value::Bool(false), list(vec![])]),
-            ("$createdAt", vec![s("datetime"), Value::Int(0), Value::Bool(false), Value::Null, Value::Bool(false), Value::Bool(false), list(vec![s("datetime")])]),
-            ("$updatedAt", vec![s("datetime"), Value::Int(0), Value::Bool(false), Value::Null, Value::Bool(false), Value::Bool(false), list(vec![s("datetime")])]),
-            ("$permissions", vec![s("string"), Value::Int(1_000_000), Value::Bool(false), list(vec![]), Value::Bool(true), Value::Bool(false), list(vec![s("json")])]),
+            (
+                "$id",
+                vec![
+                    s("string"),
+                    Value::Int(LENGTH_KEY),
+                    Value::Bool(true),
+                    Value::Null,
+                    Value::Bool(true),
+                    Value::Bool(false),
+                    list(vec![]),
+                ],
+            ),
+            (
+                "$sequence",
+                vec![
+                    s("id"),
+                    Value::Int(0),
+                    Value::Bool(true),
+                    Value::Null,
+                    Value::Bool(true),
+                    Value::Bool(false),
+                    list(vec![]),
+                ],
+            ),
+            (
+                "$collection",
+                vec![
+                    s("string"),
+                    Value::Int(LENGTH_KEY),
+                    Value::Bool(true),
+                    Value::Null,
+                    Value::Bool(true),
+                    Value::Bool(false),
+                    list(vec![]),
+                ],
+            ),
+            (
+                "$tenant",
+                vec![
+                    s("id"),
+                    Value::Int(0),
+                    Value::Bool(false),
+                    Value::Null,
+                    Value::Bool(true),
+                    Value::Bool(false),
+                    list(vec![]),
+                ],
+            ),
+            (
+                "$createdAt",
+                vec![
+                    s("datetime"),
+                    Value::Int(0),
+                    Value::Bool(false),
+                    Value::Null,
+                    Value::Bool(false),
+                    Value::Bool(false),
+                    list(vec![s("datetime")]),
+                ],
+            ),
+            (
+                "$updatedAt",
+                vec![
+                    s("datetime"),
+                    Value::Int(0),
+                    Value::Bool(false),
+                    Value::Null,
+                    Value::Bool(false),
+                    Value::Bool(false),
+                    list(vec![s("datetime")]),
+                ],
+            ),
+            (
+                "$permissions",
+                vec![
+                    s("string"),
+                    Value::Int(1_000_000),
+                    Value::Bool(false),
+                    list(vec![]),
+                    Value::Bool(true),
+                    Value::Bool(false),
+                    list(vec![s("json")]),
+                ],
+            ),
         ];
         let expected: Vec<(String, Vec<Value>)> = expected.into_iter().map(|(k, v)| (k.to_owned(), v)).collect();
         assert_eq!(stored, expected);
@@ -258,15 +348,22 @@ fn a_metadata_failure_whose_cleanup_also_fails_keeps_the_metadata_failure() {
     block_on(async {
         let (adapter, db) = memory().await;
         adapter.on(|call| match call {
-            Call::CreateDocument { collection, document } if collection.id() == METADATA && document.id() == "failing" => {
+            Call::CreateDocument { collection, document }
+                if collection.id() == METADATA && document.id() == "failing" =>
+            {
                 Some(Reply::Error(Error::new(Kind::Runtime, "the definition could not be written")))
             }
-            Call::DeleteCollection { .. } => Some(Reply::Error(Error::new(Kind::Runtime, "the table could not be dropped"))),
+            Call::DeleteCollection { .. } => {
+                Some(Reply::Error(Error::new(Kind::Runtime, "the table could not be dropped")))
+            }
             _ => None,
         });
         let error = db.create_collection(collection("failing", Vec::new(), Vec::new())).await.unwrap_err();
         assert_eq!(error.kind(), Kind::Database);
-        assert_eq!(error.message(), "Failed to create collection metadata for 'failing': the definition could not be written");
+        assert_eq!(
+            error.message(),
+            "Failed to create collection metadata for 'failing': the definition could not be written"
+        );
         assert!(error.previous().is_some_and(|p| p.kind() == Kind::Runtime));
         // The cleanup was tried (with retries) and its failure logged.
         assert!(adapter.count("deleteCollection") >= 1);
@@ -301,7 +398,9 @@ fn a_lost_creation_race_keeps_the_table() {
     block_on(async {
         let (adapter, db) = memory().await;
         adapter.on(|call| match call {
-            Call::CreateDocument { collection, document } if collection.id() == METADATA && document.id() == "raced" => {
+            Call::CreateDocument { collection, document }
+                if collection.id() == METADATA && document.id() == "raced" =>
+            {
                 Some(Reply::Error(Error::duplicate("Document already exists")))
             }
             _ => None,
@@ -321,9 +420,14 @@ fn create_collection_does_not_drop_an_uncommitted_peer_table() {
     block_on(async {
         let (adapter, db) = memory().await;
         let name = Attribute::string("name", 128);
-        crate::adapter::Adapter::create_collection(adapter.as_ref(), "preCommitCreate", std::slice::from_ref(&name), &[])
-            .await
-            .unwrap();
+        crate::adapter::Adapter::create_collection(
+            adapter.as_ref(),
+            "preCommitCreate",
+            std::slice::from_ref(&name),
+            &[],
+        )
+        .await
+        .unwrap();
         let error = db.create_collection(collection("preCommitCreate", vec![name], Vec::new())).await.unwrap_err();
         assert_eq!(error.kind(), Kind::Duplicate);
         assert_eq!(error.message(), "Collection preCommitCreate already exists");
@@ -364,7 +468,9 @@ fn a_collection_or_attribute_whose_definition_is_unconfirmed_keeps_its_storage()
         let (adapter, db) = memory().await;
         adapter.on(|call| match call {
             Call::CreateDocument { collection, document } if collection.id() == METADATA && document.id() == "logs" => {
-                Some(Reply::Error(Error::unconfirmed("Failed to commit transaction: the commit could not be confirmed")))
+                Some(Reply::Error(Error::unconfirmed(
+                    "Failed to commit transaction: the commit could not be confirmed",
+                )))
             }
             _ => None,
         });
@@ -376,9 +482,9 @@ fn a_collection_or_attribute_whose_definition_is_unconfirmed_keeps_its_storage()
         adapter.off();
         db.create_collection(collection("items", Vec::new(), Vec::new())).await.unwrap();
         adapter.on(|call| match call {
-            Call::UpdateDocument { collection, id, .. } if collection.id() == METADATA && id == "items" => {
-                Some(Reply::Error(Error::unconfirmed("Failed to commit transaction: the commit could not be confirmed")))
-            }
+            Call::UpdateDocument { collection, id, .. } if collection.id() == METADATA && id == "items" => Some(
+                Reply::Error(Error::unconfirmed("Failed to commit transaction: the commit could not be confirmed")),
+            ),
             _ => None,
         });
         adapter.clear_calls();
@@ -396,8 +502,10 @@ fn a_point_attribute_is_refused_on_memory_when_validating() {
     block_on(async {
         let (_, db) = memory().await;
         db.set_validation(true);
-        let error =
-            db.create_collection(collection("places", vec![Attribute::point("location")], Vec::new())).await.unwrap_err();
+        let error = db
+            .create_collection(collection("places", vec![Attribute::point("location")], Vec::new()))
+            .await
+            .unwrap_err();
         assert!(error.is_a(Kind::Database));
         assert_eq!(error.message(), "Spatial attributes are not supported");
     });

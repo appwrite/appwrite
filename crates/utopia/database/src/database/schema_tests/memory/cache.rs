@@ -3,7 +3,6 @@
 
 use std::sync::Arc;
 
-
 use crate::attribute::{Attribute, Update};
 use crate::collection::Update as CollectionUpdate;
 use crate::database::testing::{Call, block_on};
@@ -134,12 +133,18 @@ fn the_cached_definition_serves_its_current_permissions() {
         let adapter = Intercepted::new();
         let db = database(adapter.clone(), cache(), "definitions_permissions").await;
         cached_read(&db, &adapter).await;
-        assert_eq!(db.get_collection("books").await.unwrap().permissions_by_type(PermissionType::Read.as_str()).unwrap(), ["any"]);
+        assert_eq!(
+            db.get_collection("books").await.unwrap().permissions_by_type(PermissionType::Read.as_str()).unwrap(),
+            ["any"]
+        );
 
         let permissions = vec![Permission::read(&Role::users("")), Permission::update(&Role::any())];
-        db.update_collection("books", CollectionUpdate { permissions: Some(permissions), document_security: Some(false) })
-            .await
-            .unwrap();
+        db.update_collection(
+            "books",
+            CollectionUpdate { permissions: Some(permissions), document_security: Some(false) },
+        )
+        .await
+        .unwrap();
         cached_read(&db, &adapter).await;
         let collection = db.get_collection("books").await.unwrap();
         assert_eq!(collection.permissions_by_type(PermissionType::Read.as_str()).unwrap(), ["users"]);

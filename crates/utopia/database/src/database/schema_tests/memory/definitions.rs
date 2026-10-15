@@ -63,7 +63,9 @@ fn create_attribute_and_index_store_the_fitted_definitions() {
             .await
             .unwrap();
         db.create_attribute("events", Attribute::datetime("startsAt")).await.unwrap();
-        db.create_attributes("events", vec![Attribute::datetime("endsAt"), Attribute::string("label", 32)]).await.unwrap();
+        db.create_attributes("events", vec![Attribute::datetime("endsAt"), Attribute::string("label", 32)])
+            .await
+            .unwrap();
         let events = db.get_collection("events").await.unwrap();
         assert_eq!(events.attributes().unwrap()[1].filters, ["datetime"]);
         assert_eq!(events.attributes().unwrap()[2].filters, ["datetime"]);

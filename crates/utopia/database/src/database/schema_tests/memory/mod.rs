@@ -8,6 +8,7 @@ mod collections;
 mod definitions;
 mod indexes;
 mod relationships;
+mod types;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};

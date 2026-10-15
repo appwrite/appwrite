@@ -73,7 +73,10 @@ fn creates_every_index_and_returns_them_as_stored() {
         let created = db
             .create_indexes(
                 "users",
-                vec![unique("by_email", &["email"]), Index::key("by_name", ["name"], vec![Some(64)], Vec::new()).unwrap()],
+                vec![
+                    unique("by_email", &["email"]),
+                    Index::key("by_name", ["name"], vec![Some(64)], Vec::new()).unwrap(),
+                ],
             )
             .await
             .unwrap();
@@ -164,7 +167,10 @@ fn create_index_returns_the_stored_model() {
     block_on(async {
         let (_, db) = books().await;
         let created = db
-            .create_index("books", Index::key("by_title", ["title"], vec![Some(64)], vec![Some(OrderDirection::Desc)]).unwrap())
+            .create_index(
+                "books",
+                Index::key("by_title", ["title"], vec![Some(64)], vec![Some(OrderDirection::Desc)]).unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(created.lengths, vec![None]);
@@ -232,7 +238,8 @@ fn a_unique_index_over_duplicate_values_is_refused_without_metadata() {
             db.create_document("pets", pet(Some(id))).await.unwrap();
         }
         for attribute in ["name", "age"] {
-            let error = db.create_index("pets", unique(&format!("unique_{attribute}"), &[attribute])).await.unwrap_err();
+            let error =
+                db.create_index("pets", unique(&format!("unique_{attribute}"), &[attribute])).await.unwrap_err();
             assert!(error.is_a(Kind::Unique), "{attribute}: {error:?}");
             assert!(index_keys(&db, "pets").await.is_empty(), "no metadata is left for {attribute}");
         }
@@ -323,7 +330,8 @@ fn deleting_an_index_the_schema_no_longer_has_succeeds() {
     block_on(async {
         let (adapter, db) = catalog().await;
         adapter.on(|call| {
-            matches!(call, Call::DeleteIndex { .. }).then(|| Reply::Error(Error::not_found("Index not found in the schema")))
+            matches!(call, Call::DeleteIndex { .. })
+                .then(|| Reply::Error(Error::not_found("Index not found in the schema")))
         });
         db.delete_index("catalog", "existing").await.unwrap();
         assert!(index_keys(&db, "catalog").await.is_empty());

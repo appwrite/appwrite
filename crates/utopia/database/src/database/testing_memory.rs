@@ -174,7 +174,12 @@ impl Adapter for Intercepted {
     }
 
     async fn update(&self, name: &str, new: &str) -> Result<bool> {
-        answer!(self, Call::Update { name: name.into(), new: new.into() }, bool_reply, self.inner.update(name, new).await)
+        answer!(
+            self,
+            Call::Update { name: name.into(), new: new.into() },
+            bool_reply,
+            self.inner.update(name, new).await
+        )
     }
 
     async fn exists(&self, database: &str) -> Result<bool> {
@@ -519,8 +524,12 @@ impl Adapter for Intercepted {
         queries: Vec<Query>,
         max: Option<i64>,
     ) -> Result<Value> {
-        match self.call(Call::Sum { collection: collection.clone(), attribute: attribute.into(), queries: queries.clone(), max })
-        {
+        match self.call(Call::Sum {
+            collection: collection.clone(),
+            attribute: attribute.into(),
+            queries: queries.clone(),
+            max,
+        }) {
             Some(Reply::Value(v)) => Ok(v),
             Some(Reply::Int(i)) => Ok(Value::Int(i)),
             Some(Reply::Error(e)) => Err(e),

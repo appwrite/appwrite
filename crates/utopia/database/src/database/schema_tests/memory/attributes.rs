@@ -52,7 +52,10 @@ fn create_attribute_returns_the_stored_model() {
     block_on(async {
         let (_, db) = items().await;
         let created = db
-            .create_attribute("items", from_array(&[("key", s("at")), ("type", s("datetime")), ("signed", Value::Bool(true))]))
+            .create_attribute(
+                "items",
+                from_array(&[("key", s("at")), ("type", s("datetime")), ("signed", Value::Bool(true))]),
+            )
             .await
             .unwrap();
         assert_eq!(created.filters, ["datetime"]);
@@ -199,7 +202,8 @@ fn default(value: Value) -> Patch<Value> {
 fn unset_fields_keep_their_values() {
     block_on(async {
         let (_, db) = updatable().await;
-        let updated = db.update_attribute("items", "name", Update { size: Some(128), ..Update::default() }).await.unwrap();
+        let updated =
+            db.update_attribute("items", "name", Update { size: Some(128), ..Update::default() }).await.unwrap();
         assert_eq!(updated.size, Some(128));
         assert_eq!(updated.default, s("none"));
         assert!(!updated.required);
@@ -215,7 +219,9 @@ fn a_null_default_clears_the_default_and_a_value_sets_it() {
             db.update_attribute("items", "name", Update { default: default(Value::Null), ..Update::default() }).await;
         assert_eq!(updated.unwrap().default, Value::Null);
         assert_eq!(stored(&db, "items", "name").await.default, Value::Null);
-        db.update_attribute("items", "name", Update { default: default(s("other")), ..Update::default() }).await.unwrap();
+        db.update_attribute("items", "name", Update { default: default(s("other")), ..Update::default() })
+            .await
+            .unwrap();
         assert_eq!(stored(&db, "items", "name").await.default, s("other"));
     });
 }
@@ -248,7 +254,11 @@ fn a_required_attribute_takes_a_default_when_made_optional_in_the_same_update() 
     block_on(async {
         let (_, db) = updatable().await;
         let updated = db
-            .update_attribute("items", "code", Update { required: Some(false), default: default(s("x")), ..Update::default() })
+            .update_attribute(
+                "items",
+                "code",
+                Update { required: Some(false), default: default(s("x")), ..Update::default() },
+            )
             .await
             .unwrap();
         assert!(!updated.required);
@@ -268,7 +278,11 @@ fn making_an_attribute_required_clears_its_default() {
 
         let (_, db) = updatable().await;
         let updated = db
-            .update_attribute("items", "name", Update { required: Some(true), default: default(Value::Null), ..Update::default() })
+            .update_attribute(
+                "items",
+                "name",
+                Update { required: Some(true), default: default(Value::Null), ..Update::default() },
+            )
             .await
             .unwrap();
         assert!(updated.required);
@@ -284,7 +298,9 @@ fn making_an_attribute_optional_relaxes_its_column() {
         assert_eq!(adapter.count("relaxAttributeRequired"), 1);
         assert_eq!(adapter.count("updateAttribute"), 0);
         let mut document = Document::empty();
-        document.set(document::PERMISSIONS, Value::Array(Array::from_list(vec![s(&Permission::read(&Role::any()))]))).unwrap();
+        document
+            .set(document::PERMISSIONS, Value::Array(Array::from_list(vec![s(&Permission::read(&Role::any()))])))
+            .unwrap();
         let created = db.create_document("items", document).await.unwrap();
         assert_eq!(created.get("code"), None);
         assert!(!stored(&db, "items", "code").await.required);
@@ -306,7 +322,10 @@ fn format_and_filters_are_replaced_and_an_unknown_format_is_refused() {
         assert_eq!(name.format, None);
         assert_eq!(name.filters, ["json"]);
 
-        let update = Update { format: Patch::Set(Some(Format::new("not-registered", Array::new()).unwrap())), ..Update::default() };
+        let update = Update {
+            format: Patch::Set(Some(Format::new("not-registered", Array::new()).unwrap())),
+            ..Update::default()
+        };
         assert!(db.update_attribute("items", "name", update).await.unwrap_err().is_a(Kind::Database));
     });
 }
@@ -365,7 +384,9 @@ fn a_relaxed_attribute_accepts_a_null() {
         assert!(!stored(&db, "items", "name").await.required);
         let mut document = Document::empty();
         document.set(document::ID, s("nameless")).unwrap();
-        document.set(document::PERMISSIONS, Value::Array(Array::from_list(vec![s(&Permission::read(&Role::any()))]))).unwrap();
+        document
+            .set(document::PERMISSIONS, Value::Array(Array::from_list(vec![s(&Permission::read(&Role::any()))])))
+            .unwrap();
         document.set("name", Value::Null).unwrap();
         assert_eq!(db.create_document("items", document).await.unwrap().id(), "nameless");
         assert_eq!(db.get_document("items", "nameless", Vec::new(), false).await.unwrap().get("name"), None);
@@ -374,7 +395,8 @@ fn a_relaxed_attribute_accepts_a_null() {
 
 // ---- CreateAttributesRollbackTest -------------------------------------
 
-const PREFIX: &str = "Failed to persist metadata after retries and cleanup encountered errors for attributes creation: ";
+const PREFIX: &str =
+    "Failed to persist metadata after retries and cleanup encountered errors for attributes creation: ";
 
 /// Memory whose metadata writes fail and whose drops of `locked` columns
 /// fail with `drop` (`Column '<key>' is locked` by default).
@@ -414,7 +436,9 @@ fn cleanup_errors_for_every_column_that_could_not_be_dropped_follow_the_metadata
         let error = db.create_attributes("profiles", strings(&["title", "nick", "bio"])).await.unwrap_err();
         assert_eq!(
             error.message(),
-            format!("{PREFIX}metadata store is read-only | Cleanup errors: Column 'nick' is locked, Column 'bio' is locked")
+            format!(
+                "{PREFIX}metadata store is read-only | Cleanup errors: Column 'nick' is locked, Column 'bio' is locked"
+            )
         );
         assert_eq!(error.previous().map(Error::message), Some("metadata store is read-only"));
         assert_eq!(dropped(&adapter, locked), ["title"]);
@@ -428,7 +452,10 @@ fn a_clean_rollback_reports_only_the_metadata_error_and_lets_the_create_be_retri
     block_on(async {
         let (adapter, db) = rolling_back(&[], |key| Error::database(key.to_owned())).await;
         let error = db.create_attributes("profiles", strings(&["title", "nick"])).await.unwrap_err();
-        assert_eq!(error.message(), "Failed to persist metadata after retries for attributes creation: metadata store is read-only");
+        assert_eq!(
+            error.message(),
+            "Failed to persist metadata after retries for attributes creation: metadata store is read-only"
+        );
         assert_eq!(dropped(&adapter, &[]), ["title", "nick"]);
         adapter.off();
         assert!(attribute_keys(&db, "profiles").await.is_empty());
@@ -449,7 +476,9 @@ fn a_driver_error_while_dropping_a_column_is_collected_and_the_remaining_columns
         let error = db.create_attributes("profiles", strings(&["nick", "title"])).await.unwrap_err();
         assert_eq!(
             error.message(),
-            format!("{PREFIX}metadata store is read-only | Cleanup errors: SQLSTATE[55P03]: lock not available on 'nick'")
+            format!(
+                "{PREFIX}metadata store is read-only | Cleanup errors: SQLSTATE[55P03]: lock not available on 'nick'"
+            )
         );
         assert_eq!(dropped(&adapter, locked), ["title"]);
     });
@@ -476,10 +505,7 @@ fn the_check_counts_the_collections_attributes_against_the_limit() {
     block_on(async {
         let (adapter, db) = memory().await;
         let limits = crate::adapter::Adapter::limits(adapter.as_ref());
-        adapter.set_limits(crate::adapter::Limits {
-            attributes: limits.default_attributes + 4,
-            ..(*limits).clone()
-        });
+        adapter.set_limits(crate::adapter::Limits { attributes: limits.default_attributes + 4, ..(*limits).clone() });
         db.create_collection(collection(
             "items",
             vec![Attribute::string("first", 16), Attribute::string("second", 16), Attribute::string("third", 16)],

@@ -85,9 +85,8 @@ fn object_attributes_take_their_defaults() {
         let error = f.db.create_document("objDefaults", readable(vec![(document::ID, s("def1"))])).await.unwrap_err();
         assert!(error.is_a(Kind::Structure), "{error:?}");
 
-        let created = f
-            .db
-            .create_document(
+        let created =
+            f.db.create_document(
                 "objDefaults",
                 readable(vec![(document::ID, s("def2")), ("profile", assoc(vec![("name", s("provided"))]))]),
             )
@@ -128,9 +127,8 @@ fn invalid_spatial_values_are_refused() {
 fn invalid_coordinates_are_refused() {
     block_on(async {
         let f = fixture("test_invalid_coord", vec![Attribute::point("pointAttr").required(true)], &[]);
-        let error = f
-            .db
-            .create_document(
+        let error =
+            f.db.create_document(
                 "test_invalid_coord",
                 readable(vec![(document::ID, s("invalidDoc1")), ("pointAttr", floats(&[200.0, 20.0]))]),
             )
@@ -167,8 +165,14 @@ fn spatial_indexes_take_one_spatial_attribute_and_other_indexes_none() {
             ],
             &[],
         );
-        let multi =
-            Index::new("idx_multi", IndexType::Spatial, vec!["loc".into(), "loc2".into()], Vec::new(), Vec::new(), None);
+        let multi = Index::new(
+            "idx_multi",
+            IndexType::Spatial,
+            vec!["loc".into(), "loc2".into()],
+            Vec::new(),
+            Vec::new(),
+            None,
+        );
         for index in [
             multi.unwrap(),
             Index::spatial("idx_name_spatial", "name", None).unwrap(),
@@ -194,9 +198,10 @@ fn vector_attributes_need_valid_dimensions() {
     block_on(async {
         let f = fixture("vectorError", Vec::new(), &[Capability::Vectors]);
         let key = |k: &str| ArrayKey::Str(Str::from(k));
-        let data: Array = [(key("key"), s("bad_embedding")), (key("type"), s("vector")), (key("required"), Value::Bool(true))]
-            .into_iter()
-            .collect();
+        let data: Array =
+            [(key("key"), s("bad_embedding")), (key("type"), s("vector")), (key("required"), Value::Bool(true))]
+                .into_iter()
+                .collect();
         let error = f.db.create_attribute("vectorError", Attribute::from_array(&data).unwrap()).await.unwrap_err();
         assert_eq!(error.message(), "Vector dimensions must be a positive integer");
         let error =
@@ -304,14 +309,16 @@ fn schemaless_indexes_refuse_duplicates_and_a_second_ttl_index() {
         assert!(f.db.create_index("sl_idx_dup", index()).await.unwrap_err().is_a(Kind::Duplicate));
 
         assert_eq!(
-            f.db.create_index("sl_idx_dup", Index::ttl("idx_ttl_expires", "expiresAt", 3600).unwrap()).await.unwrap().key,
+            f.db.create_index("sl_idx_dup", Index::ttl("idx_ttl_expires", "expiresAt", 3600).unwrap())
+                .await
+                .unwrap()
+                .key,
             "idx_ttl_expires"
         );
-        let error = f
-            .db
-            .create_index("sl_idx_dup", Index::ttl("idx_ttl_expires_duplicate", "expiresAt", 7200).unwrap())
-            .await
-            .unwrap_err();
+        let error =
+            f.db.create_index("sl_idx_dup", Index::ttl("idx_ttl_expires_duplicate", "expiresAt", 7200).unwrap())
+                .await
+                .unwrap_err();
         assert!(error.message().contains("There can be only one TTL index in a collection"), "{error:?}");
     });
 }
@@ -323,7 +330,7 @@ fn schemaless_documents_carry_their_internal_attributes() {
         let any = Role::any();
         let mut d = readable(vec![(document::ID, s("i1")), ("name", s("alpha"))]);
         let permissions =
-            vec![Permission::read(&any), Permission::create(&any), Permission::update(&any), Permission::delete(&any)];
+            [Permission::read(&any), Permission::create(&any), Permission::update(&any), Permission::delete(&any)];
         d.set(document::PERMISSIONS, list(permissions.iter().map(|p| s(p)).collect())).unwrap();
         let created = f.db.create_document("sl_internal", d).await.unwrap();
         assert_eq!(created.id(), "i1");

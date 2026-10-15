@@ -120,7 +120,8 @@ fn a_failed_second_index_rename_reverses_the_first_and_the_definitions() {
         let one_to_one = Relationship::one_to_one("authors").two_way(true).key("library").two_way_key("owner");
         db.create_relationship("books", one_to_one).await.unwrap();
         db.delete_index("authors", "_index_owner").await.unwrap();
-        let update = Update { key: Some("shelf".to_owned()), two_way_key: Some("keeper".to_owned()), ..Update::default() };
+        let update =
+            Update { key: Some("shelf".to_owned()), two_way_key: Some("keeper".to_owned()), ..Update::default() };
         let error = db.update_relationship("books", "library", update).await.unwrap_err();
         assert_eq!(error.message(), "Failed to update relationship indexes for 'library': Index not found");
         assert_eq!(index(&db, "books", "_index_library").await.unwrap().attributes, ["library"]);
@@ -182,7 +183,9 @@ fn a_failed_index_rolls_back_and_a_failed_relationship_cleanup_is_logged() {
             Call::CreateIndex { index, .. } if index.key == "_index_owner" => {
                 Some(Reply::Error(Error::new(Kind::Runtime, "cannot index the owner")))
             }
-            Call::DeleteRelationship { .. } => Some(Reply::Error(Error::new(Kind::Runtime, "cannot drop the relationship"))),
+            Call::DeleteRelationship { .. } => {
+                Some(Reply::Error(Error::new(Kind::Runtime, "cannot drop the relationship")))
+            }
             _ => None,
         });
         let one_to_one = Relationship::one_to_one("authors").two_way(true).key("library").two_way_key("owner");
@@ -217,7 +220,10 @@ fn renaming_from_the_child_side_of_a_one_to_many_renames_its_index() {
         db.create_document("books", doc(&[(document::ID, "notes"), ("title", "Notes"), ("author", "ada")]))
             .await
             .unwrap();
-        assert_eq!(db.update_relationship("books", "author", rename("writer")).await.unwrap().key.as_deref(), Some("writer"));
+        assert_eq!(
+            db.update_relationship("books", "author", rename("writer")).await.unwrap().key.as_deref(),
+            Some("writer")
+        );
         assert_eq!(index(&db, "books", "_index_writer").await.unwrap().attributes, ["writer"]);
         assert!(index(&db, "books", "_index_author").await.is_none());
         let found = db
@@ -234,7 +240,10 @@ fn renaming_the_parent_key_from_the_child_side_of_a_many_to_one_renames_its_inde
         let (_, db) = library().await;
         db.create_relationship("books", many_to_one()).await.unwrap();
         let update = Update { two_way_key: Some("writer".to_owned()), ..Update::default() };
-        assert_eq!(db.update_relationship("authors", "books", update).await.unwrap().two_way_key.as_deref(), Some("writer"));
+        assert_eq!(
+            db.update_relationship("authors", "books", update).await.unwrap().two_way_key.as_deref(),
+            Some("writer")
+        );
         assert_eq!(index(&db, "books", "_index_writer").await.unwrap().attributes, ["writer"]);
         assert!(index(&db, "books", "_index_author").await.is_none());
         assert_eq!(relationship(&db, "authors", "books").await.two_way_key.as_deref(), Some("writer"));
@@ -260,7 +269,8 @@ fn an_adapter_that_does_not_update_or_fails_the_update_keeps_the_relationship() 
 
         for failure in [Error::not_found("Attribute not found"), Error::duplicate("Attribute already exists")] {
             let reply = failure.clone();
-            adapter.on(move |call| matches!(call, Call::UpdateRelationship { .. }).then(|| Reply::Error(reply.clone())));
+            adapter
+                .on(move |call| matches!(call, Call::UpdateRelationship { .. }).then(|| Reply::Error(reply.clone())));
             let error = db.update_relationship("books", "author", rename("writer")).await.unwrap_err();
             assert_eq!((error.kind(), error.message()), (failure.kind(), failure.message()));
         }
@@ -349,7 +359,9 @@ fn a_failed_definition_write_on_delete_keeps_its_error_when_the_rollback_fails()
                 {
                     Some(Reply::Error(Error::new(Kind::Runtime, "the definitions could not be written")))
                 }
-                Call::CreateIndex { .. } => Some(Reply::Error(Error::new(Kind::Runtime, "the index could not be restored"))),
+                Call::CreateIndex { .. } => {
+                    Some(Reply::Error(Error::new(Kind::Runtime, "the index could not be restored")))
+                }
                 _ => None,
             }
         });
