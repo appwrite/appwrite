@@ -870,13 +870,37 @@ fn section_encoding<'a>(
                         .collect::<R<Vec<_>>>()?,
                     _ => Vec::new(),
                 };
-                ok(db.convert_queries(&collection_param(a, "collection")?, a.queries("queries")?, &joined))?
+                let converted = db.convert_queries(&collection_param(a, "collection")?, a.queries("queries")?, &joined);
+                // PHP converts each query object in place: the stored ones
+                // see the change.
+                if let (Ok(queries), Some(Json::Array(sent))) = (&converted, a.raw("queries"))
+                    && queries.len() == sent.len()
+                {
+                    for (query, json) in queries.iter().zip(sent) {
+                        store_back(a, json, query);
+                    }
+                }
+                ok(converted)?
             }
-            "convertQuery" => ok(db.convert_query(&collection_param(a, "collection")?, a.query("query")?))?,
+            "convertQuery" => {
+                let converted = db.convert_query(&collection_param(a, "collection")?, a.query("query")?);
+                if let (Ok(query), Some(json)) = (&converted, a.raw("query")) {
+                    store_back(a, json, query);
+                }
+                ok(converted)?
+            }
 
             _ => return Ok(None),
         }))
     })
+}
+
+/// A query converted in place: `{"$obj": <name>}` now names the converted
+/// query, as the PHP object the library changed.
+fn store_back(a: &Args, json: &Json, query: &Query) {
+    if let Some(name) = json.as_object().filter(|o| o.len() == 1).and_then(|o| o.get("$obj")).and_then(Json::as_str) {
+        a.cx.store(name, query.clone().into_obj());
+    }
 }
 
 /// The `Raw statements` methods (`None`: not one of them).

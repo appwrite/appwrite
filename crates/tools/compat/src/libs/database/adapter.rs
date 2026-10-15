@@ -256,7 +256,16 @@ async fn pdo_of(a: &Args, key: &str) -> R<utopia_database::Result<Pdo>> {
         },
         _ => return fault(format!("`{key}` is not a PDO")),
     };
-    let dsn = spec.get("dsn").and_then(Json::as_str).unwrap_or("sqlite::memory:");
+    let mut dsn = spec.get("dsn").and_then(Json::as_str).unwrap_or("sqlite::memory:").to_owned();
+    // A SQLite file under /tmp lives in this run's directory: PHP's /tmp is
+    // its container's, fresh each run, and a file a previous run left here
+    // would hold its collections.
+    if let Some(rest) = dsn.strip_prefix("sqlite:/tmp/") {
+        let dir = format!("/tmp/compat-fs/{}", a.cx.ns);
+        std::fs::create_dir_all(&dir).map_err(|e| Fail::Fault(crate::adapter::Fault::new(format!("sqlite: {e}"))))?;
+        dsn = format!("sqlite:{dir}/{rest}");
+    }
+    let dsn = dsn.as_str();
     let text = |k: &str| spec.get(k).and_then(Json::as_str).map(str::to_owned);
     // A PDO without attributes fetches native numbers (PDO's default
     // ATTR_STRINGIFY_FETCHES is off).

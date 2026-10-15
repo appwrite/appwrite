@@ -47,8 +47,30 @@ fn fault<T>(message: impl Into<String>) -> D<T> {
     Err(DecodeError::Fault(Fault::new(message)))
 }
 
+thread_local! {
+    /// Stored values a [`decode_with`] call substitutes for `{"$ref": <n>}`.
+    static REFS: std::cell::RefCell<Vec<Value>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// [`decode`] with `{"$ref": <n>}` read as `refs[n]`: a stored object
+/// inside an argument is the object itself (PHP passes the same instance),
+/// never its wire form decoded again.
+pub fn decode_with(json: &Json, refs: Vec<Value>) -> D<Value> {
+    let previous = REFS.with(|r| std::mem::replace(&mut *r.borrow_mut(), refs));
+    let out = decode(json);
+    REFS.with(|r| *r.borrow_mut() = previous);
+    out
+}
+
 /// An argument as a value (`Codec::decode` then `Values::decode`).
 pub fn decode(json: &Json) -> D<Value> {
+    if let Json::Object(o) = json
+        && o.len() == 1
+        && let Some(n) = o.get("$ref").and_then(Json::as_u64)
+        && let Some(value) = REFS.with(|r| r.borrow().get(n as usize).cloned())
+    {
+        return Ok(value);
+    }
     Ok(match json {
         Json::Null => Value::Null,
         Json::Bool(b) => Value::Bool(*b),

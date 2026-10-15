@@ -1364,7 +1364,7 @@ async fn query_builder(b: &BuilderObj, this: &Obj, method: &str, a: &Args, calls
     let x = &mut *guard;
     Ok(match method {
         "from" => {
-            x.from(&s("table")?, &alias()?);
+            x.from_checked(&s("table")?, &alias()?).map_err(query_fail)?;
             fluent()
         }
         "fromNone" => {

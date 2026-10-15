@@ -72,8 +72,17 @@ pub struct Args {
 impl Args {
     /// The arguments of a call (a JSON object; `null` and `{}` are none),
     /// their tags resolved.
+    /// `this` keeps its tags: `Objects::target()` decodes it as sent.
     pub fn new(cx: &Arc<Ctx>, json: &Json) -> R<Args> {
-        let json = match tags(json)? {
+        let json = match json {
+            Json::Object(o) => Json::Object(
+                o.iter()
+                    .map(|(k, v)| Ok((k.clone(), if k == "this" { v.clone() } else { tags(v)? })))
+                    .collect::<R<Map<String, Json>>>()?,
+            ),
+            other => tags(other)?,
+        };
+        let json = match json {
             Json::Object(o) => o,
             Json::Null => Map::new(),
             Json::Array(a) if a.is_empty() => Map::new(),
@@ -436,7 +445,31 @@ pub fn decode_value(cx: &Ctx, json: &Json) -> R<Value> {
             other => fault(format!("a stored {} is not a value", other.class().unwrap_or("object"))),
         };
     }
-    Ok(codec::decode(&resolve(cx, json)?)?)
+    let mut refs = Vec::new();
+    let json = refs_of(cx, json, &mut refs)?;
+    Ok(codec::decode_with(&json, refs)?)
+}
+
+/// `json` with each stored value it names replaced by `{"$ref": <n>}`
+/// (`refs[n]`), other stored objects by their wire form.
+fn refs_of(cx: &Ctx, json: &Json, refs: &mut Vec<Value>) -> R<Json> {
+    if let Some(obj) = stored_obj(cx, json)? {
+        return Ok(match obj.into_result() {
+            Obj::Value(v) => {
+                refs.push(v);
+                serde_json::json!({ "$ref": refs.len() - 1 })
+            }
+            other => other.encode(),
+        });
+    }
+    Ok(match json {
+        Json::Object(o) if o.len() == 1 && o.get("steps").is_some_and(Json::is_array) => json.clone(),
+        Json::Object(o) => {
+            Json::Object(o.iter().map(|(k, v)| Ok((k.clone(), refs_of(cx, v, refs)?))).collect::<R<_>>()?)
+        }
+        Json::Array(items) => Json::Array(items.iter().map(|v| refs_of(cx, v, refs)).collect::<R<_>>()?),
+        other => other.clone(),
+    })
 }
 
 fn obj_value(o: Obj) -> R<Value> {
