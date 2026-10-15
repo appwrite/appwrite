@@ -297,6 +297,11 @@ class Create extends Action
 
                 $this->assertResumeAllowed($bucket, $file, $authorization, $user);
 
+                // The chunk count and size were fixed by the first chunk.
+                if ((int) $file->getAttribute('sizeOriginal', 0) !== $fileSize) {
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
+
                 if ($uploaded === $chunks) {
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -384,6 +389,17 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+
+                // A chunk can carry more or fewer bytes than its range announces.
+                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(

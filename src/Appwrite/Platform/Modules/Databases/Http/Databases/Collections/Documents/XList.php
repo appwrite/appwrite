@@ -11,10 +11,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
+use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -155,7 +157,7 @@ class XList extends Action
             $parsed = Query::groupByType($queries);
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Document => new Document($row),
+                    static fn (array $row): Aggregate => new Aggregate($row),
                     $dbForDatabases->aggregate($collectionTableId, $queries),
                 ),
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
@@ -183,7 +185,7 @@ class XList extends Action
                 }
 
                 if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => new Document($document), $cachedDocuments);
+                    $documents = \array_map(fn (array $document): Document => $parsed->isAggregation() ? new Aggregate($document) : new Document($document), $cachedDocuments);
                     $documentsCacheHit = true;
 
                     try {
@@ -242,6 +244,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_OUT_OF_RANGE, previous: $e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }

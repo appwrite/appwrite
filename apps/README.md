@@ -28,6 +28,8 @@ The `changes` job in [.github/scripts/changes.sh](../.github/scripts/changes.sh)
 | [console-staging.yml](../.github/workflows/console-staging.yml)       | Builds `appwrite/new:<sha>` and deploys it to staging on pushes to `main`                 |
 | [console-production.yml](../.github/workflows/console-production.yml) | Builds `appwrite/new:<version>` and `<version>-self-hosted` and deploys to production     |
 
+Pull requests that change `apps/console` also get a preview deployment from the `new-console` Appwrite Site, whose Git settings are recorded in [apps/console/appwrite.config.json](console/appwrite.config.json). A pull request from a fork builds only after a team member authorizes it from the bot comment.
+
 ## Releasing the console
 
 Push an `apps/console/<version>` tag:

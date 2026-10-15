@@ -33,7 +33,7 @@
         "ext-curl": "*",
         "ext-openssl": "*",
         "appwrite/appwrite": "^30.4.0",
-        "utopia-php/database": "^8.1.2",
+        "utopia-php/database": "^8.3.1",
         "utopia-php/storage": "4.*",
         "halaxa/json-machine": "^1.2",
         "psr/http-client": "^1.0",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cbb4015b780f80117b1ac75f95258084",
+    "content-hash": "052d764d2d2bb57950daeb7a017c9e3d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4426,16 +4426,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.1.3",
+            "version": "8.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f8e9c45320d1ce90badad65052b761a1b46ad323"
+                "reference": "b92964b69eb09e75ede55ce3d1ecdb7ede4beb87"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f8e9c45320d1ce90badad65052b761a1b46ad323",
-                "reference": "f8e9c45320d1ce90badad65052b761a1b46ad323",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b92964b69eb09e75ede55ce3d1ecdb7ede4beb87",
+                "reference": "b92964b69eb09e75ede55ce3d1ecdb7ede4beb87",
                 "shasum": ""
             },
             "require": {
@@ -4449,7 +4449,7 @@
                 "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "^1.5.4",
                 "utopia-php/pools": "^2.0",
-                "utopia-php/query": "^0.7",
+                "utopia-php/query": "^0.7.1",
                 "utopia-php/validators": "^1.0"
             },
             "require-dev": {
@@ -4493,9 +4493,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.1.3"
+                "source": "https://github.com/utopia-php/database/tree/8.3.0"
             },
-            "time": "2026-10-14T10:37:41+00:00"
+            "time": "2026-10-15T11:28:29+00:00"
         },
         {
             "name": "utopia-php/mongo",

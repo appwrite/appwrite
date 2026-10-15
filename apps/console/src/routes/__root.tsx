@@ -2,7 +2,6 @@ import { installBrowserApi } from '@/lib/browser-api'
 import interRegularUrl from '../assets/fonts/inter/inter-v8-latin-regular.woff2?url'
 import interSemiboldUrl from '../assets/fonts/inter/inter-v8-latin-600.woff2?url'
 import aeonikRegularUrl from '../assets/fonts/aeonik-pro/AeonikPro-Regular.woff2?url'
-import notoHebrewRegularUrl from '../assets/fonts/noto-sans-hebrew/noto-sans-hebrew-hebrew-400.woff2?url'
 import interLatinRegularUrl from '../assets/fonts/inter/inter-latin-400-normal.woff2?url'
 import {
   HeadContent,
@@ -180,13 +179,6 @@ function getHeadFontPreloads() {
     {
       rel: 'preload' as const,
       href: aeonikRegularUrl,
-      as: 'font' as const,
-      type: 'font/woff2',
-      crossOrigin: 'anonymous' as const,
-    },
-    {
-      rel: 'preload' as const,
-      href: notoHebrewRegularUrl,
       as: 'font' as const,
       type: 'font/woff2',
       crossOrigin: 'anonymous' as const,
