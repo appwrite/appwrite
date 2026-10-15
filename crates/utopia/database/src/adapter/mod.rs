@@ -56,6 +56,9 @@
 //! PHP: `Utopia\Database\Adapter`, `Adapter\Limits`, `Adapter\Profile`,
 //! `Adapter\CursorBoundary`, `Adapter\Timeout`, `Adapter\Feature\*`.
 
+#[cfg(any(feature = "postgres", feature = "mariadb", feature = "sqlite"))]
+pub mod sql;
+
 use std::any::Any;
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
