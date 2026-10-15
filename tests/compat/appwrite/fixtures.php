@@ -43,7 +43,7 @@ $output = [];
                     throw new \Exception("No {$key['resourceType']} document {$key['resourceId']}");
                 }
                 $created = $database->createDocument('keys', new Document([
-                    '$id' => \class_exists(\Utopia\Database\Id::class) ? \Utopia\Database\Id::unique() : \Utopia\Database\Helpers\ID::unique(),
+                    '$id' => \Utopia\Database\Id::unique(),
                     '$permissions' => [],
                     'resourceType' => $key['resourceType'],
                     'resourceId' => $owner->getId(),
@@ -67,7 +67,7 @@ $output = [];
                     throw new \Exception("No project {$rule['projectId']}");
                 }
                 $created = $database->createDocument('rules', new Document([
-                    '$id' => \class_exists(\Utopia\Database\Id::class) ? \Utopia\Database\Id::unique() : \Utopia\Database\Helpers\ID::unique(),
+                    '$id' => \Utopia\Database\Id::unique(),
                     '$permissions' => [],
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getSequence(),

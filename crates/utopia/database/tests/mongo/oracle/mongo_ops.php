@@ -8,7 +8,6 @@ use Utopia\Database\Change;
 use Utopia\Database\Document;
 use Utopia\Database\Index;
 use Utopia\Database\Operator;
-use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Mongo\Client;
@@ -23,7 +22,10 @@ $auth->disable();
 $adapter->setAuthorization($auth);
 $adapter->setDatabase('crosscheck');
 $adapter->setNamespace($ns);
-if (($argv[2] ?? '') === 'shared') { $adapter->setSharedTables(true); $adapter->setTenant(7); }
+if (($argv[2] ?? '') === 'shared') {
+    $adapter->setSharedTables(true);
+    $adapter->setTenant(7);
+}
 
 $out = [];
 $attributes = [
@@ -38,7 +40,10 @@ $indexes = [
     Index::unique(key: 'by_title', attributes: ['title']),
     Index::key(key: 'by_year', attributes: ['year'], orders: [OrderDirection::Desc]),
 ];
-try { $adapter->deleteCollection('movies'); } catch (\Throwable) {}
+try {
+    $adapter->deleteCollection('movies');
+} catch (\Throwable) {
+}
 $out['create'] = $adapter->createCollection('movies', $attributes, $indexes);
 $collection = new Document(['$id' => 'movies', 'attributes' => array_map(fn ($a) => $a->toDocument(), $attributes), 'indexes' => []]);
 
@@ -89,7 +94,8 @@ $out['find_between'] = $ids($adapter->find($collection, [Query::between('year', 
 $out['find_contains'] = $ids($adapter->find($collection, [Query::contains('title', ['ET'])]));
 $out['find_starts'] = $ids($adapter->find($collection, [Query::startsWith('title', 'Alpha.$')]));
 $out['find_tags'] = $ids($adapter->find($collection, [(fn ($q) => $q->setOnArray(true) ?? $q)(Query::contains('tags', ['c', 'z']))]));
-$q = Query::contains('tags', ['c', 'z']); $q->setOnArray(true);
+$q = Query::contains('tags', ['c', 'z']);
+$q->setOnArray(true);
 $out['find_tags'] = $ids($adapter->find($collection, [$q]));
 $out['find_created'] = $ids($adapter->find($collection, [Query::greaterThan('$createdAt', '2026-01-01T12:00:00.000+00:00')]));
 $m2 = $adapter->getDocument($collection, 'm2');

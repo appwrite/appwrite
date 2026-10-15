@@ -1,4 +1,5 @@
 <?php
+
 require '/usr/src/code/vendor/autoload.php';
 
 use Utopia\Database\Adapter\MariaDB;
@@ -108,7 +109,10 @@ foreach (['sqlite', 'postgres', 'mariadb', 'mysql'] as $engine) {
             $a->setTenant(7);
         }
         $a->addTransform('rec', $hook);
-        try { $a->delete($name); } catch (Throwable) {}
+        try {
+            $a->delete($name);
+        } catch (Throwable) {
+        }
         $a->create($name);
         $steps = [];
         $step = function (string $label, callable $fn) use (&$steps, $hook) {
@@ -164,7 +168,10 @@ foreach (['sqlite', 'postgres', 'mariadb', 'mysql'] as $engine) {
         $step('deleteCollection missing', fn () => $a->deleteCollection('movies'));
         $step('createCollection people again', fn () => $a->createCollection('people', [], []));
         $out[] = ['engine' => $engine, 'shared' => $shared, 'steps' => $steps, 'schema' => $schema, 'after' => $after];
-        try { $a->delete($name); } catch (Throwable) {}
+        try {
+            $a->delete($name);
+        } catch (Throwable) {
+        }
     }
 }
 echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";

@@ -61,7 +61,7 @@ final class Rewriter extends NodeVisitorAbstract
             }
         }
 
-        return null;
+        return;
     }
 
     private function mark(Node $node): void
