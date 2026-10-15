@@ -64,6 +64,12 @@ mod core_tests;
 mod schema_tests;
 #[cfg(test)]
 pub(crate) mod testing;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod fixtures;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod observed;
+#[cfg(all(test, feature = "memory"))]
+mod cache_engine_tests;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard, RwLock};
