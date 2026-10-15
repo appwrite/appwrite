@@ -117,6 +117,30 @@ Finally, please note that some of the abovementioned Personal Data will be used 
 
 
 
+## Google user data
+
+This section describes how we handle data we receive from your Google account when you choose to sign in to the Appwrite Console with Google. It applies in addition to the rest of this Privacy Policy, and in case of a conflict regarding Google user data, this section prevails.
+
+### What Google data we access
+When you sign in with Google, we receive from your Google account your name, email address, email verification status, profile picture, and your Google account identifier. We request only the `email`, `profile`, and `openid` OAuth scopes. We do not request access to any other Google data, such as your Gmail, Drive, Calendar, or contacts.
+
+### How we use it
+We use this information to create and secure your Appwrite account, to sign you in to the Console, and to display your name and profile picture in the Console.
+
+### How we share it
+We share Google user data only with the service providers that host and operate Appwrite on our behalf under contract, and where we are required to do so by law. We do not sell Google user data.
+
+### How we protect it
+Google user data is transmitted over encrypted connections and is protected by the technical and organizational measures described in the Security section above. Access is limited to personnel who need it to operate the service.
+
+### How long we keep it and how to delete it
+We keep Google user data for as long as your account exists. You can delete your account at any time from the [account settings page](https://cloud.appwrite.io/console/account) or by emailing us at privacy@appwrite.io, after which the data is deleted. You can also revoke Appwrite's access to your Google account at any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+
+### Limited Use
+Appwrite's use and transfer to any other app of information received from Google APIs will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. We do not use Google user data to develop, improve, or train generalized artificial intelligence or machine learning models.
+
+
+
 ## Protection and retention
 How we protect and retain your personal data
 
