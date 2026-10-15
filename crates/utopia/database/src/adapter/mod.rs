@@ -88,6 +88,8 @@ use crate::value::{Array, Value};
 pub mod memory;
 #[cfg(feature = "pool")]
 pub mod pool;
+#[cfg(feature = "redis")]
+pub mod redis;
 
 /// The latest datetime an adapter stores (`Adapter::MAX_DATETIME`).
 pub const MAX_DATETIME: &str = "9999-12-31 23:59:59";
