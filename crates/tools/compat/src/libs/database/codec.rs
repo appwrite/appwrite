@@ -152,28 +152,39 @@ pub fn query_tag(json: &Json) -> D<Query> {
 /// `new Operator(OperatorType::from(method), attribute, values)` from an
 /// `$operator` tag.
 pub fn operator_tag(json: &Json) -> D<Operator> {
-    let fields = decode_array(json)?;
-    let text = |k: &str| fields.get_str(k).map(value::to_text).unwrap_or_default();
-    let values = match fields.get_str("values") {
-        Some(Value::Array(v)) => v.clone(),
-        _ => Array::new(),
+    // `new Operator(OperatorType::from($o['method']), ..., decodeArray($o['values']))`:
+    // the method is checked before the values are decoded.
+    let field = |k: &str| -> D<String> {
+        Ok(match json.get(k) {
+            None => String::new(),
+            Some(j) => value::to_text(&decode(j)?),
+        })
     };
-    let method = text("method");
+    let method = field("method")?;
     let method = OperatorType::try_from_value(&method).ok_or_else(|| {
         Error::new(
             Kind::ValueError,
             format!("\"{method}\" is not a valid backing value for enum Utopia\\Database\\OperatorType"),
         )
     })?;
-    Ok(Operator::from_array(method, text("attribute"), values))
+    let attribute = field("attribute")?;
+    let values = match json.get("values") {
+        None | Some(Json::Null) => Array::new(),
+        Some(j) => decode_array(j)?,
+    };
+    Ok(Operator::from_array(method, attribute, values))
 }
 
 /// An argument that must be an array (`Values::decodeArray`): `{}` is empty.
 pub fn decode_array(json: &Json) -> D<Array> {
-    match decode(json)? {
-        Value::Array(a) => Ok(a),
-        Value::Object(a) if a.is_empty() => Ok(Array::new()),
-        other => fault(format!("expected an array, got {}", other.type_name())),
+    // `array_map(decode, $value)`: the elements are decoded, the array
+    // itself is no tag (a document's attributes may be named `$document`).
+    match json {
+        Json::Array(items) => items.iter().map(decode).collect(),
+        Json::Object(o) => {
+            o.iter().map(|(k, v)| Ok((ArrayKey::normalize(Str::from(k.as_str())), decode(v)?))).collect()
+        }
+        other => fault(format!("expected an array, got {other}")),
     }
 }
 

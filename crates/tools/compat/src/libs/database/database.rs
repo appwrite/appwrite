@@ -519,7 +519,8 @@ fn section_scopes<'a>(
             }
             "withCache" => {
                 let cb = cb("callback")?;
-                let hash = a.opt_string("hash")?;
+                // `?string $hash = ''`: absent is the empty hash, `null` uncached.
+                let hash = if a.has("hash") { a.opt_string("hash")? } else { Some(String::new()) };
                 ok(db.with_cache(&s("key")?, || async { cb.value(Vec::new()).await }, hash.as_deref()).await)?
             }
 

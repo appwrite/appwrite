@@ -548,10 +548,20 @@ pub fn query_of(cx: &Ctx, json: &Json) -> R<Query> {
                 Kind::TypeError,
                 format!(
                     "Utopia\\Database\\Query::parseQuery(): Argument #1 ($query) must be of type array, {} given, called in /usr/src/code/tests/compat/database/Values.php on line 230",
-                    v.debug_type()
+                    zend_type(&v)
                 ),
             ))),
         },
+    }
+}
+
+/// A value's type as a `TypeError` names it (`zend_zval_value_name()`):
+/// `true` and `false` for booleans, else `get_debug_type()`.
+pub fn zend_type(v: &Value) -> &str {
+    match v {
+        Value::Bool(true) => "true",
+        Value::Bool(false) => "false",
+        other => other.debug_type(),
     }
 }
 

@@ -791,7 +791,23 @@ fn permission_static(method: &str, a: &Args) -> R<Option<Obj>> {
                 None | Some(Json::Null) => PermissionType::ALL.to_vec(),
                 Some(j) => {
                     let j = a.resolve(j)?;
-                    codec::list(&j)?.into_iter().map(values::enum_of::<PermissionType>).collect::<R<_>>()?
+                    // `array_map(fn (PermissionType $p) => ..., $allowed)`
+                    // (Permission.php:181): anything but a case is a TypeError.
+                    let mut cases = Vec::new();
+                    for item in codec::list(&j)? {
+                        if item.get("$enum").is_some() {
+                            cases.push(values::enum_of::<PermissionType>(item)?);
+                            continue;
+                        }
+                        let given = codec::decode(item)?.debug_type().to_owned();
+                        return Err(crate::libs::database::ctx::Fail::Error(utopia_database::Error::new(
+                            utopia_database::Kind::TypeError,
+                            format!(
+                                "Utopia\\Database\\Permission::{{closure:Utopia\\Database\\Permission::aggregate():181}}(): Argument #1 ($p) must be of type Utopia\\Database\\PermissionType, {given} given"
+                            ),
+                        )));
+                    }
+                    cases
                 }
             };
             ok(utopia_database::Permission::aggregate(&permissions, &allowed))?
