@@ -460,6 +460,16 @@ class HelperTest extends TestCase
         $this->assertCount(0, $errors);
     }
 
+    public function testValidateSkipsRelationshipQueries(): void
+    {
+        $queries = [
+            Query::equal('name', ['John']),
+            Query::relationship('comments', [Query::equal('approved', [true])]),
+        ];
+        $errors = Query::validate($queries, ['name']);
+        $this->assertCount(0, $errors);
+    }
+
     public function testValidateRecursesNested(): void
     {
         $queries = [

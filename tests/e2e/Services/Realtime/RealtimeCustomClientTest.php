@@ -12,9 +12,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -37,7 +37,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Test Team ' . uniqid()
         ]);
 
@@ -871,7 +871,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1066,7 +1066,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'impersonation-target-' . $targetId . '@example.com',
@@ -1075,7 +1075,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'impersonation-actor-' . $actorId . '@example.com',
@@ -1201,7 +1201,7 @@ final class RealtimeCustomClientTest extends Scope
 
         $setDuration(60);
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $target = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $targetId,
             'email' => 'extension-target-' . $targetId . '@example.com',
@@ -1210,7 +1210,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
             'userId' => $actorId,
             'email' => 'extension-actor-' . $actorId . '@example.com',
@@ -1286,7 +1286,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1358,7 +1358,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -1464,7 +1464,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -1478,7 +1478,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -1520,7 +1520,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -1567,7 +1567,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -1613,7 +1613,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -1669,7 +1669,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -1678,7 +1678,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -1958,7 +1958,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2048,7 +2048,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -2062,7 +2062,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -2105,7 +2105,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Any',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -2114,7 +2114,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Users',
                     '$permissions' => [
                         Permission::read(Role::users()),
@@ -2123,21 +2123,21 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User1',
                     '$permissions' => [
                         Permission::read(Role::user($user1Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User2',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'User2',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
@@ -2470,14 +2470,14 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::user($user1Id)),
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Thor',
                     '$permissions' => [
                         Permission::read(Role::user($user2Id)),
@@ -2598,7 +2598,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -2612,7 +2612,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2656,7 +2656,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -2738,7 +2738,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -2812,7 +2812,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Bucket 1',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2831,7 +2831,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2981,7 +2981,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test timeout execution',
             'execute' => ['users'],
             'runtime' => 'node-22',
@@ -3143,7 +3143,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -3329,7 +3329,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Realtime Target User',
@@ -3355,7 +3355,7 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Realtime Delete Team ' . uniqid(),
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -3415,7 +3415,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'TablesDB Cross API Realtime DB',
         ]);
 
@@ -3431,7 +3431,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Legacy Actors',
             'permissions' => [
                 Permission::create(Role::user($user['$id'])),
@@ -3471,7 +3471,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3541,7 +3541,7 @@ final class RealtimeCustomClientTest extends Scope
          * Both clients should receive an event that includes both document-
          * style and row-style channels on the shared database.
          */
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -3592,7 +3592,7 @@ final class RealtimeCustomClientTest extends Scope
          * Both clients should again receive an event that now also includes
          * the tablesdb-prefixed channels alongside the databases-prefixed ones.
          */
-        $rowId = ID::unique();
+        $rowId = Id::unique();
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3651,7 +3651,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Legacy DB via TablesDB Route',
         ]);
 
@@ -3664,7 +3664,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Legacy Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3699,7 +3699,7 @@ final class RealtimeCustomClientTest extends Scope
             $this->assertEquals('available', $column['body']['status']);
         }, 120000, 500);
 
-        $legacyRowId = ID::unique();
+        $legacyRowId = Id::unique();
 
         $legacyRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $legacyDatabaseId . '/tables/' . $legacyTableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3765,7 +3765,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Row Update DB',
         ]);
 
@@ -3777,7 +3777,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Assembly',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -3814,7 +3814,7 @@ final class RealtimeCustomClientTest extends Scope
         }, 120000, 500);
 
         // Seed a row so we can listen to its update
-        $rowId = ID::unique();
+        $rowId = Id::unique();
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -3957,7 +3957,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Transactions DB',
         ]);
 
@@ -3968,7 +3968,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4011,7 +4011,7 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($transaction['body']['$id']);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $operationsResponse = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4159,7 +4159,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror Legacy DB',
         ]);
         $this->assertEquals(201, $legacyDatabase['headers']['status-code']);
@@ -4170,7 +4170,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Legacy Collection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4214,7 +4214,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($legacyClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $legacyDocumentId = ID::unique();
+        $legacyDocumentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $legacyDatabaseId . '/collections/' . $legacyCollectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4253,7 +4253,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror TablesDB',
         ]);
         $this->assertEquals(201, $tablesDatabase['headers']['status-code']);
@@ -4264,7 +4264,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Mirror Table',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4308,7 +4308,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($tablesClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $rowId = ID::unique();
+        $rowId = Id::unique();
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $tablesDatabaseId . '/tables/' . $tableId . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4347,7 +4347,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mirror DocumentsDB',
         ]);
         $this->assertEquals(201, $documentsDatabase['headers']['status-code']);
@@ -4358,7 +4358,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Mirror Documents Collection',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4382,7 +4382,7 @@ final class RealtimeCustomClientTest extends Scope
         $connected = json_decode($documentsClient->receive(), true);
         $this->assertEquals('connected', $connected['type']);
 
-        $documentsDocumentId = ID::unique();
+        $documentsDocumentId = Id::unique();
         $documentsDocument = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDatabaseId . '/collections/' . $documentsCollectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -4437,7 +4437,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Multi-Op DB',
         ]);
 
@@ -4448,7 +4448,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4488,9 +4488,9 @@ final class RealtimeCustomClientTest extends Scope
         ]);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId1 = ID::unique();
-        $documentId2 = ID::unique();
-        $documentId3 = ID::unique();
+        $documentId1 = Id::unique();
+        $documentId2 = Id::unique();
+        $documentId3 = Id::unique();
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4593,7 +4593,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Rollback DB',
         ]);
 
@@ -4604,7 +4604,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -4644,7 +4644,7 @@ final class RealtimeCustomClientTest extends Scope
         ]);
 
         $transactionId = $transaction['body']['$id'];
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId . '/operations', array_merge([
             'content-type' => 'application/json',
@@ -4709,7 +4709,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'db-rel'
         ]);
         $databaseId = $database['body']['$id'];
@@ -4719,7 +4719,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'level1',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4736,7 +4736,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'level2',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4812,7 +4812,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'L2'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4826,7 +4826,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'L1'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -4879,7 +4879,7 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -4887,7 +4887,7 @@ final class RealtimeCustomClientTest extends Scope
         $collections = [];
         foreach (['parent', 'child'] as $side) {
             $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'documentSecurity' => true,
@@ -4944,14 +4944,14 @@ final class RealtimeCustomClientTest extends Scope
             ];
 
             $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => ['name' => 'child'],
                 'permissions' => $permissions,
             ]);
             $childId = $child['body']['$id'];
 
             $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [$key => \in_array($case['type'], ['oneToMany', 'manyToMany']) ? [$childId] : $childId],
                 'permissions' => $permissions,
             ]);
@@ -5004,7 +5004,7 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete Permissions DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5012,7 +5012,7 @@ final class RealtimeCustomClientTest extends Scope
         $collections = [];
         foreach (['parent', 'child'] as $side) {
             $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'documentSecurity' => true,
@@ -5044,7 +5044,7 @@ final class RealtimeCustomClientTest extends Scope
         }, 30000, 250);
 
         $child = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['child'] . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'child'],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -5054,7 +5054,7 @@ final class RealtimeCustomClientTest extends Scope
         $childId = $child['body']['$id'];
 
         $parent = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['parent'] . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['children' => [$childId]],
             'permissions' => [Permission::read(Role::user($user['$id']))],
         ]);
@@ -5119,7 +5119,7 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Relationship Delete TablesDB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5127,7 +5127,7 @@ final class RealtimeCustomClientTest extends Scope
         $tables = [];
         foreach (['parent', 'child'] as $side) {
             $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => $side,
                 'permissions' => [Permission::create(Role::any())],
                 'rowSecurity' => true,
@@ -5164,14 +5164,14 @@ final class RealtimeCustomClientTest extends Scope
         ];
 
         $child = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['child'] . '/rows', $headers, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['name' => 'child'],
             'permissions' => $permissions,
         ]);
         $childId = $child['body']['$id'];
 
         $parent = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tables['parent'] . '/rows', $headers, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['children' => [$childId]],
             'permissions' => $permissions,
         ]);
@@ -5223,7 +5223,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Concurrent DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -5233,7 +5233,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Concurrent Collection',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -5299,7 +5299,7 @@ final class RealtimeCustomClientTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ],
             [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => $payload,
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -5383,7 +5383,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -5397,7 +5397,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -5441,7 +5441,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -5500,7 +5500,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -5558,7 +5558,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -5628,7 +5628,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'rows' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -5637,7 +5637,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6003,7 +6003,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'rows' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6091,7 +6091,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -6105,7 +6105,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6122,7 +6122,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans'
             ],
@@ -6159,7 +6159,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
@@ -6193,7 +6193,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
@@ -6237,7 +6237,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6246,7 +6246,7 @@ final class RealtimeCustomClientTest extends Scope
                     ],
                 ],
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Scarlett Johansson',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6498,7 +6498,7 @@ final class RealtimeCustomClientTest extends Scope
         ]), [
             'documents' => [
                 [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Robert Downey Jr.',
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -6571,7 +6571,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Actors VDB',
         ]);
 
@@ -6583,7 +6583,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6599,7 +6599,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['name' => 'Chris Evans']
@@ -6751,7 +6751,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Atomic DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -6763,7 +6763,7 @@ final class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Atomic Actors',
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -6797,7 +6797,7 @@ final class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'score' => 10
             ],

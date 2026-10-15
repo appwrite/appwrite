@@ -11,7 +11,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class SitesConsoleClientTest extends Scope
 {
@@ -23,7 +23,7 @@ final class SitesConsoleClientTest extends Scope
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Themed site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -155,7 +155,7 @@ final class SitesConsoleClientTest extends Scope
     public function testSiteDeploymentRetentionWithMaintenance(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'deploymentRetention' => 180,

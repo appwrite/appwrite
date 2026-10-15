@@ -2,6 +2,17 @@
 
 All notable changes to `utopia-php/query` are documented in this file.
 
+## 0.7.1
+
+### Added
+
+- `Method::Relationship` and `Query::relationship(string $attribute, array $queries)`:
+  queries written against the collection a relationship attribute points to.
+  It is nested, so its children parse and serialize as queries and contribute
+  to `shape()` and `fingerprint()`. `Query::validate()` skips it, since its
+  children name another collection's attributes. No bundled builder compiles
+  it; consumers that populate related documents read it themselves.
+
 ## 0.7.0
 
 ### Breaking
