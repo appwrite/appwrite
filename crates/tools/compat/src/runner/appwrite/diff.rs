@@ -452,12 +452,45 @@ async fn twin(
         use sha2::Digest as _;
         sha2::Sha256::digest(INVITE_SECRET.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
     };
-    db.execute(
-        &format!("UPDATE appwrite.\"_{sequence}_memberships\" SET secret = $1 WHERE _uid = 'm3'"),
-        &[&encrypted(&hash)?],
-    )
-    .await
-    .map_err(|e| format!("invitation secret: {e}"))?;
+    // Dedicated tables are the project's own (`_<sequence>_memberships`);
+    // shared tables hold every project's rows, told apart by `_tenant`.
+    let secret = encrypted(&hash)?;
+    let dedicated = format!("_{sequence}_memberships");
+    let exists = db
+        .query_one("SELECT to_regclass($1) IS NOT NULL", &[&format!("appwrite.\"{dedicated}\"")])
+        .await
+        .map_err(|e| format!("invitation secret: {e}"))?
+        .get::<_, bool>(0);
+    if exists {
+        db.execute(&format!("UPDATE appwrite.\"{dedicated}\" SET secret = $1 WHERE _uid = 'm3'"), &[&secret])
+            .await
+            .map_err(|e| format!("invitation secret: {e}"))?;
+    } else {
+        let shared: Vec<String> = db
+            .query(
+                "SELECT table_name::text FROM information_schema.columns WHERE table_schema = 'appwrite' \
+                 AND column_name = '_tenant' AND right(table_name::text, 12) = '_memberships'",
+                &[],
+            )
+            .await
+            .map_err(|e| format!("invitation secret: {e}"))?
+            .iter()
+            .map(|r| r.get::<_, String>(0))
+            .collect();
+        let mut updated = 0;
+        for table in shared {
+            updated += db
+                .execute(
+                    &format!("UPDATE appwrite.\"{table}\" SET secret = $1 WHERE _uid = 'm3' AND _tenant::text = $2"),
+                    &[&secret, &sequence],
+                )
+                .await
+                .map_err(|e| format!("invitation secret: {table}: {e}"))?;
+        }
+        if updated == 0 {
+            return Err("invitation secret: no membership row".to_owned());
+        }
+    }
     let account = api
         .send(
             "POST",
