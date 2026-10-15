@@ -66,6 +66,8 @@ mod schema_tests;
 pub(crate) mod testing;
 #[cfg(test)]
 pub(crate) mod spy;
+#[cfg(test)]
+mod hook_tests;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard, RwLock};
