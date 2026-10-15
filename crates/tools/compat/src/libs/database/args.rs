@@ -544,8 +544,15 @@ pub fn query_of(cx: &Ctx, json: &Json) -> R<Query> {
         other => match decode_value(cx, other)? {
             Value::Ext(Ext::Query(q)) => Ok(Query::from(*q)),
             Value::Array(a) => Ok(Query::parse_query(&value::to_query_array(&a), false)?),
-            Value::Object(a) if a.is_empty() => Ok(Query::parse_query(&utopia_query::Array::new(), false)?),
-            v => fault(format!("expected a query, got {}", v.type_name())),
+            Value::Str(s) => Ok(Query::parse_bytes(s.as_bytes(), false)?),
+            // `Values::queries` hands anything else to `parseQuery(array)`.
+            v => Err(Fail::Error(Error::new(
+                Kind::TypeError,
+                format!(
+                    "Utopia\\Database\\Query::parseQuery(): Argument #1 ($query) must be of type array, {} given, called in /usr/src/code/tests/compat/database/Values.php on line 230",
+                    v.debug_type()
+                ),
+            ))),
         },
     }
 }

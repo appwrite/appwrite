@@ -209,7 +209,9 @@ pub fn encode(value: &Value) -> Json {
             json!({
                 "method": o.method().as_str(),
                 "attribute": o.attribute(),
-                "values": encode_array(o.raw_values()),
+                // `Values::encode` reads `getValues()` (a numeric text
+                // exponent of a `power` as its number).
+                "values": encode_array(&o.values()),
             }),
         ),
         Value::Ext(Ext::Bson(b)) => tag(
