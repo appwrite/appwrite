@@ -4,7 +4,7 @@
 //! [`Transfer`] runs one into the other, recording every resource in a
 //! shared [`Cache`] and reporting per-status counters.
 //!
-//! PHP: `utopia-php/migration` 3.1. Each PHP class maps onto one item:
+//! PHP: `utopia-php/migration` 4.0 (unreleased). Each PHP class maps onto one item:
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -19,6 +19,7 @@
 //! | `Utopia\Migration\Exception` | [`Exception`] |
 //! | `Utopia\Migration\Warning` | [`Warning`] |
 //! | `Utopia\Migration\Sources\Appwrite` and `Appwrite\Reader\*` | [`sources::appwrite`] |
+//! | `Utopia\Migration\Sources\Appwrite\Client` and `Client\RedirectRefusal` | [`sdk::Client`] ([`sdk::Client::refuse_redirects`]) |
 //! | `Utopia\Migration\Sources\CSV`, `JSON` | [`sources::csv`], [`sources::json`] |
 //! | `Utopia\Migration\Sources\Firebase` | `sources::firebase` (feature `firebase`) |
 //! | `Utopia\Migration\Sources\NHost`, `Supabase` | `sources::nhost`, `sources::supabase` (feature `nhost`) |

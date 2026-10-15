@@ -1111,14 +1111,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"email\":\"one@example.test\",\"phone\":null}"
             },
@@ -1129,14 +1129,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"name\":\"One\"}"
             },
@@ -1147,14 +1147,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"number\":\"+15550001\"}"
             },
@@ -1165,14 +1165,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"emailVerification\":true}"
             },
@@ -1183,14 +1183,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"phoneVerification\":true}"
             },
@@ -1201,14 +1201,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"status\":false}"
             },
@@ -1219,14 +1219,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"prefs\":{\"theme\":\"dark\"}}"
             },
@@ -1237,14 +1237,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u1\",\"labels\":[\"vip\"]}"
             },
@@ -1255,14 +1255,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u2\",\"email\":\"two@example.test\",\"password\":\"h\"}"
             },
@@ -1273,14 +1273,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u3\",\"email\":\"three@example.test\",\"password\":\"h\",\"passwordSalt\":\"salt\",\"passwordCpu\":1,\"passwordMemory\":2,\"passwordParallel\":3,\"passwordLength\":4,\"name\":\"Three\"}"
             },
@@ -1291,14 +1291,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u3\",\"name\":\"Three\"}"
             },
@@ -1309,14 +1309,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u4\",\"email\":\"four@example.test\",\"password\":\"h\",\"passwordVersion\":\"sha256\"}"
             },
@@ -1327,14 +1327,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u5\",\"email\":\"five@example.test\",\"password\":\"h\"}"
             },
@@ -1345,14 +1345,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u6\",\"email\":\"six@example.test\",\"password\":\"h\",\"passwordSalt\":\"a\",\"passwordSaltSeparator\":\"b\",\"passwordSignerKey\":\"c\"}"
             },
@@ -1363,14 +1363,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u7\",\"email\":\"seven@example.test\",\"password\":\"h\"}"
             },
@@ -1381,14 +1381,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u8\",\"email\":\"eight@example.test\",\"phone\":\"+15550008\",\"password\":\"secret-pass\"}"
             },
@@ -1399,14 +1399,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u8\",\"number\":\"+15550008\"}"
             },
@@ -1417,14 +1417,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"u10\",\"email\":null,\"phone\":null}"
             },
@@ -1435,14 +1435,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"teamId\":\"team1\",\"name\":\"Team\"}"
             },
@@ -1453,14 +1453,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"teamId\":\"team1\",\"prefs\":{\"a\":1}}"
             },
@@ -1471,16 +1471,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
-              "body": "{\"teamId\":\"team1\",\"roles\":[\"owner\"],\"userId\":\"u1\"}"
+              "body": "{\"teamId\":\"team1\",\"roles\":[\"owner\"],\"userId\":\"u1\",\"membershipId\":\"m1\"}"
             }
           ]
         },
@@ -1921,14 +1921,14 @@
               "headers": {
                 "accept": "*/*",
                 "content-type": "multipart/form-data",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": {
                 "fields": {
@@ -1953,14 +1953,14 @@
                 "accept": "*/*",
                 "content-range": "bytes 5242880-7340032/7340032",
                 "content-type": "multipart/form-data",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": {
                 "fields": {
@@ -1984,14 +1984,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"bucketId\":\"b1\",\"name\":\"Bucket\",\"permissions\":[\"read(\\\"any\\\")\"],\"fileSecurity\":true,\"enabled\":true,\"maximumFileSize\":100,\"allowedFileExtensions\":[\"png\"],\"compression\":\"gzip\",\"encryption\":true,\"antivirus\":true,\"transformations\":true}"
             }
@@ -3116,14 +3116,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"fn1\",\"name\":\"Fn\",\"runtime\":\"node-18.0\",\"execute\":[\"any\"],\"events\":[\"users.*\"],\"schedule\":\"* * * * *\",\"timeout\":15,\"enabled\":true,\"logging\":true,\"entrypoint\":\"index.js\",\"commands\":\"npm i\",\"scopes\":[\"users.read\"],\"buildSpecification\":\"s-1vcpu-512mb\",\"runtimeSpecification\":\"s-1vcpu-512mb\",\"deploymentRetention\":2}"
             },
@@ -3134,14 +3134,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"fn3\",\"name\":\"Cron\",\"runtime\":\"node-18.0\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":1,\"interval\":15}"
             },
@@ -3152,14 +3152,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"fn3\",\"name\":\"Cron\",\"runtime\":\"node-18.0\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":1}"
             },
@@ -3170,14 +3170,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"fn4\",\"name\":\"Tick\",\"runtime\":\"node-18.0\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":1}"
             },
@@ -3188,14 +3188,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"fn1\",\"variableId\":\"v1\",\"key\":\"K\",\"value\":\"V\",\"secret\":true}"
             },
@@ -3206,14 +3206,14 @@
               "headers": {
                 "accept": "*/*",
                 "content-type": "multipart/form-data",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": {
                 "fields": {
@@ -3238,7 +3238,7 @@
                 "accept": "*/*",
                 "content-range": "bytes 0-5242879/7340032",
                 "content-type": "multipart/form-data",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-id": "d2",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
@@ -3246,7 +3246,7 @@
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": {
                 "fields": {
@@ -3270,14 +3270,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"siteId\":\"site1\",\"name\":\"Site\",\"framework\":\"sveltekit\",\"buildRuntime\":\"node-22\",\"enabled\":true,\"logging\":true,\"timeout\":600,\"installCommand\":\"\",\"buildCommand\":\"\",\"startCommand\":\"node build\",\"outputDirectory\":\"\",\"adapter\":\"ssr\",\"fallbackFile\":\"\",\"buildSpecification\":\"s-2vcpu-2gb\",\"deploymentRetention\":4,\"scopes\":[\"users.read\"]}"
             },
@@ -3288,14 +3288,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"siteId\":\"site1\",\"variableId\":\"sv1\",\"key\":\"K\",\"value\":\"V\",\"secret\":true}"
             },
@@ -3306,14 +3306,14 @@
               "headers": {
                 "accept": "*/*",
                 "content-type": "multipart/form-data",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": {
                 "fields": {
@@ -3856,7 +3856,9 @@
               "name": "News",
               "subscribe": [
                 "users"
-              ]
+              ],
+              "qos": 1,
+              "expiry": 3600
             }
           },
           "bind": "topic",
@@ -4022,7 +4024,9 @@
               "data": {
                 "subject": "S",
                 "content": "C",
-                "html": true
+                "html": true,
+                "replyToEmail": "reply@example.test",
+                "replyToName": "Reply"
               },
               "messageStatus": "scheduled",
               "scheduledAt": "2999-01-01 00:00:00"
@@ -4043,7 +4047,8 @@
               "data": {
                 "title": "T",
                 "body": "B",
-                "badge": 2
+                "badge": 2,
+                "channelId": "alerts"
               },
               "messageStatus": "scheduled",
               "scheduledAt": "2999-01-01 00:00:00"
@@ -4586,14 +4591,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"sg\",\"name\":\"SendGrid\",\"apiKey\":\"key\",\"fromName\":\"Team\",\"replyToEmail\":\"r@example.test\",\"enabled\":true}"
             },
@@ -4604,14 +4609,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"mg\",\"name\":\"Mailgun\",\"apiKey\":\"k\",\"domain\":\"example.test\",\"isEuRegion\":true,\"enabled\":true}"
             },
@@ -4622,14 +4627,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"smtp\",\"name\":\"SMTP\",\"host\":\"smtp.example.test\",\"port\":25,\"encryption\":\"tls\",\"autoTLS\":false,\"enabled\":true}"
             },
@@ -4640,14 +4645,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"fcm1\",\"name\":\"FCM\",\"serviceAccountJSON\":{\"a\":1},\"enabled\":true}"
             },
@@ -4658,14 +4663,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"apns\",\"name\":\"APNS\",\"sandbox\":true,\"enabled\":false}"
             },
@@ -4676,14 +4681,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"providerId\":\"tw\",\"name\":\"Twilio\",\"from\":\"+1555\",\"enabled\":true}"
             },
@@ -4694,16 +4699,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
-              "body": "{\"topicId\":\"t1\",\"name\":\"News\",\"subscribe\":[\"users\"]}"
+              "body": "{\"topicId\":\"t1\",\"name\":\"News\",\"subscribe\":[\"users\"],\"qos\":1,\"expiry\":3600}"
             },
             {
               "method": "POST",
@@ -4712,16 +4717,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
-              "body": "{\"messageId\":\"m1\",\"subject\":\"S\",\"content\":\"C\",\"topics\":[\"t1\"],\"draft\":false,\"html\":true,\"scheduledAt\":\"2999-01-01 00:00:00\"}"
+              "body": "{\"messageId\":\"m1\",\"subject\":\"S\",\"content\":\"C\",\"topics\":[\"t1\"],\"draft\":false,\"html\":true,\"scheduledAt\":\"2999-01-01 00:00:00\",\"replyToEmail\":\"reply@example.test\",\"replyToName\":\"Reply\"}"
             },
             {
               "method": "POST",
@@ -4730,16 +4735,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
-              "body": "{\"messageId\":\"m2\",\"title\":\"T\",\"body\":\"B\",\"data\":null,\"badge\":2,\"draft\":false,\"scheduledAt\":\"2999-01-01 00:00:00\"}"
+              "body": "{\"messageId\":\"m2\",\"title\":\"T\",\"body\":\"B\",\"data\":null,\"badge\":2,\"draft\":false,\"scheduledAt\":\"2999-01-01 00:00:00\",\"channelId\":\"alerts\"}"
             },
             {
               "method": "POST",
@@ -4748,14 +4753,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"domain\":\"api.example.test\"}"
             },
@@ -4766,14 +4771,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"domain\":\"go.example.test\",\"url\":\"https:\\/\\/example.test\",\"statusCode\":\"307\",\"resourceId\":\"site1\",\"resourceType\":\"site\"}"
             },
@@ -4784,14 +4789,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"domain\":\"fn.example.test\",\"functionId\":\"fn1\",\"branch\":\"main\"}"
             },
@@ -4802,14 +4807,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"domain\":\"site.example.test\",\"siteId\":\"site1\"}"
             }
@@ -5018,14 +5023,14 @@
               "query": "",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": ""
             },
@@ -5036,14 +5041,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"\",\"email\":null,\"phone\":null}"
             },
@@ -5053,14 +5058,14 @@
               "query": "",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": ""
             },
@@ -5071,14 +5076,14 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"userId\":\"\",\"email\":null,\"phone\":null}"
             }
@@ -5196,14 +5201,14 @@
               "query": "",
               "headers": {
                 "accept": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": ""
             },
@@ -5214,16 +5219,611 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.2.2 ()",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
                 "x-appwrite-response-format": "2.0.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.2.2"
+                "x-sdk-version": "30.4.0"
               },
               "body": "{\"functionId\":\"\",\"name\":\"\",\"runtime\":\"node-18.0\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "environments: matched by name, created under a new ID, skipped by a host without them",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "p-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/v1/project/environments",
+                "status": 200,
+                "body": {
+                  "total": 1,
+                  "projects": [
+                    {
+                      "$id": "staging-9",
+                      "$createdAt": "2024-01-01T00:00:00.000+00:00",
+                      "$updatedAt": "2024-02-01T00:00:00.000+00:00",
+                      "name": "Staging",
+                      "teamId": "",
+                      "region": "",
+                      "devKeys": [],
+                      "smtpEnabled": true,
+                      "smtpSenderName": "",
+                      "smtpSenderEmail": "",
+                      "smtpReplyToName": "",
+                      "smtpReplyToEmail": "",
+                      "smtpHost": "smtp.example.test",
+                      "smtpPort": 587,
+                      "smtpUsername": "",
+                      "smtpPassword": "",
+                      "smtpSecure": "",
+                      "pingCount": 0,
+                      "pingedAt": "",
+                      "labels": [
+                        "a",
+                        "b"
+                      ],
+                      "status": "",
+                      "onboarding": [],
+                      "authMethods": [
+                        {
+                          "$id": "email-password",
+                          "enabled": false
+                        },
+                        {
+                          "$id": "jwt",
+                          "enabled": true
+                        }
+                      ],
+                      "services": [
+                        {
+                          "$id": "users",
+                          "enabled": false
+                        },
+                        {
+                          "$id": "teams",
+                          "enabled": true
+                        }
+                      ],
+                      "protocols": [
+                        {
+                          "$id": "graphql",
+                          "enabled": false
+                        }
+                      ],
+                      "blocks": [],
+                      "consoleAccessedAt": "",
+                      "wafEnabled": false
+                    }
+                  ]
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/environments",
+                "status": 200,
+                "body": {
+                  "total": 0,
+                  "projects": []
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/environments",
+                "status": 404,
+                "body": {
+                  "message": "Route not found",
+                  "code": 404,
+                  "type": "general_route_not_found"
+                },
+                "times": 1
+              },
+              {
+                "method": "GET",
+                "path": "/v1/project/environments",
+                "status": 500,
+                "body": {
+                  "message": "Down",
+                  "code": 500,
+                  "type": "general_server_error"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/v1/project/environments",
+                "status": 201,
+                "body": {
+                  "$id": "new-1",
+                  "$createdAt": "2024-01-01T00:00:00.000+00:00",
+                  "$updatedAt": "2024-02-01T00:00:00.000+00:00",
+                  "name": "Dev",
+                  "teamId": "",
+                  "region": "",
+                  "devKeys": [],
+                  "smtpEnabled": true,
+                  "smtpSenderName": "",
+                  "smtpSenderEmail": "",
+                  "smtpReplyToName": "",
+                  "smtpReplyToEmail": "",
+                  "smtpHost": "smtp.example.test",
+                  "smtpPort": 587,
+                  "smtpUsername": "",
+                  "smtpPassword": "",
+                  "smtpSecure": "",
+                  "pingCount": 0,
+                  "pingedAt": "",
+                  "labels": [
+                    "a",
+                    "b"
+                  ],
+                  "status": "",
+                  "onboarding": [],
+                  "authMethods": [
+                    {
+                      "$id": "email-password",
+                      "enabled": false
+                    },
+                    {
+                      "$id": "jwt",
+                      "enabled": true
+                    }
+                  ],
+                  "services": [
+                    {
+                      "$id": "users",
+                      "enabled": false
+                    },
+                    {
+                      "$id": "teams",
+                      "enabled": true
+                    }
+                  ],
+                  "protocols": [
+                    {
+                      "$id": "graphql",
+                      "enabled": false
+                    }
+                  ],
+                  "blocks": [],
+                  "consoleAccessedAt": "",
+                  "wafEnabled": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Environment",
+            "args": {
+              "id": "staging",
+              "name": "Staging"
+            }
+          },
+          "bind": "e1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Environment",
+            "args": {
+              "id": "dev",
+              "name": "Dev"
+            }
+          },
+          "bind": "e2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Environment",
+            "args": {
+              "id": "qa",
+              "name": "QA"
+            }
+          },
+          "bind": "e3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Environment",
+            "args": {
+              "id": "prod",
+              "name": "Prod"
+            }
+          },
+          "bind": "e4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "e1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "e2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "e3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "e4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "project": "p-${ns}",
+            "api": true,
+            "key": "test-key"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "project-environment"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "project-environment",
+                "id": "staging",
+                "status": "skip",
+                "message": "Environment already exists"
+              },
+              {
+                "$resource": "project-environment",
+                "id": "dev",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "project-environment",
+                "id": "qa",
+                "status": "skip",
+                "message": "The destination does not support environments"
+              },
+              {
+                "$resource": "project-environment",
+                "id": "prod",
+                "status": "error",
+                "message": "Down"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 500,
+              "message": "Down",
+              "resourceName": "project-environment",
+              "resourceGroup": "projects",
+              "resourceId": "prod",
+              "json": {
+                "code": 500,
+                "message": "Down",
+                "resourceName": "project-environment",
+                "resourceGroup": "projects",
+                "resourceId": "prod",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Appwrite\\AppwriteException",
+                "message": "Down"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "project-environment": {
+              "pending": 0,
+              "success": 1,
+              "error": 1,
+              "skip": 2,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e1"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "Staging",
+            "getGroup": "projects",
+            "getId": "staging",
+            "getMessage": "Environment already exists",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e2"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "Dev",
+            "getGroup": "projects",
+            "getId": "dev",
+            "getMessage": "",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e3"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "QA",
+            "getGroup": "projects",
+            "getId": "qa",
+            "getMessage": "The destination does not support environments",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "skip",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "e4"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "Prod",
+            "getGroup": "projects",
+            "getId": "prod",
+            "getMessage": "Down",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "<uniqid>",
+            "getStatus": "error",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "p-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/project/environments",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22name%22%2C%22values%22%3A%5B%22Staging%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/environments",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22name%22%2C%22values%22%3A%5B%22Dev%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "path": "/v1/project/environments",
+              "query": "",
+              "headers": {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": "{\"environmentId\":\"<uniqid>\",\"name\":\"Dev\"}"
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/environments",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22name%22%2C%22values%22%3A%5B%22QA%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/v1/project/environments",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22equal%22%2C%22attribute%22%3A%22name%22%2C%22values%22%3A%5B%22Prod%22%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "p-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
             }
           ]
         }

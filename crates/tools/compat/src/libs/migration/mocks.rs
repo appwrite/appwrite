@@ -61,6 +61,7 @@ const SUPPORTED: &[&str] = &[
     types::PROJECT_LABELS,
     types::PROJECT_SERVICES,
     types::PROJECT_EMAIL_TEMPLATE,
+    types::PROJECT_ENVIRONMENT,
     types::PROVIDER,
     types::TOPIC,
     types::SUBSCRIBER,

@@ -2,7 +2,7 @@
 
 use php_std::{Array, Value};
 
-use super::{Input, param, to_array, to_bool, to_int, to_string};
+use super::{Input, param, to_array, to_bool, to_int, to_opt_int, to_string};
 use crate::error::Result;
 use crate::resource::{Base, Kind, Resource, ResourceRef};
 
@@ -191,6 +191,10 @@ pub struct Topic {
     pub name: String,
     /// Roles allowed to subscribe.
     pub subscribe: Array,
+    /// The MQTT delivery QoS (`None`: the subscriber chooses).
+    pub qos: Option<i64>,
+    /// Seconds offline deliveries are kept (`None`: the providers' expiry).
+    pub expiry: Option<i64>,
 }
 
 impl Topic {
@@ -212,9 +216,16 @@ impl Topic {
         let topic = Topic {
             name: to_string(&i.or("name", Value::from("")), &p(2, "name"))?,
             subscribe: to_array(&i.or("subscribe", Value::Array(Array::new())), &p(3, "subscribe"))?,
+            qos: None,
+            expiry: None,
         };
         let created = to_string(&i.or("createdAt", Value::from("")), &p(4, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(5, "updatedAt"))?;
+        let topic = Topic {
+            qos: to_opt_int(&i.or("qos", Value::Null), &p(6, "qos"))?,
+            expiry: to_opt_int(&i.or("expiry", Value::Null), &p(7, "expiry"))?,
+            ..topic
+        };
         Ok(topic.resource(id, created, updated))
     }
 }

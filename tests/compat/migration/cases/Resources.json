@@ -1240,8 +1240,11 @@
             },
             "getName": "policies",
             "getOriginalId": "",
+            "getPasskeyRpId": null,
             "getPasswordDictionary": false,
             "getPasswordHistory": 0,
+            "getPasswordPwned": null,
+            "getPasswordRotation": null,
             "getPasswordStrength": {
               "min": 6
             },
@@ -1290,6 +1293,9 @@
             "denyDisposableEmail": null,
             "denyFreeEmail": true,
             "denyCorporateEmail": false,
+            "passwordPwned": null,
+            "passwordRotation": null,
+            "passkeyRpId": null,
             "createdAt": "",
             "updatedAt": ""
           }

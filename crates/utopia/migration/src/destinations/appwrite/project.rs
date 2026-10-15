@@ -8,11 +8,19 @@ use utopia_database::{Database as Db, Document, Kind as DbKind, Permission, Perm
 use super::Appwrite;
 use super::normalize_date_time;
 use super::schema::{attr, db_array, db_value, doc, s};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::resource::{Kind, ResourceRef, status, types};
-use crate::resources::cast_bool;
+use crate::resources::{cast_bool, cast_int};
+use crate::sdk::query;
 
 type DbValue = utopia_database::Value;
+
+/// The authenticator type of a passkey.
+const AUTHENTICATOR_PASSKEY: &str = "passkey";
+
+fn v(s: &str) -> Value {
+    Value::from(s)
+}
 
 /// `bin2hex(random_bytes($bytes))`.
 fn random_hex(bytes: usize) -> String {
@@ -135,6 +143,9 @@ impl Appwrite {
                 existing.set("replyToName".into(), Value::from(t.reply_to_name.as_str()));
                 templates.set(php_std::ArrayKey::from(key.as_str()), Value::Array(existing));
                 self.update_project("templates", list(&templates), false).await?;
+            }
+            Kind::Environment(_) => {
+                self.create_environment(r).await?;
             }
             _ => {}
         }
@@ -368,10 +379,59 @@ impl Appwrite {
         Ok(true)
     }
 
+    /// An environment's ID is a project ID, unique across the platform, so
+    /// the source's own is usually taken: the environment gets a new ID and
+    /// is matched by name instead. A destination without environments (400
+    /// or 404) skips it.
+    ///
+    /// PHP: `createEnvironment($resource)`.
+    async fn create_environment(&mut self, r: &ResourceRef) -> Result<()> {
+        let Kind::Environment(e) = r.kind() else { return Ok(()) };
+        let queries = query::list(vec![query::equal("name", Value::Array(Array::from_list(vec![v(&e.name)])))]);
+        let existing = match self.client.invoke("Project", "listEnvironments", &[("queries", queries)]).await {
+            Ok(list) => list,
+            Err(Error::Appwrite { code: 400 | 404, .. }) => {
+                r.set_status(status::SKIPPED, "The destination does not support environments");
+                return Ok(());
+            }
+            Err(error) => return Err(error),
+        };
+        if cast_int(&existing.value("total")) > 0 {
+            r.set_status(status::SKIPPED, "Environment already exists");
+            return Ok(());
+        }
+        self.client
+            .invoke("Project", "createEnvironment", &[("environmentId", v(&id::unique()?)), ("name", v(&e.name))])
+            .await?;
+        Ok(())
+    }
+
+    /// Passkeys are bound to the relying party ID they were registered for,
+    /// so the destination keeps its own (`destination`, when set and
+    /// different) while any user holds a passkey under it: `None`.
+    ///
+    /// PHP: `resolvePasskeyRpId($source, $destination)`.
+    async fn resolve_passkey_rp_id(&self, source: Option<&str>, destination: &str) -> Result<Option<String>> {
+        let Some(source) = source else { return Ok(None) };
+        if destination.is_empty() || source == destination {
+            return Ok(Some(source.to_owned()));
+        }
+        let auth = self.db_for_project.authorization();
+        let passkey = auth
+            .skip(Self::find_one(
+                &self.db_for_project,
+                "authenticators",
+                vec![Query::equal("type", [AUTHENTICATOR_PASSKEY.to_owned()])],
+            ))
+            .await?;
+        Ok(passkey.is_empty().then(|| source.to_owned()))
+    }
+
     /// PHP: `createPolicies($resource)`.
     pub(super) async fn create_policies(&mut self, r: &ResourceRef) -> Result<bool> {
         let Kind::Policies(p) = r.kind() else { return Ok(false) };
-        let mut auths = array_attr(&self.project().await?, "auths");
+        let project = self.project().await?;
+        let mut auths = array_attr(&project, "auths");
         auths.set("passwordHistory".into(), Value::Int(p.password_history));
         auths.set("duration".into(), Value::Int(p.session_duration));
         auths.set("maxSessions".into(), Value::Int(p.sessions_limit));
@@ -391,6 +451,15 @@ impl Appwrite {
         }
         // Policies the source did not report are left as they are.
         let flag = |b: Option<bool>| b.map(Value::Bool);
+        // `is_array($auths) ? optionalString($auths, 'passkeyRpId') ?? '' : ''`.
+        let current = match attr(&project, "auths") {
+            Value::Array(a) => match a.get_str("passkeyRpId") {
+                Some(id @ Value::Str(_)) => crate::resources::cast_string(id),
+                _ => String::new(),
+            },
+            _ => String::new(),
+        };
+        let passkey_rp_id = self.resolve_passkey_rp_id(p.passkey_rp_id.as_deref(), &current).await?;
         let reported = [
             ("membershipsUserAccessedAt", flag(p.memberships_user_accessed_at)),
             ("passwordStrength", p.password_strength.clone().map(Value::Array)),
@@ -399,6 +468,9 @@ impl Appwrite {
             ("disposableEmails", flag(p.deny_disposable_email)),
             ("freeEmails", flag(p.deny_free_email)),
             ("corporateEmails", flag(p.deny_corporate_email)),
+            ("passwordPwned", p.password_pwned.clone().map(Value::Array)),
+            ("passwordRotation", p.password_rotation.clone().map(Value::Array)),
+            ("passkeyRpId", passkey_rp_id.map(|id| Value::from(id.as_str()))),
         ];
         for (k, v) in reported {
             if let Some(v) = v {

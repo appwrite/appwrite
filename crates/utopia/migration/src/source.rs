@@ -9,7 +9,7 @@ use php_std::Value;
 use crate::cache::Cache;
 use crate::error::Result;
 use crate::resource::{ResourceRef, is_supported, status, types};
-use crate::target::Target;
+use crate::target::{Destinations, Resolver, Target};
 use crate::transfer::{EXPORT_GROUPS, Report, ResourceSelector};
 
 /// Receives batches of exported resources (the destination's import).
@@ -93,6 +93,27 @@ pub trait Source: crate::target::AsAny + Send {
 
     /// The shared state, mutably.
     fn target_mut(&mut self) -> &mut Target;
+
+    /// Whether its HTTP calls follow redirects (they do not by default).
+    ///
+    /// PHP: `setFollowRedirects()`.
+    fn set_follow_redirects(&mut self, follow: bool) {
+        self.target_mut().set_follow_redirects(follow);
+    }
+
+    /// Pins its HTTP calls to the addresses `resolver` returns for each URL.
+    ///
+    /// PHP: `setResolver()`.
+    fn set_resolver(&mut self, resolver: Option<Resolver>) {
+        self.target_mut().set_resolver(resolver);
+    }
+
+    /// Confines its HTTP calls to `destinations`.
+    ///
+    /// PHP: `setDestinations()`.
+    fn set_destinations(&mut self, destinations: Destinations) {
+        self.target_mut().set_destinations(destinations);
+    }
 
     /// Counts the resources available for transfer (and checks the service
     /// is reachable), for root resources limited to `resource_ids`.
