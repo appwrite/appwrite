@@ -55,7 +55,10 @@ fn both_sides_store_the_relationship_options_shape() {
     block_on(async {
         let db = artists().await;
         let created = db.create_relationship("artists", albums()).await.unwrap();
-        assert_eq!(sorted(created.to_options(RelationshipSide::Parent)), stored_options(&db, "artists", "albums").await);
+        assert_eq!(
+            sorted(created.to_options(RelationshipSide::Parent)),
+            stored_options(&db, "artists", "albums").await
+        );
         assert_eq!(
             sorted(created.inverse("artists").to_options(RelationshipSide::Child)),
             stored_options(&db, "albums", "artist").await
@@ -264,7 +267,10 @@ fn linking_by_document_writes_nested_documents_to_the_same_depth_as_creating() {
     block_on(async {
         let db = partners().await;
         let partner = |child: &str, toy: &str, part: &str| {
-            (child.to_owned(), vec![("$id", s(child)), ("toy", array(&[("$id", s(toy)), ("part", array(&[("$id", s(part))]))]))])
+            (
+                child.to_owned(),
+                vec![("$id", s(child)), ("toy", array(&[("$id", s(toy)), ("part", array(&[("$id", s(part))]))]))],
+            )
         };
         let (_, created) = partner("c8", "t8", "x8");
         create(&db, "parent", doc(&[("$id", s("p8")), ("partner", array(&created))])).await;
@@ -273,9 +279,11 @@ fn linking_by_document_writes_nested_documents_to_the_same_depth_as_creating() {
         let (_, new) = partner("c7", "t7", "x7");
         update(&db, "parent", "p3", doc(&[("partner", d(&new))])).await;
 
-        for (case, [parent, child, toy, part]) in
-            [("created", ["p8", "c8", "t8", "x8"]), ("linked", ["p2", "c1", "t1", "x1"]), ("new", ["p3", "c7", "t7", "x7"])]
-        {
+        for (case, [parent, child, toy, part]) in [
+            ("created", ["p8", "c8", "t8", "x8"]),
+            ("linked", ["p2", "c1", "t1", "x1"]),
+            ("new", ["p3", "c7", "t7", "x7"]),
+        ] {
             assert_eq!(link(&db, "parent", parent, "partner").await, some(child), "{case}");
             assert_eq!(link(&db, "child", child, "parent").await, some(parent), "{case}");
             assert_eq!(link(&db, "child", child, "toy").await, some(toy), "{case}");

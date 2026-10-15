@@ -423,7 +423,13 @@ impl Adapter for Spy {
         self.inner.count(collection, queries, max).await
     }
 
-    async fn sum(&self, collection: &Collection, attribute: &str, queries: Vec<Query>, max: Option<i64>) -> Result<Value> {
+    async fn sum(
+        &self,
+        collection: &Collection,
+        attribute: &str,
+        queries: Vec<Query>,
+        max: Option<i64>,
+    ) -> Result<Value> {
         self.inner.sum(collection, attribute, queries, max).await
     }
 

@@ -37,7 +37,14 @@ fn scenarios() -> Vec<Scenario> {
     let user = Role::user(USER, "");
     let create_read = vec![Permission::create(&users), Permission::read(&users)];
     let any = Role::any();
-    let s = |name, state, document_security, collection: Vec<String>, stored: Option<Vec<String>>, staged: Option<Vec<String>>, by_id, as_document| Scenario {
+    let s = |name,
+             state,
+             document_security,
+             collection: Vec<String>,
+             stored: Option<Vec<String>>,
+             staged: Option<Vec<String>>,
+             by_id,
+             as_document| Scenario {
         name,
         state,
         document_security,
@@ -58,7 +65,16 @@ fn scenarios() -> Vec<Scenario> {
             None,
             None,
         ),
-        s("unstaged, read without update", State::Unstaged, true, create_read.clone(), Some(Vec::new()), None, Some(NO_UPDATE), Some(NO_UPDATE)),
+        s(
+            "unstaged, read without update",
+            State::Unstaged,
+            true,
+            create_read.clone(),
+            Some(Vec::new()),
+            None,
+            Some(NO_UPDATE),
+            Some(NO_UPDATE),
+        ),
         s(
             "staged deleted, create on the collection, update only for another team",
             State::Deleted,
@@ -119,7 +135,16 @@ fn scenarios() -> Vec<Scenario> {
             None,
             None,
         ),
-        s("staged create without update", State::Created, true, create_read.clone(), None, Some(Vec::new()), Some(NO_UPDATE), Some(NO_UPDATE)),
+        s(
+            "staged create without update",
+            State::Created,
+            true,
+            create_read.clone(),
+            None,
+            Some(Vec::new()),
+            Some(NO_UPDATE),
+            Some(NO_UPDATE),
+        ),
         s(
             "staged create with update",
             State::Created,
@@ -134,7 +159,9 @@ fn scenarios() -> Vec<Scenario> {
 }
 
 fn relationship(kind: &str) -> Relationship {
-    let two_way = |kind| Relationship::new("related", kind).key("related").two_way(true).two_way_key("back").on_delete(OnDelete::SetNull);
+    let two_way = |kind| {
+        Relationship::new("related", kind).key("related").two_way(true).two_way_key("back").on_delete(OnDelete::SetNull)
+    };
     match kind {
         "oneToOne" => two_way(RelationshipType::OneToOne),
         "oneToOne one-way" => Relationship::one_to_one("related").key("related").on_delete(OnDelete::SetNull),
@@ -169,8 +196,12 @@ async fn seed(kind: &str, document_security: bool, permissions: Vec<String>, sto
             collection(&db, "related", vec![string("name", 64)], permissions, document_security).await;
             relate(&db, "parents", relationship(kind)).await;
             if let Some(stored) = stored {
-                create(&db, "related", doc(&[("$id", s("stored")), ("name", s("Stored")), ("$permissions", perms(&stored))]))
-                    .await;
+                create(
+                    &db,
+                    "related",
+                    doc(&[("$id", s("stored")), ("name", s("Stored")), ("$permissions", perms(&stored))]),
+                )
+                .await;
             }
         })
         .await;
@@ -266,7 +297,8 @@ async fn as_stored(db: &Database, collection: &str, id: &str) -> Document {
 
 async fn stored_parent(db: &Database) -> Document {
     let any = Role::any();
-    let parent = doc(&[("$id", s("parent")), ("$permissions", perms(&[Permission::read(&any), Permission::update(&any)]))]);
+    let parent =
+        doc(&[("$id", s("parent")), ("$permissions", perms(&[Permission::read(&any), Permission::update(&any)]))]);
     db.authorization().skip(db.create_document("parents", parent)).await.unwrap()
 }
 
@@ -435,8 +467,10 @@ fn an_api_key_passes_whatever_the_staged_view() {
         for state in [State::Deleted, State::Updated] {
             for by_id in [true, false] {
                 let resolve = resolver(state, Some(Vec::new()));
-                let result =
-                    db.authorization().skip(db.authorize_create("parents", &parent("oneToMany", by_id), Some(resolve))).await;
+                let result = db
+                    .authorization()
+                    .skip(db.authorize_create("parents", &parent("oneToMany", by_id), Some(resolve)))
+                    .await;
                 assert_eq!(refusal(result, "key"), None, "{state:?} {by_id}");
             }
         }

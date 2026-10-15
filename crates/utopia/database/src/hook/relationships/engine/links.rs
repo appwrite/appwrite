@@ -8,10 +8,8 @@ use crate::relationship::{RelationshipDeleteAction as OnDelete, RelationshipSide
 const USER: &str = "u1";
 const NO_READ: &str = "No permissions provided for action 'read'";
 const NO_UPDATE: &str = "No permissions provided for action 'update'";
-const GUEST_NO_READ: &str =
-    "Missing \"read\" permission for role \"users\". Only \"[\"any\",\"guests\"]\" scopes are allowed and \"[\"users\"]\" was given.";
-const GUEST_NO_UPDATE: &str =
-    "Missing \"update\" permission for role \"users\". Only \"[\"any\",\"guests\"]\" scopes are allowed and \"[\"users\"]\" was given.";
+const GUEST_NO_READ: &str = "Missing \"read\" permission for role \"users\". Only \"[\"any\",\"guests\"]\" scopes are allowed and \"[\"users\"]\" was given.";
+const GUEST_NO_UPDATE: &str = "Missing \"update\" permission for role \"users\". Only \"[\"any\",\"guests\"]\" scopes are allowed and \"[\"users\"]\" was given.";
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum Caller {
@@ -24,7 +22,9 @@ enum Caller {
 const TYPES: [&str; 5] = ["oneToOne", "oneToOne one-way", "oneToMany", "manyToOne", "manyToMany"];
 
 fn relationship(kind: &str) -> Relationship {
-    let two_way = |kind| Relationship::new("related", kind).key("related").two_way(true).two_way_key("back").on_delete(OnDelete::SetNull);
+    let two_way = |kind| {
+        Relationship::new("related", kind).key("related").two_way(true).two_way_key("back").on_delete(OnDelete::SetNull)
+    };
     match kind {
         "oneToOne" => two_way(RelationshipType::OneToOne),
         "oneToOne one-way" => Relationship::one_to_one("related").key("related").on_delete(OnDelete::SetNull),
@@ -145,8 +145,14 @@ async fn seed(kind: &str, scenario: &Scenario) -> Database {
                 Array::new(),
             );
             db.create_collection(parents.unwrap()).await.unwrap();
-            collection(&db, "related", vec![string("name", 64)], scenario.collection.clone(), scenario.document_security)
-                .await;
+            collection(
+                &db,
+                "related",
+                vec![string("name", 64)],
+                scenario.collection.clone(),
+                scenario.document_security,
+            )
+            .await;
             relate(&db, "parents", relationship(kind)).await;
             create(
                 &db,
@@ -164,9 +170,7 @@ async fn as_caller<F: std::future::Future>(db: &Database, caller: Caller, future
     let authorization = db.authorization();
     match caller {
         Caller::Key => authorization.skip(future).await,
-        Caller::Guest => {
-            authorization.with_roles(&[Role::any().to_string(), Role::guests().to_string()], future).await
-        }
+        Caller::Guest => authorization.with_roles(&[Role::any().to_string(), Role::guests().to_string()], future).await,
         Caller::Session => {
             let roles = [Role::any().to_string(), Role::users("").to_string(), Role::user(USER, "").to_string()];
             authorization.with_roles(&roles, future).await
@@ -240,7 +244,9 @@ fn creating_a_parent_with_a_stored_related_document() {
                 as_caller(
                     &db,
                     scenario.caller,
-                    db.with_transaction(|| Box::pin(db.create_documents("parents", vec![parent.clone()], BATCH_SIZE, None))),
+                    db.with_transaction(|| {
+                        Box::pin(db.create_documents("parents", vec![parent.clone()], BATCH_SIZE, None))
+                    }),
                 )
                 .await
                 .map(|_| ())
@@ -322,8 +328,12 @@ fn authorize_create_refuses_what_the_create_refuses() {
             ]);
             let given = parent.array_copy();
             let result = if transaction {
-                as_caller(&db, scenario.caller, db.with_transaction(|| Box::pin(db.authorize_create("parents", &parent, None))))
-                    .await
+                as_caller(
+                    &db,
+                    scenario.caller,
+                    db.with_transaction(|| Box::pin(db.authorize_create("parents", &parent, None))),
+                )
+                .await
             } else {
                 as_caller(&db, scenario.caller, db.authorize_create("parents", &parent, None)).await
             };
@@ -344,8 +354,12 @@ fn authorize_update_refuses_what_the_update_refuses() {
             let old = stored_parent(&db).await;
             let change = doc(&[("related", related_value(kind, by_id))]);
             let result = if transaction {
-                as_caller(&db, scenario.caller, db.with_transaction(|| Box::pin(db.authorize_update("parents", &old, &change, None))))
-                    .await
+                as_caller(
+                    &db,
+                    scenario.caller,
+                    db.with_transaction(|| Box::pin(db.authorize_update("parents", &old, &change, None))),
+                )
+                .await
             } else {
                 as_caller(&db, scenario.caller, db.authorize_update("parents", &old, &change, None)).await
             };
@@ -361,9 +375,12 @@ fn authorize_update_refuses_what_the_update_refuses() {
 
 #[test]
 fn a_stored_related_document_sent_as_a_document_is_updated_and_linked() {
-    for kind in
-        [RelationshipType::OneToOne, RelationshipType::OneToMany, RelationshipType::ManyToOne, RelationshipType::ManyToMany]
-    {
+    for kind in [
+        RelationshipType::OneToOne,
+        RelationshipType::OneToMany,
+        RelationshipType::ManyToOne,
+        RelationshipType::ManyToMany,
+    ] {
         for transaction in [false, true] {
             block_on(async {
                 let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::None)));
@@ -377,8 +394,15 @@ fn a_stored_related_document_sent_as_a_document_is_updated_and_linked() {
                     .skip(async {
                         db.create(None).await.unwrap();
                         for id in ["parents", "related"] {
-                            let definition =
-                                Collection::create(id, "", vec![string("name", 64)], Vec::new(), None, true, Array::new());
+                            let definition = Collection::create(
+                                id,
+                                "",
+                                vec![string("name", 64)],
+                                Vec::new(),
+                                None,
+                                true,
+                                Array::new(),
+                            );
                             db.create_collection(definition.unwrap()).await.unwrap();
                         }
                         relate(
@@ -401,9 +425,11 @@ fn a_stored_related_document_sent_as_a_document_is_updated_and_linked() {
                             ("related", if single { related } else { value::list([related]) }),
                         ]);
                         if transaction {
-                            db.with_transaction(|| Box::pin(db.create_documents("parents", vec![parent.clone()], BATCH_SIZE, None)))
-                                .await
-                                .unwrap();
+                            db.with_transaction(|| {
+                                Box::pin(db.create_documents("parents", vec![parent.clone()], BATCH_SIZE, None))
+                            })
+                            .await
+                            .unwrap();
                         } else {
                             create(&db, "parents", parent).await;
                         }

@@ -11,8 +11,12 @@ async fn library() -> Database {
         collection(&db, id, vec![string(attribute, 64)], crud(), true).await;
     }
     relate(&db, "books", Relationship::many_to_one("authors").two_way(true).key("author").two_way_key("books")).await;
-    relate(&db, "authors", Relationship::many_to_one("publishers").two_way(true).key("publisher").two_way_key("authors"))
-        .await;
+    relate(
+        &db,
+        "authors",
+        Relationship::many_to_one("publishers").two_way(true).key("publisher").two_way_key("authors"),
+    )
+    .await;
     create(&db, "publishers", doc(&[("$id", s("acme")), ("name", s("Acme"))])).await;
     create(&db, "authors", doc(&[("$id", s("ada")), ("name", s("Ada")), ("publisher", s("acme"))])).await;
     create(&db, "books", doc(&[("$id", s("notes")), ("title", s("Notes")), ("author", s("ada"))])).await;
@@ -25,8 +29,12 @@ async fn find_ids(db: &Database, collection: &str, queries: Vec<Query>) -> Vec<S
 
 async fn add_countries(db: &Database, countries: &[(&str, &str)]) {
     collection(db, "countries", vec![string("name", 64)], crud(), true).await;
-    relate(db, "publishers", Relationship::many_to_one("countries").two_way(true).key("country").two_way_key("publishers"))
-        .await;
+    relate(
+        db,
+        "publishers",
+        Relationship::many_to_one("countries").two_way(true).key("country").two_way_key("publishers"),
+    )
+    .await;
     for (id, name) in countries {
         create(db, "countries", doc(&[("$id", s(id)), ("name", s(name))])).await;
     }
@@ -37,7 +45,10 @@ async fn add_countries(db: &Database, countries: &[(&str, &str)]) {
 fn a_nested_path_through_a_plain_attribute_matches_nothing() {
     block_on(async {
         let db = library().await;
-        assert_eq!(find_ids(&db, "books", vec![Query::equal("author.publisher.name", ["Acme"])]).await, names(&["notes"]));
+        assert_eq!(
+            find_ids(&db, "books", vec![Query::equal("author.publisher.name", ["Acme"])]).await,
+            names(&["notes"])
+        );
         assert!(find_ids(&db, "books", vec![Query::equal("author.name.first", ["Ada"])]).await.is_empty());
     });
 }
@@ -151,7 +162,10 @@ async fn link(db: &Database, collection: &str, id: &str, key: &str) -> Option<St
     }
 }
 
-fn values() -> [(&'static str, fn(&str) -> Value); 2] {
+/// How a related document is given: by id or as a document.
+type Given = (&'static str, fn(&str) -> Value);
+
+fn values() -> [Given; 2] {
     [("id", |id| s(id)), ("document", |id| d(&[("$id", s(id))]))]
 }
 
@@ -177,7 +191,8 @@ fn linking_a_document_linked_elsewhere_throws_the_relationship_duplicate() {
     for (name, value) in values() {
         block_on(async {
             let db = one_to_one().await;
-            let error = failure(db.update_document("parent", "c", doc(&[("partner", value("L"))])).await, Kind::Duplicate);
+            let error =
+                failure(db.update_document("parent", "c", doc(&[("partner", value("L"))])).await, Kind::Duplicate);
             assert_eq!(error.kind(), Kind::Duplicate, "{name}");
             assert_eq!(error.message(), DUPLICATE);
             assert_eq!(link(&db, "parent", "c", "partner").await, None, "{name}");

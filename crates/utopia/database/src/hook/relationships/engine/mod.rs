@@ -6,17 +6,17 @@
 //! adapters' ports.
 
 mod authorize_grants;
+mod coverage;
 mod create_returns_stored;
 mod delete_action;
 mod delete_related_update;
 mod hook;
 mod links;
 mod nested_pre_check;
-mod coverage;
 mod nested_preparation;
 mod options;
-mod staged_view;
 mod prepared_create;
+mod staged_view;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -125,8 +125,7 @@ pub(crate) async fn collection(
     document_security: bool,
 ) {
     let collection =
-        Collection::create(id, "", attributes, Vec::new(), Some(permissions), document_security, Array::new())
-            .unwrap();
+        Collection::create(id, "", attributes, Vec::new(), Some(permissions), document_security, Array::new()).unwrap();
     database.create_collection(collection).await.unwrap();
 }
 

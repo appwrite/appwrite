@@ -164,7 +164,11 @@ fn deleting_a_many_to_many_side_reports_the_peers() {
         relate(
             &db,
             "parent",
-            Relationship::many_to_many("child").two_way(true).key("children").two_way_key("parents").on_delete(OnDelete::SetNull),
+            Relationship::many_to_many("child")
+                .two_way(true)
+                .key("children")
+                .two_way_key("parents")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         create_family(&db, "parent1", &["child1", "child2"]).await;
@@ -183,7 +187,11 @@ fn deleting_a_one_to_one_side_reports_its_partner() {
         relate(
             &db,
             "parent",
-            Relationship::one_to_one("child").two_way(true).key("partner").two_way_key("partnerOf").on_delete(OnDelete::SetNull),
+            Relationship::one_to_one("child")
+                .two_way(true)
+                .key("partner")
+                .two_way_key("partnerOf")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         create(&db, "child", owned("child1")).await;
@@ -213,7 +221,11 @@ fn one_way_peers_are_not_reported_while_two_way_peers_are() {
         relate(
             &db,
             "parent",
-            Relationship::one_to_many("child").two_way(true).key("children").two_way_key("parent").on_delete(OnDelete::SetNull),
+            Relationship::one_to_many("child")
+                .two_way(true)
+                .key("children")
+                .two_way_key("parent")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         create(&db, "child", owned("child1")).await;
@@ -239,13 +251,21 @@ fn a_peer_cascaded_away_by_another_relationship_is_not_reported_while_a_survivor
         relate(
             &db,
             "parent",
-            Relationship::many_to_one("pair").two_way(true).key("owner").two_way_key("owned").on_delete(OnDelete::SetNull),
+            Relationship::many_to_one("pair")
+                .two_way(true)
+                .key("owner")
+                .two_way_key("owned")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         relate(
             &db,
             "parent",
-            Relationship::one_to_one("pair").two_way(true).key("buddy").two_way_key("buddyOf").on_delete(OnDelete::Cascade),
+            Relationship::one_to_one("pair")
+                .two_way(true)
+                .key("buddy")
+                .two_way_key("buddyOf")
+                .on_delete(OnDelete::Cascade),
         )
         .await;
         create(&db, "pair", owned("pair1")).await;
@@ -272,13 +292,21 @@ fn a_peer_removed_down_a_cascade_chain_is_not_reported_while_its_sibling_is() {
         relate(
             &db,
             "parent",
-            Relationship::one_to_one("pair").two_way(true).key("buddy").two_way_key("buddyOf").on_delete(OnDelete::Cascade),
+            Relationship::one_to_one("pair")
+                .two_way(true)
+                .key("buddy")
+                .two_way_key("buddyOf")
+                .on_delete(OnDelete::Cascade),
         )
         .await;
         relate(
             &db,
             "pair",
-            Relationship::one_to_one("child").two_way(true).key("tail").two_way_key("tailOf").on_delete(OnDelete::Cascade),
+            Relationship::one_to_one("child")
+                .two_way(true)
+                .key("tail")
+                .two_way_key("tailOf")
+                .on_delete(OnDelete::Cascade),
         )
         .await;
         for child in ["child1", "child2"] {

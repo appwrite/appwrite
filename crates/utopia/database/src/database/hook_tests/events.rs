@@ -77,8 +77,15 @@ fn crud() -> Vec<String> {
 }
 
 async fn create_notes(db: &Database) {
-    let notes =
-        Collection::create(NOTES, "", vec![Attribute::string("name", 64)], Vec::new(), Some(crud()), false, Array::new());
+    let notes = Collection::create(
+        NOTES,
+        "",
+        vec![Attribute::string("name", 64)],
+        Vec::new(),
+        Some(crud()),
+        false,
+        Array::new(),
+    );
     db.create_collection(notes.unwrap()).await.unwrap();
 }
 
@@ -145,7 +152,8 @@ fn a_relationship_rename_keeps_metadata_and_columns_together_when_a_hook_fails()
         .await
         .unwrap();
         db.create_document("parent", Document::from_pairs([("$id", value::string("owner"))]).unwrap()).await.unwrap();
-        let member = Document::from_pairs([("$id", value::string("member")), ("parent", value::string("owner"))]).unwrap();
+        let member =
+            Document::from_pairs([("$id", value::string("member")), ("parent", value::string("owner"))]).unwrap();
         db.create_document("child", member).await.unwrap();
         db.add_hook(failing(Event::AttributeUpdate, broken())).unwrap();
 
@@ -190,7 +198,9 @@ fn isolated() -> Vec<(&'static str, Event, Operation)> {
                 db.update_collection(COLLECTION, update).await.map(|_| ())
             })
         }),
-        ("collection read", Event::CollectionRead, |db| Box::pin(async move { db.get_collection(COLLECTION).await.map(|_| ()) })),
+        ("collection read", Event::CollectionRead, |db| {
+            Box::pin(async move { db.get_collection(COLLECTION).await.map(|_| ()) })
+        }),
         ("collection list", Event::CollectionList, |db| {
             Box::pin(async move { db.list_collections(25, 0).await.map(|_| ()) })
         }),
@@ -201,7 +211,9 @@ fn isolated() -> Vec<(&'static str, Event, Operation)> {
             Box::pin(async move { db.create_attribute(COLLECTION, Attribute::string("summary", 64)).await.map(|_| ()) })
         }),
         ("attributes create", Event::AttributesCreate, |db| {
-            Box::pin(async move { db.create_attributes(COLLECTION, vec![Attribute::string("summary", 64)]).await.map(|_| ()) })
+            Box::pin(async move {
+                db.create_attributes(COLLECTION, vec![Attribute::string("summary", 64)]).await.map(|_| ())
+            })
         }),
         ("attribute update", Event::AttributeUpdate, |db| {
             Box::pin(async move {
@@ -209,7 +221,9 @@ fn isolated() -> Vec<(&'static str, Event, Operation)> {
                 db.update_attribute(COLLECTION, "title", update).await.map(|_| ())
             })
         }),
-        ("attribute delete", Event::AttributeDelete, |db| Box::pin(async move { db.delete_attribute(COLLECTION, "views").await })),
+        ("attribute delete", Event::AttributeDelete, |db| {
+            Box::pin(async move { db.delete_attribute(COLLECTION, "views").await })
+        }),
         ("index rename", Event::IndexRename, |db| {
             Box::pin(async move {
                 db.create_index(COLLECTION, Index::key("by_title", ["title"], Vec::new(), Vec::new())?).await?;
@@ -222,7 +236,9 @@ fn isolated() -> Vec<(&'static str, Event, Operation)> {
                 db.delete_index(COLLECTION, "by_title").await
             })
         }),
-        ("collection delete", Event::CollectionDelete, |db| Box::pin(async move { db.delete_collection(COLLECTION).await })),
+        ("collection delete", Event::CollectionDelete, |db| {
+            Box::pin(async move { db.delete_collection(COLLECTION).await })
+        }),
     ]
 }
 
@@ -230,7 +246,9 @@ fn propagating() -> Vec<(&'static str, Event, Operation)> {
     vec![
         ("index create", Event::IndexCreate, |db| {
             Box::pin(async move {
-                db.create_index(COLLECTION, Index::key("by_title", ["title"], Vec::new(), Vec::new())?).await.map(|_| ())
+                db.create_index(COLLECTION, Index::key("by_title", ["title"], Vec::new(), Vec::new())?)
+                    .await
+                    .map(|_| ())
             })
         }),
         ("document read", Event::DocumentRead, |db| {
@@ -391,13 +409,18 @@ fn collection_events() {
         let comments = Collection::create("comments", "", Vec::new(), Vec::new(), None, true, Array::new()).unwrap();
         db.create_collection(comments).await.unwrap();
         db.get_collection("comments").await.unwrap();
-        db.update_collection("comments", crate::collection::Update { document_security: Some(true), ..Default::default() })
-            .await
-            .unwrap();
+        db.update_collection(
+            "comments",
+            crate::collection::Update { document_security: Some(true), ..Default::default() },
+        )
+        .await
+        .unwrap();
         let collections = db.list_collections(25, 0).await.unwrap();
         db.delete_collection("comments").await.unwrap();
 
-        let Domain::CollectionCreated { collection, definition } = only(&recorder, Event::CollectionCreate) else { panic!() };
+        let Domain::CollectionCreated { collection, definition } = only(&recorder, Event::CollectionCreate) else {
+            panic!()
+        };
         assert_eq!((collection.as_str(), definition.id()), ("comments", "comments"));
         let Domain::CollectionRead { definition, .. } = only(&recorder, Event::CollectionRead) else { panic!() };
         assert_eq!(definition.id(), "comments");
@@ -416,9 +439,13 @@ fn attribute_events() {
         let (db, recorder) = typed().await;
         db.create_attribute(COLLECTION, Attribute::string("summary", 64)).await.unwrap();
         db.create_attributes(COLLECTION, vec![Attribute::integer("likes")]).await.unwrap();
-        db.update_attribute(COLLECTION, "likes", crate::attribute::Update { required: Some(true), ..Default::default() })
-            .await
-            .unwrap();
+        db.update_attribute(
+            COLLECTION,
+            "likes",
+            crate::attribute::Update { required: Some(true), ..Default::default() },
+        )
+        .await
+        .unwrap();
         db.rename_attribute(COLLECTION, "summary", "abstract").await.unwrap();
         db.delete_attribute(COLLECTION, "abstract").await.unwrap();
 
@@ -451,9 +478,12 @@ fn attribute_events() {
 fn index_events() {
     block_on(async {
         let (db, recorder) = typed().await;
-        let key = |key: &str, attributes: &[&str]| Index::key(key, attributes.to_vec(), Vec::new(), Vec::new()).unwrap();
+        let key =
+            |key: &str, attributes: &[&str]| Index::key(key, attributes.to_vec(), Vec::new(), Vec::new()).unwrap();
         db.create_index(COLLECTION, key("byTitle", &["title"])).await.unwrap();
-        db.create_indexes(COLLECTION, vec![key("byViews", &["views"]), key("byBoth", &["title", "views"])]).await.unwrap();
+        db.create_indexes(COLLECTION, vec![key("byViews", &["views"]), key("byBoth", &["title", "views"])])
+            .await
+            .unwrap();
         db.rename_index(COLLECTION, "byTitle", "titles").await.unwrap();
         db.delete_index(COLLECTION, "titles").await.unwrap();
 

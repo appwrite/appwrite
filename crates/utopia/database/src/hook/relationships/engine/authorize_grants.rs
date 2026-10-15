@@ -188,14 +188,16 @@ fn it_refuses_the_grants_authorize_create_and_update_refuse() {
             let mut adding = foreign();
             adding.push(Permission::update(&Role::user("u2", "")));
             let held = vec![Permission::read(&Role::user(USER, "")), Permission::update(&Role::users(""))];
-            let array: Array = [
-                (value::ArrayKey::from("name"), s("new")),
-                (value::ArrayKey::from("$permissions"), perms(&foreign())),
-            ]
-            .into_iter()
-            .collect();
+            let array: Array =
+                [(value::ArrayKey::from("name"), s("new")), (value::ArrayKey::from("$permissions"), perms(&foreign()))]
+                    .into_iter()
+                    .collect();
             let cases: Vec<(&str, Value, Option<String>)> = vec![
-                ("a new document adding an unheld role", d(&[("name", s("new")), ("$permissions", perms(&foreign()))]), some(UNHELD)),
+                (
+                    "a new document adding an unheld role",
+                    d(&[("name", s("new")), ("$permissions", perms(&foreign()))]),
+                    some(UNHELD),
+                ),
                 ("a new document adding held roles", d(&[("name", s("new")), ("$permissions", perms(&held))]), None),
                 ("a new document given as an array", Value::Array(array), some(UNHELD)),
                 ("a new document without permissions", d(&[("name", s("new"))]), None),
@@ -214,7 +216,11 @@ fn it_refuses_the_grants_authorize_create_and_update_refuse() {
                     d(&[("$id", s(STORED)), ("name", s("Stored")), ("$permissions", value::list([]))]),
                     None,
                 ),
-                ("malformed permissions", d(&[("name", s("new")), ("$permissions", strs(&["malformed"]))]), Some(malformed)),
+                (
+                    "malformed permissions",
+                    d(&[("name", s("new")), ("$permissions", strs(&["malformed"]))]),
+                    Some(malformed),
+                ),
             ];
 
             for (case, related, expected) in cases {
@@ -252,10 +258,7 @@ fn it_checks_no_create_or_update_permission() {
                     parent(kind, d(&[("$id", s(STORED)), ("name", s("Changed")), ("$permissions", value::list([]))])),
                 ),
                 ("a related document given by ID", parent(kind, s(STORED))),
-                (
-                    "unheld roles on the parent itself",
-                    doc(&[("$id", s(PARENT)), ("$permissions", perms(&foreign()))]),
-                ),
+                ("unheld roles on the parent itself", doc(&[("$id", s(PARENT)), ("$permissions", perms(&foreign()))])),
             ];
             for (case, document) in documents {
                 assert_eq!(f.create(&document, None).await, some(NO_CREATE), "{kind:?} {case}");
@@ -334,11 +337,8 @@ fn nested_hooks_prepare_every_related_document_first() {
             assert_eq!(f.create(&document, None).await, f.grants(PARENTS, &document, None).await);
 
             f.seen.lock().unwrap().clear();
-            let held = doc(&[
-                ("$id", s(MARKER)),
-                ("name", s("related")),
-                (NEXT, value_of(kind, Value::from(leaf.clone()))),
-            ]);
+            let held =
+                doc(&[("$id", s(MARKER)), ("name", s("related")), (NEXT, value_of(kind, Value::from(leaf.clone())))]);
             assert_eq!(f.grants(PARENTS, &parent(kind, Value::from(held)), None).await, some(UNHELD), "{kind:?}");
             assert_eq!(*f.seen.lock().unwrap(), vec![pair(RELATED), pair(LEAVES)], "{kind:?}");
 
@@ -348,7 +348,10 @@ fn nested_hooks_prepare_every_related_document_first() {
                 ("name", s("related")),
                 (NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s("leaf"))]))),
             ]);
-            assert_eq!(f.grants(PARENTS, &parent(kind, Value::from(leafless)), Some(f.resolve_as_stored())).await, None);
+            assert_eq!(
+                f.grants(PARENTS, &parent(kind, Value::from(leafless)), Some(f.resolve_as_stored())).await,
+                None
+            );
             assert_eq!(*f.seen.lock().unwrap(), vec![pair(RELATED), pair(LEAVES)], "{kind:?}");
             assert_eq!(related.id(), MARKER);
             assert_eq!(leaf.id(), MARKER);
@@ -376,7 +379,8 @@ fn an_id_a_nested_hook_assigns_is_judged_new() {
                     ])
                 })
             });
-            let kept = parent(kind, d(&[("$id", s(STORED)), ("name", s("Stored")), ("$permissions", perms(&foreign()))]));
+            let kept =
+                parent(kind, d(&[("$id", s(STORED)), ("name", s("Stored")), ("$permissions", perms(&foreign()))]));
             let assigned =
                 parent(kind, d(&[("$id", s(MARKER)), ("name", s("Stored")), ("$permissions", perms(&foreign()))]));
 
@@ -398,12 +402,11 @@ fn it_does_nothing_unless_grants_are_checked() {
         block_on(async {
             let f = build(kind, everything(), everything(), false).await;
             f.add_marker();
-            let document = parent(
-                kind,
-                d(&[("$id", s(MARKER)), ("name", s("new")), ("$permissions", perms(&foreign()))]),
-            );
+            let document =
+                parent(kind, d(&[("$id", s(MARKER)), ("name", s("new")), ("$permissions", perms(&foreign()))]));
             let db = &f.db;
-            let check = |collection: &'static str| db.authorize_grants(collection, &document, Some(f.resolve_as_stored()));
+            let check =
+                |collection: &'static str| db.authorize_grants(collection, &document, Some(f.resolve_as_stored()));
 
             assert_eq!(refusal(check(PARENTS).await), None, "grants are not checked by default");
             assert_eq!(refusal(check("missing").await), None, "nothing is read while grants are not checked");

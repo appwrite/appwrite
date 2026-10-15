@@ -38,9 +38,7 @@ static NAMESPACES: AtomicU64 = AtomicU64::new(0);
 async fn fixture_on(adapter: Arc<dyn crate::adapter::Adapter>, cache: Arc<utopia_cache::Cache>) -> Database {
     let database = Database::new(adapter, cache);
     database.set_authorization(Arc::new(Authorization::new(true)));
-    database
-        .set_database("hooks")
-        .set_namespace(&format!("hooks_{}", NAMESPACES.fetch_add(1, Ordering::Relaxed)));
+    database.set_database("hooks").set_namespace(&format!("hooks_{}", NAMESPACES.fetch_add(1, Ordering::Relaxed)));
     database.create(None).await.unwrap();
     let any = Role::any();
     let posts = Collection::create(
@@ -48,7 +46,12 @@ async fn fixture_on(adapter: Arc<dyn crate::adapter::Adapter>, cache: Arc<utopia
         "",
         vec![Attribute::string("title", 64), Attribute::integer("views")],
         Vec::new(),
-        Some(vec![Permission::create(&any), Permission::read(&any), Permission::update(&any), Permission::delete(&any)]),
+        Some(vec![
+            Permission::create(&any),
+            Permission::read(&any),
+            Permission::update(&any),
+            Permission::delete(&any),
+        ]),
         true,
         Array::new(),
     )

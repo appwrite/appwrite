@@ -230,10 +230,17 @@ fn a_nested_hook_rewrites_every_depth_on_create() {
             let f = two_way_database(kind).await;
             f.add(f.marker());
             let grandchild = doc(&[("$id", s(MARKER)), ("name", s("grandchild"))]);
-            let child =
-                doc(&[("$id", s(MARKER)), ("name", s("child")), (NEXT, value_of(kind, Value::from(grandchild.clone())))]);
-            create(&f.db, FIRST, doc(&[("$id", s("root")), ("name", s("root")), (NEXT, value_of(kind, Value::from(child.clone())))]))
-                .await;
+            let child = doc(&[
+                ("$id", s(MARKER)),
+                ("name", s("child")),
+                (NEXT, value_of(kind, Value::from(grandchild.clone()))),
+            ]);
+            create(
+                &f.db,
+                FIRST,
+                doc(&[("$id", s("root")), ("name", s("root")), (NEXT, value_of(kind, Value::from(child.clone())))]),
+            )
+            .await;
 
             let child_id = f.generated_id(SECOND, "child").await;
             let grandchild_id = f.generated_id(THIRD, "grandchild").await;
@@ -259,7 +266,8 @@ fn a_nested_hook_rewrites_the_inverse_side_two_levels_down() {
                 ("name", s("child")),
                 (PREVIOUS, reverse(kind, doc(&[("$id", s(MARKER)), ("name", s("root"))]))),
             ]);
-            create(&f.db, THIRD, doc(&[("$id", s("leaf")), ("name", s("leaf")), (PREVIOUS, reverse(kind, child))])).await;
+            create(&f.db, THIRD, doc(&[("$id", s("leaf")), ("name", s("leaf")), (PREVIOUS, reverse(kind, child))]))
+                .await;
 
             let child_id = f.generated_id(SECOND, "child").await;
             let root_id = f.generated_id(FIRST, "root").await;
@@ -288,7 +296,8 @@ fn a_nested_hook_reaches_three_levels_down_in_both_directions() {
         create(&f.db, FIRST, doc(&[("$id", s("root")), ("name", s("root")), (NEXT, docs(vec![child]))])).await;
         let inverse_grandchild = marked("inverse grandchild", NEXT, Some(marked("inverse great-grandchild", "", None)));
         let inverse_child = marked("inverse child", PREVIOUS, Some(inverse_grandchild));
-        create(&f.db, THIRD, doc(&[("$id", s("leaf")), ("name", s("leaf")), (PREVIOUS, docs(vec![inverse_child]))])).await;
+        create(&f.db, THIRD, doc(&[("$id", s("leaf")), ("name", s("leaf")), (PREVIOUS, docs(vec![inverse_child]))]))
+            .await;
 
         let child = f.generated_id(SECOND, "child").await;
         let grandchild = f.generated_id(THIRD, "grandchild").await;
@@ -326,10 +335,15 @@ fn a_nested_hook_is_given_a_related_document_sent_as_an_array() {
         block_on(async {
             let f = two_way_database(kind).await;
             f.add(f.marker());
-            let child: Array =
-                [(value::ArrayKey::from("$id"), s(MARKER)), (value::ArrayKey::from("name"), s("child"))].into_iter().collect();
-            create(&f.db, FIRST, doc(&[("$id", s("root")), ("name", s("root")), (NEXT, value_of(kind, Value::Array(child)))]))
-                .await;
+            let child: Array = [(value::ArrayKey::from("$id"), s(MARKER)), (value::ArrayKey::from("name"), s("child"))]
+                .into_iter()
+                .collect();
+            create(
+                &f.db,
+                FIRST,
+                doc(&[("$id", s("root")), ("name", s("root")), (NEXT, value_of(kind, Value::Array(child)))]),
+            )
+            .await;
             let child = f.generated_id(SECOND, "child").await;
             assert_eq!(f.next_ids(FIRST, "root", NEXT).await, vec![child], "{kind:?}");
             assert_eq!(f.seen(), vec![pair(SECOND, MARKER)], "{kind:?}");
@@ -378,7 +392,10 @@ fn a_nested_hook_rewrites_on_create_documents() {
                             d(&[
                                 ("$id", s(MARKER)),
                                 ("name", s(&format!("{id} child"))),
-                                (NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s(&format!("{id} grandchild")))]))),
+                                (
+                                    NEXT,
+                                    value_of(kind, d(&[("$id", s(MARKER)), ("name", s(&format!("{id} grandchild")))])),
+                                ),
                             ]),
                         ),
                     ),
@@ -413,7 +430,8 @@ fn the_top_level_document_and_string_values_are_not_given_to_the_hook() {
             let f = two_way_database(kind).await;
             f.add(f.marker());
             create(&f.db, SECOND, doc(&[("$id", s(MARKER)), ("name", s("literal"))])).await;
-            create(&f.db, FIRST, doc(&[("$id", s(MARKER)), ("name", s("root")), (NEXT, value_of(kind, s(MARKER)))])).await;
+            create(&f.db, FIRST, doc(&[("$id", s(MARKER)), ("name", s("root")), (NEXT, value_of(kind, s(MARKER)))]))
+                .await;
 
             assert_eq!(get(&f.db, FIRST, MARKER).await.get("name"), Some(&s("root")));
             assert_eq!(f.next_ids(FIRST, MARKER, NEXT).await, names(&[MARKER]), "{kind:?}");
@@ -439,7 +457,11 @@ fn an_empty_id_is_still_generated_and_an_explicit_id_is_kept_with_a_hook() {
                         NEXT,
                         value_of(
                             kind,
-                            d(&[("$id", s("chosen")), ("name", s("child")), (NEXT, value_of(kind, d(&[("name", s("grandchild"))])))]),
+                            d(&[
+                                ("$id", s("chosen")),
+                                ("name", s("child")),
+                                (NEXT, value_of(kind, d(&[("name", s("grandchild"))]))),
+                            ]),
                         ),
                     ),
                 ]),
@@ -463,7 +485,11 @@ fn hooks_run_in_registration_order() {
             create(
                 &f.db,
                 FIRST,
-                doc(&[("$id", s("root")), ("name", s("root")), (NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s("child"))])))]),
+                doc(&[
+                    ("$id", s("root")),
+                    ("name", s("root")),
+                    (NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s("child"))]))),
+                ]),
             )
             .await;
             assert_eq!(f.seen(), vec![pair(SECOND, MARKER), pair(SECOND, "renamed")], "{kind:?}");
@@ -508,14 +534,18 @@ fn a_hook_exception_writes_nothing() {
             let f = two_way_database(kind).await;
             create(&f.db, FIRST, doc(&[("$id", s("stored")), ("name", s("stored"))])).await;
             f.db.add_hook(Hook::nested(Arc::new(Refusing))).unwrap();
-            let children = || value_of(kind, d(&[("name", s("child")), (NEXT, value_of(kind, d(&[("name", s("grandchild"))])))]));
+            let children =
+                || value_of(kind, d(&[("name", s("child")), (NEXT, value_of(kind, d(&[("name", s("grandchild"))])))]));
 
             let results = [
                 (
                     "create",
-                    f.db.create_document(FIRST, doc(&[("$id", s("created")), ("name", s("created")), (NEXT, children())]))
-                        .await
-                        .map(|_| ()),
+                    f.db.create_document(
+                        FIRST,
+                        doc(&[("$id", s("created")), ("name", s("created")), (NEXT, children())]),
+                    )
+                    .await
+                    .map(|_| ()),
                 ),
                 (
                     "create in bulk",
@@ -557,7 +587,8 @@ fn the_grant_check_judges_the_rewritten_document() {
         block_on(async {
             let f = two_way_database(kind).await;
             let db = &f.db;
-            create(db, SECOND, doc(&[("$id", s(MARKER)), ("name", s("stored")), ("$permissions", perms(&unheld()))])).await;
+            create(db, SECOND, doc(&[("$id", s(MARKER)), ("name", s("stored")), ("$permissions", perms(&unheld()))]))
+                .await;
             db.set_check_grants(true);
             create(db, FIRST, root_with_marked_child(kind, "unhooked", &unheld())).await;
             assert_eq!(f.next_ids(FIRST, "unhooked", NEXT).await, names(&[MARKER]), "{kind:?}");
@@ -590,7 +621,8 @@ fn an_id_the_hook_assigns_is_judged_new_without_reading_the_stored_permissions()
         block_on(async {
             let f = two_way_database(kind).await;
             let db = &f.db;
-            create(db, SECOND, doc(&[("$id", s("stored")), ("name", s("stored")), ("$permissions", perms(&unheld()))])).await;
+            create(db, SECOND, doc(&[("$id", s("stored")), ("name", s("stored")), ("$permissions", perms(&unheld()))]))
+                .await;
             create(db, FIRST, doc(&[("$id", s("updated")), ("name", s("updated"))])).await;
             db.set_check_grants(true);
             f.add(f.hook(|id| Ok(if id == MARKER { "stored".into() } else { id.to_owned() })));
@@ -598,8 +630,11 @@ fn an_id_the_hook_assigns_is_judged_new_without_reading_the_stored_permissions()
 
             assert_eq!(
                 refusal(
-                    db.create_document(FIRST, doc(&[("$id", s("created")), ("name", s("created")), (NEXT, value_of(kind, child(MARKER)))]))
-                        .await
+                    db.create_document(
+                        FIRST,
+                        doc(&[("$id", s("created")), ("name", s("created")), (NEXT, value_of(kind, child(MARKER)))])
+                    )
+                    .await
                 ),
                 Some(UNHELD_REFUSAL.to_owned()),
                 "{kind:?}"
@@ -612,7 +647,8 @@ fn an_id_the_hook_assigns_is_judged_new_without_reading_the_stored_permissions()
             assert_eq!(names_in(db, FIRST).await, names(&["updated"]));
             assert!(f.next_ids(FIRST, "updated", NEXT).await.is_empty());
 
-            create(db, FIRST, doc(&[("$id", s("kept")), ("name", s("kept")), (NEXT, value_of(kind, child("stored")))])).await;
+            create(db, FIRST, doc(&[("$id", s("kept")), ("name", s("kept")), (NEXT, value_of(kind, child("stored")))]))
+                .await;
             assert_eq!(f.next_ids(FIRST, "kept", NEXT).await, names(&["stored"]), "{kind:?}");
             let stored = db.authorization().skip(db.get_document(SECOND, "stored", Vec::new(), false)).await.unwrap();
             assert_eq!(stored.permissions().unwrap(), unheld());
@@ -631,7 +667,11 @@ fn an_unheld_role_is_refused_at_each_depth() {
                 ("$id", s("depth one")),
                 (NEXT, value_of(kind, d(&[("name", s("child")), ("$permissions", perms(&unheld()))]))),
             ]);
-            assert_eq!(refusal(db.create_document(FIRST, depth_one).await), Some(UNHELD_REFUSAL.to_owned()), "{kind:?}");
+            assert_eq!(
+                refusal(db.create_document(FIRST, depth_one).await),
+                Some(UNHELD_REFUSAL.to_owned()),
+                "{kind:?}"
+            );
             let depth_two = doc(&[
                 ("$id", s("depth two")),
                 (
@@ -645,7 +685,11 @@ fn an_unheld_role_is_refused_at_each_depth() {
                     ),
                 ),
             ]);
-            assert_eq!(refusal(db.create_document(FIRST, depth_two).await), Some(UNHELD_REFUSAL.to_owned()), "{kind:?}");
+            assert_eq!(
+                refusal(db.create_document(FIRST, depth_two).await),
+                Some(UNHELD_REFUSAL.to_owned()),
+                "{kind:?}"
+            );
             f.assert_wrote_nothing().await;
         });
     }
@@ -657,10 +701,15 @@ fn an_unheld_role_on_a_new_to_many_item_is_refused() {
         block_on(async {
             let f = one_way_database(kind).await;
             let db = &f.db;
-            create(db, FIRST, doc(&[("$id", s("root")), (NEXT, docs(vec![doc(&[("$id", s("held")), ("name", s("held"))])]))]))
-                .await;
+            create(
+                db,
+                FIRST,
+                doc(&[("$id", s("root")), (NEXT, docs(vec![doc(&[("$id", s("held")), ("name", s("held"))])]))]),
+            )
+            .await;
             db.set_check_grants(true);
-            let new = d(&[("name", s("new")), ("$permissions", perms(&[Permission::update(&Role::team("admin", ""))]))]);
+            let new =
+                d(&[("name", s("new")), ("$permissions", perms(&[Permission::update(&Role::team("admin", ""))]))]);
             let result = db.update_document(FIRST, "root", doc(&[(NEXT, value::list([s("held"), new]))])).await;
             assert_eq!(refusal(result), Some(UNHELD_REFUSAL.to_owned()), "{kind:?}");
             assert_eq!(names_in(db, SECOND).await, names(&["held"]), "{kind:?}");
@@ -677,7 +726,8 @@ fn held_unchanged_and_cleared_permissions_are_allowed() {
             let db = &f.db;
             let mut stored = unheld();
             stored.push(Permission::update(&Role::any()));
-            create(db, SECOND, doc(&[("$id", s("stored")), ("name", s("stored")), ("$permissions", perms(&stored))])).await;
+            create(db, SECOND, doc(&[("$id", s("stored")), ("name", s("stored")), ("$permissions", perms(&stored))]))
+                .await;
             db.set_check_grants(true);
 
             let held = vec![
@@ -685,21 +735,37 @@ fn held_unchanged_and_cleared_permissions_are_allowed() {
                 Permission::update(&Role::users("")),
                 Permission::write(&Role::any()),
             ];
-            create(db, FIRST, doc(&[("$id", s("held")), (NEXT, value_of(kind, d(&[("name", s("held")), ("$permissions", perms(&held))])))]))
-                .await;
             create(
                 db,
                 FIRST,
                 doc(&[
-                    ("$id", s("unchanged")),
-                    (NEXT, value_of(kind, d(&[("$id", s("stored")), ("name", s("unchanged")), ("$permissions", perms(&unheld()))]))),
+                    ("$id", s("held")),
+                    (NEXT, value_of(kind, d(&[("name", s("held")), ("$permissions", perms(&held))]))),
                 ]),
             )
             .await;
             create(
                 db,
                 FIRST,
-                doc(&[("$id", s("cleared")), (NEXT, value_of(kind, d(&[("name", s("cleared")), ("$permissions", value::list([]))])))]),
+                doc(&[
+                    ("$id", s("unchanged")),
+                    (
+                        NEXT,
+                        value_of(
+                            kind,
+                            d(&[("$id", s("stored")), ("name", s("unchanged")), ("$permissions", perms(&unheld()))]),
+                        ),
+                    ),
+                ]),
+            )
+            .await;
+            create(
+                db,
+                FIRST,
+                doc(&[
+                    ("$id", s("cleared")),
+                    (NEXT, value_of(kind, d(&[("name", s("cleared")), ("$permissions", value::list([]))]))),
+                ]),
             )
             .await;
 
@@ -724,13 +790,21 @@ fn absent_or_null_permissions_inherit_the_parents_unchecked() {
             create(
                 db,
                 FIRST,
-                doc(&[("$id", s("absent")), ("$permissions", perms(&inherited)), (NEXT, value_of(kind, d(&[("name", s("absent"))])))]),
+                doc(&[
+                    ("$id", s("absent")),
+                    ("$permissions", perms(&inherited)),
+                    (NEXT, value_of(kind, d(&[("name", s("absent"))]))),
+                ]),
             )
             .await;
             create(
                 db,
                 FIRST,
-                doc(&[("$id", s("nulled")), ("$permissions", perms(&inherited)), (NEXT, value_of(kind, Value::from(nulled)))]),
+                doc(&[
+                    ("$id", s("nulled")),
+                    ("$permissions", perms(&inherited)),
+                    (NEXT, value_of(kind, Value::from(nulled))),
+                ]),
             )
             .await;
 
@@ -770,7 +844,10 @@ fn disabled_authorization_or_the_toggle_off_allows_any_role() {
             let f = one_way_database(kind).await;
             let db = &f.db;
             let root = |id: &str| {
-                doc(&[("$id", s(id)), (NEXT, value_of(kind, d(&[("name", s(id)), ("$permissions", perms(&unheld()))])))])
+                doc(&[
+                    ("$id", s(id)),
+                    (NEXT, value_of(kind, d(&[("name", s(id)), ("$permissions", perms(&unheld()))]))),
+                ])
             };
             create(db, FIRST, root("toggle off")).await;
             db.set_check_grants(true);
@@ -831,8 +908,13 @@ fn a_bulk_update_refuses_a_related_document_given_as_a_document() {
 async fn bulk_update(f: &Fixture, kind: RelationshipType) -> (Option<String>, Vec<String>, Vec<String>, Vec<String>) {
     let db = &f.db;
     create(db, FIRST, doc(&[("$id", s("one")), ("name", s("one"))])).await;
-    let result = update_all(db, FIRST, doc(&[(NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s("child"))])))]), Vec::new())
-        .await;
+    let result = update_all(
+        db,
+        FIRST,
+        doc(&[(NEXT, value_of(kind, d(&[("$id", s(MARKER)), ("name", s("child"))])))]),
+        Vec::new(),
+    )
+    .await;
     (
         result.err().map(|e| format!("{:?}: {}", e.kind(), e.message())),
         names_in(db, FIRST).await,
@@ -911,8 +993,11 @@ fn a_snapshot_carries_the_grant_check_into_spawned_work() {
         };
         let snapshot = db.with_check_grants(true, async { db.snapshot() }).await;
         let unscoped = refusal(db.create_document(FIRST, root_with_child("unscoped", "user:u2")).await);
-        let refused =
-            db.with_snapshot(&snapshot, async { refusal(db.create_document(FIRST, root_with_child("refused", "user:u2")).await) }).await;
+        let refused = db
+            .with_snapshot(&snapshot, async {
+                refusal(db.create_document(FIRST, root_with_child("refused", "user:u2")).await)
+            })
+            .await;
         let held = db
             .with_snapshot(&snapshot, async {
                 refusal(db.create_document(FIRST, root_with_child("held", &format!("user:{USER}"))).await)

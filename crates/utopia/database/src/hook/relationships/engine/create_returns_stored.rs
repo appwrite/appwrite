@@ -72,10 +72,7 @@ fn the_returned_relationship_is_the_stored_parent_side() {
             .unwrap();
         let parent = attribute(&db, "artists", "albums").await;
         assert_eq!(parent.side, Some(RelationshipSide::Parent));
-        assert_eq!(
-            created.to_document().array_copy(),
-            parent.relationship.unwrap().to_document().array_copy()
-        );
+        assert_eq!(created.to_document().array_copy(), parent.relationship.unwrap().to_document().array_copy());
     });
 }
 

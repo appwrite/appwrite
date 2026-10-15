@@ -20,8 +20,12 @@ const NEXT: &str = "next";
 const BACK: &str = "back";
 const MARKER: &str = "marker";
 
-pub(super) const TYPES: [RelationshipType; 4] =
-    [RelationshipType::OneToOne, RelationshipType::OneToMany, RelationshipType::ManyToOne, RelationshipType::ManyToMany];
+pub(super) const TYPES: [RelationshipType; 4] = [
+    RelationshipType::OneToOne,
+    RelationshipType::OneToMany,
+    RelationshipType::ManyToOne,
+    RelationshipType::ManyToMany,
+];
 
 pub(super) type Log = Arc<Mutex<Vec<(String, String)>>>;
 
@@ -60,7 +64,8 @@ async fn connect() -> Fixture {
 /// `createCollections()`.
 async fn create_collections(db: &Database, related: &[&str], permissions: Vec<String>) {
     db.create(None).await.unwrap();
-    let parents = Collection::create("parents", "", vec![string("name", 64)], Vec::new(), Some(cru()), true, Array::new());
+    let parents =
+        Collection::create("parents", "", vec![string("name", 64)], Vec::new(), Some(cru()), true, Array::new());
     db.create_collection(parents.unwrap()).await.unwrap();
     for id in related {
         collection(db, id, vec![string("name", 64)], permissions.clone(), false).await;
@@ -75,7 +80,9 @@ async fn seed(kind: RelationshipType, permissions: Vec<String>, stored: Option<V
         .skip(async {
             create_collections(db, &[RELATED], permissions).await;
             let relationship = match kind {
-                RelationshipType::OneToOne => Relationship::one_to_one(RELATED).key(RELATED).on_delete(OnDelete::SetNull),
+                RelationshipType::OneToOne => {
+                    Relationship::one_to_one(RELATED).key(RELATED).on_delete(OnDelete::SetNull)
+                }
                 RelationshipType::ManyToOne => {
                     Relationship::many_to_one(RELATED).key(RELATED).on_delete(OnDelete::SetNull)
                 }
@@ -92,8 +99,12 @@ async fn seed(kind: RelationshipType, permissions: Vec<String>, stored: Option<V
             };
             relate(db, "parents", relationship).await;
             if let Some(stored) = stored {
-                create(db, RELATED, doc(&[("$id", s(STORED)), ("name", s("Stored")), ("$permissions", perms(&stored))]))
-                    .await;
+                create(
+                    db,
+                    RELATED,
+                    doc(&[("$id", s(STORED)), ("name", s("Stored")), ("$permissions", perms(&stored))]),
+                )
+                .await;
             }
         })
         .await;
@@ -175,12 +186,8 @@ impl Fixture {
 
     async fn names(&self, collection: &str) -> Vec<String> {
         let db = &self.db;
-        let found =
-            db.authorization().skip(db.find(collection, Vec::new(), PermissionType::Read)).await.unwrap();
-        found
-            .iter()
-            .map(|d| value::as_str(d.get("name").unwrap_or(&Value::Null)).unwrap_or("").to_owned())
-            .collect()
+        let found = db.authorization().skip(db.find(collection, Vec::new(), PermissionType::Read)).await.unwrap();
+        found.iter().map(|d| value::as_str(d.get("name").unwrap_or(&Value::Null)).unwrap_or("").to_owned()).collect()
     }
 
     /// `relatedNames()`.
@@ -246,7 +253,12 @@ fn refusal<T>(result: Result<T>) -> Option<String> {
 fn staged_as(id: &'static str, name: &'static str, permissions: Vec<String>) -> Resolve {
     Arc::new(move |collection, requested| {
         (collection == RELATED && requested == id).then(|| {
-            doc(&[("$id", s(id)), ("$collection", s(RELATED)), ("name", s(name)), ("$permissions", perms(&permissions))])
+            doc(&[
+                ("$id", s(id)),
+                ("$collection", s(RELATED)),
+                ("name", s(name)),
+                ("$permissions", perms(&permissions)),
+            ])
         })
     })
 }
@@ -269,7 +281,8 @@ fn an_unheld_grant_is_refused_and_nothing_is_written() {
             let changes = doc(&[(RELATED, related_value(kind, related.clone()))]);
             assert_eq!(refusal(db.authorize_update("parents", &old, &changes, None).await), unheld());
             assert!(f.related_names().await.is_empty());
-            let off = db.with_check_grants(false, db.authorize_create("parents", &parent(kind, related.clone()), None)).await;
+            let off =
+                db.with_check_grants(false, db.authorize_create("parents", &parent(kind, related.clone()), None)).await;
             assert_eq!(refusal(off), None, "with the toggle off the grant is not checked");
             let skipped =
                 db.authorization().skip(db.authorize_create("parents", &parent(kind, related.clone()), None)).await;
@@ -286,7 +299,8 @@ fn a_staged_views_permissions_count_as_current() {
             let db = &f.db;
             db.set_check_grants(true);
             let staged = staged_as(STORED, "Stored", u2());
-            let parent = parent(kind, doc(&[("$id", s(STORED)), ("name", s("Changed")), ("$permissions", perms(&u2()))]));
+            let parent =
+                parent(kind, doc(&[("$id", s(STORED)), ("name", s("Changed")), ("$permissions", perms(&u2()))]));
 
             assert_eq!(refusal(db.authorize_create("parents", &parent, None).await), unheld(), "judged as stored");
             assert_eq!(refusal(db.authorize_create("parents", &parent, Some(staged.clone())).await), None);
@@ -310,7 +324,11 @@ fn a_document_staged_for_deletion_is_new() {
                 parent(kind, doc(&[("$id", s(STORED)), ("name", s("Recreated")), ("$permissions", perms(&u2()))]));
 
             assert_eq!(refusal(db.authorize_create("parents", &parent, None).await), None, "judged as stored");
-            assert_eq!(refusal(db.authorize_create("parents", &parent, Some(deleted)).await), unheld(), "judged as staged");
+            assert_eq!(
+                refusal(db.authorize_create("parents", &parent, Some(deleted)).await),
+                unheld(),
+                "judged as staged"
+            );
         });
     }
 }
@@ -445,7 +463,11 @@ fn an_id_the_hook_assigns_is_judged_new_without_the_stored_or_staged_permissions
             );
             let old = f.stored_parent().await;
             let changes = doc(&[(RELATED, assigned.get(RELATED).cloned().unwrap())]);
-            assert_eq!(refusal(db.authorize_update("parents", &old, &changes, Some(staged)).await), unheld(), "{kind:?}");
+            assert_eq!(
+                refusal(db.authorize_update("parents", &old, &changes, Some(staged)).await),
+                unheld(),
+                "{kind:?}"
+            );
             assert!(f.related_names().await.is_empty());
         });
     }
@@ -476,7 +498,8 @@ fn an_id_the_hook_assigns_needs_create_while_grants_are_checked() {
             let created = ids_in(created.get(RELATED));
             assert_eq!(created.len(), 1, "{kind:?}");
             assert_ne!(created[0], MARKER);
-            let stored = db.authorization().skip(db.get_document(RELATED, &created[0], Vec::new(), false)).await.unwrap();
+            let stored =
+                db.authorization().skip(db.get_document(RELATED, &created[0], Vec::new(), false)).await.unwrap();
             assert_eq!(stored.permissions().unwrap(), held);
             assert_eq!(f.related_names().await, names(&["Created"]));
         });

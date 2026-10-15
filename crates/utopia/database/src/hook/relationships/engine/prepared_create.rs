@@ -105,7 +105,13 @@ enum Write {
 }
 
 /// `database()`.
-async fn database(spy: &Arc<Spy>, mode: Mode, tenant: Option<i64>, tenant_per_document: bool, codecs: Vec<Callback>) -> Database {
+async fn database(
+    spy: &Arc<Spy>,
+    mode: Mode,
+    tenant: Option<i64>,
+    tenant_per_document: bool,
+    codecs: Vec<Callback>,
+) -> Database {
     if !mode.savepoints() {
         spy.without_savepoints();
     }
@@ -131,7 +137,8 @@ async fn database(spy: &Arc<Spy>, mode: Mode, tenant: Option<i64>, tenant_per_do
 /// `chain()`.
 async fn chain(db: &Database, kind: RelationshipType, depth: usize, two_way: bool) {
     for level in 0..=depth {
-        collection(db, &format!("level{level}"), vec![string("name", 64), Attribute::integer("score")], crud(), true).await;
+        collection(db, &format!("level{level}"), vec![string("name", 64), Attribute::integer("score")], crud(), true)
+            .await;
     }
     for level in 0..depth {
         relate(
@@ -170,12 +177,20 @@ fn tree(kind: RelationshipType, id: &str, level: i64, depth: i64) -> Document {
 async fn nodes(db: &Database) {
     collection(db, "node", vec![string("name", 64)], crud(), true).await;
     collection(db, "tag", vec![string("name", 64)], crud(), true).await;
-    relate(db, "node", Relationship::one_to_many("tag").two_way(true).key("tags").two_way_key("node").on_delete(OnDelete::Cascade))
-        .await;
+    relate(
+        db,
+        "node",
+        Relationship::one_to_many("tag").two_way(true).key("tags").two_way_key("node").on_delete(OnDelete::Cascade),
+    )
+    .await;
     relate(
         db,
         "tag",
-        Relationship::many_to_many("node").two_way(true).key("nodes").two_way_key("labels").on_delete(OnDelete::Cascade),
+        Relationship::many_to_many("node")
+            .two_way(true)
+            .key("nodes")
+            .two_way_key("labels")
+            .on_delete(OnDelete::Cascade),
     )
     .await;
 }
@@ -256,21 +271,36 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
             create(db, "level1", named("existing", "existing")).await;
             create(db, "level2", named("leaf", "leaf")).await;
             let a = with_next(named("a", "a"), value::list([s("leaf"), d(&[("$id", s("a1")), ("name", s("a1"))])]));
-            let root = with_next(named("root", "root"), value::list([Value::from(a), s("existing"), d(&[("$id", s("b")), ("name", s("b"))])]));
+            let root = with_next(
+                named("root", "root"),
+                value::list([Value::from(a), s("existing"), d(&[("$id", s("b")), ("name", s("b"))])]),
+            );
             (root, level0)
         }
         "one to many documents mixed with ids" => {
             chain(db, OneToMany, 2, true).await;
             create(db, "level1", named("existing", "existing")).await;
             let a = with_next(named("a", "a"), docs(vec![named("a1", "a1")]));
-            let root = with_next(named("root", "root"), value::list([Value::from(a), s("existing"), Value::from(named("b", "b"))]));
+            let root = with_next(
+                named("root", "root"),
+                value::list([Value::from(a), s("existing"), Value::from(named("b", "b"))]),
+            );
             (root, level0)
         }
         "existing related documents" => {
             chain(db, OneToMany, 2, true).await;
             let read = perms(&[Permission::read(&Role::any())]);
-            create(db, "level1", doc(&[("$id", s("same")), ("name", s("same")), ("score", Value::Int(1)), ("$permissions", read.clone())]))
-                .await;
+            create(
+                db,
+                "level1",
+                doc(&[
+                    ("$id", s("same")),
+                    ("name", s("same")),
+                    ("score", Value::Int(1)),
+                    ("$permissions", read.clone()),
+                ]),
+            )
+            .await;
             create(db, "level1", doc(&[("$id", s("changed")), ("name", s("before")), ("score", Value::Int(1))])).await;
             let root = with_next(
                 named("root", "root"),
@@ -318,7 +348,11 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
         }
         "one collection at several depths" => {
             nodes(db).await;
-            let t1 = doc(&[("$id", s("t1")), ("name", s("t1")), ("nodes", docs(vec![named("n1", "n1"), named("n2", "n2")]))]);
+            let t1 = doc(&[
+                ("$id", s("t1")),
+                ("name", s("t1")),
+                ("nodes", docs(vec![named("n1", "n1"), named("n2", "n2")])),
+            ]);
             let t2 = doc(&[("$id", s("t2")), ("name", s("t2")), ("nodes", docs(vec![named("n3", "n3")]))]);
             (doc(&[("$id", s("n0")), ("name", s("n0")), ("tags", docs(vec![t1, t2]))]), Write::Create("node"))
         }
@@ -329,7 +363,8 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
         }
         "related document with the id of the document it belongs to" => {
             nodes(db).await;
-            let t1 = doc(&[("$id", s("t1")), ("nodes", docs(vec![doc(&[("$id", s("n1"))]), doc(&[("$id", s("n0"))])]))]);
+            let t1 =
+                doc(&[("$id", s("t1")), ("nodes", docs(vec![doc(&[("$id", s("n1"))]), doc(&[("$id", s("n0"))])]))]);
             (doc(&[("$id", s("n0")), ("tags", docs(vec![t1]))]), Write::Create("node"))
         }
         "inside a transaction" => {
@@ -344,7 +379,12 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
         }
         "one to many update" => {
             chain(db, OneToMany, 2, true).await;
-            create(db, "level0", with_next(named("root", "root"), docs(vec![named("kept", "kept"), named("dropped", "dropped")]))).await;
+            create(
+                db,
+                "level0",
+                with_next(named("root", "root"), docs(vec![named("kept", "kept"), named("dropped", "dropped")])),
+            )
+            .await;
             create(db, "level1", named("loose", "loose")).await;
             let a = with_next(named("a", "a"), docs(vec![named("a1", "a1"), named("a2", "a2")]));
             let change = doc(&[
@@ -355,17 +395,26 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
         }
         "many to many update" => {
             chain(db, ManyToMany, 2, true).await;
-            create(db, "level0", with_next(named("root", "root"), docs(vec![named("kept", "kept"), named("dropped", "dropped")]))).await;
+            create(
+                db,
+                "level0",
+                with_next(named("root", "root"), docs(vec![named("kept", "kept"), named("dropped", "dropped")])),
+            )
+            .await;
             create(db, "level1", named("loose", "loose")).await;
             let a = with_next(named("a", "a"), docs(vec![named("a1", "a1")]));
-            let change = doc(&[("next", value::list([s("kept"), Value::from(a), s("loose"), Value::from(named("b", "b"))]))]);
+            let change =
+                doc(&[("next", value::list([s("kept"), Value::from(a), s("loose"), Value::from(named("b", "b"))]))]);
             (change, Write::Update("level0", "root"))
         }
         "many to one update" => {
             chain(db, ManyToOne, 2, true).await;
             create(db, "level1", named("shared", "shared")).await;
             create(db, "level0", with_next(named("old", "old"), s("shared"))).await;
-            let change = doc(&[("prev", value::list([s("old"), Value::from(named("p1", "p1")), Value::from(named("p2", "p2"))]))]);
+            let change = doc(&[(
+                "prev",
+                value::list([s("old"), Value::from(named("p1", "p1")), Value::from(named("p2", "p2"))]),
+            )]);
             (change, Write::Update("level1", "shared"))
         }
         "update with an existing related document" => {
@@ -405,7 +454,10 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
         }
         "invalid related document" => {
             chain(db, OneToMany, 2, true).await;
-            let a = with_next(named("a", "a"), docs(vec![named("a1", "a1"), doc(&[("$id", s("a2")), ("score", s("many"))])]));
+            let a = with_next(
+                named("a", "a"),
+                docs(vec![named("a1", "a1"), doc(&[("$id", s("a2")), ("score", s("many"))])]),
+            );
             let b = doc(&[("$id", s("b")), ("name", s("b")), ("score", s("many"))]);
             (doc(&[("$id", s("root")), ("next", docs(vec![a, b]))]), level0)
         }
@@ -434,15 +486,25 @@ async fn setup(db: &Database, scenario: &str) -> (Document, Write) {
             create(
                 db,
                 "level2",
-                doc(&[("$id", s("locked")), ("name", s("locked")), ("$permissions", perms(&[Permission::read(&Role::any())]))]),
+                doc(&[
+                    ("$id", s("locked")),
+                    ("name", s("locked")),
+                    ("$permissions", perms(&[Permission::read(&Role::any())])),
+                ]),
             )
             .await;
-            let a = doc(&[("$id", s("a")), ("next", docs(vec![doc(&[("$id", s("a1"))]), doc(&[("$id", s("locked"))])]))]);
+            let a =
+                doc(&[("$id", s("a")), ("next", docs(vec![doc(&[("$id", s("a1"))]), doc(&[("$id", s("locked"))])]))]);
             (doc(&[("$id", s("root")), ("next", docs(vec![a]))]), level0)
         }
         "unreadable existing related document" => {
             chain(db, OneToMany, 2, true).await;
-            create(db, "level2", doc(&[("$id", s("hidden")), ("name", s("hidden")), ("$permissions", value::list([]))])).await;
+            create(
+                db,
+                "level2",
+                doc(&[("$id", s("hidden")), ("name", s("hidden")), ("$permissions", value::list([]))]),
+            )
+            .await;
             let a = doc(&[("$id", s("a")), ("next", docs(vec![doc(&[("$id", s("a1"))]), named("hidden", "mine")]))]);
             (doc(&[("$id", s("root")), ("next", docs(vec![a]))]), level0)
         }
@@ -529,7 +591,11 @@ async fn stored_dump(db: &Database) -> Value {
             let mut stored = Array::new();
             for collection in collections {
                 let rows = db
-                    .find(&collection, vec![Query::limit(1000), Query::order_asc("$sequence", None)], PermissionType::Read)
+                    .find(
+                        &collection,
+                        vec![Query::limit(1000), Query::order_asc("$sequence", None)],
+                        PermissionType::Read,
+                    )
                     .await
                     .unwrap();
                 stored.set(value::ArrayKey::from(collection.as_str()), value::list(rows.iter().map(export)));
@@ -602,7 +668,9 @@ fn an_immediate_create_matches_one_by_one() {
 fn every_prepared_scenario_prepares_its_related_documents() {
     for scenario in PREPARED {
         block_on(async {
-            for (prepared, one_by_one) in [(Mode::Deferred, Mode::OneByOne), (Mode::Immediate, Mode::OneByOneWithoutSavepoints)] {
+            for (prepared, one_by_one) in
+                [(Mode::Deferred, Mode::OneByOne), (Mode::Immediate, Mode::OneByOneWithoutSavepoints)]
+            {
                 let unprepared = observe(one_by_one, scenario).await.reads;
                 let prepared_reads = observe(prepared, scenario).await.reads;
                 assert!(
@@ -656,12 +724,36 @@ fn a_filter_is_applied_once_when_an_associative_value_holds_a_stored_document() 
                 collection(&db, id, vec![string("name", 64)], crud(), true).await;
             }
             collection(&db, "leaf", vec![string("name", 64).filters(["wrap"])], crud(), true).await;
-            relate(&db, "root", Relationship::many_to_one("mid").two_way(true).key("mid").two_way_key("roots").on_delete(OnDelete::Cascade))
-                .await;
-            relate(&db, "root", Relationship::many_to_one("side").two_way(true).key("side").two_way_key("roots").on_delete(OnDelete::Cascade))
-                .await;
-            relate(&db, "mid", Relationship::one_to_many("leaf").two_way(true).key("leaves").two_way_key("mid").on_delete(OnDelete::Cascade))
-                .await;
+            relate(
+                &db,
+                "root",
+                Relationship::many_to_one("mid")
+                    .two_way(true)
+                    .key("mid")
+                    .two_way_key("roots")
+                    .on_delete(OnDelete::Cascade),
+            )
+            .await;
+            relate(
+                &db,
+                "root",
+                Relationship::many_to_one("side")
+                    .two_way(true)
+                    .key("side")
+                    .two_way_key("roots")
+                    .on_delete(OnDelete::Cascade),
+            )
+            .await;
+            relate(
+                &db,
+                "mid",
+                Relationship::one_to_many("leaf")
+                    .two_way(true)
+                    .key("leaves")
+                    .two_way_key("mid")
+                    .on_delete(OnDelete::Cascade),
+            )
+            .await;
             create(&db, "leaf", named("existing", "old")).await;
 
             let mid: Array = [

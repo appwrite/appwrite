@@ -23,8 +23,7 @@ async fn database() -> Database {
 /// Rewrites the stored `onDelete` of `collection.key` (`storeDeleteAction()`).
 async fn store_delete_action(db: &Database, collection: &str, key: &str, action: &str) {
     let authorization = db.authorization();
-    let mut metadata =
-        authorization.skip(db.get_document(METADATA, collection, Vec::new(), false)).await.unwrap();
+    let mut metadata = authorization.skip(db.get_document(METADATA, collection, Vec::new(), false)).await.unwrap();
     let mut attributes = Vec::new();
     for attribute in metadata.documents("attributes").unwrap() {
         let mut attribute = attribute;
@@ -47,7 +46,11 @@ async fn store_delete_action(db: &Database, collection: &str, key: &str, action:
 async fn artist_with_album(db: &Database) {
     db.create_relationship(
         "artists",
-        Relationship::one_to_many("albums").key("albums").two_way(true).two_way_key("artist").on_delete(OnDelete::Cascade),
+        Relationship::one_to_many("albums")
+            .key("albums")
+            .two_way(true)
+            .two_way_key("artist")
+            .on_delete(OnDelete::Cascade),
     )
     .await
     .unwrap();
@@ -194,21 +197,31 @@ async fn dates_database() -> Database {
     db.add_hook(Hook::Relationships(Arc::new(Relationships::default()))).unwrap();
     db.authorization()
         .skip(async {
-            let authors = Collection::create("authors", "", vec![string("name", 64)], Vec::new(), None, true, Array::new());
+            let authors =
+                Collection::create("authors", "", vec![string("name", 64)], Vec::new(), None, true, Array::new());
             db.create_collection(authors.unwrap()).await.unwrap();
             let books = Collection::create("books", "", vec![string("name", 64)], Vec::new(), None, true, Array::new());
             db.create_collection(books.unwrap()).await.unwrap();
             relate(
                 &db,
                 "authors",
-                Relationship::one_to_many("books").key("books").two_way(true).two_way_key("author").on_delete(OnDelete::SetNull),
+                Relationship::one_to_many("books")
+                    .key("books")
+                    .two_way(true)
+                    .two_way_key("author")
+                    .on_delete(OnDelete::SetNull),
             )
             .await;
             db.with_preserve_dates(true, async {
                 create(
                     &db,
                     "authors",
-                    doc(&[("$id", s("author3")), ("name", s("Linus")), ("$createdAt", s(STORED)), ("$updatedAt", s(STORED))]),
+                    doc(&[
+                        ("$id", s("author3")),
+                        ("name", s("Linus")),
+                        ("$createdAt", s(STORED)),
+                        ("$updatedAt", s(STORED)),
+                    ]),
                 )
                 .await;
                 for id in ["book4", "book5"] {

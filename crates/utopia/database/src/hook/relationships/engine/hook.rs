@@ -34,7 +34,12 @@ async fn database() -> Database {
 }
 
 /// `relate()`: `parent` (with a `name`) and `child`, related.
-async fn related(database: &Database, relationship: Relationship, child_permissions: Vec<String>, child_security: bool) {
+async fn related(
+    database: &Database,
+    relationship: Relationship,
+    child_permissions: Vec<String>,
+    child_security: bool,
+) {
     collection(database, "parent", vec![string("name", 64)], crud(), false).await;
     let child_permissions = if child_permissions.is_empty() { crud() } else { child_permissions };
     collection(database, "child", Vec::new(), child_permissions, child_security).await;
@@ -367,7 +372,11 @@ fn linking_existing_children_through_a_nested_create_needs_update_permission() {
 fn linking_a_partner_through_a_nested_two_way_one_to_one_update_needs_update_permission() {
     block_on(async {
         let db = nested_link_database(
-            Relationship::one_to_one("child").two_way(true).key("partner").two_way_key("parent").on_delete(OnDelete::SetNull),
+            Relationship::one_to_one("child")
+                .two_way(true)
+                .key("partner")
+                .two_way_key("parent")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         assert_link_rejected(
@@ -422,11 +431,9 @@ fn relationship_maintenance_keeps_the_tenant_of_every_related_document() {
         db.set_tenant(Value::Int(1));
 
         create(&db, "parent", doc(&[("$id", s("parent1")), ("$tenant", Value::Int(1))])).await;
-        create(&db, "child", doc(&[("$id", s("child1")), ("$tenant", Value::Int(1)), ("parent", s("parent1"))]))
-            .await;
+        create(&db, "child", doc(&[("$id", s("child1")), ("$tenant", Value::Int(1)), ("parent", s("parent1"))])).await;
         create(&db, "child", doc(&[("$id", s("child2")), ("$tenant", Value::Int(1))])).await;
-        create(&db, "child", doc(&[("$id", s("foreign")), ("$tenant", Value::Int(2)), ("parent", s("parent1"))]))
-            .await;
+        create(&db, "child", doc(&[("$id", s("foreign")), ("$tenant", Value::Int(2)), ("parent", s("parent1"))])).await;
 
         update(&db, "parent", "parent1", doc(&[("children", strs(&["child2"]))])).await;
         assert_eq!(related_ids(&get(&db, "parent", "parent1").await, "children"), names(&["child2"]));
@@ -456,7 +463,11 @@ async fn nested_cascade_database(grandchild_permissions: Vec<String>, on_delete:
     relate(
         &db,
         "child",
-        Relationship::one_to_many("grandchild").two_way(true).key("grandchildren").two_way_key("child").on_delete(on_delete),
+        Relationship::one_to_many("grandchild")
+            .two_way(true)
+            .key("grandchildren")
+            .two_way_key("child")
+            .on_delete(on_delete),
     )
     .await;
     db.authorization()
@@ -603,7 +614,11 @@ async fn write_stack_database(hook: Arc<Relationships>) -> Database {
     relate(
         &db,
         "item",
-        Relationship::one_to_many("detail").two_way(true).key("details").two_way_key("item").on_delete(OnDelete::SetNull),
+        Relationship::one_to_many("detail")
+            .two_way(true)
+            .key("details")
+            .two_way_key("item")
+            .on_delete(OnDelete::SetNull),
     )
     .await;
     db.authorization()
@@ -652,7 +667,10 @@ fn a_nested_create_after_a_failed_nested_write_stores_its_related_documents() {
             "owner",
             doc(&[
                 ("$id", s("owner2")),
-                ("items", docs(vec![doc(&[("$id", s("item1")), ("details", docs(vec![doc(&[("$id", s("detail1"))])]))])])),
+                (
+                    "items",
+                    docs(vec![doc(&[("$id", s("item1")), ("details", docs(vec![doc(&[("$id", s("detail1"))])]))])]),
+                ),
             ]),
         )
         .await;
@@ -665,13 +683,12 @@ fn a_nested_create_after_a_failed_nested_write_stores_its_related_documents() {
 
 /// `deletePairs()`: each relationship type with how a parent and a child
 /// are linked.
-fn delete_pairs() -> Vec<(&'static str, fn(OnDelete) -> Relationship, &'static str)> {
+/// A relationship type, its relationship by delete action, and how a pair is linked.
+type Pair = (&'static str, fn(OnDelete) -> Relationship, &'static str);
+
+fn delete_pairs() -> Vec<Pair> {
     vec![
-        (
-            "one-to-one",
-            |o| Relationship::one_to_one("child").key("child").two_way_key("parent").on_delete(o),
-            "holds",
-        ),
+        ("one-to-one", |o| Relationship::one_to_one("child").key("child").two_way_key("parent").on_delete(o), "holds"),
         ("one-to-many", one_to_many, "child"),
         ("many-to-one", many_to_one, "child"),
         ("many-to-many", many_to_many, "lists"),
@@ -704,13 +721,10 @@ fn delete_documents_with_a_select_cascades_to_children() {
             link(&db, how, "parent1", "child1").await;
             link(&db, how, "parent2", "child2").await;
 
-            let deleted = delete_all(
-                &db,
-                "parent",
-                vec![Query::equal("$id", ["parent2"]), Query::select(["$id", "name"])],
-            )
-            .await
-            .unwrap();
+            let deleted =
+                delete_all(&db, "parent", vec![Query::equal("$id", ["parent2"]), Query::select(["$id", "name"])])
+                    .await
+                    .unwrap();
             assert_eq!(deleted, 1, "{kind}");
             assert_eq!(ids(&db, "parent").await, names(&["parent1"]), "{kind}");
             assert_eq!(ids(&db, "child").await, names(&["child1"]), "{kind}: the deleted parent's child goes with it");
@@ -728,8 +742,7 @@ fn delete_documents_with_a_select_honours_restrict() {
             link(&db, how, "parent2", "child2").await;
 
             let result =
-                delete_all(&db, "parent", vec![Query::equal("$id", ["parent2"]), Query::select(["$id", "name"])])
-                    .await;
+                delete_all(&db, "parent", vec![Query::equal("$id", ["parent2"]), Query::select(["$id", "name"])]).await;
             assert!(result.as_ref().is_err_and(|e| e.is_a(Kind::Restricted)), "{kind}: {result:?}");
             assert_eq!(ids(&db, "parent").await, names(&["parent1", "parent2"]), "{kind}");
             assert_eq!(ids(&db, "child").await, names(&["child1", "child2"]), "{kind}");
@@ -743,15 +756,23 @@ fn delete_documents_with_a_select_cascades_from_the_child_side_of_a_two_way_one_
         let db = database().await;
         related(
             &db,
-            Relationship::one_to_one("child").two_way(true).key("child").two_way_key("parent").on_delete(OnDelete::Cascade),
+            Relationship::one_to_one("child")
+                .two_way(true)
+                .key("child")
+                .two_way_key("parent")
+                .on_delete(OnDelete::Cascade),
             Vec::new(),
             true,
         )
         .await;
         for suffix in ["1", "2"] {
             create(&db, "child", doc(&[("$id", s(&format!("child{suffix}")))])).await;
-            create(&db, "parent", doc(&[("$id", s(&format!("parent{suffix}"))), ("child", s(&format!("child{suffix}")))]))
-                .await;
+            create(
+                &db,
+                "parent",
+                doc(&[("$id", s(&format!("parent{suffix}"))), ("child", s(&format!("child{suffix}")))]),
+            )
+            .await;
         }
 
         let deleted =
@@ -872,7 +893,8 @@ fn a_new_nested_many_to_many_document_keeps_its_own_permissions() {
         create(&db, "parent", with_permissions("parent1", vec![Permission::read(&Role::any())])).await;
 
         let own = vec![Permission::read(&Role::any()), Permission::update(&Role::user("owner", ""))];
-        update(&db, "parent", "parent1", doc(&[("children", docs(vec![with_permissions("child1", own.clone())]))])).await;
+        update(&db, "parent", "parent1", doc(&[("children", docs(vec![with_permissions("child1", own.clone())]))]))
+            .await;
 
         let child = db.authorization().skip(db.get_document("child", "child1", Vec::new(), false)).await.unwrap();
         assert_eq!(child.permissions().unwrap(), own);
@@ -948,25 +970,41 @@ fn nested_path_filters_stay_within_the_query_value_limit() {
         relate(
             &db,
             "child",
-            Relationship::many_to_many("tag").two_way(true).key("tags").two_way_key("children").on_delete(OnDelete::SetNull),
+            Relationship::many_to_many("tag")
+                .two_way(true)
+                .key("tags")
+                .two_way_key("children")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         relate(
             &db,
             "tag",
-            Relationship::one_to_many("label").two_way(true).key("labels").two_way_key("tag").on_delete(OnDelete::SetNull),
+            Relationship::one_to_many("label")
+                .two_way(true)
+                .key("labels")
+                .two_way_key("tag")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         relate(
             &db,
             "child",
-            Relationship::many_to_one("owner").two_way(true).key("owner").two_way_key("children").on_delete(OnDelete::SetNull),
+            Relationship::many_to_one("owner")
+                .two_way(true)
+                .key("owner")
+                .two_way_key("children")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
         relate(
             &db,
             "parent",
-            Relationship::many_to_many("tag").two_way(true).key("topics").two_way_key("parents").on_delete(OnDelete::SetNull),
+            Relationship::many_to_many("tag")
+                .two_way(true)
+                .key("topics")
+                .two_way_key("parents")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
 
@@ -976,8 +1014,12 @@ fn nested_path_filters_stay_within_the_query_value_limit() {
             create(&db, "owner", doc(&[("$id", s(&n("owner"))), ("name", s(name))])).await;
             create(&db, "tag", doc(&[("$id", s(&n("tag")))])).await;
             create(&db, "label", doc(&[("$id", s(&n("label"))), ("name", s(name)), ("tag", s(&n("tag")))])).await;
-            create(&db, "child", doc(&[("$id", s(&n("child"))), ("tags", strs(&[&n("tag")])), ("owner", s(&n("owner")))]))
-                .await;
+            create(
+                &db,
+                "child",
+                doc(&[("$id", s(&n("child"))), ("tags", strs(&[&n("tag")])), ("owner", s(&n("owner")))]),
+            )
+            .await;
             create(
                 &db,
                 "parent",
@@ -989,7 +1031,8 @@ fn nested_path_filters_stay_within_the_query_value_limit() {
         db.set_max_query_values(2);
 
         let matching = names(&["parent1", "parent2", "parent3", "parent4", "parent5"]);
-        let filters: Vec<(&str, Vec<&str>, Vec<String>, Vec<&str>)> = vec![
+        type Filter<'a> = (&'a str, Vec<&'a str>, Vec<String>, Vec<&'a str>);
+        let filters: Vec<Filter> = vec![
             ("children.tags.labels.name", vec!["match"], matching.clone(), vec!["child", "junction", "label"]),
             ("children.owner.name", vec!["match"], matching.clone(), vec!["child", "owner"]),
             ("topics.labels.name", vec!["match"], matching, vec!["junction", "label", "tag"]),
@@ -1075,13 +1118,22 @@ fn creating_with_a_list_on_the_child_side_of_a_one_way_one_to_one_is_rejected() 
 
 #[test]
 fn update_rejects_invalid_relationship_values() {
-    let one_to_one = || Relationship::one_to_one("child").key("partner").two_way_key("parent").on_delete(OnDelete::SetNull);
+    let one_to_one =
+        || Relationship::one_to_one("child").key("partner").two_way_key("parent").on_delete(OnDelete::SetNull);
     let two_way_one_to_one = || {
-        Relationship::one_to_one("child").two_way(true).key("partner").two_way_key("parent").on_delete(OnDelete::SetNull)
+        Relationship::one_to_one("child")
+            .two_way(true)
+            .key("partner")
+            .two_way_key("parent")
+            .on_delete(OnDelete::SetNull)
     };
     let one_to_many = || one_to_many(OnDelete::SetNull);
     let many_to_one = || {
-        Relationship::many_to_one("child").two_way(true).key("child").two_way_key("parents").on_delete(OnDelete::SetNull)
+        Relationship::many_to_one("child")
+            .two_way(true)
+            .key("child")
+            .two_way_key("parents")
+            .on_delete(OnDelete::SetNull)
     };
     let many_to_many = || many_to_many(OnDelete::SetNull);
 
@@ -1205,7 +1257,11 @@ fn selecting_nested_attributes_through_the_child_side_of_a_many_to_one() {
         relate(
             &db,
             "product",
-            Relationship::many_to_one("store").two_way(true).key("store").two_way_key("products").on_delete(OnDelete::SetNull),
+            Relationship::many_to_one("store")
+                .two_way(true)
+                .key("store")
+                .two_way_key("products")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
 
@@ -1225,7 +1281,10 @@ fn selecting_nested_attributes_through_the_child_side_of_a_many_to_one() {
         }
 
         let stores = [
-            ("getDocument", db.get_document("store", "store1", vec![Query::select(["*", "products.name"])], false).await.unwrap()),
+            (
+                "getDocument",
+                db.get_document("store", "store1", vec![Query::select(["*", "products.name"])], false).await.unwrap(),
+            ),
             ("findOne", db.find_one("store", vec![Query::select(["*", "products.name"])]).await.unwrap()),
         ];
         for (read, store) in stores {
@@ -1256,7 +1315,11 @@ fn relationship_filter_conversion_edge_cases() {
         relate(
             &db,
             "project",
-            Relationship::many_to_many("developer").two_way(true).key("developers").two_way_key("projects").on_delete(OnDelete::SetNull),
+            Relationship::many_to_many("developer")
+                .two_way(true)
+                .key("developers")
+                .two_way_key("projects")
+                .on_delete(OnDelete::SetNull),
         )
         .await;
 
@@ -1299,7 +1362,11 @@ fn set_operators_decide_which_documents_stay_linked() {
 
             let steps: Vec<(&str, Operator, Vec<String>)> = vec![
                 ("arrayUnique", Operator::array_unique(), names(&["child1", "child2", "child3"])),
-                ("arrayFilter", Operator::array_filter("isNotNull", Value::Null), names(&["child1", "child2", "child3"])),
+                (
+                    "arrayFilter",
+                    Operator::array_filter("isNotNull", Value::Null),
+                    names(&["child1", "child2", "child3"]),
+                ),
                 ("arrayIntersect", Operator::array_intersect([s("child1"), s("child2")]), names(&["child1", "child2"])),
                 ("arrayDiff", Operator::array_diff([s("child1")]), names(&["child2"])),
                 ("arrayInsert", Operator::array_insert(0, s("child3")), names(&["child2", "child3"])),

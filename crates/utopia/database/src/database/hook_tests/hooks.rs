@@ -196,7 +196,8 @@ fn decorators_keep_running_during_a_named_silence() {
         let db = memory().await;
         seed(&db, &["first"]).await;
         db.add_hook(Hook::decorator(Arc::new(Marking))).unwrap();
-        let named = db.silent_hooks(&["audits"], db.get_document(COLLECTION, "first", Vec::new(), false)).await.unwrap();
+        let named =
+            db.silent_hooks(&["audits"], db.get_document(COLLECTION, "first", Vec::new(), false)).await.unwrap();
         let silenced = db.silent(db.get_document(COLLECTION, "first", Vec::new(), false)).await.unwrap();
         assert_eq!(named.get("decorated"), Some(&Value::Bool(true)));
         assert_eq!(silenced.get("decorated"), None);
@@ -324,8 +325,10 @@ fn removing_a_queries_hook_stops_it_rewriting_reads() {
 
 /// `family()`: parents with children, no relationships hook.
 async fn family() -> Database {
-    let db = Database::new(Arc::new(Memory::new()), Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::None))));
-    db.set_database("remove_hook").set_namespace(&format!("remove_hook_{}", NAMESPACES.fetch_add(1, Ordering::Relaxed)));
+    let db =
+        Database::new(Arc::new(Memory::new()), Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::None))));
+    db.set_database("remove_hook")
+        .set_namespace(&format!("remove_hook_{}", NAMESPACES.fetch_add(1, Ordering::Relaxed)));
     db.create(None).await.unwrap();
     let any = Role::any();
     for id in ["parents", "children"] {
@@ -341,9 +344,12 @@ async fn family() -> Database {
         .unwrap();
         db.create_collection(collection).await.unwrap();
     }
-    db.create_relationship("parents", Relationship::one_to_many("children").two_way(true).key("children").two_way_key("parent"))
-        .await
-        .unwrap();
+    db.create_relationship(
+        "parents",
+        Relationship::one_to_many("children").two_way(true).key("children").two_way_key("parent"),
+    )
+    .await
+    .unwrap();
     db
 }
 
@@ -459,7 +465,8 @@ fn create_documents_hands_decorated_documents_to_its_callback() {
                 .unwrap()
             })
             .collect();
-        let count = db.create_documents(COLLECTION, documents, super::super::BATCH_SIZE, Some(&mut on_next)).await.unwrap();
+        let count =
+            db.create_documents(COLLECTION, documents, super::super::BATCH_SIZE, Some(&mut on_next)).await.unwrap();
         let marks = marks(&seen);
         assert_eq!(count as usize, marks.len());
         let mark = Some(value::string(Event::DocumentsCreate.as_str()));
@@ -522,13 +529,17 @@ fn the_relationships_hook_relates_through_the_database_it_is_added_to() {
             .unwrap();
             db.create_collection(collection).await.unwrap();
         }
-        db.create_relationship("parents", Relationship::one_to_many("children").two_way(true).key("children").two_way_key("parent"))
-            .await
-            .unwrap();
+        db.create_relationship(
+            "parents",
+            Relationship::one_to_many("children").two_way(true).key("children").two_way_key("parent"),
+        )
+        .await
+        .unwrap();
         db.add_hook(Hook::Relationships(Arc::new(Relationships::default()))).unwrap();
         db.create_document("parents", parent()).await.unwrap();
 
-        let children = db.get_document("parents", "p1", Vec::new(), false).await.unwrap().documents("children").unwrap();
+        let children =
+            db.get_document("parents", "p1", Vec::new(), false).await.unwrap().documents("children").unwrap();
         assert_eq!(children.iter().map(Document::id).collect::<Vec<_>>(), ["c1"]);
     });
 }
@@ -576,7 +587,8 @@ fn a_clone_of_an_attached_relationships_hook_attaches_to_another_database() {
 
 // ----- CoroutineStateTest (relationship cases) -----
 
-type Scope = Box<dyn FnOnce(Pin<Box<dyn Future<Output = ()> + Send>>) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
+type Scope =
+    Box<dyn FnOnce(Pin<Box<dyn Future<Output = ()> + Send>>) -> Pin<Box<dyn Future<Output = ()> + Send>> + Send>;
 
 /// `whileASiblingIsInside()`: opens a scope in one task and reads the state
 /// from inside it, from the parent and from a sibling task while it is
@@ -670,10 +682,8 @@ fn a_snapshot_carries_the_callers_state_into_a_task_that_outlives_it() {
         let audits = Recorder::named("audits");
         db.add_hook(Hook::lifecycle(audits.clone())).unwrap();
 
-        let snapshot = db
-            .authorization()
-            .skip(db.skip_relationships(db.silent_hooks(&["audits"], async { db.snapshot() })))
-            .await;
+        let snapshot =
+            db.authorization().skip(db.skip_relationships(db.silent_hooks(&["audits"], async { db.snapshot() }))).await;
         let seen = {
             let (db, hook) = (db.clone(), hook.clone());
             tokio::spawn(async move {
@@ -704,10 +714,11 @@ fn a_snapshot_applies_to_another_handle() {
         let destination_hook = Arc::new(Relationships::default());
         destination.add_hook(Hook::Relationships(destination_hook.clone())).unwrap();
 
-        let snapshot =
-            db.authorization().skip(db.skip_relationships_exist_check(async { db.snapshot() })).await;
+        let snapshot = db.authorization().skip(db.skip_relationships_exist_check(async { db.snapshot() })).await;
         let seen = destination
-            .with_snapshot(&snapshot, async { (destination.authorization().status(), destination_hook.should_check_exist()) })
+            .with_snapshot(&snapshot, async {
+                (destination.authorization().status(), destination_hook.should_check_exist())
+            })
             .await;
         assert_eq!(seen, (false, false));
         assert!(destination.authorization().status());
