@@ -622,7 +622,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('t')
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->build();
         $this->assertBindingCount($result);
 
@@ -634,7 +634,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('t')
-            ->cursorBefore('xyz789')
+            ->cursorBefore(['_cursor' => 'xyz789'])
             ->build();
         $this->assertBindingCount($result);
 
@@ -837,7 +837,7 @@ class MySQLTest extends TestCase
             ->from('docs')
             ->addHook($hook)
             ->filter([Query::equal('status', ['active'])])
-            ->cursorAfter('cursor_val')
+            ->cursorAfter(['_cursor' => 'cursor_val'])
             ->limit(10)
             ->offset(5)
             ->build();
@@ -1842,7 +1842,7 @@ class MySQLTest extends TestCase
                 Query::equal('a', ['x']),
                 Query::greaterThan('b', 5),
             ])
-            ->cursorAfter('cursor_abc')
+            ->cursorAfter(['_cursor' => 'cursor_abc'])
             ->limit(10)
             ->offset(20)
             ->build();
@@ -1928,7 +1928,7 @@ class MySQLTest extends TestCase
             ->filter([Query::equal('status', ['paid'])])
             ->groupBy(['status'])
             ->having([Query::greaterThan('cnt', 1)])
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->limit(10)
             ->offset(5)
             ->union($sub)
@@ -2070,7 +2070,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('t')
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->limit(10)
             ->offset(5)
             ->build();
@@ -2087,7 +2087,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('t')
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->page(2, 10)
             ->build();
         $this->assertBindingCount($result);
@@ -2201,8 +2201,8 @@ class MySQLTest extends TestCase
         $this->assertSame($builder, $builder->sortRandom());
         $this->assertSame($builder, $builder->limit(1));
         $this->assertSame($builder, $builder->offset(0));
-        $this->assertSame($builder, $builder->cursorAfter('x'));
-        $this->assertSame($builder, $builder->cursorBefore('x'));
+        $this->assertSame($builder, $builder->cursorAfter(['_cursor' => 'x']));
+        $this->assertSame($builder, $builder->cursorBefore(['_cursor' => 'x']));
         $this->assertSame($builder, $builder->queries([]));
         $this->assertSame($builder, $builder->count());
         $this->assertSame($builder, $builder->sum('a'));
@@ -3108,7 +3108,7 @@ class MySQLTest extends TestCase
     public function testCompileCursorAfterStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileCursor(Query::cursorAfter('abc'));
+        $sql = $builder->compileCursor(Query::cursorAfter(['_cursor' => 'abc']));
         $this->assertSame('`_cursor` > ?', $sql);
         $this->assertSame(['abc'], $builder->getBindings());
     }
@@ -3116,7 +3116,7 @@ class MySQLTest extends TestCase
     public function testCompileCursorBeforeStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileCursor(Query::cursorBefore('xyz'));
+        $sql = $builder->compileCursor(Query::cursorBefore(['_cursor' => 'xyz']));
         $this->assertSame('`_cursor` < ?', $sql);
         $this->assertSame(['xyz'], $builder->getBindings());
     }
@@ -3173,29 +3173,29 @@ class MySQLTest extends TestCase
     public function testCompileJoinStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileJoin(Query::join('orders', 'users.id', 'orders.uid'));
-        $this->assertSame('JOIN `orders` ON `users`.`id` = `orders`.`uid`', $sql);
+        $sql = $builder->compileJoin(Query::join('orders', 'o', [Query::on('users.id', 'o.uid')]));
+        $this->assertSame('JOIN `orders` AS `o` ON `users`.`id` = `o`.`uid`', $sql);
     }
 
     public function testCompileLeftJoinStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileJoin(Query::leftJoin('profiles', 'users.id', 'profiles.uid'));
-        $this->assertSame('LEFT JOIN `profiles` ON `users`.`id` = `profiles`.`uid`', $sql);
+        $sql = $builder->compileJoin(Query::leftJoin('profiles', 'p', [Query::on('users.id', 'p.uid')]));
+        $this->assertSame('LEFT JOIN `profiles` AS `p` ON `users`.`id` = `p`.`uid`', $sql);
     }
 
     public function testCompileRightJoinStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileJoin(Query::rightJoin('orders', 'users.id', 'orders.uid'));
-        $this->assertSame('RIGHT JOIN `orders` ON `users`.`id` = `orders`.`uid`', $sql);
+        $sql = $builder->compileJoin(Query::rightJoin('orders', 'o', [Query::on('users.id', 'o.uid')]));
+        $this->assertSame('RIGHT JOIN `orders` AS `o` ON `users`.`id` = `o`.`uid`', $sql);
     }
 
     public function testCompileCrossJoinStandalone(): void
     {
         $builder = new Builder();
-        $sql = $builder->compileJoin(Query::crossJoin('colors'));
-        $this->assertSame('CROSS JOIN `colors`', $sql);
+        $sql = $builder->compileJoin(Query::crossJoin('colors', 'c'));
+        $this->assertSame('CROSS JOIN `colors` AS `c`', $sql);
     }
 
     public function testCompileNestedJoinOn(): void
@@ -4665,7 +4665,7 @@ class MySQLTest extends TestCase
                 }
             })
             ->filter([Query::equal('status', ['active'])])
-            ->cursorAfter('cur1')
+            ->cursorAfter(['_cursor' => 'cur1'])
             ->groupBy(['status'])
             ->having([Query::greaterThan('cnt', 5)])
             ->build();
@@ -4769,7 +4769,7 @@ class MySQLTest extends TestCase
                 Query::equal('a', ['va']),
                 Query::greaterThan('b', 10),
             ])
-            ->cursorAfter('cur')
+            ->cursorAfter(['_cursor' => 'cur'])
             ->limit(5)
             ->offset(10)
             ->build();
@@ -5346,7 +5346,7 @@ class MySQLTest extends TestCase
                 Query::equal('status', ['paid']),
                 Query::greaterThan('total', 0),
             ])
-            ->cursorAfter('cursor_val')
+            ->cursorAfter(['_cursor' => 'cursor_val'])
             ->groupBy(['status'])
             ->having([Query::greaterThan('cnt', 1)])
             ->limit(25)
@@ -5428,7 +5428,7 @@ class MySQLTest extends TestCase
                 }
             })
             ->filter([Query::equal('a', ['x'])])
-            ->cursorBefore('my_cursor')
+            ->cursorBefore(['_cursor' => 'my_cursor'])
             ->limit(10)
             ->offset(0)
             ->build();
@@ -5718,7 +5718,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()->from('t')
             ->count('*', 'total')
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT COUNT(*) AS `total` FROM `t` WHERE `_cursor` > ?', $result->query);
@@ -5732,7 +5732,7 @@ class MySQLTest extends TestCase
             ->count('*', 'total')
             ->groupBy(['status'])
             ->sortDesc('total')
-            ->cursorAfter('xyz')
+            ->cursorAfter(['_cursor' => 'xyz'])
             ->union($other)
             ->build();
         $this->assertBindingCount($result);
@@ -5765,7 +5765,7 @@ class MySQLTest extends TestCase
                     return new Condition('_tenant = ?', ['t1']);
                 }
             })
-            ->cursorAfter('abc')
+            ->cursorAfter(['_cursor' => 'abc'])
             ->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT * FROM `t` WHERE _tenant = ? AND `_cursor` > ?', $result->query);
@@ -5932,7 +5932,7 @@ class MySQLTest extends TestCase
     public function testCursorWithNullValue(): void
     {
         // Null cursor value is ignored by groupByType since cursor stays null
-        $result = new Builder()->from('t')->cursorAfter(null)->build();
+        $result = new Builder()->from('t')->queries([Query::parseQuery(['method' => 'cursorAfter', 'values' => [null]])])->build();
         $this->assertBindingCount($result);
         $this->assertStringNotContainsString('_cursor', $result->query);
         $this->assertSame([], $result->bindings);
@@ -5940,7 +5940,7 @@ class MySQLTest extends TestCase
 
     public function testCursorWithIntegerValue(): void
     {
-        $result = new Builder()->from('t')->cursorAfter(42)->build();
+        $result = new Builder()->from('t')->cursorAfter(['_cursor' => 42])->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT * FROM `t` WHERE `_cursor` > ?', $result->query);
         $this->assertSame([42], $result->bindings);
@@ -5948,7 +5948,7 @@ class MySQLTest extends TestCase
 
     public function testCursorWithFloatValue(): void
     {
-        $result = new Builder()->from('t')->cursorAfter(3.14)->build();
+        $result = new Builder()->from('t')->cursorAfter(['_cursor' => 3.14])->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT * FROM `t` WHERE `_cursor` > ?', $result->query);
         $this->assertSame([3.14], $result->bindings);
@@ -5971,7 +5971,7 @@ class MySQLTest extends TestCase
 
     public function testCursorAfterAndBeforeFirstWins(): void
     {
-        $result = new Builder()->from('t')->cursorAfter('a')->cursorBefore('b')->build();
+        $result = new Builder()->from('t')->cursorAfter(['_cursor' => 'a'])->cursorBefore(['_cursor' => 'b'])->build();
         $this->assertBindingCount($result);
         $this->assertSame('SELECT * FROM `t` WHERE `_cursor` > ?', $result->query);
         $this->assertStringNotContainsString('`_cursor` < ?', $result->query);
@@ -6107,14 +6107,14 @@ class MySQLTest extends TestCase
     public function testQueryCompileCursorAfter(): void
     {
         $builder = new Builder();
-        $this->assertSame('`_cursor` > ?', Query::cursorAfter('x')->compile($builder));
+        $this->assertSame('`_cursor` > ?', Query::cursorAfter(['_cursor' => 'x'])->compile($builder));
         $this->assertSame(['x'], $builder->getBindings());
     }
 
     public function testQueryCompileCursorBefore(): void
     {
         $builder = new Builder();
-        $this->assertSame('`_cursor` < ?', Query::cursorBefore('x')->compile($builder));
+        $this->assertSame('`_cursor` < ?', Query::cursorBefore(['_cursor' => 'x'])->compile($builder));
         $this->assertSame(['x'], $builder->getBindings());
     }
 
@@ -8208,7 +8208,7 @@ class MySQLTest extends TestCase
         $result = new Builder()
             ->from('t')
             ->sortAsc('id')
-            ->cursorAfter(5)
+            ->cursorAfter(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -8223,7 +8223,7 @@ class MySQLTest extends TestCase
         $result = new Builder()
             ->from('t')
             ->sortAsc('id')
-            ->cursorBefore(5)
+            ->cursorBefore(['_cursor' => 5])
             ->limit(10)
             ->build();
         $this->assertBindingCount($result);
@@ -10936,7 +10936,7 @@ class MySQLTest extends TestCase
             ->from('users')
             ->select(['id', 'name'])
             ->sortAsc('name')
-            ->cursorAfter('abc123')
+            ->cursorAfter(['_cursor' => 'abc123'])
             ->build();
         $this->assertBindingCount($result);
 
@@ -10953,7 +10953,7 @@ class MySQLTest extends TestCase
             ->from('users')
             ->select(['id', 'name'])
             ->sortDesc('name')
-            ->cursorBefore('xyz789')
+            ->cursorBefore(['_cursor' => 'xyz789'])
             ->build();
         $this->assertBindingCount($result);
 
@@ -12783,7 +12783,7 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('left_table')
-            ->queries([new Query(Method::FullOuterJoin, 'right_table', ['left_table.id', '=', 'right_table.id'])])
+            ->queries([new Query(Method::FullOuterJoin, 'right_table', [Query::on('left_table.id', 'right_table.id')])])
             ->build();
         $this->assertBindingCount($result);
 
@@ -12794,11 +12794,11 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()
             ->from('users')
-            ->queries([Query::naturalJoin('profiles')])
+            ->queries([Query::naturalJoin('profiles', 'p')])
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `users` NATURAL JOIN `profiles`', $result->query);
+        $this->assertSame('SELECT * FROM `users` NATURAL JOIN `profiles` AS `p`', $result->query);
     }
 
     public function testCloneWithLateralJoins(): void

@@ -1,0 +1,33 @@
+---
+layout: changelog
+title: "Android SDK 29.0.0 works with R8 code shrinking"
+date: 2026-10-04
+description: "The Appwrite Android SDK now works in apps shrunk with R8 full mode, and raises the R8 obfuscation and optimization scores Google Play reports."
+tags: sdk, performance
+---
+
+The [Appwrite Android SDK](/docs/quick-starts/android) version **29.0.0** works in apps built with R8 full mode. Before this release, turning on code shrinking broke parts of the SDK at runtime, and the SDK's keep rules lowered the R8 scores Google Play reads from your app bundle.
+
+### Fixed under R8
+
+- **Queries and operators**: `Query` and `Operator` values serialize to the correct JSON instead of `{}`.
+- **Realtime**: Subscriptions receive their events, and Realtime errors keep their message and code.
+- **Sessions**: Saved session cookies stay readable after you ship a new build of your app.
+
+### Better optimization scores
+
+The SDK's R8 rules now keep only what the bundled MQTT client needs. Measured on a minimal app built with R8 full mode:
+
+| Metric | Before | After |
+| --- | --- | --- |
+| Obfuscation score | 67.4% | 89.3% |
+| Optimization score | 65.8% | 87.8% |
+| DEX size | 2.57 MB | 2.44 MB |
+
+The SDK ships the R8 rules it needs, so there is nothing to configure. Annotate your own classes that the SDK fills from JSON, such as the `nestedType` of documents and rows, with `@Keep`.
+
+Version 29.0.0 also raises the minimum Android SDK to 24 (Android 7.0). Update the dependency to `io.appwrite:sdk-for-android:29.0.0` to get these changes.
+
+{% arrow_link href="https://github.com/appwrite/sdk-for-android/releases/tag/29.0.0" %}
+Read the release notes
+{% /arrow_link %}

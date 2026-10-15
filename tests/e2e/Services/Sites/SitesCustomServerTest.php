@@ -12,9 +12,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Command;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -3956,5 +3956,10 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedWithAProjectKey(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }
