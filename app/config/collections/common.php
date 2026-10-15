@@ -127,6 +127,7 @@ return [
             Attribute::string(key: 'identifier', size: 64),
             Attribute::string(key: 'name', size: 128),
             Attribute::datetime(key: 'accessedAt'),
+            Attribute::integer(key: 'lastStep', width: IntegerWidth::Bits64),
         ],
         'indexes' => [
             Index::key(key: '_key_userInternalId', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),

@@ -222,6 +222,11 @@ class V25 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
                     }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'lastStep');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"lastStep\" in collection {$id}: {$th->getMessage()}");
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 

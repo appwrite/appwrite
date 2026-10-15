@@ -109,7 +109,7 @@ class Update extends Action
             throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
         }
 
-        $success = Challenge\TOTP::verify($user, $otp);
+        $success = Challenge\TOTP::redeem($dbForProject, $user, $otp, \time());
 
         if (!$success) {
             throw new Exception(Exception::USER_INVALID_TOKEN);

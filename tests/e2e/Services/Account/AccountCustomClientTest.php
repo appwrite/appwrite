@@ -6074,11 +6074,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($recoveryCodes['body']['recoveryCodes']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
-        // The server accepts only the current time step. Leave a five-second
-        // margin for the enrollment request instead of sending an expiring code.
-        if ($totp->expiresIn() <= 5) {
-            $this->getNextTOTP($totp, $totp->now());
-        }
         $enrollmentOtp = $totp->now();
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
@@ -6269,9 +6264,10 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
 
+        $challengeOtp = $this->getNextTOTP($totp, $enrollmentOtp);
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $newSessionHeaders, [
             'challengeId' => $challenge['body']['$id'],
-            'otp' => $this->getNextTOTP($totp, $enrollmentOtp),
+            'otp' => $challengeOtp,
         ]);
 
         $this->assertEquals(200, $challengeVerification['headers']['status-code']);
@@ -6283,6 +6279,38 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($data['id'], $account['body']['$id']);
+
+        $replaySession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $this->assertEquals(201, $replaySession['headers']['status-code']);
+
+        $replayHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $replaySession['cookies']['a_session_' . $projectId],
+        ];
+
+        $replayChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $replayHeaders, [
+            'factor' => 'totp',
+        ]);
+
+        $this->assertEquals(201, $replayChallenge['headers']['status-code']);
+
+        $replayVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $replayHeaders, [
+            'challengeId' => $replayChallenge['body']['$id'],
+            'otp' => $challengeOtp,
+        ]);
+
+        $this->assertEquals(401, $replayVerification['headers']['status-code'], 'A code that completed a challenge must not complete another');
+        $this->assertEquals('user_invalid_token', $replayVerification['body']['type']);
     }
 
     protected function createJWTHeaders(string $session): array
@@ -6376,9 +6404,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $authenticator['headers']['status-code']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
-        if ($totp->expiresIn() <= 5) {
-            $this->getNextTOTP($totp, $totp->now());
-        }
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
             'otp' => $totp->now(),
         ]);
@@ -6495,9 +6520,6 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $authenticator['headers']['status-code']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
-        if ($totp->expiresIn() <= 5) {
-            $this->getNextTOTP($totp, $totp->now());
-        }
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $current, [
             'otp' => $totp->now(),
         ]);

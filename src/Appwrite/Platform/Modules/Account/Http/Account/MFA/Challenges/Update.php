@@ -148,7 +148,7 @@ class Update extends Action
         };
 
         $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
+            Type::TOTP => Challenge\TOTP::redeem($dbForProject, $user, $otp, \time()),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
