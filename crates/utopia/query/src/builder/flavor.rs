@@ -36,6 +36,9 @@ use crate::method::Method;
 use crate::query::Query;
 use crate::value::{self, Array, Value};
 
+/// A check of a path into an object attribute (see [`Flavor::object_path`]).
+pub type ObjectPathCheck = Arc<dyn Fn(&str) -> Result<()> + Send + Sync>;
+
 /// How a builder compiles some filters, as `utopia-php/database`'s builder
 /// subclasses do. The default compiles as this library does.
 #[derive(Clone, Default)]
@@ -58,7 +61,7 @@ pub struct Flavor {
     /// the filter's.
     ///
     /// PHP: `Utopia\Database\Builder\Postgres::compileFilter()`.
-    pub object_path: Option<Arc<dyn Fn(&str) -> Result<()> + Send + Sync>>,
+    pub object_path: Option<ObjectPathCheck>,
     /// `distanceLessThan()` leads with a predicate the spatial index serves,
     /// in this SRID (PostgreSQL).
     ///
@@ -399,16 +402,14 @@ impl<D: Dialect> Builder<D> {
         };
         let collate = format!(" COLLATE {}", sqlite.collation);
         for (left, operator, right) in on_comparisons(&query.join_on_queries()) {
-            if !matches!(operator.as_str(), "=" | "!=" | "<>") || (!self.is_collated(&left)? && !self.is_collated(&right)?)
+            if !matches!(operator.as_str(), "=" | "!=" | "<>")
+                || (!self.is_collated(&left)? && !self.is_collated(&right)?)
             {
                 continue;
             }
             let comparison = format!(" {operator} {}", self.resolve_and_wrap(&right)?);
             let wrapped_left = self.resolve_and_wrap(&left)?;
-            sql = sql.replace(
-                &format!("{wrapped_left}{comparison}"),
-                &format!("{wrapped_left}{collate}{comparison}"),
-            );
+            sql = sql.replace(&format!("{wrapped_left}{comparison}"), &format!("{wrapped_left}{collate}{comparison}"));
         }
         Ok(sql)
     }
@@ -484,9 +485,8 @@ impl Builder<crate::builder::PostgreSqlDialect> {
                 "(ST_DWithin({attribute}, {geometry}, ?) AND ST_Distance({attribute}, {geometry}) < ?)"
             ));
         }
-        let distance = format!(
-            "ST_Distance(({attribute}::geography), ST_SetSRID(ST_GeomFromText(?), {srid})::geography) < ?"
-        );
+        let distance =
+            format!("ST_Distance(({attribute}::geography), ST_SetSRID(ST_GeomFromText(?), {srid})::geography) < ?");
         let degrees = if query.attribute_type() == "point" {
             degrees_within_meters(&filter.geometry, filter.distance)
         } else {
@@ -537,8 +537,9 @@ fn degrees_within_meters(point: &Value, meters: f64) -> Option<(f64, f64)> {
     if latitude.abs() + latitude_degrees >= 90.0 {
         return None;
     }
-    let longitude_degrees =
-        meters / (METERS_PER_EQUATORIAL_LONGITUDE_DEGREE * ((latitude.abs() + latitude_degrees) / 180.0 * std::f64::consts::PI).cos());
+    let longitude_degrees = meters
+        / (METERS_PER_EQUATORIAL_LONGITUDE_DEGREE
+            * ((latitude.abs() + latitude_degrees) / 180.0 * std::f64::consts::PI).cos());
     if longitude - longitude_degrees <= -180.0 || longitude + longitude_degrees >= 180.0 {
         return None;
     }

@@ -50,7 +50,7 @@ pub use core::{
     AfterBuild, BeforeBuild, Builder, Core, Dialect, ExistsSubquery, ExplainOptions, LateralJoin, SubSelect,
     WhereInSubquery,
 };
-pub use flavor::{Flavor, Scope, ScopeBinding, SqliteFlavor};
+pub use flavor::{Flavor, ObjectPathCheck, Scope, ScopeBinding, SqliteFlavor};
 pub use join::JoinBuilder;
 pub use mariadb::{MariaDb, MariaDbDialect};
 pub use mongodb::{IndexHint, MongoDb, MongoDbDialect, Operation, PipelineStage, UpdateOperation, UpdateOperator};

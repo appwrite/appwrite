@@ -20,10 +20,7 @@ use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
 use super::operator::json_encode;
 use super::{Engine, Sql};
 
-/// Whether any query is a join (`SQL::queriesHaveJoins()`).
-pub(crate) fn queries_have_joins(queries: &[Query]) -> bool {
-    queries.iter().any(|q| q.method().is_join())
-}
+pub(crate) use super::find::queries_have_joins;
 
 /// PHP's `empty($value)`.
 pub(crate) fn empty_value(value: &Value) -> bool {
@@ -653,11 +650,11 @@ impl Sql {
             if for_update {
                 return Err(Error::query("Cannot lock a document for update when join queries are present"));
             }
-            self.read_joined_document_stub(collection, id, queries).await?
+            self.read_joined_document(collection, id, queries).await?
         } else {
             let mut builder = self.simple_builder(&name, alias)?;
             if !selections.iter().any(|s| s == "*") {
-                builder.select(self.selection_columns(&selections));
+                builder.select(self.map_selections_to_columns(&selections, true, &[]));
             }
             builder.filter(vec![utopia_query::Query::equal(storage::UID, [id])]);
             if for_update && self.supports(Capability::UpdateLock) {
@@ -672,36 +669,6 @@ impl Sql {
         };
         super::row::remap_row(&mut row);
         Document::from_row(row)
-    }
-
-    /// The joined read of `getDocument()`, which the find port provides as
-    /// `read_joined_document()`: the rows `executeSelect()` reads for the
-    /// joined builder, before `remapRow()`.
-    #[allow(clippy::unused_async)]
-    async fn read_joined_document_stub(
-        &self,
-        collection: &Collection,
-        id: &str,
-        queries: Vec<Query>,
-    ) -> Result<Vec<Array>> {
-        let _ = (collection, id, queries);
-        todo!("rewired to `read_joined_document()` of the find port")
-    }
-
-    /// `mapSelectionsToColumns($selections, joinAliases: [])`: the selected
-    /// columns, every internal column after them.
-    fn selection_columns(&self, selections: &[String]) -> Vec<String> {
-        let internal =
-            [document::ID, document::SEQUENCE, document::PERMISSIONS, document::CREATED_AT, document::UPDATED_AT];
-        let mut columns: Vec<String> = selections
-            .iter()
-            .filter(|s| !internal.contains(&s.as_str()) && s.as_str() != document::COLLECTION)
-            .map(|s| self.filter(s))
-            .collect();
-        for k in internal {
-            columns.push(self.filter(storage::column(k)));
-        }
-        columns
     }
 
     /// `updateDocument()` of each engine.

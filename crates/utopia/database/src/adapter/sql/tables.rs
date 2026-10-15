@@ -19,7 +19,7 @@ use crate::adapter::{Adapter, SqlSchema};
 use crate::builder::{self, SqlBuilder};
 use crate::database;
 use crate::document::Document;
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::event::Event;
 use crate::hook::{Tenancy, WriteContext};
 use crate::storage;

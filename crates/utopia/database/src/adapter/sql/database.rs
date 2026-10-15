@@ -307,9 +307,6 @@ impl Sql {
     /// `hostname()`: the DSN's host, else the hostname set; `''` when
     /// neither is known.
     pub(crate) async fn hostname(&self) -> String {
-        match self.connection.lock().await.hostname() {
-            Ok(host) => host,
-            Err(_) => String::new(),
-        }
+        self.connection.lock().await.hostname().unwrap_or_default()
     }
 }
