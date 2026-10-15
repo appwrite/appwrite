@@ -11,13 +11,13 @@
 //!
 //! # Port status
 //!
-//! The 8.x crate is ported layer by layer. This layer is the foundation:
-//! the model, the adapter contract, the validators, and the Memory, Redis,
-//! Pool, ReadWritePool and MongoDB adapters ([`adapter::mongo`], feature
-//! `mongo`). The `Database` type, the hooks it implements
-//! (`Hook\Permissions`, `Hook\Relationships`), the caches, the SQL adapters
-//! and `Mirror` follow; the 7.4 port they start from is kept, uncompiled,
-//! under `src/legacy/`.
+//! The 8.x crate is ported layer by layer. Done: the foundation (the
+//! model, the adapter contract, the validators), the adapters (Memory,
+//! Redis, Pool, ReadWritePool, MongoDB ([`adapter::mongo`], feature
+//! `mongo`) and the SQL ones), and the core: the [`Database`] type with its
+//! caches ([`cache`]) and the hooks it implements ([`hook::Permissions`],
+//! [`hook::relationships::Relationships`]). `Mirror` follows; the 7.4 port
+//! it starts from is kept, uncompiled, under `src/legacy/`.
 //!
 //! # PHP classes and their Rust items
 //!
@@ -58,7 +58,9 @@
 //! | `Adapter\SQL`, `Adapter\{Postgres, MariaDB, MySQL, SQLite}`, `Adapter\SQL\*`, `PDO`, `PDOStatement` | [`adapter::sql`] ([`adapter::sql::Sql`], [`adapter::sql::Engine`], [`adapter::sql::pdo`]) |
 //! | `Adapter\Feature\*` | [`adapter::Feature`], [`adapter::Casting`], [`adapter::Connection`], [`adapter::QueryBuilder`], [`adapter::RawQuery`], [`adapter::Relationships`], [`adapter::Schemaless`], [`adapter::Spatial`], [`adapter::Timeouts`], [`adapter::Upserts`] |
 //! | `Utopia\Database\Validator\*` | [`validator`] |
-//! | `Utopia\Database\Database` (constants, `internalAttributesFor()`) | [`database`] |
+//! | `Utopia\Database\Database` and its traits | [`Database`] (its constants and `internalAttributesFor()` in [`database`]), [`database::Hook`] (what `addHook()` takes), [`database::Filter`] (`addFilter()`), [`database::Callback`] (`onNext`), [`database::Context`] (an invalidation scope) |
+//! | `Utopia\Database\Cache\*` | [`cache::Query`], [`cache::Invalidator`], [`cache::Owners`], [`cache::Scope`], [`cache::Entry`], [`cache::Epoch`], [`cache::Region`], [`cache::Registration`] |
+//! | `Hook\Permissions`, `Hook\Relationships`, `Hook\Cascade`, `Hook\Preparation`, `Hook\PreparedCreate` | [`hook::Permissions`], [`hook::relationships::Relationships`], [`hook::relationships::Cascade`], [`hook::relationships::Preparation`], [`hook::relationships::PreparedCreate`] |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
 //! | PHP values (`mixed`) | [`Value`] (`php_std::Value` with [`value::Ext`]); query values are [`utopia_query::Value`] (see [`value`]) |
 
