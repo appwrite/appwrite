@@ -64,15 +64,8 @@ function parseMaxAge(raw: string | null): number | undefined {
   return Number.isInteger(value) && value >= 0 ? value : undefined
 }
 
-/**
- * The SDK types `resource` as a single string, but its client flattens arrays
- * into the indexed repeated params (`resource[0]`, `resource[1]`) the server
- * expects for RFC 8707 resource lists - the reference console relies on the
- * same behavior. Contain the unavoidable cast in this one documented place.
- */
-function toResourceParam(resources: string[]): string | undefined {
-  if (resources.length === 0) return undefined
-  return resources as unknown as string
+function resourceParam(resources: string[]): string[] | undefined {
+  return resources.length > 0 ? resources : undefined
 }
 
 // The authorize-request fields shared verbatim between createPAR (pre-login
@@ -91,7 +84,7 @@ function readAuthorizeParams(params: URLSearchParams) {
     prompt: params.get('prompt') ?? undefined,
     maxAge: parseMaxAge(params.get('max_age')),
     authorizationDetails: params.get('authorization_details') ?? undefined,
-    resource: toResourceParam(params.getAll('resource')),
+    resource: resourceParam(params.getAll('resource')),
   }
 }
 

@@ -14,6 +14,7 @@ use Utopia\NATS\Exception\AuthenticationException;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\Exception\NatsException;
+use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
@@ -283,7 +284,7 @@ final class Connection
                         $index = $pending[$token];
                         unset($pending[$token]);
                         $response = $message->headers?->getStatus() === '503'
-                            ? new NatsException('No responders for request') : $message;
+                            ? new NoRespondersException('No responders for request') : $message;
                         $this->notify($reply, $index, $response);
                     }
                 }

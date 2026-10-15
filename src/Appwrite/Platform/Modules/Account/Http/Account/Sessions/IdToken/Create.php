@@ -29,10 +29,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
@@ -266,7 +266,7 @@ class Create extends Action
 
         $session = new Document(array_merge(
             [
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'provider' => $provider,
@@ -420,6 +420,10 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
+                // The provider verified this address, or its canonical form on the same domain
+                if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
+                    $user->setAttribute('emailVerification', true);
+                }
             }
         }
 
@@ -452,7 +456,7 @@ class Create extends Action
         $this->assertEmailPolicy($emailMetadata, $email, $canonicalize, $project, $plan);
 
         try {
-            $userId = ID::unique();
+            $userId = Id::unique();
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -588,7 +592,7 @@ class Create extends Action
 
             try {
                 $dbForProject->createDocument('identities', new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
                         Permission::update(Role::user($user->getId())),

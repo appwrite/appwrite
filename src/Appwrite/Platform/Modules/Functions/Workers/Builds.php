@@ -6,6 +6,7 @@ use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -423,16 +424,17 @@ class Builds extends Action
 
             Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {
-            if ($dbForProject->getDocument('deployments', $deploymentId)->getAttribute('status') === 'canceled') {
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            if ($deployment->getAttribute('status') === 'canceled') {
                 $this->finalizeCanceledDeployment($deployment->getId(), $dbForProject, $queueForRealtime);
 
                 return;
             }
 
-            $isUserFacing = $th instanceof BuildException;
-            $message = $isUserFacing
-                ? $th->getMessage()
-                : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
+            // A BuildException, or a deployment Deployments::submit() refused, is
+            // the owner's to fix: its message is safe to show and a retry would
+            // fail the same way.
+            $isUserFacing = $th instanceof AppwriteException && $th->getCode() < 500;
 
             // Record user-facing failures on the span here, since they're not
             // re-raised to the harness (which records internal errors via setError).
@@ -441,36 +443,40 @@ class Builds extends Action
                 Span::add('build.exception.message', $th->getMessage());
             }
 
-            // Color message red
-            if (! \str_contains($message, '')) {
-                $message = '[31m' . $message;
-            }
-
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
-            $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
-
-            // Append error to whatever build logs were already streamed
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $previousLogs = $deployment->getAttribute('buildLogs', '');
-            if (! empty($previousLogs)) {
-                $message = $previousLogs . "\n" . $message;
-            }
-
-            $endTime = DateTime::now();
             $durationEnd = \microtime(true);
-            $deployment->setAttribute('buildEndedAt', $endTime);
             $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment->setAttribute('status', 'failed');
+            $updates = ['buildDuration' => $deployment->getAttribute('buildDuration')];
+
+            // Deployments::submit() fails a deployment it refuses or cannot queue,
+            // and has already written why to its build logs.
+            if ($deployment->getAttribute('status') !== 'failed') {
+                $message = $isUserFacing
+                    ? $th->getMessage()
+                    : 'An internal error occurred while building. Please try again, and contact support if the problem persists.';
+
+                // Color message red
+                if (! \str_contains($message, '')) {
+                    $message = '[31m' . $message;
+                }
+
+                $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_START}', '', $message);
+                $message = \str_replace('{APPWRITE_DETECTION_SEPARATOR_END}', '', $message);
+
+                // Append error to whatever build logs were already streamed
+                $previousLogs = $deployment->getAttribute('buildLogs', '');
+                if (! empty($previousLogs)) {
+                    $message = $previousLogs . "\n" . $message;
+                }
+
+                $updates['buildEndedAt'] = DateTime::now();
+                $updates['status'] = 'failed';
+                $updates['buildLogs'] = $this->truncateBuildLogs($message);
+            }
+
             Span::add('deployment.status', 'failed');
             Span::add('build.duration', $deployment->getAttribute('buildDuration'));
 
-            $deployment->setAttribute('buildLogs', $this->truncateBuildLogs($message));
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
-                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
-                'buildDuration' => $deployment->getAttribute('buildDuration'),
-                'status' => 'failed',
-                'buildLogs' => $this->truncateBuildLogs($message),
-            ]));
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document($updates));
 
             $resource = $this->updateLatestDeployment($dbForProject, $resource);
 

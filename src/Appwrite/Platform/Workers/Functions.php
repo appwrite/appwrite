@@ -22,10 +22,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -179,7 +179,7 @@ class Functions extends Action
                 try {
                     $functions = $dbForProject->find('functions', [
                         Query::select(['$id', 'events']), // Skip variables subqueries
-                        Query::contains('events', $events),
+                        Query::containsAny('events', $events),
                         Query::limit($limit),
                         Query::offset($offset),
                         Query::orderAsc('$sequence'),
@@ -298,7 +298,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    createdAt: $execution->getCreatedAt(),
                 );
                 break;
             case 'schedule':
@@ -457,7 +458,7 @@ class Functions extends Action
         ?string $jwt = null,
         ?string $event = null,
     ): void {
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -525,6 +526,7 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
+     * @param string|null $createdAt Creation time of an execution queued by the API, kept on its update
      * @return void
      * @throws \Throwable Only before the executor is called, where a retry cannot run the function twice.
      */
@@ -549,6 +551,7 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
+        ?string $createdAt = null,
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
@@ -614,7 +617,7 @@ class Functions extends Action
 
         /** Create or update execution to processing status */
         if (empty($executionId)) {
-            $executionId = ID::unique();
+            $executionId = Id::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
 
@@ -627,9 +630,12 @@ class Functions extends Action
             }
         }
 
+        $now = DateTime::now();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            '$createdAt' => $createdAt ?: $now,
+            '$updatedAt' => $now,
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -794,6 +800,7 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
+            $execution->setAttribute('$updatedAt', DateTime::now());
             Span::add('execution.status', $execution->getAttribute('status', ''));
 
             $bus->dispatch(new ExecutionCompleted(
@@ -811,17 +818,13 @@ class Functions extends Action
         // Webhook and realtime triggers swallow their own publish errors;
         // the functions publish does not, so it goes last.
         try {
-            $executionModel = new Execution();
-            $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
-            $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
-
             $queueForEvents
                 ->setProject($project)
                 ->setUser($user)
                 ->setEvent('functions.[functionId].executions.[executionId].update')
                 ->setParam('functionId', $function->getId())
                 ->setParam('executionId', $execution->getId())
-                ->setPayload($realtimeExecution);
+                ->setPayload((new Execution())->payload($execution));
 
             /** Trigger Webhook */
             $queueForWebhooks

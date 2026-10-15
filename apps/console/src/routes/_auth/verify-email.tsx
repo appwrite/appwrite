@@ -1,5 +1,9 @@
 import { useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   createFileRoute,
   redirect,
@@ -29,6 +33,7 @@ import {
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
 import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
+import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useRouter } from '@tanstack/react-router'
 
 const searchSchema = z.object({
@@ -56,6 +61,10 @@ function isInvalidTokenError(error: unknown): boolean {
  * reporting failure for a verification that had in fact just succeeded.
  */
 const attemptedSecrets = new Set<string>()
+
+/** Accounts already sent a link by this page, so a remount does not mail another. */
+const sentVerifications = new Set<string>()
+const RESEND_MUTATION_KEY = ['account', 'verification', 'email']
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
 function getVerificationParamsFromUrl(): {
@@ -107,6 +116,8 @@ export const Route = createFileRoute('/_auth/verify-email')({
       }
       throw redirect({ to: CONSOLE_ENTRY_PATH, replace: true })
     }
+
+    return { accountId: account.$id }
   },
   head: () => ({ meta: [{ title: pageTitle('Verify your email') }] }),
 })
@@ -114,6 +125,7 @@ export const Route = createFileRoute('/_auth/verify-email')({
 function VerifyEmailPage() {
   const t = useT()
   const search = useSearch({ from: '/_auth/verify-email' })
+  const accountId = Route.useLoaderData()?.accountId
   const navigate = useNavigate()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -200,6 +212,7 @@ function VerifyEmailPage() {
   })
 
   const resendMutation = useMutation({
+    mutationKey: RESEND_MUTATION_KEY,
     mutationFn: async () => {
       // Preserve the pending destination (e.g. an OAuth2 consent/device flow)
       // so the resent link returns the user to it after verification.
@@ -221,6 +234,19 @@ function VerifyEmailPage() {
       toast.error(message)
     },
   })
+
+  // A remount gives this component a new observer that reports an in-flight
+  // send as idle, so the button reads pending state from the mutation cache.
+  const isResending = useIsMutating({ mutationKey: RESEND_MUTATION_KEY }) > 0
+
+  // Sign-up, OAuth2 and sign-in all land here, so this page sends the link;
+  // impersonators cannot write to the account.
+  useEffect(() => {
+    if (!accountId || sentVerifications.has(accountId)) return
+    if (hasConsoleImpersonationSessionTarget()) return
+    sentVerifications.add(accountId)
+    resendMutation.mutate()
+  }, [accountId])
 
   // When landing with userId + secret (from email link), confirm and redirect.
   // Read from URL directly so the long secret is not altered by router/search parsing.
@@ -254,7 +280,7 @@ function VerifyEmailPage() {
     >
       <VerifyEmail
         onResend={() => resendMutation.mutate()}
-        isResendLoading={resendMutation.isPending}
+        isResendLoading={isResending}
         redirect={search.redirect}
       />
     </AuthFlowShell>

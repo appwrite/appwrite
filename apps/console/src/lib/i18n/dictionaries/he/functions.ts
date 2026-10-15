@@ -159,7 +159,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': 'יומי בחצות',
   'Daily at noon': 'יומי בצהריים',
   'Data sovereignty, compliance': 'ריבונות נתונים, תאימות רגולטורית',
-  'Default': 'ברירת מחדל',
+  Default: 'ברירת מחדל',
   'DDoS Mitigation': 'מיגון DDoS',
   'DDoS protection': 'הגנת DDoS',
   Delete: 'מחיקה',
@@ -486,8 +486,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Return immediately and run in the background. View the response on the executions tab when it completes.':
     'חוזרת מיד ורצה ברקע. צפו בתגובה בלשונית ההרצות כשהיא מסתיימת.',
   'Root directory': 'תיקיית שורש',
-  'Run this function on a schedule using cron expressions.':
-    'הריצו את הפונקציה הזו לפי תזמון באמצעות ביטויי Cron.',
   'Run your function manually': 'הריצו את הפונקציה שלכם ידנית',
   'Run your function or connect a repository for deployments':
     'הריצו את הפונקציה שלכם או חברו repo לפריסות',
@@ -698,4 +696,22 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Trigger it': 'הפעלת הפונקציה',
   'Run it over HTTP, on events in your project, or on a schedule.':
     'הריצו אותה דרך HTTP, בתגובה לאירועים בפרויקט או לפי תזמון.',
+  'Run this function on a schedule, every few minutes or with a cron expression.':
+    'הריצו את הפונקציה הזו לפי תזמון, כל כמה דקות או באמצעות ביטוי Cron.',
+  'Schedule type': 'סוג התזמון',
+  'Interval below your plan minimum': 'המרווח קצר מהמינימום של התוכנית',
+  'This function keeps running on its current interval. A new interval must be {minutes} minutes or longer.':
+    'הפונקציה ממשיכה לרוץ לפי המרווח הנוכחי שלה. מרווח חדש חייב להיות {minutes} דקות או יותר.',
+  'to use shorter intervals.': 'כדי להשתמש במרווחים קצרים יותר.',
+  'Your plan supports intervals of {minutes} minutes or longer.':
+    'התוכנית שלכם תומכת במרווחים של {minutes} דקות או יותר.',
+  'Upgrade to unlock': 'שדרגו כדי לפתוח',
+  'Interval length': 'אורך המרווח',
+  'Interval unit': 'יחידת המרווח',
+  'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
+    'Appwrite בוחרת זמן קבוע בתוך כל מרווח להרצת הפונקציה הזו כדי לפזר את העומס. השתמשו ב-Cron אם אתם צריכים זמנים מדויקים.',
+  'Every day': 'כל יום',
+  'Every {count} minutes': 'כל {count} דקות',
+  'Every {count} hours': 'כל {count} שעות',
+  'Every {count} days': 'כל {count} ימים',
 }

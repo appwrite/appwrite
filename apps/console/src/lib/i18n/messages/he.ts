@@ -100,7 +100,7 @@ export const heCatalog: EnCatalog = {
         learn: 'לימוד',
         programs: 'תוכניות',
         about: 'אודות',
-        compare: 'השוואה',
+        compare: 'אחד נגד כולם',
       },
       links: {
         ...enCatalog.app.footer.links,

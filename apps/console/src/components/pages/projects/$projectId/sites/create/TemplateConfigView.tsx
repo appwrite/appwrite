@@ -270,8 +270,16 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       return
     }
 
+    // The template deployment needs the template's repository; check it before
+    // the site is created, not after.
+    if (!template.providerRepositoryId || !template.providerOwner) {
+      toast.error(t('Template is missing repository information'))
+      return
+    }
+
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // Use template framework when available, otherwise SDK framework defaults (buildRuntime, adapter, fallbackFile)
       const sdkDefaults = getFrameworkDefaults(framework)
@@ -311,6 +319,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           providerSilentMode: false,
         }),
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -341,11 +350,6 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       // 4. Create deployment: always use template deployment so the build has source code.
       // (When connect now, the site is linked to the user's repo for future VCS deployments,
       // but the initial deploy uses the template repo so new/empty user repos don't fail.)
-      if (!template.providerRepositoryId || !template.providerOwner) {
-        toast.error(t('Template is missing repository information'))
-        setIsDeploying(false)
-        return
-      }
       const deployment = await createTemplateDeploymentMutation.mutateAsync({
         siteId: site.$id,
         repository: template.providerRepositoryId,
@@ -375,6 +379,18 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }

@@ -16,7 +16,7 @@ final class ExecutionCancelled extends Base
     {
         return [
             'operation' => 'delete',
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'execution' => $this->execution->getArrayCopy(),
         ];
     }

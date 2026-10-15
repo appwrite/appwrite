@@ -11,7 +11,13 @@ import { analyticsPropertyQueryOptions } from '@/lib/react-query/hooks'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/analytics/$propertyId/settings',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Settings', 'Analytics') }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.property?.name ?? 'Property', 'Analytics'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 

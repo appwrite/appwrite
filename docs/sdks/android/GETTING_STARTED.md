@@ -81,7 +81,7 @@ val user = account.create(
 
 ### Type Safety with Models
 
-The Appwrite Android SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+The Appwrite Android SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
 
 **Kotlin:**
 ```kotlin
@@ -94,16 +94,17 @@ data class Book(
     val isCheckedOut: Boolean
 )
 
-val databases = Databases(client)
+val tablesDB = TablesDB(client)
 
 try {
-    val documents = databases.listDocuments(
+    val result = tablesDB.listRows(
         databaseId = "your-database-id",
-        collectionId = "your-collection-id",
+        tableId = "your-table-id",
         nestedType = Book::class.java // Pass in your custom model type
     )
     
-    for (book in documents.documents) {
+    for (row in result.rows) {
+        val book = row.data
         Log.d("Appwrite", "Book: ${book.name} by ${book.author}") // Now you have full type safety
     }
 } catch (e: AppwriteException) {
@@ -148,21 +149,24 @@ public class Book {
     public void setCheckedOut(boolean checkedOut) { isCheckedOut = checkedOut; }
 }
 
-Databases databases = new Databases(client);
+TablesDB tablesDB = new TablesDB(client);
 
-try {
-    DocumentList<Book> documents = databases.listDocuments(
-        "your-database-id",
-        "your-collection-id",
-        Book.class // Pass in your custom model type
-    );
-    
-    for (Book book : documents.getDocuments()) {
-        Log.d("Appwrite", "Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
-    }
-} catch (AppwriteException e) {
-    Log.e("Appwrite", e.getMessage() != null ? e.getMessage() : "Unknown error");
-}
+tablesDB.listRows(
+    "your-database-id",
+    "your-table-id",
+    Book.class, // Pass in your custom model type
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            Log.e("Appwrite", error.getMessage() != null ? error.getMessage() : "Unknown error");
+            return;
+        }
+
+        for (Row<Book> row : result.getRows()) {
+            Book book = row.getData();
+            Log.d("Appwrite", "Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
+        }
+    })
+);
 ```
 
 **Tip**: You can use the `appwrite types` command to automatically generate model definitions based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
@@ -212,7 +216,7 @@ The Appwrite Android SDK raises an `AppwriteException` object with `message`, `c
 ```kotlin
 try {
     var user = account.create(ID.unique(),"email@example.com","password","Walter O'Brien")
-    Log.d("Appwrite user", user.toMap())
+    Log.d("Appwrite user", user.toMap().toString())
 } catch(e : AppwriteException) {
     e.printStackTrace()
 }
