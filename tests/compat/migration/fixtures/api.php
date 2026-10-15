@@ -20,7 +20,13 @@ declare(strict_types=1);
  *                            the project's requests since the last read: [{method, path, query,
  *                            headers, body}], multipart bodies as their fields and files
  *   /p/<project>/<rest>      a call for project <project> with path /<rest> (Google APIs for Firebase)
+ *   GET  /__timeout/<b>      TargetTimeoutTest's remotes: `streaming` sends 20 bytes, one every 0.2 s;
+ *                            `stalled` sends a 20-byte response's head and first byte, then nothing;
+ *                            `silent` never answers
  *   anything else            the first matching route of the project, or a 404 Appwrite error
+ *
+ * A second port (`php api.php <port> <silent port>`) accepts TCP connections
+ * and never sends a byte, so a TLS handshake there never completes.
  */
 
 namespace Tests\Compat\Migration\Fixtures;
@@ -54,6 +60,11 @@ final class Api
             $this->routes[(string) ($input['project'] ?? '')] = $input['routes'] ?? [];
             $this->requests[(string) ($input['project'] ?? '')] = [];
             $this->json($response, 200, ['ok' => true]);
+
+            return;
+        }
+        if (\str_starts_with($path, '/__timeout/')) {
+            $this->timeout(\substr($path, \strlen('/__timeout/')), $response);
 
             return;
         }
@@ -162,6 +173,27 @@ final class Api
         return \count($want) === \count($have);
     }
 
+    private function timeout(string $behaviour, Response $response): void
+    {
+        if ($behaviour === 'silent') {
+            \Swoole\Coroutine::sleep(120);
+
+            return;
+        }
+        $response->header('Content-Type', 'text/plain');
+        if ($behaviour === 'stalled') {
+            $response->write('x');
+            \Swoole\Coroutine::sleep(120);
+
+            return;
+        }
+        for ($i = 0; $i < 20; $i++) {
+            \Swoole\Coroutine::sleep(0.2);
+            $response->write('x');
+        }
+        $response->end();
+    }
+
     private function json(Response $response, int $status, mixed $body): void
     {
         $response->status($status);
@@ -173,6 +205,10 @@ final class Api
 $api = new Api();
 $server = new Server('0.0.0.0', (int) ($argv[1] ?? 8080));
 $server->set(['worker_num' => 1, 'log_level' => SWOOLE_LOG_WARNING]);
+$silent = $server->listen('0.0.0.0', (int) ($argv[2] ?? 8081), SWOOLE_SOCK_TCP);
+$silent->set(['open_http_protocol' => false]);
+$silent->on('receive', static function (): void {
+});
 $server->on('request', static function (Request $request, Response $response) use ($api): void {
     $api->handle($request, $response);
 });

@@ -17,9 +17,14 @@ use Tests\Compat\Session;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache as UtopiaCache;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Attribute as UtopiaAttribute;
+use Utopia\Database\Capability;
+use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
+use Utopia\Database\Index as UtopiaIndex;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Structure;
 use Utopia\Migration\Cache;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
@@ -44,7 +49,9 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Migration\Warning;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Storage\Device\Local;
+use Utopia\Validator\Text;
 
 require_once __DIR__ . '/Mocks.php';
 require_once __DIR__ . '/Values.php';
@@ -361,8 +368,18 @@ final class Adapter implements Base, Benchmarks
 
             // Project databases on the Memory adapter, authorization off.
             'db.new' => function (array $a, Session $s) {
-                $adapter = new MemoryAdapter();
-                $adapter->setSupportForAttributes(!($a['schemaless'] ?? false));
+                // A schemaless adapter is one without defined attributes.
+                $adapter = ($a['schemaless'] ?? false)
+                    ? new class () extends MemoryAdapter {
+                        public function capabilities(): array
+                        {
+                            return \array_values(\array_filter(
+                                parent::capabilities(),
+                                static fn (Capability $c) => $c !== Capability::DefinedAttributes,
+                            ));
+                        }
+                    }
+                    : new MemoryAdapter();
                 $db = new UtopiaDatabase($adapter, new UtopiaCache(new MemoryCache()));
                 $db->setDatabase('appwrite')->setNamespace('_project');
                 $db->getAuthorization()->disable();
@@ -370,13 +387,48 @@ final class Adapter implements Base, Benchmarks
 
                 return $s->handle($db);
             },
-            'db.collection' => fn (array $a, Session $s) => !$s->get($a['db'])->createCollection(
-                $a['id'],
-                \array_map(static fn (array $d) => new UtopiaDocument($d), $a['attributes'] ?? []),
-                \array_map(static fn (array $d) => new UtopiaDocument($d), $a['indexes'] ?? []),
-            )->isEmpty(),
+            'db.collection' => fn (array $a, Session $s) => !$s->get($a['db'])->createCollection(Collection::create(
+                id: $a['id'],
+                attributes: \array_map(static fn (array $d) => UtopiaAttribute::fromArray($d), $a['attributes'] ?? []),
+                indexes: \array_map(static fn (array $d) => UtopiaIndex::fromArray($d), $a['indexes'] ?? []),
+            ))->isEmpty(),
             'db.document' => fn (array $a, Session $s) => $s->get($a['db'])->createDocument($a['collection'], new UtopiaDocument($a['document']))->getSequence(),
             'db.get' => fn (array $a, Session $s) => $s->get($a['db'])->getDocument($a['collection'], $a['id'])->getArrayCopy(),
+            'db.update' => fn (array $a, Session $s) => !$s->get($a['db'])->updateDocument($a['collection'], $a['id'], new UtopiaDocument($a['document']))->isEmpty(),
+            'db.add_format' => function (array $a, Session $s) {
+                Structure::addFormat($a['name'], static fn (): Text => new Text(0), ColumnType::from($a['type']));
+
+                return null;
+            },
+            'db.remove_format' => function (array $a, Session $s) {
+                Structure::removeFormat($a['name']);
+
+                return null;
+            },
+            'source.previous_report' => function (array $a, Session $s) {
+                $s->get($a['source'])->previousReport = $a['report'];
+
+                return null;
+            },
+            // TargetTimeoutTest: one GET on a target with short timeouts,
+            // against a fixture that streams, stalls or stays silent; whether
+            // it took between `min` and `max` seconds.
+            'target.fetch' => function (array $a, Session $s) {
+                $url = ($a['server'] ?? 'api') === 'silent'
+                    ? 'https://' . $s->service('migration-silent') . '/'
+                    : $s->service('migration-api') . $a['path'];
+                $started = \microtime(true);
+                $body = null;
+                $error = null;
+                try {
+                    $body = (new ShortTimeoutTarget())->fetch($url);
+                } catch (\Exception $e) {
+                    $error = ['class' => $e::class, 'code' => $e->getCode()];
+                }
+                $elapsed = \microtime(true) - $started;
+
+                return ['body' => $body, 'error' => $error, 'within' => $elapsed >= $a['min'] && $elapsed < $a['max']];
+            },
             'db.subquery_filters' => function (array $a, Session $s) {
                 // Appwrite's virtual attributes of a database's collection of
                 // tables: its columns and indexes.
