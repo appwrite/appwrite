@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T23:30:00Z",
+  "updated": "2026-10-15T22:19:00Z",
   "tasks": [
     {
       "id": "db83",
@@ -24,6 +24,14 @@
       "status": "progress",
       "updated": "2026-10-15T20:02:00Z",
       "note": "CI's Postgres lane: 786 differences. About 178 are aggregate values typed as strings in Rust where PHP returns numbers; about 25 cases cascade from PHP 8.1.3 losing a transaction under load, which the runner will retry once and log."
+    },
+    {
+      "id": "db8-recordings",
+      "title": "Database 8: the last recording fixes",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-15T22:19:00Z",
+      "note": "WithCacheTest re-recorded, the last connection id masked, a $sequence checked by reference, SQLSchemaBuilder dropped (its schema objects are self-referencing), and tied join rows masked by a new recorder/ties.py: 512 steps in 18 join files."
     },
     {
       "id": "async-adapter",
@@ -88,14 +96,6 @@
       "status": "progress",
       "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
       "updated": "2026-10-15T19:17:00Z"
-    },
-    {
-      "id": "db8-recordings",
-      "title": "Database 8: the last recording fixes",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-15T19:14:00Z",
-      "note": "Re-record Unit-WithCacheTest from the committed core.php, mask the SQLite connection id and one $sequence, the SQLSchemaBuilder stack overflow, and join tie order under load."
     },
     {
       "id": "db8-mirror",
