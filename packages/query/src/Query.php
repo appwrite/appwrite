@@ -250,6 +250,10 @@ class Query
             throw new ValidationException('Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code');
         }
 
+        if ($methodEnum === Method::Distinct && ($attribute !== '' || $values !== [])) {
+            throw new QueryException('Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names');
+        }
+
         if ($methodEnum->isJoin()) {
             return self::parseJoin($methodEnum, $attribute, $values, $alias, $allowRaw);
         }
