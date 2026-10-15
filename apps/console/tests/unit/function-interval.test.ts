@@ -93,17 +93,25 @@ describe('getFunctionScheduleMode', () => {
 
 describe('isCronAllowed', () => {
   test('refuses plans that turn cron off', () => {
-    expect(isCronAllowed({ functionsAllowCron: false })).toBe(false)
+    expect(isCronAllowed({ functionsAllowCron: false }, true)).toBe(false)
   })
 
   test('allows plans that turn cron on or predate the flag', () => {
-    expect(isCronAllowed({ functionsAllowCron: true })).toBe(true)
-    expect(isCronAllowed({ functionsIntervalMinimum: 0 })).toBe(true)
+    expect(isCronAllowed({ functionsAllowCron: true }, true)).toBe(true)
+    expect(isCronAllowed({ functionsIntervalMinimum: 0 }, true)).toBe(true)
   })
 
   test('refuses while the plan is still loading', () => {
-    expect(isCronAllowed(undefined)).toBe(false)
-    expect(isCronAllowed(null)).toBe(false)
+    expect(isCronAllowed(undefined, true)).toBe(false)
+    expect(isCronAllowed(null, true)).toBe(false)
+  })
+
+  test('refuses the fallback plan a failed request leaves on a billing console', () => {
+    expect(isCronAllowed({ $id: 'self-hosted' }, true)).toBe(false)
+  })
+
+  test('allows the self-hosted plan on a self-hosted console', () => {
+    expect(isCronAllowed({ $id: 'self-hosted' }, false)).toBe(true)
   })
 })
 

@@ -9,6 +9,7 @@ import {
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -45,7 +46,7 @@ export function View() {
   const { project } = useProject(projectId)
   const { plan } = useOrganizationPlan(project?.teamId)
   const intervalMinimum = getFunctionIntervalMinimum(plan)
-  const cronAllowed = isCronAllowed(plan)
+  const cronAllowed = isCronAllowed(plan, getActiveProfileFeatures().billing)
 
   const savedScheduleMode = getFunctionScheduleMode(func ?? {})
   const savedInterval = func?.interval ?? 0

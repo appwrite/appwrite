@@ -67,10 +67,15 @@ export function getFunctionIntervalMinimum(
 /**
  * Whether the plan allows cron schedules. Free and Education only allow
  * intervals; plans that predate `functionsAllowCron` allow cron. A plan that
- * has not loaded yet allows nothing new, so cron cannot be picked in that window.
+ * has not loaded yet allows nothing new, and neither does the self-hosted plan
+ * on a console with billing, where it is the fallback for a failed plan request.
  */
-export function isCronAllowed(plan: object | null | undefined): boolean {
+export function isCronAllowed(
+  plan: object | null | undefined,
+  billing: boolean,
+): boolean {
   if (!plan) return false
+  if (billing && '$id' in plan && plan.$id === 'self-hosted') return false
   return !('functionsAllowCron' in plan && plan.functionsAllowCron === false)
 }
 
