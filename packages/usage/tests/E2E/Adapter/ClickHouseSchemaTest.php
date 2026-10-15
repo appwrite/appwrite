@@ -261,6 +261,64 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
         }
     }
 
+    public function testMigrateAddsMissingColumnsWithoutApplyingRetention(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_migrate',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+            retention: 30,
+        );
+        $database = $this->databaseName($adapter);
+        $eventsTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsTableName')}`";
+        $dailyTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsDailyTableName')}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+        $this->queryRaw($adapter, "
+            CREATE TABLE {$eventsTable} (
+                id String,
+                metric String,
+                value Int64,
+                time DateTime64(3, 'UTC'),
+                tenant Nullable(String)
+            )
+            ENGINE = MergeTree()
+            ORDER BY (tenant, metric, time, id)
+            PARTITION BY toYYYYMM(time)
+            SETTINGS allow_nullable_key = 1
+        ");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        $eventsDdl = $this->showCreateFor($adapter, $eventsTable);
+        foreach ($this->expectedDimAssertions(Metric::EVENT_COLUMNS, 'event') as $expected) {
+            $this->assertStringContainsString($expected, $eventsDdl);
+        }
+        $this->assertStringNotContainsString('TTL', $eventsDdl, 'migrate() must leave the events retention as it is');
+        $this->assertStringNotContainsString('TTL', $this->showCreateFor($adapter, $dailyTable), 'migrate() must leave the daily retention as it is');
+
+        $this->assertTrue($usage->addBatch([[
+            'tenant' => '1',
+            'metric' => 'requests',
+            'value' => 1,
+            'tags' => ['ordinal' => '1'],
+        ]], Usage::TYPE_EVENT));
+
+        $usage->setup();
+
+        $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $eventsTable));
+        $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $dailyTable));
+    }
+
     public function testRetentionAppliesTtlToEventsAndDailyTables(): void
     {
         $adapter = new ClickHouseAdapter(

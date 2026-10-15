@@ -12,8 +12,8 @@ use Utopia\Usage\Usage;
  * Lifecycle-local connection to the shared OSS usage namespace.
  *
  * Self-hosted constructs this from enabled / DSN / HTTP client and lazily
- * builds Usage. To attach an already-pooled Usage (one client, schema out
- * of band), use Connection::fromUsage(). Callers that need the raw Utopia
+ * builds Usage. To attach an already-pooled Usage (one client, schema applied
+ * by the usage-setup task), use Connection::fromUsage(). Callers that need the raw Utopia
  * Usage object use getUsage(); do not register a second usage resource.
  */
 class Connection
@@ -34,8 +34,8 @@ class Connection
     }
 
     /**
-     * Wrap an already-built Usage instance. isEnabled and isReady are true;
-     * setup() does not run DDL.
+     * Wrap an already-built Usage instance. isEnabled and isReady are true
+     * without a health check; setup() still applies the schema.
      */
     public static function fromUsage(Usage $usage): self
     {
@@ -143,10 +143,6 @@ class Connection
 
     public function setup(): void
     {
-        if ($this->wrapped) {
-            return;
-        }
-
         if ($this->enabled) {
             $this->ready = false;
             $this->checkedAt = 0.0;

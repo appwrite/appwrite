@@ -724,4 +724,19 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': 'כל {count} דקות',
   'Every {count} hours': 'כל {count} שעות',
   'Every {count} days': 'כל {count} ימים',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'טריגר האימייל הופעל',
+  'Email trigger disabled': 'טריגר האימייל הושבת',
+  'Failed to update email trigger': 'עדכון טריגר האימייל נכשל',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    'אפשרו לאימייל נכנס להפעיל את הפונקציה הזו. האפשרות כבויה כברירת מחדל, כך שדואר לא יתקבל עד שתפעילו אותה.',
+  'Email trigger': 'טריגר אימייל',
+  'Inbound mail for this function is accepted.':
+    'דואר נכנס לפונקציה הזו מתקבל.',
+  'Inbound mail for this function is rejected.': 'דואר נכנס לפונקציה הזו נדחה.',
+  'Default address': 'כתובת ברירת מחדל',
+  'Enable the email trigger to receive mail at this address.':
+    'דואר נכנס לכתובת הזו יתקבל אחרי שתפעילו את טריגר האימייל.',
+  'Mail is delivered when this function has an active deployment.':
+    'הדואר נמסר כאשר לפונקציה יש פריסה פעילה.',
 }
