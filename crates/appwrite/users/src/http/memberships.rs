@@ -1,6 +1,7 @@
 //! Team memberships of a user.
 
-use utopia_database::{Database, Query};
+use utopia_database::PermissionType;
+use utopia_database::Query;
 use utopia_http::Response;
 use utopia_validators::Text;
 
@@ -23,10 +24,9 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     if !search.is_empty() {
         queries.push(Query::search("search", &search));
     }
-    queries.push(Query::equal("userInternalId", [documents::internal_id(user.sequence)]));
+    queries.push(Query::equal("userInternalId", [user.sequence.to_string()]));
     let db = ctx.db()?;
-    let memberships: Vec<Membership> =
-        documents::all(&db.find("memberships", queries, Database::PERMISSION_READ).await?);
+    let memberships: Vec<Membership> = documents::all(&db.find("memberships", queries, PermissionType::Read).await?);
 
     // `getDocument('teams', $teamId)` for each membership.
     let mut team_names: Vec<String> = Vec::with_capacity(memberships.len());

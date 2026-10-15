@@ -25,7 +25,7 @@ async fn respond(ctx: &mut Context, user: &User) -> Result<Response> {
 async fn update_one(ctx: &mut Context, user_id: &str, key: &str, value: DbValue) -> Result<Response> {
     let user = base::user_or_404(ctx, user_id, &[]).await?;
     let mut updates = Document::default();
-    updates.set(key, value);
+    updates.put(key, value);
     let user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
     respond(ctx, &user).await
 }
@@ -127,9 +127,9 @@ pub async fn password(ctx: &mut Context) -> Result<Response> {
     let mut user = user;
     if password.is_empty() {
         let mut updates = Document::default();
-        updates.set("password", DbValue::from(""));
-        updates.set("passwordPwned", DbValue::Null);
-        updates.set("passwordUpdate", datetime::value(&datetime::now()));
+        updates.put("password", DbValue::from(""));
+        updates.put("passwordPwned", DbValue::Null);
+        updates.put("passwordUpdate", datetime::value(&datetime::now()));
         user = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
         ctx.event_param("userId", user.id.clone());
         early = Some(ctx.ok(&UserModel { user: &user, render: ctx.render() }));
@@ -185,19 +185,19 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
     }
 
     let mut updates = Document::default();
-    updates.set("password", DbValue::from(new_hash.as_str()));
-    updates.set("passwordHistory", documents::strings(&history));
-    updates.set("passwordPwned", pwned.map(DbValue::Bool).unwrap_or(DbValue::Null));
-    updates.set("passwordUpdate", datetime::value(&datetime::now()));
-    updates.set("hash", DbValue::from(proof.name()));
-    updates.set("hashOptions", base::hash_options(proof.as_ref()));
+    updates.put("password", DbValue::from(new_hash.as_str()));
+    updates.put("passwordHistory", documents::strings(&history));
+    updates.put("passwordPwned", pwned.map(DbValue::Bool).unwrap_or(DbValue::Null));
+    updates.put("passwordUpdate", datetime::value(&datetime::now()));
+    updates.put("hash", DbValue::from(proof.name()));
+    updates.put("hashOptions", base::hash_options(proof.as_ref()));
     let updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS, base::SESSIONS]).await?;
 
     if ctx.project.auth_bool("invalidateSessions", true) {
         invalidate_sessions(ctx, &updated).await?;
     }
     let db = ctx.db()?;
-    db.purge_cached_document("users", Some(&updated.id)).await?;
+    db.purge_cached_document("users", &updated.id).await?;
     Ok(updated)
 }
 
@@ -209,9 +209,8 @@ async fn invalidate_sessions(ctx: &mut Context, user: &User) -> Result<()> {
     }
     db.delete_documents(
         "challenges",
-        vec![Query::equal("userInternalId", [documents::internal_id(user.sequence)])],
-        utopia_database::Database::DELETE_BATCH_SIZE,
-        None,
+        vec![Query::equal("userInternalId", [user.sequence.to_string()])],
+        utopia_database::database::BATCH_SIZE,
         None,
     )
     .await?;
@@ -237,8 +236,8 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     base::check_email_policy(ctx, &meta)?;
 
     let mut updates = Document::default();
-    updates.set("email", DbValue::from(email.as_str()));
-    updates.set("emailVerification", DbValue::Bool(false));
+    updates.put("email", DbValue::from(email.as_str()));
+    updates.put("emailVerification", DbValue::Bool(false));
     meta.apply(&mut updates);
     let result = async {
         let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
@@ -263,8 +262,8 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     // Null rather than empty, so the unique index allows many users without one.
     let value = if number.is_empty() { None } else { Some(number.as_str()) };
     let mut updates = Document::default();
-    updates.set("phone", text(value));
-    updates.set("phoneVerification", DbValue::Bool(false));
+    updates.put("phone", text(value));
+    updates.put("phoneVerification", DbValue::Bool(false));
     let result = async {
         let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
         sync_target(ctx, &mut updated, old_phone.as_deref(), &number, "sms").await?;
@@ -295,7 +294,7 @@ async fn sync_target(
             let target_id = user.targets[index].id.clone();
             if !new.is_empty() {
                 let mut updates = Document::default();
-                updates.set("identifier", DbValue::from(new));
+                updates.put("identifier", DbValue::from(new));
                 db.update_document("targets", &target_id, updates).await?;
                 // The response keeps the target as loaded, with the new identifier.
                 user.targets[index].identifier = new.to_owned();
@@ -313,6 +312,6 @@ async fn sync_target(
         }
         None => {}
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(())
 }

@@ -103,7 +103,7 @@ async fn verification(ctx: &mut Context, user: &User, kind: i64, secret: &str, e
     let token = base::new_token(ctx, &user.id, documents::internal_id(user.sequence), kind, secret, expire)?;
     let token = base::create_token(ctx, &user.id, token).await?;
     let db = ctx.db()?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(token)
 }
 
@@ -320,7 +320,7 @@ async fn confirm(ctx: &mut Context, kind: i64, attribute: &str, payload: bool) -
 
     let db = ctx.db()?;
     let authorization = db.authorization();
-    let document = authorization.skip(|| base::user_document(&db, &user_id, &[base::TOKENS])).await?;
+    let document = authorization.skip(base::user_document(&db, &user_id, &[base::TOKENS])).await?;
     if document.is_empty() {
         return Err(Error::new(ErrorType::UserNotFound));
     }
@@ -330,12 +330,12 @@ async fn confirm(ctx: &mut Context, kind: i64, attribute: &str, payload: bool) -
     ctx.authorization.add_role(&format!("user:{}", document.id()));
 
     let mut updates = Document::default();
-    updates.set(attribute, Value::Bool(true));
+    updates.put(attribute, Value::Bool(true));
     let profile = base::update_user(&db, document.id(), updates, &[]).await?;
 
     let token = db.get_document("tokens", verified.id(), Vec::new(), false).await?;
     db.delete_document("tokens", verified.id()).await?;
-    db.purge_cached_document("users", Some(&profile.id)).await?;
+    db.purge_cached_document("users", &profile.id).await?;
 
     let token = Token::from(&token);
     // PHP fills the request's user with the profile: the event's user.

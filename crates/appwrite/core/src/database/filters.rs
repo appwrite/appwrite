@@ -7,18 +7,20 @@
 //! and the same signatures, Rust reads and writes the cache fields PHP does.
 //!
 //! The `enum` and `range` filters change the attribute document they are
-//! given in PHP (an object passed by handle); a [`Filter`] receives the
-//! document by reference, so here they pass the value through. Only the
-//! `attributes` collection of user databases uses them, which no Rust
-//! service reads.
+//! given in PHP (an object passed by handle: encode removes `elements`,
+//! `min` and `max`; decode sets them from `formatOptions`); a [`Filter`]
+//! receives the document by shared reference, so here they pass the value
+//! through. Only the `attributes` collection of user databases uses them,
+//! which no Rust service reads.
 
 use std::sync::{Arc, Once};
 
 use async_trait::async_trait;
 use php_std::json::{self, Flags};
 use utopia_database::database::Filter;
-use utopia_database::value::{Array, ArrayKey, KeyRef, Str, list, to_text};
-use utopia_database::{Database, Document, Query, Result, Value};
+use utopia_database::value::{Array, ArrayKey, KeyRef, Str, list, to_query, to_text};
+use utopia_database::{Database, Document, PermissionType, Query, Result, Value};
+use utopia_query::Value as QValue;
 
 use crate::crypto;
 
@@ -77,7 +79,7 @@ pub fn register() {
 pub async fn sub_query(database: &Database, name: &str, document: &Document) -> Result<Value> {
     static FILTERS: std::sync::LazyLock<Vec<(&'static str, Arc<dyn Filter>)>> = std::sync::LazyLock::new(all);
     match FILTERS.iter().find(|(n, _)| *n == name) {
-        Some((_, filter)) => filter.decode(Value::Null, document, database).await,
+        Some((_, filter)) => filter.decode(Value::Null, document, database, "").await,
         None => Err(utopia_database::Error::not_found(format!("Filter: {name} not found"))),
     }
 }
@@ -92,31 +94,31 @@ fn all() -> Vec<(&'static str, Arc<dyn Filter>)> {
     };
     vec![
         ("casting", Arc::new(Casting)),
-        ("enum", Arc::new(Passthrough(signature(26, 33)))),
-        ("range", Arc::new(Passthrough(signature(45, 55)))),
-        sub("subQueryAttributes", SubQuery::Attributes, 69, 72),
-        sub("subQueryIndexes", SubQuery::Indexes, 108, 111),
-        sub("subQueryPlatforms", SubQuery::Platforms, 123, 126),
-        sub("subQueryKeys", SubQuery::Keys("projects"), 143, 146),
-        sub("subQueryDevKeys", SubQuery::Empty, 161, 164),
-        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 171, 174),
-        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 185, 188),
-        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 198, 201),
-        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 212, 215),
-        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 226, 229),
-        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 241, 244),
-        sub("subQueryVariables", SubQuery::Variables, 255, 258),
+        ("enum", Arc::new(Passthrough(signature(27, 34)))),
+        ("range", Arc::new(Passthrough(signature(49, 59)))),
+        sub("subQueryAttributes", SubQuery::Attributes, 76, 79),
+        sub("subQueryIndexes", SubQuery::Indexes, 114, 117),
+        sub("subQueryPlatforms", SubQuery::Platforms, 129, 132),
+        sub("subQueryKeys", SubQuery::Keys("projects"), 149, 152),
+        sub("subQueryDevKeys", SubQuery::Empty, 167, 170),
+        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 177, 180),
+        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 191, 194),
+        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 204, 207),
+        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 218, 221),
+        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 232, 235),
+        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 247, 250),
+        sub("subQueryVariables", SubQuery::Variables, 261, 264),
         ("encrypt", Arc::new(Encrypt)),
-        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 304, 307),
-        search("userSearch", Search::User, 318, 334),
-        sub("subQueryTargets", SubQuery::ByUser("targets", false), 341, 344),
-        sub("subQueryTopicTargets", SubQuery::TopicTargets, 355, 358),
-        search("providerSearch", Search::Provider, 383, 395),
-        search("topicSearch", Search::Topic, 402, 413),
-        search("messageSearch", Search::Message, 420, 449),
-        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 457, 460),
-        sub("subQueryAccountKeys", SubQuery::Keys("users"), 472, 475),
-        sub("subQueryReportInsights", SubQuery::ReportInsights, 487, 490),
+        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 310, 313),
+        search("userSearch", Search::User, 324, 340),
+        sub("subQueryTargets", SubQuery::ByUser("targets", false), 347, 350),
+        sub("subQueryTopicTargets", SubQuery::TopicTargets, 361, 364),
+        search("providerSearch", Search::Provider, 389, 401),
+        search("topicSearch", Search::Topic, 408, 419),
+        search("messageSearch", Search::Message, 426, 455),
+        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 463, 466),
+        sub("subQueryAccountKeys", SubQuery::Keys("users"), 478, 481),
+        sub("subQueryReportInsights", SubQuery::ReportInsights, 493, 496),
     ]
 }
 
@@ -133,7 +135,13 @@ impl Filter for Casting {
             .unwrap_or(Value::Bool(false)))
     }
 
-    async fn decode(&self, value: Value, _document: &Document, _database: &Database) -> Result<Value> {
+    async fn decode(
+        &self,
+        value: Value,
+        _document: &Document,
+        _database: &Database,
+        _attribute: &str,
+    ) -> Result<Value> {
         if matches!(value, Value::Null) {
             return Ok(Value::Null);
         }
@@ -146,7 +154,7 @@ impl Filter for Casting {
     }
 
     fn signature(&self) -> String {
-        signature(12, 15)
+        signature(13, 16)
     }
 }
 
@@ -159,7 +167,13 @@ impl Filter for Passthrough {
         Ok(value)
     }
 
-    async fn decode(&self, value: Value, _document: &Document, _database: &Database) -> Result<Value> {
+    async fn decode(
+        &self,
+        value: Value,
+        _document: &Document,
+        _database: &Database,
+        _attribute: &str,
+    ) -> Result<Value> {
         Ok(value)
     }
 
@@ -177,7 +191,13 @@ impl Filter for Encrypt {
         Ok(Value::from(crypto::encrypt_env(&to_text(&value)).as_str()))
     }
 
-    async fn decode(&self, value: Value, _document: &Document, _database: &Database) -> Result<Value> {
+    async fn decode(
+        &self,
+        value: Value,
+        _document: &Document,
+        _database: &Database,
+        _attribute: &str,
+    ) -> Result<Value> {
         if matches!(value, Value::Null) {
             return Ok(Value::Null);
         }
@@ -189,7 +209,7 @@ impl Filter for Encrypt {
     }
 
     fn signature(&self) -> String {
-        signature(278, 291)
+        signature(284, 297)
     }
 }
 
@@ -227,14 +247,19 @@ struct Sub {
     signature: String,
 }
 
-fn sequence(document: &Document) -> Value {
-    document.sequence().cloned().unwrap_or(Value::Null)
+fn sequence(document: &Document) -> QValue {
+    document.sequence().map(to_query).unwrap_or(QValue::Null)
+}
+
+/// An attribute of `document` as a query value.
+fn field(document: &Document, key: &str) -> QValue {
+    document.get(key).map(to_query).unwrap_or(QValue::Null)
 }
 
 /// `$database->getAuthorization()->skip(fn () => $database->find(...))`.
 async fn find_skipping(database: &Database, collection: &str, queries: Vec<Query>) -> Result<Vec<Document>> {
     let authorization = database.authorization();
-    authorization.skip(|| database.find(collection, queries, Database::PERMISSION_READ)).await
+    authorization.skip(database.find(collection, queries, PermissionType::Read)).await
 }
 
 fn key_text(key: KeyRef<'_>) -> String {
@@ -254,7 +279,7 @@ impl Filter for Sub {
         Ok(Value::Null)
     }
 
-    async fn decode(&self, _value: Value, document: &Document, database: &Database) -> Result<Value> {
+    async fn decode(&self, _value: Value, document: &Document, database: &Database, _attribute: &str) -> Result<Value> {
         let found = match self.kind {
             SubQuery::Empty => return Ok(Value::Array(Array::new())),
             SubQuery::Attributes => {
@@ -267,10 +292,7 @@ impl Filter for Sub {
                     "attributes",
                     vec![
                         Query::equal("collectionInternalId", [sequence(document)]),
-                        Query::equal(
-                            "databaseInternalId",
-                            [document.get("databaseInternalId").cloned().unwrap_or(Value::Null)],
-                        ),
+                        Query::equal("databaseInternalId", [field(document, "databaseInternalId")]),
                         Query::limit(limit),
                     ],
                 )
@@ -278,26 +300,21 @@ impl Filter for Sub {
                 for attribute in &mut attributes {
                     let kind = attribute.get("type").map(to_text).unwrap_or_default();
                     match kind.as_str() {
-                        Database::VAR_RELATIONSHIP => {
+                        "relationship" => {
                             if let Some(Value::Array(options)) = attribute.get("options").cloned() {
                                 for (key, value) in options.iter() {
-                                    attribute.set(Str::from(key_text(key)), value.clone());
+                                    attribute.put(Str::from(key_text(key)), value.clone());
                                 }
                             }
-                            attribute.remove("options");
                         }
-                        Database::VAR_STRING
-                        | Database::VAR_VARCHAR
-                        | Database::VAR_TEXT
-                        | Database::VAR_MEDIUMTEXT
-                        | Database::VAR_LONGTEXT => {
+                        "string" | "varchar" | "text" | "mediumtext" | "longtext" => {
                             let encrypted = match attribute.get("filters") {
                                 Some(Value::Array(filters)) => {
                                     filters.values().any(|f| f.loose_eq(&Value::from("encrypt")))
                                 }
                                 _ => false,
                             };
-                            attribute.set("encrypt", Value::Bool(encrypted));
+                            attribute.put("encrypt", Value::Bool(encrypted));
                         }
                         _ => {}
                     }
@@ -310,10 +327,7 @@ impl Filter for Sub {
                     "indexes",
                     vec![
                         Query::equal("collectionInternalId", [sequence(document)]),
-                        Query::equal(
-                            "databaseInternalId",
-                            [document.get("databaseInternalId").cloned().unwrap_or(Value::Null)],
-                        ),
+                        Query::equal("databaseInternalId", [field(document, "databaseInternalId")]),
                         Query::limit(database.limit_for_indexes()),
                     ],
                 )
@@ -328,7 +342,7 @@ impl Filter for Sub {
                 .await?;
                 for platform in &mut platforms {
                     let kind = platform.get("type").map(to_text).unwrap_or_default();
-                    platform.set("type", Value::from(super::project::map_platform_type(&kind).as_str()));
+                    platform.put("type", Value::from(super::project::map_platform_type(&kind).as_str()));
                 }
                 platforms
             }
@@ -355,7 +369,7 @@ impl Filter for Sub {
             SubQuery::ByUser(collection, newest_first) => {
                 let mut queries = vec![Query::equal("userInternalId", [sequence(document)])];
                 if newest_first {
-                    queries.push(Query::order_desc("$createdAt"));
+                    queries.push(Query::order_desc("$createdAt", None));
                 }
                 queries.push(Query::limit(LIMIT_SUBQUERY));
                 find_skipping(database, collection, queries).await?
@@ -372,8 +386,8 @@ impl Filter for Sub {
                     vec![
                         Query::equal("resourceInternalId", [sequence(document)]),
                         Query::equal("resourceType", resource_types),
-                        Query::order_asc("resourceType"),
-                        Query::order_asc(""),
+                        Query::order_asc("resourceType", None),
+                        Query::order_asc("", None),
                         Query::limit(LIMIT_SUBQUERY),
                     ],
                 )
@@ -398,20 +412,17 @@ impl Filter for Sub {
                     ],
                 )
                 .await?;
-                let ids: Vec<Value> =
-                    subscribers.iter().map(|s| s.get("targetInternalId").cloned().unwrap_or(Value::Null)).collect();
+                let ids: Vec<QValue> = subscribers.iter().map(|s| field(s, "targetInternalId")).collect();
                 if ids.is_empty() {
                     return Ok(Value::Array(Array::new()));
                 }
                 let count = ids.len() as i64;
                 database
-                    .skip_validation(|| {
-                        database.find(
-                            "targets",
-                            vec![Query::equal("$sequence", ids), Query::limit(count)],
-                            Database::PERMISSION_READ,
-                        )
-                    })
+                    .skip_validation(database.find(
+                        "targets",
+                        vec![Query::equal("$sequence", ids), Query::limit(count)],
+                        PermissionType::Read,
+                    ))
                     .await?
             }
             SubQuery::ReportInsights => {
@@ -419,10 +430,7 @@ impl Filter for Sub {
                     database,
                     "insights",
                     vec![
-                        Query::equal(
-                            "projectInternalId",
-                            [document.get("projectInternalId").cloned().unwrap_or(Value::Null)],
-                        ),
+                        Query::equal("projectInternalId", [field(document, "projectInternalId")]),
                         Query::equal("reportInternalId", [sequence(document)]),
                         Query::limit(LIMIT_SUBQUERY),
                     ],
@@ -499,7 +507,13 @@ impl Filter for Searchable {
         Ok(Value::from(parts.join(" ").as_str()))
     }
 
-    async fn decode(&self, value: Value, _document: &Document, _database: &Database) -> Result<Value> {
+    async fn decode(
+        &self,
+        value: Value,
+        _document: &Document,
+        _database: &Database,
+        _attribute: &str,
+    ) -> Result<Value> {
         Ok(value)
     }
 
@@ -548,11 +562,11 @@ mod tests {
     #[tokio::test]
     async fn user_search_drops_falsy_values() {
         let mut user = Document::default();
-        user.set("$id", Value::from("u1"));
-        user.set("email", Value::from("a@b.c"));
-        user.set("name", Value::from("0"));
-        user.set("phone", Value::Null);
-        user.set("labels", list([Value::from("vip"), Value::from("x")]));
+        user.put("$id", Value::from("u1"));
+        user.put("email", Value::from("a@b.c"));
+        user.put("name", Value::from("0"));
+        user.put("phone", Value::Null);
+        user.put("labels", list([Value::from("vip"), Value::from("x")]));
         let filter = Searchable { kind: Search::User, signature: String::new() };
         let db = test_database();
         let value = filter.encode(Value::Null, &user, &db).await.unwrap();
@@ -561,6 +575,6 @@ mod tests {
 
     fn test_database() -> Database {
         let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::Memory::new())));
-        Database::new(Arc::new(utopia_database::adapter::memory::Memory::new()), cache, Vec::new())
+        Database::new(Arc::new(utopia_database::adapter::memory::Memory::new()), cache)
     }
 }

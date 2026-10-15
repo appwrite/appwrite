@@ -1,6 +1,7 @@
 //! OAuth identities.
 
-use utopia_database::{Database, Query};
+use utopia_database::PermissionType;
+use utopia_database::Query;
 use utopia_http::Response;
 use utopia_validators::Text;
 
@@ -23,7 +24,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     }
     let db = ctx.db()?;
     base::resolve_cursor(&db, "identities", &mut queries, "User").await?;
-    let identities = db.find("identities", queries.clone(), Database::PERMISSION_READ).await?;
+    let identities = db.find("identities", queries.clone(), PermissionType::Read).await?;
     let total = if include_total { db.count("identities", queries, Some(LIMIT_COUNT)).await? } else { 0 };
     let identities: Vec<Identity> = documents::all(&identities);
     Ok(ctx.ok(&IdentityListModel { total, identities: &identities }))

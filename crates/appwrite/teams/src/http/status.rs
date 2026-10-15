@@ -3,7 +3,7 @@
 
 use utopia_auth::Hash;
 use utopia_auth::hashes::Sha;
-use utopia_database::helpers::role::Role;
+use utopia_database::Role;
 use utopia_database::{Document, Value};
 use utopia_http::Response;
 use utopia_http::{Cookie, same_site};
@@ -47,7 +47,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::MembershipNotFound));
     };
     let authorization = db.authorization();
-    let team = authorization.skip(|| db.get_document("teams", &team_id, Vec::new(), false)).await?;
+    let team = authorization.skip(db.get_document("teams", &team_id, Vec::new(), false)).await?;
     if team.is_empty() {
         return Err(Error::new(ErrorType::TeamNotFound));
     }
@@ -76,8 +76,8 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let joined = datetime::value(&datetime::now());
 
     let mut verified = Document::default();
-    verified.set("emailVerification", Value::Bool(true));
-    authorization.skip(|| db.update_document("users", &target.id, verified)).await?;
+    verified.put("emailVerification", Value::Bool(true));
+    authorization.skip(db.update_document("users", &target.id, verified)).await?;
 
     // A session for the invitee when they are not signed in.
     let mut cookies: Vec<Cookie> = Vec::new();
@@ -91,8 +91,8 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         let session_secret = utopia_auth::proofs::Token::default().token();
         let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
         let mut session = Document::default();
-        session.set("$id", Value::from(unique_id().as_str()));
-        session.set(
+        session.put("$id", Value::from(unique_id().as_str()));
+        session.put(
             "$permissions",
             base::permissions(&[
                 ("read", Role::user(&target.id, "")),
@@ -100,28 +100,28 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
                 ("delete", Role::user(&target.id, "")),
             ]),
         );
-        session.set("userId", Value::from(target.id.as_str()));
-        session.set("userInternalId", documents::internal_id(target.sequence));
-        session.set("provider", Value::from("email"));
-        session.set("providerUid", text(target.email.as_deref()));
-        session.set("secret", Value::from(token_hash(&session_secret)?.as_str()));
-        session.set("userAgent", Value::from(user_agent.as_str()));
-        session.set("ip", Value::from(ctx.ip.as_str()));
-        session.set("factors", documents::strings(&["email".to_owned()]));
-        session.set("countryCode", Value::from(country.as_str()));
-        session.set("expire", datetime::value(&expire));
-        session.set("osCode", Value::from(detected.os_code.as_str()));
-        session.set("osName", Value::from(detected.os_name.as_str()));
-        session.set("osVersion", Value::from(detected.os_version.as_str()));
-        session.set("clientType", Value::from(detected.client_type.as_str()));
-        session.set("clientCode", Value::from(detected.client_code.as_str()));
-        session.set("clientName", Value::from(detected.client_name.as_str()));
-        session.set("clientVersion", Value::from(detected.client_version.as_str()));
-        session.set("clientEngine", Value::from(detected.client_engine.as_str()));
-        session.set("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
-        session.set("deviceName", text(detected.device_name.as_deref()));
-        session.set("deviceBrand", text(detected.device_brand.as_deref()));
-        session.set("deviceModel", text(detected.device_model.as_deref()));
+        session.put("userId", Value::from(target.id.as_str()));
+        session.put("userInternalId", documents::internal_id(target.sequence));
+        session.put("provider", Value::from("email"));
+        session.put("providerUid", text(target.email.as_deref()));
+        session.put("secret", Value::from(token_hash(&session_secret)?.as_str()));
+        session.put("userAgent", Value::from(user_agent.as_str()));
+        session.put("ip", Value::from(ctx.ip.as_str()));
+        session.put("factors", documents::strings(&["email".to_owned()]));
+        session.put("countryCode", Value::from(country.as_str()));
+        session.put("expire", datetime::value(&expire));
+        session.put("osCode", Value::from(detected.os_code.as_str()));
+        session.put("osName", Value::from(detected.os_name.as_str()));
+        session.put("osVersion", Value::from(detected.os_version.as_str()));
+        session.put("clientType", Value::from(detected.client_type.as_str()));
+        session.put("clientCode", Value::from(detected.client_code.as_str()));
+        session.put("clientName", Value::from(detected.client_name.as_str()));
+        session.put("clientVersion", Value::from(detected.client_version.as_str()));
+        session.put("clientEngine", Value::from(detected.client_engine.as_str()));
+        session.put("clientEngineVersion", Value::from(detected.client_engine_version.as_str()));
+        session.put("deviceName", text(detected.device_name.as_deref()));
+        session.put("deviceBrand", text(detected.device_brand.as_deref()));
+        session.put("deviceModel", text(detected.device_model.as_deref()));
         db.create_document("sessions", session).await?;
         ctx.authorization.add_role(&format!("user:{user_id}"));
 
@@ -159,18 +159,15 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         .with_transaction(|| async {
             // Re-read under a lock: a concurrent accept of the same invite
             // must not be counted twice.
-            let current =
-                authorization.skip(|| db.get_document("memberships", &membership.id, Vec::new(), true)).await?;
+            let current = authorization.skip(db.get_document("memberships", &membership.id, Vec::new(), true)).await?;
             if current.get("confirm") == Some(&Value::Bool(true)) {
                 return Ok(Document::default());
             }
             let mut updates = Document::default();
-            updates.set("joined", joined.clone());
-            updates.set("confirm", Value::Bool(true));
+            updates.put("joined", joined.clone());
+            updates.put("confirm", Value::Bool(true));
             let confirmed = db.update_document("memberships", &membership.id, updates).await?;
-            authorization
-                .skip(|| db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None))
-                .await?;
+            authorization.skip(db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None)).await?;
             Ok(confirmed)
         })
         .await?;
@@ -178,7 +175,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::MembershipAlreadyConfirmed));
     }
     let membership = Membership::from(&confirmed);
-    db.purge_cached_document("users", Some(&target.id)).await?;
+    db.purge_cached_document("users", &target.id).await?;
 
     ctx.event_param("userId", target.id.clone());
     ctx.event_param("teamId", team.id.clone());

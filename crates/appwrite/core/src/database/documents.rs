@@ -29,7 +29,7 @@ pub trait Attributes {
     /// A decoded JSON attribute as JSON.
     fn json(&self, key: &str) -> Option<Json>;
     /// The nested documents of an attribute (sub-queries).
-    fn documents(&self, key: &str) -> Vec<&Document>;
+    fn nested(&self, key: &str) -> Vec<&Document>;
     /// `$sequence` as an integer.
     fn sequence_i64(&self) -> i64;
 }
@@ -67,7 +67,7 @@ impl Attributes for Document {
         }
     }
 
-    fn documents(&self, key: &str) -> Vec<&Document> {
+    fn nested(&self, key: &str) -> Vec<&Document> {
         match self.get(key) {
             Some(Value::Array(items)) => items.values().filter_map(as_document).collect(),
             _ => Vec::new(),
@@ -127,7 +127,7 @@ impl From<&Document> for User {
             sequence: d.sequence_i64(),
             created_at: d.datetime("$createdAt"),
             updated_at: d.datetime("$updatedAt"),
-            permissions: d.permissions(),
+            permissions: d.permissions().unwrap_or_default(),
             name: d.string("name"),
             email: d.string("email"),
             phone: d.string("phone"),
@@ -153,10 +153,10 @@ impl From<&Document> for User {
             email_is_canonical: d.boolean("emailIsCanonical"),
             password_pwned: d.boolean("passwordPwned"),
             impersonator: d.boolean("impersonator"),
-            targets: d.documents("targets").into_iter().map(Target::from).collect(),
-            sessions: d.documents("sessions").into_iter().map(Session::from).collect(),
-            memberships: d.documents("memberships").into_iter().map(Membership::from).collect(),
-            authenticators: d.documents("authenticators").into_iter().map(Authenticator::from).collect(),
+            targets: d.nested("targets").into_iter().map(Target::from).collect(),
+            sessions: d.nested("sessions").into_iter().map(Session::from).collect(),
+            memberships: d.nested("memberships").into_iter().map(Membership::from).collect(),
+            authenticators: d.nested("authenticators").into_iter().map(Authenticator::from).collect(),
             kind: d.string("type"),
         }
     }
@@ -536,6 +536,12 @@ pub fn strings(values: &[String]) -> Value {
 /// stores internal ids as strings.
 pub fn internal_id(sequence: i64) -> Value {
     Value::from(sequence.to_string().as_str())
+}
+
+/// A document value as a query value (`null` when absent), for the
+/// queries built from a document's attributes.
+pub fn query_value(value: Option<&Value>) -> utopia_query::Value {
+    value.map(utopia_database::value::to_query).unwrap_or(utopia_query::Value::Null)
 }
 
 /// The `$sequence` of a document as text.

@@ -1,5 +1,6 @@
 //! Push targets of the session's device: `/v1/account/targets/push`.
 
+use utopia_database::PermissionType;
 use utopia_database::{Database, Document, Query, Value};
 use utopia_http::Response;
 use utopia_validators::Text;
@@ -67,7 +68,7 @@ fn request_user(ctx: &Context) -> User {
 /// `getDocument('targets', $id)`, skipping authorization.
 async fn target(db: &Database, id: &str) -> Result<Document> {
     let authorization = db.authorization();
-    Ok(authorization.skip(|| db.get_document("targets", id, Vec::new(), false)).await?)
+    Ok(authorization.skip(db.get_document("targets", id, Vec::new(), false)).await?)
 }
 
 /// `POST /v1/account/targets/push`.
@@ -80,7 +81,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
 
     let authorization = db.authorization();
-    let provider = authorization.skip(|| db.get_document("providers", &provider_id, Vec::new(), false)).await?;
+    let provider = authorization.skip(db.get_document("providers", &provider_id, Vec::new(), false)).await?;
     if !target(&db, &target_id).await?.is_empty() {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
@@ -99,20 +100,18 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             Query::equal("providerId", [provider_id.as_str()])
         };
         authorization
-            .skip(|| {
-                db.find(
-                    "targets",
-                    vec![
-                        Query::equal("userInternalId", [documents::internal_id(user.sequence)]),
-                        Query::equal("sessionInternalId", [session.sequence().cloned().unwrap_or(Value::Null)]),
-                        Query::equal("providerType", ["push"]),
-                        provider_query,
-                        Query::order_asc("$sequence"),
-                        Query::limit(base::LIMIT_SUBQUERY),
-                    ],
-                    Database::PERMISSION_READ,
-                )
-            })
+            .skip(db.find(
+                "targets",
+                vec![
+                    Query::equal("userInternalId", [user.sequence.to_string()]),
+                    Query::equal("sessionInternalId", [documents::query_value(session.sequence())]),
+                    Query::equal("providerType", ["push"]),
+                    provider_query,
+                    Query::order_asc("$sequence", None),
+                    Query::limit(base::LIMIT_SUBQUERY),
+                ],
+                PermissionType::Read,
+            ))
             .await?
     };
     // The sibling already holding this token is reused, else the oldest.
@@ -125,28 +124,28 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let written = match &current {
         None => {
             let mut document = Document::default();
-            document.set("$id", Value::from(target_id.as_str()));
-            document.set("$permissions", base::owner_permissions(&user.id));
+            document.put("$id", Value::from(target_id.as_str()));
+            document.set("$permissions", base::owner_permissions(&user.id))?;
             let provided = !provider_id.is_empty();
-            document.set("providerId", text(provided.then_some(provider_id.as_str())));
-            document.set(
+            document.put("providerId", text(provided.then_some(provider_id.as_str())));
+            document.put(
                 "providerInternalId",
                 if provided { provider.sequence().cloned().unwrap_or(Value::Null) } else { Value::Null },
             );
-            document.set("providerType", Value::from("push"));
-            document.set("userId", Value::from(user.id.as_str()));
-            document.set("userInternalId", documents::internal_id(user.sequence));
-            document.set("sessionId", Value::from(session.id()));
-            document.set("sessionInternalId", session.sequence().cloned().unwrap_or(Value::Null));
-            document.set("identifier", Value::from(identifier.as_str()));
-            document.set("name", Value::from(name.as_str()));
+            document.put("providerType", Value::from("push"));
+            document.put("userId", Value::from(user.id.as_str()));
+            document.put("userInternalId", documents::internal_id(user.sequence));
+            document.put("sessionId", Value::from(session.id()));
+            document.put("sessionInternalId", session.sequence().cloned().unwrap_or(Value::Null));
+            document.put("identifier", Value::from(identifier.as_str()));
+            document.put("name", Value::from(name.as_str()));
             db.create_document("targets", document).await
         }
         Some(current) => {
             let mut updates = Document::default();
-            updates.set("identifier", Value::from(identifier.as_str()));
-            updates.set("expired", Value::Bool(false));
-            updates.set("name", Value::from(name.as_str()));
+            updates.put("identifier", Value::from(identifier.as_str()));
+            updates.put("expired", Value::Bool(false));
+            updates.put("name", Value::from(name.as_str()));
             db.update_document("targets", current.id(), updates).await
         }
     };
@@ -161,10 +160,10 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     // maintenance sweep to release.
     for sibling in &siblings {
         let mut updates = Document::default();
-        updates.set("expired", Value::Bool(true));
+        updates.put("expired", Value::Bool(true));
         db.update_document("targets", sibling.id(), updates).await?;
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("targetId", written.id.clone());
@@ -183,13 +182,13 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserTargetNotFound));
     }
     if !identifier.is_empty() && identifier != "0" {
-        document.set("identifier", Value::from(identifier.as_str()));
-        document.set("expired", Value::Bool(false));
+        document.put("identifier", Value::from(identifier.as_str()));
+        document.put("expired", Value::Bool(false));
     }
     let mut updates = Document::default();
-    updates.set("identifier", document.get("identifier").cloned().unwrap_or(Value::Null));
-    updates.set("expired", document.get("expired").cloned().unwrap_or(Value::Null));
-    updates.set("name", Value::from(device_name(ctx).as_str()));
+    updates.put("identifier", document.get("identifier").cloned().unwrap_or(Value::Null));
+    updates.put("expired", document.get("expired").cloned().unwrap_or(Value::Null));
+    updates.put("name", Value::from(device_name(ctx).as_str()));
     let updated = match db.update_document("targets", document.id(), updates).await {
         Ok(target) => Target::from(&target),
         Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
@@ -197,7 +196,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         }
         Err(e) => return Err(e.into()),
     };
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("targetId", updated.id.clone());
@@ -216,9 +215,9 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserTargetNotFound));
     }
     db.delete_document("targets", document.id()).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
-    let payload = Value::Array(document.array_copy(&[], &[])).to_json();
+    let payload = Value::Array(document.array_copy()).to_json();
     let message = appwrite_core::event::delete_message(&ctx.project.message_payload(), "target", payload);
     ctx.events.deletes.push(message);
 
