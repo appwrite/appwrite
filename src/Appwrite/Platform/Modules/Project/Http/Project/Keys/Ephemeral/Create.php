@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -78,7 +78,7 @@ class Create extends Base
         QueueEvent $queueForEvents,
         Document $project,
     ) {
-        $keyId = ID::unique();
+        $keyId = Id::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 

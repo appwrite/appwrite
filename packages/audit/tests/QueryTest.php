@@ -4,84 +4,68 @@ declare(strict_types=1);
 
 namespace Utopia\Audit\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Query;
 
 final class QueryTest extends TestCase
 {
-    /**
-     * Test Query class static factory methods
-     */
     public function testQueryStaticFactoryMethods(): void
     {
-        // Test equal
         $query = Query::equal('userId', '123');
         $this->assertSame(Query::TYPE_EQUAL, $query->getMethod()->value);
         $this->assertSame('userId', $query->getAttribute());
         $this->assertSame(['123'], $query->getValues());
 
-        // Test lessThan
         $query = Query::lessThan('time', '2024-01-01');
         $this->assertSame(Query::TYPE_LESSER, $query->getMethod()->value);
         $this->assertSame('time', $query->getAttribute());
         $this->assertSame(['2024-01-01'], $query->getValues());
 
-        // Test greaterThan
         $query = Query::greaterThan('time', '2023-01-01');
         $this->assertSame(Query::TYPE_GREATER, $query->getMethod()->value);
         $this->assertSame('time', $query->getAttribute());
         $this->assertSame(['2023-01-01'], $query->getValues());
 
-        // Test between
         $query = Query::between('time', '2023-01-01', '2024-01-01');
         $this->assertSame(Query::TYPE_BETWEEN, $query->getMethod()->value);
         $this->assertSame('time', $query->getAttribute());
         $this->assertSame(['2023-01-01', '2024-01-01'], $query->getValues());
 
-        // Test contains
         $query = Query::containsString('event', ['create', 'update', 'delete']);
         $this->assertSame(Query::TYPE_CONTAINS, $query->getMethod()->value);
         $this->assertSame('event', $query->getAttribute());
         $this->assertSame(['create', 'update', 'delete'], $query->getValues());
 
-        // Test orderDesc
         $query = Query::orderDesc('time');
         $this->assertSame(Query::TYPE_ORDER_DESC, $query->getMethod()->value);
         $this->assertSame('time', $query->getAttribute());
         $this->assertSame([], $query->getValues());
 
-        // Test orderAsc
         $query = Query::orderAsc('userId');
         $this->assertSame(Query::TYPE_ORDER_ASC, $query->getMethod()->value);
         $this->assertSame('userId', $query->getAttribute());
         $this->assertSame([], $query->getValues());
 
-        // Test limit
         $query = Query::limit(10);
         $this->assertSame(Query::TYPE_LIMIT, $query->getMethod()->value);
         $this->assertSame('', $query->getAttribute());
         $this->assertSame([10], $query->getValues());
 
-        // Test offset
         $query = Query::offset(5);
         $this->assertSame(Query::TYPE_OFFSET, $query->getMethod()->value);
         $this->assertSame('', $query->getAttribute());
         $this->assertSame([5], $query->getValues());
     }
 
-    /**
-     * Test Query parse and toString methods
-     */
     public function testQueryParseAndToString(): void
     {
-        // Test parsing equal query
         $json = '{"method":"equal","attribute":"userId","values":["123"]}';
         $query = Query::parse($json);
         $this->assertSame(Query::TYPE_EQUAL, $query->getMethod()->value);
         $this->assertSame('userId', $query->getAttribute());
         $this->assertSame(['123'], $query->getValues());
 
-        // Test toString
         $query = Query::equal('event', 'create');
         $json = $query->toString();
         $this->assertJson($json);
@@ -91,7 +75,6 @@ final class QueryTest extends TestCase
         $this->assertSame('event', $parsed->getAttribute());
         $this->assertSame(['create'], $parsed->getValues());
 
-        // Test toArray
         $array = $query->toArray();
         $this->assertArrayHasKey('method', $array);
         $this->assertArrayHasKey('attribute', $array);
@@ -101,9 +84,6 @@ final class QueryTest extends TestCase
         $this->assertEquals(['create'], $array['values']);
     }
 
-    /**
-     * Test Query parseQueries method
-     */
     public function testQueryParseQueries(): void
     {
         $queries = [
@@ -124,9 +104,6 @@ final class QueryTest extends TestCase
         $this->assertSame(Query::TYPE_LIMIT, $parsed[2]->getMethod()->value);
     }
 
-    /**
-     * Test Query getValue method
-     */
     public function testGetValue(): void
     {
         $query = Query::equal('userId', '123');
@@ -135,15 +112,11 @@ final class QueryTest extends TestCase
         $query = Query::limit(10);
         $this->assertEquals(10, $query->getValue());
 
-        // Test with default value
         $query = Query::orderAsc('time');
         $this->assertNull($query->getValue());
         $this->assertEquals('default', $query->getValue('default'));
     }
 
-    /**
-     * Test Query with empty attribute
-     */
     public function testQueryWithEmptyAttribute(): void
     {
         $query = Query::limit(25);
@@ -155,20 +128,14 @@ final class QueryTest extends TestCase
         $this->assertSame([10], $query->getValues());
     }
 
-    /**
-     * Test Query parse with invalid JSON
-     */
     public function testQueryParseInvalidJson(): void
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Invalid query');
 
-        Query::parse('{"method":"equal","attribute":"userId"'); // Invalid JSON
+        Query::parse('{"method":"equal","attribute":"userId"');
     }
 
-    /**
-     * Test Query parse with non-array value
-     */
     public function testQueryParseNonArray(): void
     {
         $this->expectException(\Exception::class);
@@ -177,9 +144,6 @@ final class QueryTest extends TestCase
         Query::parse('"string"');
     }
 
-    /**
-     * Test Query parse with invalid method type
-     */
     public function testQueryParseInvalidMethodType(): void
     {
         $this->expectException(\Exception::class);
@@ -188,9 +152,6 @@ final class QueryTest extends TestCase
         Query::parse('{"method":["array"],"attribute":"test","values":[]}');
     }
 
-    /**
-     * Test Query parse with invalid attribute type
-     */
     public function testQueryParseInvalidAttributeType(): void
     {
         $this->expectException(\Exception::class);
@@ -199,9 +160,6 @@ final class QueryTest extends TestCase
         Query::parse('{"method":"equal","attribute":123,"values":[]}');
     }
 
-    /**
-     * Test Query parse with invalid values type
-     */
     public function testQueryParseInvalidValuesType(): void
     {
         $this->expectException(\Exception::class);
@@ -210,9 +168,6 @@ final class QueryTest extends TestCase
         Query::parse('{"method":"equal","attribute":"test","values":"string"}');
     }
 
-    /**
-     * Test Query toString with complex values
-     */
     public function testQueryToStringWithComplexValues(): void
     {
         $query = Query::between('time', '2023-01-01', '2024-12-31');
@@ -223,5 +178,108 @@ final class QueryTest extends TestCase
         $this->assertSame(Query::TYPE_BETWEEN, $parsed->getMethod()->value);
         $this->assertSame('time', $parsed->getAttribute());
         $this->assertSame(['2023-01-01', '2024-12-31'], $parsed->getValues());
+    }
+
+    /**
+     * @return iterable<string, array{string, string, array<mixed>, Query}>
+     */
+    public static function legacyTypes(): iterable
+    {
+        yield 'TYPE_EQUAL' => [Query::TYPE_EQUAL, 'userId', ['123'], Query::equal('userId', '123')];
+        yield 'TYPE_NOT_EQUAL' => [Query::TYPE_NOT_EQUAL, 'event', ['delete'], Query::notEqual('event', 'delete')];
+        yield 'TYPE_LESSER' => [Query::TYPE_LESSER, 'time', ['2024-01-01'], Query::lessThan('time', '2024-01-01')];
+        yield 'TYPE_LESSER_EQUAL' => [Query::TYPE_LESSER_EQUAL, 'time', ['2024-01-01'], Query::lessThanEqual('time', '2024-01-01')];
+        yield 'TYPE_GREATER' => [Query::TYPE_GREATER, 'time', ['2023-01-01'], Query::greaterThan('time', '2023-01-01')];
+        yield 'TYPE_GREATER_EQUAL' => [Query::TYPE_GREATER_EQUAL, 'time', ['2023-01-01'], Query::greaterThanEqual('time', '2023-01-01')];
+        yield 'TYPE_BETWEEN' => [Query::TYPE_BETWEEN, 'time', ['2023-01-01', '2024-01-01'], Query::between('time', '2023-01-01', '2024-01-01')];
+        yield 'TYPE_NOT_BETWEEN' => [Query::TYPE_NOT_BETWEEN, 'time', ['2023-01-01', '2024-01-01'], Query::notBetween('time', '2023-01-01', '2024-01-01')];
+        yield 'TYPE_CONTAINS' => [Query::TYPE_CONTAINS, 'event', ['create', 'update'], Query::containsString('event', ['create', 'update'])];
+        yield 'TYPE_NOT_CONTAINS' => [Query::TYPE_NOT_CONTAINS, 'event', ['delete'], Query::notContains('event', ['delete'])];
+        yield 'TYPE_IS_NULL' => [Query::TYPE_IS_NULL, 'userId', [], Query::isNull('userId')];
+        yield 'TYPE_IS_NOT_NULL' => [Query::TYPE_IS_NOT_NULL, 'userId', [], Query::isNotNull('userId')];
+        yield 'TYPE_STARTS_WITH' => [Query::TYPE_STARTS_WITH, 'event', ['users.'], Query::startsWith('event', 'users.')];
+        yield 'TYPE_NOT_STARTS_WITH' => [Query::TYPE_NOT_STARTS_WITH, 'event', ['teams.'], Query::notStartsWith('event', 'teams.')];
+        yield 'TYPE_ENDS_WITH' => [Query::TYPE_ENDS_WITH, 'event', ['.create'], Query::endsWith('event', '.create')];
+        yield 'TYPE_NOT_ENDS_WITH' => [Query::TYPE_NOT_ENDS_WITH, 'event', ['.delete'], Query::notEndsWith('event', '.delete')];
+        yield 'TYPE_REGEX' => [Query::TYPE_REGEX, 'resource', ['^user/'], Query::regex('resource', '^user/')];
+        yield 'TYPE_SELECT' => [Query::TYPE_SELECT, '', ['event', 'time'], Query::select(['event', 'time'])];
+        yield 'TYPE_ORDER_DESC' => [Query::TYPE_ORDER_DESC, 'time', [], Query::orderDesc('time')];
+        yield 'TYPE_ORDER_ASC' => [Query::TYPE_ORDER_ASC, 'time', [], Query::orderAsc('time')];
+        yield 'TYPE_ORDER_RANDOM' => [Query::TYPE_ORDER_RANDOM, '', [], Query::orderRandom()];
+        yield 'TYPE_LIMIT' => [Query::TYPE_LIMIT, '', [25], Query::limit(25)];
+        yield 'TYPE_OFFSET' => [Query::TYPE_OFFSET, '', [50], Query::offset(50)];
+        yield 'TYPE_CURSOR_AFTER' => [Query::TYPE_CURSOR_AFTER, '', [['$id' => 'log1']], Query::cursorAfter(['$id' => 'log1'])];
+        yield 'TYPE_CURSOR_BEFORE' => [Query::TYPE_CURSOR_BEFORE, '', [['$id' => 'log2']], Query::cursorBefore(['$id' => 'log2'])];
+    }
+
+    /**
+     * @param array<mixed> $values
+     */
+    #[DataProvider('legacyTypes')]
+    public function testLegacyTypeBuildsTheSameQueryAsItsFactory(string $type, string $attribute, array $values, Query $expected): void
+    {
+        $query = new Query($type, $attribute, $values);
+
+        $this->assertSame($expected->getMethod(), $query->getMethod());
+        $this->assertSame($expected->toArray(), $query->toArray());
+        $this->assertSame($expected->toString(), $query->toString());
+    }
+
+    /**
+     * @param array<mixed> $values
+     */
+    #[DataProvider('legacyTypes')]
+    public function testLegacyTypeRoundTripsThroughParse(string $type, string $attribute, array $values, Query $expected): void
+    {
+        $parsed = Query::parse(new Query($type, $attribute, $values)->toString());
+
+        $this->assertInstanceOf(Query::class, $parsed);
+        $this->assertSame($expected->toArray(), $parsed->toArray());
+    }
+
+    public function testLegacyTypesParseInABatch(): void
+    {
+        $parsed = Query::parseQueries([
+            new Query(Query::TYPE_EQUAL, 'userId', ['123'])->toString(),
+            new Query(Query::TYPE_GREATER, 'time', ['2023-01-01'])->toString(),
+            new Query(Query::TYPE_ORDER_DESC, 'time')->toString(),
+            new Query(Query::TYPE_LIMIT, values: [10])->toString(),
+        ]);
+
+        $this->assertSame(
+            [
+                Query::equal('userId', '123')->toArray(),
+                Query::greaterThan('time', '2023-01-01')->toArray(),
+                Query::orderDesc('time')->toArray(),
+                Query::limit(10)->toArray(),
+            ],
+            \array_map(static fn (Query $query): array => $query->toArray(), $parsed),
+        );
+    }
+
+    public function testUnknownTypeIsRejectedOnConstruction(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        new Query('lesser', 'time', ['2024-01-01']);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function unknownTypes(): iterable
+    {
+        yield 'unknown name' => ['lesser'];
+        yield 'wrong case' => ['EQUAL'];
+        yield 'empty' => [''];
+    }
+
+    #[DataProvider('unknownTypes')]
+    public function testUnknownTypeIsRejectedByParse(string $type): void
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid query method: ' . $type);
+
+        Query::parse(\json_encode(['method' => $type, 'attribute' => 'time', 'values' => ['2024-01-01']], JSON_THROW_ON_ERROR));
     }
 }

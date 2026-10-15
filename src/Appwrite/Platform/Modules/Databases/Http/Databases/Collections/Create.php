@@ -9,24 +9,29 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Attribute;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Attribute;
+use Utopia\Database\Capability;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Index;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\IndexDefinition as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
@@ -76,8 +81,8 @@ class Create extends Action
                     replaceWith: 'tablesDB.createTable',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -100,7 +105,7 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
+        $collectionId = $collectionId === 'unique()' ? Id::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
@@ -138,8 +143,8 @@ class Create extends Action
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes()
+            $this->supportsSpatial($dbForDatabases->getAdapter()),
+            $this->supportsDefinedAttributes($dbForDatabases->getAdapter())
         );
 
         if (!$attributesValidator->isValid($attributes)) {
@@ -148,7 +153,7 @@ class Create extends Action
         }
 
         foreach ($attributes as $attribute) {
-            if (($attribute['type'] ?? '') === Database::VAR_RELATIONSHIP) {
+            if (($attribute['type'] ?? '') === ColumnType::Relationship->value) {
                 $dbForProject->deleteDocument($databaseKey, $collection->getId());
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
             }
@@ -191,23 +196,7 @@ class Create extends Action
         $indexValidator = new IndexValidator(
             $collectionAttributes,
             [],
-            $dbForDatabases->getAdapter()->getMaxIndexLength(),
-            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForDatabases->getAdapter()->getSupportForVectors(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObjectIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForTrigramIndex(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForIndex(),
-            $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
-            $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
-            $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject(),
+            $dbForDatabases->profile(),
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -218,13 +207,13 @@ class Create extends Action
         }
 
         try {
-            $dbForDatabases->createCollection(
+            $dbForDatabases->createCollection(Collection::create(
                 id: $collectionKey,
                 attributes: $collectionAttributes,
                 indexes: $collectionIndexes,
                 permissions: $permissions,
-                documentSecurity: $documentSecurity
-            );
+                documentSecurity: $documentSecurity,
+            ));
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
@@ -274,16 +263,14 @@ class Create extends Action
     }
 
     /**
-     * Build attribute Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @return array{collection: Attribute, document: Document}
      */
     protected function buildAttributeDocument(
         Document $database,
         Document $collection,
         array $attribute,
     ): array {
-        ['type' => $type, 'format' => $format, 'size' => $size] = Attribute::resolve($attribute);
+        ['type' => $type, 'format' => $format, 'size' => $size] = AttributeDefinition::resolve($attribute);
 
         $key = $attribute['key'];
         $required = $attribute['required'] ?? false;
@@ -300,12 +287,17 @@ class Create extends Action
         // The dedicated endpoints store a range on every numeric attribute, falling
         // back to the full width of the type, so omitting min/max here has to produce
         // the same document rather than one with no range at all.
-        if (\in_array($type, [Database::VAR_INTEGER, Database::VAR_BIGINT, Database::VAR_FLOAT])) {
-            $isFloat = $type === Database::VAR_FLOAT;
+        if (\in_array($type, [
+            ColumnType::Integer->value,
+            Attribute::storedType(ColumnType::BigInteger),
+            ColumnType::Float->value,
+            ColumnType::Double->value,
+        ], true)) {
+            $isFloat = \in_array($type, [ColumnType::Float->value, ColumnType::Double->value], true);
 
-            $format = match($type) {
-                Database::VAR_INTEGER => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                Database::VAR_BIGINT => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
+            $format = match ($type) {
+                ColumnType::Integer->value => APP_DATABASE_ATTRIBUTE_INT_RANGE,
+                Attribute::storedType(ColumnType::BigInteger) => APP_DATABASE_ATTRIBUTE_BIGINT_RANGE,
                 default => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             };
 
@@ -318,7 +310,7 @@ class Create extends Action
             ];
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Attribute::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,
@@ -333,7 +325,7 @@ class Create extends Action
         ]);
 
         $document = new Document([
-            '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),
@@ -358,11 +350,10 @@ class Create extends Action
     }
 
     /**
-     * Build index Document objects from a definition array
-     *
-     * @return array{collection: Document, document: Document}
+     * @param list<Attribute> $attributes
+     * @return array{collection: Index, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForDatabases): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributes, Database $dbForDatabases): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -370,36 +361,30 @@ class Create extends Action
         $orders = $indexDef['orders'] ?? [];
         $lengths = $indexDef['lengths'] ?? [];
 
-        $attrKeys = array_map(fn ($a) => $a->getAttribute('key'), $attributeDocuments);
+        $attributesByKey = [];
+        foreach ($attributes as $attribute) {
+            $attributesByKey[$attribute->key] = $attribute;
+        }
 
-        // Build lengths and orders based on attribute properties
         foreach ($indexAttributes as $i => $attr) {
-            $attrIndex = array_search($attr, $attrKeys);
-            if ($attrIndex !== false) {
-                $attrDoc = $attributeDocuments[$attrIndex];
-                $attrArray = $attrDoc->getAttribute('array', false);
+            if (empty($lengths[$i])) {
+                $lengths[$i] = null;
+            }
 
-                if (empty($lengths[$i])) {
-                    $lengths[$i] = null;
-                }
+            if (!(($attributesByKey[$attr] ?? null)?->array)) {
+                continue;
+            }
 
-                if ($attrArray === true) {
-                    $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
-                    $orders[$i] = null;
+            $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
+            $orders[$i] = null;
 
-                    if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
-                        // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
-                        throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
-                    }
-                }
-            } else {
-                if (empty($lengths[$i])) {
-                    $lengths[$i] = null;
-                }
+            if ($dbForDatabases->getAdapter()->supports(Capability::DefinedAttributes)) {
+                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
             }
         }
 
-        $collectionDoc = new Document([
+        $collectionDoc = Index::fromArray([
             '$id' => $key,
             'key' => $key,
             'type' => $type,
@@ -409,7 +394,7 @@ class Create extends Action
         ]);
 
         $document = new Document([
-            '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+            '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
             'status' => 'available',
             'databaseInternalId' => $database->getSequence(),

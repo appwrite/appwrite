@@ -1,0 +1,78 @@
+services:
+  supabase-db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: supabase-db
+    networks:
+      - tests
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  nhost-db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nhost-db
+    networks:
+      - tests
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  nhost-storage:
+    image: mockoon/cli:latest
+    command: ["--data", "/mockoon/api.json", "--port", "80", "--disable-log-to-file"]
+    networks:
+      - tests
+    volumes:
+      - ./tests/fixtures/nhost:/mockoon
+
+  supabase-api:
+    image: mockoon/cli:latest
+    command: ["--data", "/mockoon/api.json", "--port", "80", "--disable-log-to-file"]
+    networks:
+      - tests
+    volumes:
+      - ./tests/fixtures/supabase:/mockoon
+
+  tests:
+    image: appwrite/base:2.1.0
+    entrypoint: ["tail", "-f", "/dev/null"]
+    networks:
+      - tests
+    volumes:
+      - ./:/usr/src/code
+      # phpunit comes from the root toolchain, as on the host; its autoloader
+      # also loads files from the sibling packages, relative to the vendor dir
+      - ../../vendor:/usr/src/toolchain:ro
+      - ../../packages:/usr/src/packages:ro
+    working_dir: /usr/src/code
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      nhost-db:
+        condition: service_healthy
+      nhost-storage:
+        condition: service_started
+      supabase-api:
+        condition: service_started
+    environment:
+      - NHOST_DB_URL=postgres://postgres:postgres@nhost-db:5432/postgres
+      - SUPABASE_DB_URL=postgres://postgres:postgres@supabase-db:5432/postgres
+
+networks:
+  tests:
