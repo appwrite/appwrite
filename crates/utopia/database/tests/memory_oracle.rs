@@ -249,8 +249,20 @@ async fn run(adapter: &Memory, authorization: &Arc<Authorization>, op: &str, a: 
 
 #[tokio::test]
 async fn test_memory_matches_php() {
-    let scenario: Json = serde_json::from_str(include_str!("fixtures/memory_scenario.json")).unwrap();
-    let expected: Vec<&str> = include_str!("fixtures/memory_expected.txt").lines().collect();
+    check(include_str!("fixtures/memory_scenario.json"), include_str!("fixtures/memory_expected.txt")).await;
+}
+
+/// Uniqueness across updates and renames, permissions moved by renames and
+/// batch updates, tenant per document, big-integer increments, ordering and
+/// cursors over mixed types.
+#[tokio::test]
+async fn test_memory_matches_php_on_writes_permissions_and_tenants() {
+    check(include_str!("fixtures/memory_scenario2.json"), include_str!("fixtures/memory_expected2.txt")).await;
+}
+
+async fn check(scenario: &str, expected: &str) {
+    let scenario: Json = serde_json::from_str(scenario).unwrap();
+    let expected: Vec<&str> = expected.lines().collect();
     let adapter = Memory::new();
     let authorization = Arc::new(Authorization::new(true));
     adapter.set_authorization(authorization.clone());
