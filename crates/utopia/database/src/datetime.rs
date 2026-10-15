@@ -34,6 +34,27 @@ pub fn now() -> String {
     DateTime::new(b"now", None, &TzInfo::utc()).map(|date| format(&date)).unwrap_or_default()
 }
 
+/// The current time in the database format, made later than `previous`:
+/// when `previous` is not before now (a clock that went back, or two
+/// writes within one millisecond), one millisecond after `previous`.
+///
+/// Fails with the parser's message when `previous` is not a date
+/// ([`Kind::Database`]).
+///
+/// PHP: `DateTime::nowAfter($previous)`.
+pub fn now_after(previous: Option<&str>) -> Result<String> {
+    let current = now();
+    let Some(previous) = previous else { return Ok(current) };
+    let date = DateTime::new(current.as_bytes(), None, &TzInfo::utc()).map_err(|e| Error::database(e.message()))?;
+    let mut minimum =
+        DateTime::new(previous.as_bytes(), None, &TzInfo::utc()).map_err(|e| Error::database(e.message()))?;
+    if date <= minimum {
+        minimum.modify(b"+1 millisecond").map_err(|e| Error::database(e.message()))?;
+        return Ok(format(&minimum));
+    }
+    Ok(current)
+}
+
 /// `date` in the database format ([`FORMAT_DB`]).
 ///
 /// PHP: `DateTime::format($date)`.

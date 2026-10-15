@@ -23,6 +23,9 @@ pub struct Error {
     /// The message as PHP has it, when it is not UTF-8 (`message` is then
     /// its lossy form).
     raw: Option<Vec<u8>>,
+    /// The string code (a SQLSTATE such as `HY000`) the error was built
+    /// with (`$state`).
+    state: Option<String>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -32,6 +35,24 @@ pub enum Kind {
     Database,
     /// `Exception\Authorization`: the roles lack a permission.
     Authorization,
+    /// `Exception\Schema`: a schema definition or a document breaks the rules
+    /// of its collection's schema (the parent of [`Kind::Structure`],
+    /// [`Kind::Type`], [`Kind::Character`], [`Kind::Truncate`],
+    /// [`Kind::Index`], [`Kind::Dependency`], [`Kind::Limit`] and
+    /// [`Kind::Relationship`]).
+    Schema,
+    /// `Exception\Contention`: the engine aborted a statement over a lock
+    /// conflict (a [`Kind::Transaction`]).
+    Contention,
+    /// `Exception\Mismatch`: a resource exists with another definition (a
+    /// [`Kind::Duplicate`]).
+    Mismatch,
+    /// `Exception\Refused`: an adapter reported, without an error, that it
+    /// did not apply a schema change.
+    Refused,
+    /// `Exception\Unconfirmed`: a commit could not be confirmed, so its
+    /// writes may or may not be stored.
+    Unconfirmed,
     /// `Exception\Character`: a value has characters the adapter cannot store.
     Character,
     /// `Exception\Conflict`: the document changed after the request started.
@@ -113,6 +134,11 @@ impl Kind {
         match self {
             Kind::Database => "Utopia\\Database\\Exception",
             Kind::Authorization => "Utopia\\Database\\Exception\\Authorization",
+            Kind::Schema => "Utopia\\Database\\Exception\\Schema",
+            Kind::Contention => "Utopia\\Database\\Exception\\Contention",
+            Kind::Mismatch => "Utopia\\Database\\Exception\\Mismatch",
+            Kind::Refused => "Utopia\\Database\\Exception\\Refused",
+            Kind::Unconfirmed => "Utopia\\Database\\Exception\\Unconfirmed",
             Kind::Character => "Utopia\\Database\\Exception\\Character",
             Kind::Conflict => "Utopia\\Database\\Exception\\Conflict",
             Kind::Dependency => "Utopia\\Database\\Exception\\Dependency",
@@ -151,9 +177,14 @@ impl Kind {
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 34] = [
+        const ALL: [Kind; 39] = [
             Kind::Database,
             Kind::Authorization,
+            Kind::Schema,
+            Kind::Contention,
+            Kind::Mismatch,
+            Kind::Refused,
+            Kind::Unconfirmed,
             Kind::Character,
             Kind::Conflict,
             Kind::Dependency,
@@ -192,11 +223,24 @@ impl Kind {
     }
 
     /// The kind this kind's PHP class extends, if it extends another
-    /// database exception (every `Exception\*` extends [`Kind::Database`];
-    /// `Unique` extends [`Kind::Duplicate`]).
+    /// database exception: `Unique` and `Mismatch` extend
+    /// [`Kind::Duplicate`], `Contention` extends [`Kind::Transaction`],
+    /// `Order` and `Operator` extend [`Kind::Query`], the schema violations
+    /// extend [`Kind::Schema`], and every other `Exception\*` extends
+    /// [`Kind::Database`].
     pub fn parent(self) -> Option<Kind> {
         match self {
-            Kind::Unique => Some(Kind::Duplicate),
+            Kind::Unique | Kind::Mismatch => Some(Kind::Duplicate),
+            Kind::Contention => Some(Kind::Transaction),
+            Kind::Order | Kind::Operator => Some(Kind::Query),
+            Kind::Structure
+            | Kind::Type
+            | Kind::Character
+            | Kind::Truncate
+            | Kind::Index
+            | Kind::Dependency
+            | Kind::Limit
+            | Kind::Relationship => Some(Kind::Schema),
             Kind::Database
             | Kind::Pdo
             | Kind::TypeError
@@ -220,7 +264,7 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None }
+        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, state: None }
     }
 
     /// An error of `kind` whose message is bytes (PHP messages are: one can
@@ -262,10 +306,17 @@ impl Error {
         if php_std::value::numeric_bytes_ex(code).is_some() { php_std::format::str_to_int(code) } else { 0 }
     }
 
-    /// The same error with a string code, as [`Error::string_code`] turns it
-    /// into an integer.
-    pub fn with_string_code(self, code: &[u8]) -> Self {
+    /// The same error with a string code: kept as [`Error::state`], and as
+    /// the integer [`Error::string_code`] turns it into.
+    pub fn with_string_code(mut self, code: &[u8]) -> Self {
+        self.state = Some(String::from_utf8_lossy(code).into_owned());
         self.with_code(Self::string_code(code))
+    }
+
+    /// The string code the error was built with, such as a SQLSTATE
+    /// (`$state`); `None` for an integer code.
+    pub fn state(&self) -> Option<&str> {
+        self.state.as_deref()
     }
 
     /// The same error wrapping `previous`.
@@ -300,6 +351,13 @@ impl Error {
             k = current.parent();
         }
         false
+    }
+
+    /// Whether the error is an engine `\Error` (`TypeError`, `ValueError`,
+    /// `DivisionByZeroError`, `Error`) rather than an `\Exception`: code
+    /// that catches `Exception` lets it through.
+    pub fn is_engine_error(&self) -> bool {
+        matches!(self.kind, Kind::TypeError | Kind::ValueError | Kind::DivisionByZero | Kind::Error)
     }
 
     /// The message (`getMessage()`), lossy when [`Error::message_bytes`]
@@ -357,6 +415,9 @@ impl From<php_std::EngineError> for Error {
 /// `Result` with [`Error`].
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
+/// The message of every unique index violation (`Exception\Unique::MESSAGE`).
+pub const UNIQUE_MESSAGE: &str = "Unique index violation";
+
 /// Shorthands for the error of each kind.
 macro_rules! constructors {
     ($($name:ident => $kind:ident),* $(,)?) => {
@@ -374,6 +435,12 @@ macro_rules! constructors {
 constructors! {
     database => Database,
     authorization => Authorization,
+    schema => Schema,
+    contention => Contention,
+    mismatch => Mismatch,
+    refused => Refused,
+    unconfirmed => Unconfirmed,
+    exception => Exception,
     character => Character,
     conflict => Conflict,
     dependency => Dependency,

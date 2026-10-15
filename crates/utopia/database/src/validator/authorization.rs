@@ -5,41 +5,51 @@
 //! `Validator\Authorization\Input` ([`Input`]).
 
 use std::future::Future;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
 
+use crate::permission::PermissionType;
+use crate::state::Scoped;
 use crate::value::{Array, ArrayKey, KeyRef, Str, Value};
 
 /// The current roles, and whether authorization is enforced.
 ///
+/// The status and the roles are [`Scoped`]: [`Authorization::skip`] and
+/// [`Authorization::with_roles`] change them for the future they run and
+/// nothing else, and a setter inside such a scope changes them only there.
+///
 /// ```
 /// use utopia_database::validator::authorization::{Authorization, Input};
+/// use utopia_database::PermissionType;
 ///
-/// let auth = Authorization::new();
+/// let auth = Authorization::new(true);
 /// auth.add_role("user:1");
-/// assert!(auth.is_valid(&Input::new("read", vec!["user:1".into()])));
-/// assert!(!auth.is_valid(&Input::new("read", vec!["user:2".into()])));
+/// assert!(auth.is_valid(&Input::new(PermissionType::Read, vec!["user:1".into()])));
+/// assert!(!auth.is_valid(&Input::new(PermissionType::Read, vec!["user:2".into()])));
 /// assert_eq!(auth.description(), "Missing \"read\" permission for role \"user:2\". Only \"[\"any\",\"user:1\"]\" scopes are allowed and \"[\"user:2\"]\" was given.");
 /// ```
 ///
 /// PHP: roles are the keys of an array, so a numeric role (`"123"`) is an
 /// integer key and comes back from [`Authorization::roles`] as one.
 pub struct Authorization {
-    state: Mutex<State>,
+    default_status: bool,
+    status: Scoped<bool>,
+    roles: Scoped<Array>,
+    message: Mutex<String>,
 }
 
-struct State {
-    status: bool,
-    status_default: bool,
-    roles: Array,
-    message: String,
+impl std::fmt::Debug for Authorization {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Authorization").field("status", &self.status()).field("roles", &self.role_names()).finish()
+    }
 }
 
 /// The action and permissions an [`Authorization`] checks.
 ///
 /// PHP: `Utopia\Database\Validator\Authorization\Input`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Input {
-    /// The action (`read`, `create`, `update`, `delete`).
+    /// The action: a [`PermissionType`]'s value, or an action of an
+    /// application's own such as `execute`.
     pub action: String,
     /// The roles the permission list grants the action to.
     pub permissions: Vec<String>,
@@ -47,93 +57,135 @@ pub struct Input {
 
 impl Input {
     /// `new Input($action, $permissions)`.
-    pub fn new(action: impl Into<String>, permissions: Vec<String>) -> Self {
-        Self { action: action.into(), permissions }
+    pub fn new(action: impl Into<Action>, permissions: Vec<String>) -> Self {
+        Self { action: action.into().0, permissions }
+    }
+}
+
+/// An action of an [`Input`]: a [`PermissionType`] or a name.
+#[derive(Debug, Clone)]
+pub struct Action(String);
+
+impl From<PermissionType> for Action {
+    fn from(p: PermissionType) -> Self {
+        Action(p.as_str().to_owned())
+    }
+}
+
+impl From<&str> for Action {
+    fn from(s: &str) -> Self {
+        Action(s.to_owned())
+    }
+}
+
+impl From<String> for Action {
+    fn from(s: String) -> Self {
+        Action(s)
     }
 }
 
 impl Default for Authorization {
     fn default() -> Self {
-        Self::new()
+        Self::new(true)
     }
 }
 
+impl Clone for Authorization {
+    /// A copy with the status and roles the caller sees, scoped
+    /// independently of this one (`__clone`).
+    fn clone(&self) -> Self {
+        Authorization {
+            default_status: self.default_status,
+            status: Scoped::new(self.status.get()),
+            roles: Scoped::new(self.roles.get()),
+            message: Mutex::new(self.description()),
+        }
+    }
+}
+
+fn key(role: &str) -> ArrayKey {
+    ArrayKey::normalize(Str::from(role))
+}
+
 impl Authorization {
-    /// `new Authorization()`: enforced, with the role `any`.
-    pub fn new() -> Self {
+    /// `new Authorization($defaultStatus)`: with the role `any`, enforced
+    /// unless `default_status` is false.
+    pub fn new(default_status: bool) -> Self {
         let mut roles = Array::new();
         roles.set(ArrayKey::from("any"), Value::Bool(true));
         Self {
-            state: Mutex::new(State {
-                status: true,
-                status_default: true,
-                roles,
-                message: "Authorization Error".to_owned(),
-            }),
+            default_status,
+            status: Scoped::new(default_status),
+            roles: Scoped::new(roles),
+            message: Mutex::new("Authorization Error".to_owned()),
         }
     }
 
-    fn lock(&self) -> MutexGuard<'_, State> {
-        self.state.lock().unwrap_or_else(|e| e.into_inner())
+    fn set_message(&self, message: String) {
+        *self.message.lock().unwrap_or_else(|e| e.into_inner()) = message;
     }
 
     /// The description of the last failure (`getDescription()`).
     pub fn description(&self) -> String {
-        self.lock().message.clone()
+        self.message.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     /// `isValid($input)`: whether one of the permissions is a current role
-    /// (always, when disabled). Sets the description on failure.
+    /// (always, while disabled). Sets the description on failure.
     pub fn is_valid(&self, input: &Input) -> bool {
-        let mut s = self.lock();
-        if !s.status {
+        if !self.status.get() {
             return true;
         }
         if input.permissions.is_empty() {
-            s.message = format!("No permissions provided for action '{}'", input.action);
+            self.set_message(format!("No permissions provided for action '{}'", input.action));
             return false;
         }
+        let roles = self.roles.get();
         let mut last = "-";
         for permission in &input.permissions {
             last = permission;
-            if s.roles.contains_key(&ArrayKey::normalize(Str::from(permission.as_str()))) {
+            if roles.contains_key(&key(permission)) {
                 return true;
             }
         }
-        let roles = php_std::json::encode(&Value::Array(role_list(&s.roles)), php_std::json::Flags::NONE, 512)
-            .unwrap_or_default();
-        let given = php_std::json::encode(
-            &Value::Array(input.permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect()),
-            php_std::json::Flags::NONE,
-            512,
-        )
-        .unwrap_or_default();
-        s.message = format!(
+        let encode = |v: Value| php_std::json::encode(&v, php_std::json::Flags::NONE, 512).unwrap_or_default();
+        let given = encode(Value::Array(input.permissions.iter().map(|p| Value::Str(Str::from(p.as_str()))).collect()));
+        self.set_message(format!(
             "Missing \"{}\" permission for role \"{}\". Only \"{}\" scopes are allowed and \"{}\" was given.",
-            input.action, last, roles, given
-        );
+            input.action,
+            last,
+            encode(Value::Array(role_list(&roles))),
+            given
+        ));
         false
     }
 
     /// `addRole()`.
-    pub fn add_role(&self, role: &str) {
-        self.lock().roles.set(ArrayKey::normalize(Str::from(role)), Value::Bool(true));
+    pub fn add_role(&self, role: &str) -> &Self {
+        let mut roles = self.roles.get();
+        roles.set(key(role), Value::Bool(true));
+        self.roles.set(roles);
+        self
     }
 
     /// `removeRole()`.
-    pub fn remove_role(&self, role: &str) {
-        self.lock().roles.remove(&ArrayKey::normalize(Str::from(role)));
+    pub fn remove_role(&self, role: &str) -> &Self {
+        let mut roles = self.roles.get();
+        roles.remove(&key(role));
+        self.roles.set(roles);
+        self
     }
 
-    /// `getRoles()`: in the order they were added (numeric roles as integers).
+    /// `getRoles()`: in the order they were added (numeric roles as
+    /// integers).
     pub fn roles(&self) -> Vec<Value> {
-        role_list(&self.lock().roles).into_iter().map(|(_, v)| v).collect()
+        role_list(&self.roles.get()).into_iter().map(|(_, v)| v).collect()
     }
 
-    /// The roles as strings, for permission checks against stored permissions.
+    /// The roles as strings.
     pub fn role_names(&self) -> Vec<String> {
-        self.lock()
-            .roles
+        self.roles
+            .get()
             .keys()
             .map(|k| match k {
                 KeyRef::Int(i) => i.to_string(),
@@ -142,64 +194,65 @@ impl Authorization {
             .collect()
     }
 
+    /// Runs `future` with exactly `roles` (`withRoles()`).
+    pub async fn with_roles<F: Future>(&self, roles: &[String], future: F) -> F::Output {
+        let set: Array = roles.iter().map(|r| (key(r), Value::Bool(true))).collect();
+        self.roles.with(set, future).await
+    }
+
     /// `cleanRoles()`.
-    pub fn clean_roles(&self) {
-        self.lock().roles = Array::new();
+    pub fn clean_roles(&self) -> &Self {
+        self.roles.set(Array::new());
+        self
     }
 
     /// `hasRole()`.
     pub fn has_role(&self, role: &str) -> bool {
-        self.lock().roles.contains_key(&ArrayKey::normalize(Str::from(role)))
-    }
-
-    /// `setDefaultStatus()`: the status [`Authorization::reset`] returns to,
-    /// and the current status.
-    pub fn set_default_status(&self, status: bool) {
-        let mut s = self.lock();
-        s.status_default = status;
-        s.status = status;
+        self.roles.get().contains_key(&key(role))
     }
 
     /// `setStatus()`.
-    pub fn set_status(&self, status: bool) {
-        self.lock().status = status;
+    pub fn set_status(&self, status: bool) -> &Self {
+        self.status.set(status);
+        self
     }
 
     /// `getStatus()`: whether authorization is enforced.
     pub fn status(&self) -> bool {
-        self.lock().status
+        self.status.get()
     }
 
-    /// `skip($callback)`: runs `f` with authorization disabled, then restores
-    /// the status it had.
-    pub async fn skip<T, F, Fut>(&self, f: F) -> T
-    where
-        F: FnOnce() -> Fut,
-        Fut: Future<Output = T>,
-    {
-        let initial = {
-            let mut s = self.lock();
-            std::mem::replace(&mut s.status, false)
-        };
-        let out = f().await;
-        self.lock().status = initial;
-        out
+    /// Runs `future` with authorization disabled (`skip()`).
+    pub async fn skip<F: Future>(&self, future: F) -> F::Output {
+        self.status.with(false, future).await
+    }
+
+    /// [`Authorization::skip`] for work that does not await.
+    pub fn skip_sync<R>(&self, callback: impl FnOnce() -> R) -> R {
+        self.status.with_sync(false, callback)
+    }
+
+    /// Runs `future` with `status` and exactly `roles` (`restore()`,
+    /// internal: applies a snapshot).
+    pub async fn restore<F: Future>(&self, status: bool, roles: &[String], future: F) -> F::Output {
+        self.status.with(status, self.with_roles(roles, future)).await
     }
 
     /// `enable()`.
-    pub fn enable(&self) {
-        self.lock().status = true;
+    pub fn enable(&self) -> &Self {
+        self.status.set(true);
+        self
     }
 
     /// `disable()`.
-    pub fn disable(&self) {
-        self.lock().status = false;
+    pub fn disable(&self) -> &Self {
+        self.status.set(false);
+        self
     }
 
     /// `reset()`: back to the default status.
     pub fn reset(&self) {
-        let mut s = self.lock();
-        s.status = s.status_default;
+        self.status.set(self.default_status);
     }
 }
 
@@ -223,7 +276,7 @@ impl utopia_validators::Validator for Authorization {
     /// this trait every value is `Invalid input provided`, as PHP answers
     /// for anything that is not an `Input`.
     fn is_valid(&self, _value: &serde_json::Value) -> bool {
-        self.lock().message = "Invalid input provided".to_owned();
+        self.set_message("Invalid input provided".to_owned());
         false
     }
 

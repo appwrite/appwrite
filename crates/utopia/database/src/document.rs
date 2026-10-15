@@ -2,16 +2,69 @@
 //! (`$id`, `$sequence`, `$collection`, `$tenant`, `$createdAt`, `$updatedAt`,
 //! `$permissions`) every stored document has.
 
-use php_std::sort::{SortFlags, array_intersect, array_unique};
-
-use crate::error::{Error, Kind, Result};
+use crate::error::{Error, Result};
+use crate::permission::PermissionType;
 use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
 
 /// The PHP class of a plain document.
 pub const CLASS: &str = "Utopia\\Database\\Document";
 
-/// The internal (system) attributes [`Document::attributes`] leaves out.
-const INTERNAL: [&str; 7] = ["$id", "$sequence", "$collection", "$tenant", "$createdAt", "$updatedAt", "$permissions"];
+/// `Document::ID`.
+pub const ID: &str = "$id";
+/// `Document::SEQUENCE`.
+pub const SEQUENCE: &str = "$sequence";
+/// `Document::COLLECTION`.
+pub const COLLECTION: &str = "$collection";
+/// `Document::CREATED_AT`.
+pub const CREATED_AT: &str = "$createdAt";
+/// `Document::UPDATED_AT`.
+pub const UPDATED_AT: &str = "$updatedAt";
+/// `Document::PERMISSIONS`.
+pub const PERMISSIONS: &str = "$permissions";
+/// `Document::TENANT`.
+pub const TENANT: &str = "$tenant";
+/// `Document::DISTANCE`.
+pub const DISTANCE: &str = "$distance";
+/// `Document::DELETED_AT`.
+pub const DELETED_AT: &str = "$deletedAt";
+
+/// The internal attributes [`Document::attributes`] leaves out: the keys of
+/// `Database::internalAttributesFor(true)`.
+pub const INTERNAL: [&str; 7] = [ID, SEQUENCE, COLLECTION, TENANT, CREATED_AT, UPDATED_AT, PERMISSIONS];
+
+/// How [`Document::set_with`] stores a value.
+///
+/// PHP: `Utopia\Database\SetType`.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum SetType {
+    /// Replace the attribute (`assign`).
+    Assign,
+    /// Put the value in front of the attribute's array (`prepend`).
+    Prepend,
+    /// Put the value behind the attribute's array (`append`).
+    Append,
+}
+
+impl SetType {
+    /// The case's value (`assign`, `prepend`, `append`).
+    pub fn as_str(self) -> &'static str {
+        match self {
+            SetType::Assign => "assign",
+            SetType::Prepend => "prepend",
+            SetType::Append => "append",
+        }
+    }
+
+    /// The case of a value (`tryFrom()`).
+    pub fn from_name(name: &str) -> Option<SetType> {
+        match name {
+            "assign" => Some(SetType::Assign),
+            "prepend" => Some(SetType::Prepend),
+            "append" => Some(SetType::Append),
+            _ => None,
+        }
+    }
+}
 
 /// A document: attributes in insertion order, each a [`Value`]. Nested
 /// documents (relationships) are [`Value::Ext`] with [`Ext::Document`].
@@ -21,7 +74,7 @@ const INTERNAL: [&str; 7] = ["$id", "$sequence", "$collection", "$tenant", "$cre
 ///
 /// let mut doc = Document::from_pairs([("$id", string("movie1")), ("name", string("Alien"))]).unwrap();
 /// assert_eq!(doc.id(), "movie1");
-/// doc.set("year", 1979.into());
+/// doc.set("year", 1979.into()).unwrap();
 /// assert_eq!(doc.get("year"), Some(&1979.into()));
 /// assert!(doc.remove("name").is_some());
 /// ```
@@ -38,51 +91,18 @@ pub struct Document {
     class: Option<Str>,
 }
 
-/// How [`Document::set_with`] stores a value.
-///
-/// PHP: `Document::SET_TYPE_ASSIGN`, `SET_TYPE_PREPEND`, `SET_TYPE_APPEND`.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum SetType {
-    /// Replace the attribute (`SET_TYPE_ASSIGN`).
-    Assign,
-    /// Push onto the front of the attribute's array (`SET_TYPE_PREPEND`).
-    Prepend,
-    /// Push onto the end of the attribute's array (`SET_TYPE_APPEND`).
-    Append,
-}
-
-impl SetType {
-    /// The PHP constant's value (`assign`, `prepend`, `append`).
-    pub fn as_str(self) -> &'static str {
-        match self {
-            SetType::Assign => "assign",
-            SetType::Prepend => "prepend",
-            SetType::Append => "append",
-        }
-    }
-
-    /// The set type a PHP constant's value names; `None` for any other
-    /// string (PHP's `setAttribute` then does nothing).
-    pub fn from_name(name: &str) -> Option<SetType> {
-        match name {
-            "assign" => Some(SetType::Assign),
-            "prepend" => Some(SetType::Prepend),
-            "append" => Some(SetType::Append),
-            _ => None,
-        }
-    }
-}
-
 /// `isset($array[$key])`.
 fn isset(a: &Array, key: &str) -> bool {
     a.get_str(key).is_some_and(|v| !matches!(v, Value::Null))
 }
 
+/// Whether an array is a document's (`isset($value['$id']) || isset($value['$collection'])`).
 fn wraps(a: &Array) -> bool {
-    isset(a, "$id") || isset(a, "$collection")
+    isset(a, ID) || isset(a, COLLECTION)
 }
 
 /// The name PHP gives a value's type in a `TypeError` (`zend_zval_value_name`).
+#[allow(dead_code)] // for the validators being ported
 pub(crate) fn value_name(v: &Value) -> &str {
     match v {
         Value::Bool(true) => "true",
@@ -91,91 +111,98 @@ pub(crate) fn value_name(v: &Value) -> &str {
     }
 }
 
-/// A string argument of an internal function in coercive mode
-/// (`zend_parse_arg_str_weak`): scalars convert, `null` is `""` (PHP
-/// deprecates it), anything else is a `TypeError`.
-pub(crate) fn string_arg(v: &Value, function: &str, arg: &str) -> Result<Str> {
-    match v {
-        Value::Array(_) | Value::Object(_) | Value::Ext(_) => Err(Error::new(
-            Kind::TypeError,
-            format!("{function}(): Argument {arg} must be of type string, {} given", value_name(v)),
-        )),
-        other => Ok(other.to_php_string().unwrap_or_default()),
-    }
-}
-
-/// Removes every occurrence of `search` from `subject` (`str_replace($search, '', $subject)`).
-fn remove_all(subject: &[u8], search: &[u8]) -> Vec<u8> {
-    php_std::string::str_replace(search, b"", subject).0.into_owned()
-}
-
-/// What `$value[$key]` is when `isset($value[$key])` holds.
-enum Offset<'a> {
-    /// An array element or a document attribute.
-    Value(&'a Value),
-    /// A byte of a string (a numeric `$key` is a string offset).
-    Byte(u8),
-}
-
-/// The string offset a key names: `$str[$key]` takes an integer numeric
-/// string (surrounding whitespace allowed), negative from the end.
-fn string_offset(s: &Str, key: &str) -> Option<usize> {
-    let (php_std::value::Number::Int(i), _) = php_std::value::numeric_str_ex(key)? else { return None };
-    let len = s.len() as i64;
-    let i = if i < 0 { i.checked_add(len)? } else { i };
-    (0..len).contains(&i).then_some(i as usize)
-}
-
-/// `isset($value[$key]) ? $value[$key] : nothing`, failing like PHP when
-/// `$value` is an object that is not array-accessible.
-fn offset<'a>(value: &'a Value, key: &str) -> Result<Option<Offset<'a>>> {
-    Ok(match value {
-        Value::Array(a) => a.get_str(key).filter(|v| !matches!(v, Value::Null)).map(Offset::Value),
-        Value::Ext(Ext::Document(d)) => d.get(key).map(Offset::Value),
-        Value::Ext(_) | Value::Object(_) => {
-            return Err(Error::new(Kind::Error, format!("Cannot use object of type {} as array", value.debug_type())));
+/// `array_values(array_unique($strings))`: the first of equal strings kept.
+fn unique(strings: Vec<Str>) -> Vec<Str> {
+    let mut out: Vec<Str> = Vec::with_capacity(strings.len());
+    for s in strings {
+        if !out.iter().any(|o| o.as_bytes() == s.as_bytes()) {
+            out.push(s);
         }
-        Value::Str(s) => string_offset(s, key).map(|i| Offset::Byte(s.as_bytes()[i])),
-        _ => None,
-    })
+    }
+    out
 }
 
-/// `isset($value[$key]) && $value[$key] === $find`.
-fn matches(value: &Value, key: &str, find: &Value) -> Result<bool> {
-    Ok(match offset(value, key)? {
-        None => false,
-        Some(Offset::Value(v)) => v.strict_eq(find),
-        Some(Offset::Byte(b)) => matches!(find, Value::Str(s) if s.as_bytes() == [b]),
-    })
+/// `Document::normalizePermissions()`: the permissions as a list of unique
+/// strings.
+///
+/// Fails with [`crate::Kind::Structure`] when `permissions` is not an array
+/// (`$permissions must be of type array`) or holds a value that is not a
+/// string (`Every permission must be of type string`).
+pub(crate) fn normalize_permissions(permissions: &Value) -> Result<Vec<Str>> {
+    let Value::Array(list) = permissions else {
+        return Err(Error::structure("$permissions must be of type array"));
+    };
+    let mut strings = Vec::with_capacity(list.len());
+    for permission in list.values() {
+        let Value::Str(s) = permission else {
+            return Err(Error::structure("Every permission must be of type string"));
+        };
+        strings.push(s.clone());
+    }
+    Ok(unique(strings))
+}
+
+fn str_list(strings: Vec<Str>) -> Value {
+    Value::Array(Array::from_list(strings.into_iter().map(Value::Str).collect()))
+}
+
+/// The string-keyed entries of an array (`foreach ($value as $name => $item) if (is_string($name))`).
+fn string_keyed(a: &Array) -> Array {
+    a.iter().filter(|(k, _)| matches!(k, KeyRef::Str(_))).map(|(k, v)| (k.to_owned(), v.clone())).collect()
+}
+
+/// `trim()`'s default characters.
+fn trim(bytes: &[u8]) -> &[u8] {
+    const WS: &[u8] = b" \t\n\r\0\x0B";
+    let start = bytes.iter().position(|b| !WS.contains(b)).unwrap_or(bytes.len());
+    let end = bytes.iter().rposition(|b| !WS.contains(b)).map_or(start, |e| e + 1);
+    &bytes[start..end.max(start)]
 }
 
 impl Document {
-    /// A document of `input`, as `new Document($input)`: nested arrays with a
-    /// `$id` or `$collection` become documents, and so do such arrays inside
-    /// list values.
+    /// A document of `input`, as `new Document($input)`: `$permissions` made
+    /// a list of unique strings, nested arrays with a `$id` or `$collection`
+    /// made documents, and so are such arrays inside array values.
     ///
-    /// Fails like PHP when `$id` is not a string or `$permissions` not an
-    /// array ([`crate::Kind::Structure`]).
+    /// Fails ([`crate::Kind::Structure`]) when `$id` is not a string
+    /// (`$id must be of type string`), `$permissions` is not an array
+    /// (`$permissions must be of type array`) or holds a value that is not a
+    /// string (`Every permission must be of type string`).
     ///
     /// PHP: `Document::__construct`.
     pub fn new(input: Array) -> Result<Self> {
-        if let Some(id) = input.get_str("$id")
+        Self::build(input, false)
+    }
+
+    /// [`Document::new`], or `fromStorage()` with `storage`.
+    fn build(input: Array, storage: bool) -> Result<Self> {
+        let mut attrs = input;
+        if let Some(id) = attrs.get_str(ID)
             && !matches!(id, Value::Str(_))
         {
             return Err(Error::structure("$id must be of type string"));
         }
-        if let Some(p) = input.get_str("$permissions")
-            && !matches!(p, Value::Array(_))
-        {
-            return Err(Error::structure("$permissions must be of type array"));
+        let key = ArrayKey::Str(Str::from_static(PERMISSIONS));
+        if let Some(p) = attrs.get(&key) {
+            let normalized = if storage {
+                let Value::Array(list) = p else {
+                    return Err(Error::structure("$permissions must be of type array"));
+                };
+                unique(
+                    list.values().filter_map(|v| if let Value::Str(s) = v { Some(s.clone()) } else { None }).collect(),
+                )
+            } else {
+                normalize_permissions(p)?
+            };
+            attrs.set(key, str_list(normalized));
         }
-        let mut attrs = input;
-        let keys: Vec<ArrayKey> = attrs.keys().map(KeyRef::to_owned).collect();
+        let keys: Vec<ArrayKey> =
+            attrs.iter().filter(|(_, v)| matches!(v, Value::Array(_))).map(|(k, _)| k.to_owned()).collect();
         for key in keys {
             let Some(Value::Array(value)) = attrs.get_mut(&key) else { continue };
             if wraps(value) {
                 let inner = std::mem::take(value);
-                attrs.set(key, Value::from(Document::new(inner)?));
+                attrs.set(key, Value::from(Self::build(inner, storage)?));
                 continue;
             }
             let child_keys: Vec<ArrayKey> = value
@@ -186,7 +213,7 @@ impl Document {
             for ck in child_keys {
                 if let Some(Value::Array(child)) = value.get_mut(&ck) {
                     let inner = std::mem::take(child);
-                    value.set(ck, Value::from(Document::new(inner)?));
+                    value.set(ck, Value::from(Self::build(inner, storage)?));
                 }
             }
         }
@@ -203,9 +230,53 @@ impl Document {
         Self::new(pairs.into_iter().map(|(k, v)| (ArrayKey::normalize(k.into()), v)).collect())
     }
 
+    /// A document read from a SQL row: integer keys dropped, a `null` `$id`
+    /// read as `""`, `$permissions` kept to their unique strings; nothing
+    /// else converted.
+    ///
+    /// Fails ([`crate::Kind::Structure`]) for an `$id` that is neither a
+    /// string nor `null`, and for `$permissions` that are not an array.
+    ///
+    /// PHP: `Document::fromRow()` (internal).
+    pub fn from_row(row: Array) -> Result<Self> {
+        let mut attrs = row;
+        attrs.retain(|k, _| matches!(k, KeyRef::Str(_)));
+        let id = ArrayKey::Str(Str::from_static(ID));
+        match attrs.get(&id) {
+            Some(Value::Null) => {
+                attrs.set(id, Value::Str(Str::EMPTY));
+            }
+            Some(Value::Str(_)) | None => {}
+            Some(_) => return Err(Error::structure("$id must be of type string")),
+        }
+        let key = ArrayKey::Str(Str::from_static(PERMISSIONS));
+        if let Some(p) = attrs.get(&key) {
+            let Value::Array(list) = p else {
+                return Err(Error::structure("$permissions must be of type array"));
+            };
+            let strings = unique(
+                list.values().filter_map(|v| if let Value::Str(s) = v { Some(s.clone()) } else { None }).collect(),
+            );
+            attrs.set(key, str_list(strings));
+        }
+        Ok(Self { attrs, class: None })
+    }
+
+    /// A document read from storage that keeps documents (MongoDB, Memory,
+    /// Redis, the caches): like [`Document::new`], except that permissions
+    /// that are not strings are dropped, at every level, instead of refused.
+    ///
+    /// Fails ([`crate::Kind::Structure`]) for an `$id` that is not a string
+    /// and `$permissions` that are not an array.
+    ///
+    /// PHP: `Document::fromStorage()` (internal).
+    pub fn from_storage(data: Array) -> Result<Self> {
+        Self::build(data, true)
+    }
+
     /// A document holding `attrs` exactly, without the nested-document
     /// wrapping or checks of [`Document::new`] (adapters building documents
-    /// from rows they already validated).
+    /// from rows they already validated; PHP's `exchangeArray()`).
     pub fn from_array_unchecked(attrs: Array) -> Self {
         Self { attrs, class: None }
     }
@@ -219,156 +290,99 @@ impl Document {
     /// The same document as an instance of the custom class `class`
     /// (`Database::setDocumentType`).
     pub fn with_class(mut self, class: impl Into<Str>) -> Self {
-        self.class = Some(class.into());
+        let class = class.into();
+        self.class = if class.as_bytes() == CLASS.as_bytes() { None } else { Some(class) };
         self
     }
 
     /// `$id` (`getId()`); empty when unset.
     ///
-    /// PHP: `Document::getId`. PHP coerces an `$id` set to another scalar
-    /// after construction to a string; here it reads as empty.
+    /// PHP: `Document::getId`. An `$id` set to another type after
+    /// construction reads as empty here.
     pub fn id(&self) -> &str {
-        match self.get("$id") {
+        match self.get(ID) {
             Some(Value::Str(s)) => s.as_str().unwrap_or(""),
             _ => "",
         }
     }
 
-    /// `$sequence` (`getSequence()`).
+    /// `$sequence` (`getSequence()`), as stored.
     pub fn sequence(&self) -> Option<&Value> {
-        self.get("$sequence")
+        self.get(SEQUENCE)
     }
 
     /// `$collection` (`getCollection()`); empty when unset.
     pub fn collection(&self) -> &str {
-        match self.get("$collection") {
+        match self.get(COLLECTION) {
             Some(Value::Str(s)) => s.as_str().unwrap_or(""),
             _ => "",
         }
     }
 
-    /// `$permissions` without duplicates, as text (`getPermissions()`).
-    pub fn permissions(&self) -> Vec<String> {
-        self.permission_list().map(|p| p.values().map(crate::value::to_text).collect()).unwrap_or_default()
-    }
-
-    /// `$permissions` without duplicates, the values as stored, renumbered
-    /// (`array_values(array_unique($permissions))`: duplicates are found by
-    /// their string forms, the first one kept).
+    /// `$permissions` as a list of unique strings (`getPermissions()`).
     ///
-    /// Fails like PHP when `$permissions` was set to something other than
-    /// an array (`TypeError`) or holds an object among several values
-    /// (`Error`).
-    ///
-    /// PHP: `Document::getPermissions`.
-    pub fn permission_list(&self) -> Result<Array> {
+    /// Fails ([`crate::Kind::Structure`]) when the stored `$permissions` are
+    /// not an array of strings, which only a write that bypassed
+    /// [`Document::set`]'s checks (such as [`Document::as_array_mut`]) leaves.
+    pub fn permissions(&self) -> Result<Vec<String>> {
         let empty = Value::Array(Array::new());
-        match self.get_or("$permissions", &empty) {
-            Value::Array(p) => {
-                let unique = array_unique(p, SortFlags::String)?;
-                Ok(unique.into_iter().map(|(_, v)| v).collect())
-            }
-            other => Err(Error::new(
-                Kind::TypeError,
-                format!("array_unique(): Argument #1 ($array) must be of type array, {} given", value_name(other)),
-            )),
-        }
+        Ok(normalize_permissions(self.get_or(PERMISSIONS, &empty))?
+            .into_iter()
+            .map(|s| String::from_utf8_lossy(s.as_bytes()).into_owned())
+            .collect())
     }
 
-    /// The roles granted `read` (`getRead()`).
-    pub fn read(&self) -> Vec<String> {
-        self.permissions_by_type("read")
-    }
-
-    /// The roles granted `create` (`getCreate()`).
-    pub fn create(&self) -> Vec<String> {
-        self.permissions_by_type("create")
-    }
-
-    /// The roles granted `update` (`getUpdate()`).
-    pub fn update(&self) -> Vec<String> {
-        self.permissions_by_type("update")
-    }
-
-    /// The roles granted `delete` (`getDelete()`).
-    pub fn delete(&self) -> Vec<String> {
-        self.permissions_by_type("delete")
-    }
-
-    /// The roles granted create, update and delete (`getWrite()`).
-    pub fn write(&self) -> Vec<String> {
-        self.write_roles().map(|r| texts(&r)).unwrap_or_default()
-    }
-
-    /// The roles of the permissions starting with `kind`
-    /// (`getPermissionsByType()`): `read("any")` gives `any`.
-    pub fn permissions_by_type(&self, kind: &str) -> Vec<String> {
-        self.roles(kind).map(|r| texts(&r)).unwrap_or_default()
-    }
-
-    /// The roles of the permissions starting with `kind`, as PHP returns
-    /// them: `kind(`, `)`, `"` and spaces removed from each permission, then
-    /// duplicates dropped with their keys (so `["a", "a", "b"]` is
-    /// `[0 => "a", 2 => "b"]`).
+    /// The roles the permissions of type `kind` grant
+    /// (`getPermissionsByType()`): `read("any")` gives `any` for `read`.
+    /// `kind` is a [`PermissionType`] or, for a type of an application's
+    /// own such as `execute`, its name.
     ///
-    /// Fails like [`Document::permission_list`], and with a `TypeError` for
-    /// a permission that is not a scalar.
+    /// Each permission is split at its first `(`: the type is the text
+    /// before it, trimmed; the role is the text after it without `)`, `"`
+    /// and spaces. Roles are unique per type, in first-seen order.
     ///
-    /// PHP: `Document::getPermissionsByType` (and `getRead`, `getCreate`,
-    /// `getUpdate`, `getDelete` for their types).
-    pub fn roles(&self, kind: &str) -> Result<Array> {
-        let open = [kind.as_bytes(), b"("].concat();
-        let mut out = Array::new();
-        for permission in self.permission_list()?.values() {
-            let permission = string_arg(permission, "str_starts_with", "#1 ($haystack)")?;
-            if !permission.as_bytes().starts_with(kind.as_bytes()) {
+    /// Fails as [`Document::permissions`] does.
+    pub fn permissions_by_type(&self, kind: impl AsRef<str>) -> Result<Vec<String>> {
+        let kind = kind.as_ref().as_bytes();
+        let empty = Value::Array(Array::new());
+        let mut roles: Vec<String> = Vec::new();
+        for permission in normalize_permissions(self.get_or(PERMISSIONS, &empty))? {
+            let bytes = permission.as_bytes();
+            let Some(open) = bytes.iter().position(|&b| b == b'(') else { continue };
+            if trim(&bytes[..open]) != kind {
                 continue;
             }
-            let mut role = remove_all(permission.as_bytes(), &open);
-            for search in [&b")"[..], b"\"", b" "] {
-                role = remove_all(&role, search);
+            let role: Vec<u8> =
+                bytes[open + 1..].iter().copied().filter(|b| !matches!(b, b')' | b'"' | b' ')).collect();
+            let role = String::from_utf8_lossy(&role).into_owned();
+            if !roles.contains(&role) {
+                roles.push(role);
             }
-            let _ = out.push(Value::Str(Str::from(role)));
         }
-        Ok(array_unique(&out, SortFlags::String)?)
-    }
-
-    /// The roles granted create, update and delete, as PHP returns them
-    /// (`array_unique(array_intersect($create, $update, $delete))`: the keys
-    /// of [`Document::roles`]`("create")` are kept).
-    ///
-    /// PHP: `Document::getWrite`.
-    pub fn write_roles(&self) -> Result<Array> {
-        let (create, update, delete) = (self.roles("create")?, self.roles("update")?, self.roles("delete")?);
-        Ok(array_unique(&array_intersect(&create, &[&update, &delete])?, SortFlags::String)?)
+        Ok(roles)
     }
 
     /// `$createdAt` (`getCreatedAt()`).
     pub fn created_at(&self) -> Option<&str> {
-        self.get("$createdAt").and_then(crate::value::as_str)
+        self.get(CREATED_AT).and_then(crate::value::as_str)
     }
 
     /// `$updatedAt` (`getUpdatedAt()`).
     pub fn updated_at(&self) -> Option<&str> {
-        self.get("$updatedAt").and_then(crate::value::as_str)
+        self.get(UPDATED_AT).and_then(crate::value::as_str)
     }
 
-    /// `$tenant` (`getTenant()`): numeric values (integers, floats, numeric
-    /// strings) as integers, cast like `(int)`; booleans as 0 or 1.
-    ///
-    /// PHP: `Document::getTenant`. A non-scalar `$tenant` fails PHP's return
-    /// type (`TypeError`); here it is returned as it is.
+    /// `$tenant` (`getTenant()`): a string of digits as an integer (cast
+    /// like `(int)`), an integer or another string as it is, anything else
+    /// as `None`.
     pub fn tenant(&self) -> Option<Value> {
-        let t = self.get("$tenant")?;
-        Some(match t {
-            Value::Int(i) => Value::Int(*i),
-            Value::Float(f) => Value::Int(php_std::format::dval_to_lval(*f)),
-            Value::Bool(b) => Value::Int(i64::from(*b)),
-            Value::Str(s) if php_std::value::numeric_bytes_ex(s.as_bytes()).is_some() => {
-                Value::Int(php_std::format::str_to_int(s.as_bytes()))
+        match self.get(TENANT)? {
+            Value::Str(s) if !s.is_empty() && s.as_bytes().iter().all(u8::is_ascii_digit) => {
+                Some(Value::Int(php_std::format::str_to_int(s.as_bytes())))
             }
-            other => other.clone(),
-        })
+            v @ (Value::Int(_) | Value::Str(_)) => Some(v.clone()),
+            _ => None,
+        }
     }
 
     /// Every attribute except the internal ones (`getAttributes()`).
@@ -400,232 +414,134 @@ impl Document {
         self.attrs.get_str(key)
     }
 
-    /// Whether `key` is present at all, `null` included
-    /// (`array_key_exists`/`offsetExists`).
+    /// Whether `key` is present at all, `null` included (`offsetExists()`).
     pub fn has(&self, key: &str) -> bool {
         self.attrs.get_str(key).is_some()
     }
 
+    /// The attribute `key` when it is present and an array, else an empty
+    /// array (`getArray()`).
+    pub fn array(&self, key: &str) -> Array {
+        match self.attrs.get_str(key) {
+            Some(Value::Array(a)) => a.clone(),
+            _ => Array::new(),
+        }
+    }
+
+    /// The documents of the array attribute `key` (`getDocuments()`): each
+    /// document element as it is, each array element as a document of its
+    /// string-keyed entries, other elements skipped.
+    ///
+    /// Fails as [`Document::new`] does for an array element that is not a
+    /// valid document.
+    pub fn documents(&self, key: &str) -> Result<Vec<Document>> {
+        let Some(Value::Array(items)) = self.attrs.get_str(key) else { return Ok(Vec::new()) };
+        let mut out = Vec::with_capacity(items.len());
+        for item in items.values() {
+            match item {
+                Value::Ext(Ext::Document(d)) => out.push((**d).clone()),
+                Value::Array(a) => out.push(Document::new(string_keyed(a))?),
+                _ => {}
+            }
+        }
+        Ok(out)
+    }
+
+    /// The document attribute `key` (`getDocument()`): a document as it is,
+    /// a non-empty array that is not a list as a document of its
+    /// string-keyed entries, anything else as an empty document.
+    ///
+    /// Fails as [`Document::new`] does for an array that is not a valid
+    /// document.
+    pub fn document(&self, key: &str) -> Result<Document> {
+        match self.attrs.get_str(key) {
+            Some(Value::Ext(Ext::Document(d))) => Ok((**d).clone()),
+            Some(Value::Array(a)) if !a.is_empty() && !a.is_list() => Document::new(string_keyed(a)),
+            _ => Ok(Document::empty()),
+        }
+    }
+
     /// Sets `key` to `value` (`setAttribute($key, $value)`).
-    pub fn set(&mut self, key: impl Into<Str>, value: Value) -> &mut Self {
+    ///
+    /// Fails ([`crate::Kind::Structure`]) when `key` is `$permissions` and
+    /// `value` is neither `null` nor an array of strings; the permissions
+    /// are stored as a list of unique strings.
+    pub fn set(&mut self, key: impl Into<Str>, value: Value) -> Result<&mut Self> {
+        self.set_with(key, value, SetType::Assign)
+    }
+
+    /// Sets, appends or prepends (`setAttribute($key, $value, $type)`).
+    /// Appending or prepending to an attribute that is unset or not an array
+    /// starts a new array; the integer keys of the array are renumbered,
+    /// its string keys kept (`[...$current, $value]`).
+    ///
+    /// Fails as [`Document::set`] does.
+    pub fn set_with(&mut self, key: impl Into<Str>, value: Value, how: SetType) -> Result<&mut Self> {
+        let key = ArrayKey::normalize(key.into());
+        let value = match how {
+            SetType::Assign => value,
+            SetType::Append | SetType::Prepend => {
+                let current = match self.attrs.get(&key) {
+                    Some(Value::Array(a)) => a.clone(),
+                    _ => Array::new(),
+                };
+                let mut out = Array::with_capacity(current.len() + 1);
+                if how == SetType::Prepend {
+                    let _ = out.push(value.clone());
+                }
+                for (k, v) in current.iter() {
+                    match k {
+                        KeyRef::Int(_) => {
+                            let _ = out.push(v.clone());
+                        }
+                        k => {
+                            out.set(k.to_owned(), v.clone());
+                        }
+                    }
+                }
+                if how == SetType::Append {
+                    let _ = out.push(value);
+                }
+                Value::Array(out)
+            }
+        };
+        let value = if matches!(&key, ArrayKey::Str(s) if s.as_bytes() == PERMISSIONS.as_bytes())
+            && !matches!(value, Value::Null)
+        {
+            str_list(normalize_permissions(&value)?)
+        } else {
+            value
+        };
+        self.attrs.set(key, value);
+        Ok(self)
+    }
+
+    /// Sets an attribute that is not `$permissions`: [`Document::set`]
+    /// without its check, for code that sets attributes it names itself.
+    ///
+    /// Setting `$permissions` through it stores the value unchecked, as
+    /// `$document['$permissions'] = $value` does in PHP.
+    pub fn put(&mut self, key: impl Into<Str>, value: Value) -> &mut Self {
         self.attrs.set(ArrayKey::normalize(key.into()), value);
         self
     }
 
-    /// Sets, appends or prepends (`setAttribute($key, $value, $type)`).
-    /// Appending or prepending to an attribute that is unset, `null` or not
-    /// an array starts a new array.
-    pub fn set_with(&mut self, key: impl Into<Str>, value: Value, how: SetType) -> &mut Self {
-        let key = ArrayKey::normalize(key.into());
-        match how {
-            SetType::Assign => {
-                self.attrs.set(key, value);
-            }
-            SetType::Append | SetType::Prepend => {
-                // Taken in place, so the attribute keeps its position.
-                let mut list = match self.attrs.get_mut(&key) {
-                    Some(Value::Array(a)) => std::mem::take(a),
-                    _ => Array::new(),
-                };
-                if how == SetType::Append {
-                    let _ = list.push(value);
-                } else {
-                    // array_unshift renumbers integer keys and keeps string keys.
-                    let mut out = Array::with_capacity(list.len() + 1);
-                    let _ = out.push(value);
-                    for (k, v) in list {
-                        match k {
-                            ArrayKey::Int(_) => {
-                                let _ = out.push(v);
-                            }
-                            k => {
-                                out.set(k, v);
-                            }
-                        }
-                    }
-                    list = out;
-                }
-                self.attrs.set(key, Value::Array(list));
-            }
-        }
-        self
-    }
-
-    /// Sets every attribute of `attrs` (`setAttributes()`).
-    pub fn set_many(&mut self, attrs: Array) -> &mut Self {
+    /// Sets every attribute of `attrs` (`setAttributes()`), failing as
+    /// [`Document::set`] does.
+    pub fn set_many(&mut self, attrs: Array) -> Result<&mut Self> {
         for (k, v) in attrs {
-            self.attrs.set(k, v);
+            let key = match k {
+                ArrayKey::Int(i) => Str::from(i.to_string()),
+                ArrayKey::Str(s) => s,
+            };
+            self.set(key, v)?;
         }
-        self
+        Ok(self)
     }
 
     /// Removes `key` (`removeAttribute()`), returning its value.
     pub fn remove(&mut self, key: &str) -> Option<Value> {
         self.attrs.remove(&ArrayKey::normalize(Str::from(key)))
-    }
-
-    /// The first element of `subject` (or the document itself when `subject`
-    /// is empty or unset) whose `key` is `===` `needle` (`find()`).
-    ///
-    /// [`Document::try_find`] reports the errors PHP raises for objects
-    /// that are not documents; here they read as not found.
-    pub fn find(&self, key: &str, needle: &Value, subject: &str) -> Option<Value> {
-        self.try_find(key, needle, subject).ok().flatten()
-    }
-
-    /// [`Document::find`], failing like PHP when an element (or the subject)
-    /// is an object other than a document (`Error`).
-    ///
-    /// The subject is the attribute `subject` when it is truthy, else the
-    /// document itself. An array subject is searched element by element; any
-    /// other subject is matched itself. `$value[$key]` follows PHP: an array
-    /// element, a document attribute, or a byte of a string when `key` is an
-    /// integer.
-    ///
-    /// PHP: `Document::find` (`false` when nothing matches is `None`).
-    pub fn try_find(&self, key: &str, needle: &Value, subject: &str) -> Result<Option<Value>> {
-        match self.attrs.get_str(subject).filter(|v| v.truthy()) {
-            None => Ok(self.get(key).is_some_and(|v| v.strict_eq(needle)).then(|| Value::from(self.clone()))),
-            Some(Value::Array(a)) => {
-                for v in a.values() {
-                    if matches(v, key, needle)? {
-                        return Ok(Some(v.clone()));
-                    }
-                }
-                Ok(None)
-            }
-            Some(other) => Ok(matches(other, key, needle)?.then(|| other.clone())),
-        }
-    }
-
-    /// Replaces the first element of `subject` whose `key` is `===` `needle`
-    /// with `replacement` (`findAndReplace()`); whether one was found.
-    ///
-    /// [`Document::try_find_and_replace`] reports the errors PHP raises;
-    /// here they read as not found.
-    pub fn find_and_replace(&mut self, key: &str, needle: &Value, replacement: Value, subject: &str) -> bool {
-        self.try_find_and_replace(key, needle, replacement, subject).unwrap_or(false)
-    }
-
-    /// [`Document::find_and_replace`], failing like PHP.
-    ///
-    /// The subject is chosen as in [`Document::try_find`]. In an array
-    /// subject the matching element is replaced; a document subject gets
-    /// `key` set; a string subject gets the byte at `key` replaced by the
-    /// first byte of `replacement` (an empty one is an `Error`); without a
-    /// subject the document gets `key` set.
-    ///
-    /// PHP: `Document::findAndReplace`. Without a truthy subject PHP also
-    /// stores the document inside itself under `subject` (it binds the
-    /// subject by reference and assigns `$this` to it), a cycle Rust does not
-    /// build: the subject attribute is left as it was.
-    pub fn try_find_and_replace(
-        &mut self,
-        key: &str,
-        needle: &Value,
-        replacement: Value,
-        subject: &str,
-    ) -> Result<bool> {
-        let skey = ArrayKey::normalize(Str::from(subject));
-        let Some(target) = self.attrs.get_mut(&skey).filter(|v| v.truthy()) else {
-            // The subject is the document, which now holds itself under `subject`.
-            if ArrayKey::normalize(Str::from(key)) == skey {
-                return Ok(false);
-            }
-            if self.get(key).is_some_and(|v| v.strict_eq(needle)) {
-                self.set(key, replacement);
-                return Ok(true);
-            }
-            return Ok(false);
-        };
-        match target {
-            Value::Array(a) => {
-                let mut found = None;
-                for (k, v) in a.iter() {
-                    if matches(v, key, needle)? {
-                        found = Some(k.to_owned());
-                        break;
-                    }
-                }
-                Ok(found.map(|k| a.set(k, replacement)).is_some())
-            }
-            Value::Str(s) => {
-                let Some(i) = string_offset(s, key)
-                    .filter(|&i| matches!(needle, Value::Str(n) if n.as_bytes() == [s.as_bytes()[i]]))
-                else {
-                    return Ok(false);
-                };
-                let with = replacement.to_php_string().map_err(Error::from)?;
-                let Some(&byte) = with.as_bytes().first() else {
-                    return Err(Error::new(Kind::Error, "Cannot assign an empty string to a string offset"));
-                };
-                let mut bytes = s.as_bytes().to_vec();
-                bytes[i] = byte;
-                *s = Str::from(bytes);
-                Ok(true)
-            }
-            other => {
-                if !matches(other, key, needle)? {
-                    return Ok(false);
-                }
-                if let Value::Ext(Ext::Document(d)) = other {
-                    d.set(key, replacement);
-                }
-                Ok(true)
-            }
-        }
-    }
-
-    /// Removes the first element of `subject` whose `key` is `===` `needle`
-    /// (`findAndRemove()`); whether one was found.
-    ///
-    /// [`Document::try_find_and_remove`] reports the errors PHP raises;
-    /// here they read as not found.
-    pub fn find_and_remove(&mut self, key: &str, needle: &Value, subject: &str) -> bool {
-        self.try_find_and_remove(key, needle, subject).unwrap_or(false)
-    }
-
-    /// [`Document::find_and_remove`], failing like PHP (removing a byte of a
-    /// string subject is an `Error`).
-    ///
-    /// PHP: `Document::findAndRemove`, with the same caveat as
-    /// [`Document::try_find_and_replace`] when there is no truthy subject.
-    pub fn try_find_and_remove(&mut self, key: &str, needle: &Value, subject: &str) -> Result<bool> {
-        let skey = ArrayKey::normalize(Str::from(subject));
-        let Some(target) = self.attrs.get_mut(&skey).filter(|v| v.truthy()) else {
-            if ArrayKey::normalize(Str::from(key)) == skey {
-                return Ok(false);
-            }
-            if self.get(key).is_some_and(|v| v.strict_eq(needle)) {
-                self.remove(key);
-                return Ok(true);
-            }
-            return Ok(false);
-        };
-        match target {
-            Value::Array(a) => {
-                let mut found = None;
-                for (k, v) in a.iter() {
-                    if matches(v, key, needle)? {
-                        found = Some(k.to_owned());
-                        break;
-                    }
-                }
-                Ok(found.map(|k| a.remove(&k)).is_some())
-            }
-            other => {
-                if !matches(other, key, needle)? {
-                    return Ok(false);
-                }
-                match other {
-                    Value::Ext(Ext::Document(d)) => {
-                        d.remove(key);
-                    }
-                    _ => return Err(Error::new(Kind::Error, "Cannot unset string offsets")),
-                }
-                Ok(true)
-            }
-        }
     }
 
     /// Whether the document has no attributes (`isEmpty()`).
@@ -643,50 +559,42 @@ impl Document {
         self.attrs.len()
     }
 
-    /// The attributes as an array, nested documents as arrays, keeping only
-    /// `allow` (when not empty) and dropping `disallow` (`getArrayCopy()`).
-    ///
-    /// Keys are matched as PHP's `in_array` matches them, loosely: `"5"`
-    /// matches the key `5`, and numeric strings match numerically.
-    pub fn array_copy(&self, allow: &[&str], disallow: &[&str]) -> Array {
-        if allow.is_empty() && disallow.is_empty() {
-            return self.array_copy_values(&[], &[]);
-        }
-        let text = |list: &[&str]| -> Vec<Value> { list.iter().map(|s| Value::Str(Str::from(*s))).collect() };
-        self.array_copy_values(&text(allow), &text(disallow))
+    /// The attributes as an array, nested documents (directly or as
+    /// elements of an array attribute) as arrays (`getArrayCopy()`).
+    pub fn array_copy(&self) -> Array {
+        Self::export(self.attrs.iter())
     }
 
-    /// [`Document::array_copy`] with any values as the lists, compared to
-    /// each key with PHP's `==` (so `null` matches the keys `""` and `0`,
-    /// and `true` every other key).
-    ///
-    /// PHP: `Document::getArrayCopy` (`in_array($key, $allow)`): nested
-    /// documents, directly or as elements of an array, are exported with
-    /// the same lists.
-    pub fn array_copy_values(&self, allow: &[Value], disallow: &[Value]) -> Array {
-        let listed = |k: KeyRef<'_>, list: &[Value]| -> bool {
-            let key = match k {
-                KeyRef::Int(i) => Value::Int(i),
-                KeyRef::Str(s) => Value::Str(Str::from(s)),
-            };
-            list.iter().any(|a| key.loose_eq(a))
-        };
-        let mut out = Array::with_capacity(self.attrs.len());
-        for (k, v) in self.attrs.iter() {
-            if !allow.is_empty() && !listed(k, allow) {
-                continue;
-            }
-            if !disallow.is_empty() && listed(k, disallow) {
-                continue;
-            }
+    /// The `keys` attributes of [`Document::array_copy`], in the document's
+    /// order (`only()`); `only(&[])` is empty.
+    pub fn only(&self, keys: &[&str]) -> Array {
+        Self::export(self.attrs.iter().filter(|(k, _)| Self::listed(*k, keys)))
+    }
+
+    /// [`Document::array_copy`] without the `keys` attributes (`except()`).
+    pub fn except(&self, keys: &[&str]) -> Array {
+        Self::export(self.attrs.iter().filter(|(k, _)| !Self::listed(*k, keys)))
+    }
+
+    /// Whether an array key is one of `keys` (`array_flip($keys)`, so `"5"`
+    /// names the key `5`).
+    fn listed(key: KeyRef<'_>, keys: &[&str]) -> bool {
+        keys.iter().any(|k| ArrayKey::normalize(Str::from(*k)).as_ref() == key)
+    }
+
+    /// `Document::export()`: nested documents as their array copy, one
+    /// level into arrays.
+    fn export<'a>(entries: impl Iterator<Item = (KeyRef<'a>, &'a Value)>) -> Array {
+        let mut out = Array::new();
+        for (k, v) in entries {
             let v = match v {
-                Value::Ext(Ext::Document(d)) => Value::Array(d.array_copy_values(allow, disallow)),
+                Value::Ext(Ext::Document(d)) => Value::Array(d.array_copy()),
                 Value::Array(items) => Value::Array(
                     items
                         .iter()
                         .map(|(ik, iv)| {
                             let iv = match iv {
-                                Value::Ext(Ext::Document(d)) => Value::Array(d.array_copy_values(allow, disallow)),
+                                Value::Ext(Ext::Document(d)) => Value::Array(d.array_copy()),
                                 other => other.clone(),
                             };
                             (ik.to_owned(), iv)
@@ -705,7 +613,8 @@ impl Document {
         &self.attrs
     }
 
-    /// The attributes, mutably.
+    /// The attributes, mutably (`$document[$key] = ...` and the other
+    /// `ArrayAccess` writes, which skip [`Document::set`]'s checks).
     pub fn as_array_mut(&mut self) -> &mut Array {
         &mut self.attrs
     }
@@ -724,11 +633,12 @@ impl Document {
     pub fn keys(&self) -> impl Iterator<Item = KeyRef<'_>> {
         self.attrs.keys()
     }
-}
 
-/// The values of an array of strings, as text.
-fn texts(a: &Array) -> Vec<String> {
-    a.values().map(crate::value::to_text).collect()
+    /// The roles of [`Document::permissions_by_type`] for a built-in
+    /// [`PermissionType`].
+    pub fn roles(&self, kind: PermissionType) -> Result<Vec<String>> {
+        self.permissions_by_type(kind.as_str())
+    }
 }
 
 #[cfg(test)]
@@ -741,13 +651,15 @@ mod tests {
         let nested: Array = [(ArrayKey::from("$id"), string("x"))].into_iter().collect();
         let doc = Document::from_pairs([("rel", Value::Array(nested))]).unwrap();
         assert!(as_document(doc.get("rel").unwrap()).is_some());
-        assert_eq!(doc.array_copy(&[], &[]).get_str("rel").map(|v| matches!(v, Value::Array(_))), Some(true));
+        assert_eq!(doc.array_copy().get_str("rel").map(|v| matches!(v, Value::Array(_))), Some(true));
     }
 
     #[test]
     fn rejects_bad_system_attributes() {
         let e = Document::from_pairs([("$id", Value::Int(1))]).unwrap_err();
         assert_eq!(e.message(), "$id must be of type string");
+        let e = Document::from_pairs([("$permissions", crate::value::list([Value::Int(1)]))]).unwrap_err();
+        assert_eq!(e.message(), "Every permission must be of type string");
     }
 
     #[test]
@@ -755,27 +667,8 @@ mod tests {
         let perms =
             crate::value::list([string("read(\"any\")"), string("read(\"any\")"), string("update(\"user:1\")")]);
         let doc = Document::from_pairs([("$permissions", perms)]).unwrap();
-        assert_eq!(doc.read(), vec!["any".to_owned()]);
-        assert_eq!(doc.update(), vec!["user:1".to_owned()]);
-        assert_eq!(doc.permissions().len(), 2);
-    }
-
-    #[test]
-    fn roles_keep_php_keys() {
-        let perms = crate::value::list([string("read(\"a\")"), string("read(a)"), string("read(\"b\")")]);
-        let doc = Document::from_pairs([("$permissions", perms)]).unwrap();
-        let roles = doc.roles("read").unwrap();
-        assert_eq!(roles.keys().collect::<Vec<_>>(), vec![KeyRef::Int(0), KeyRef::Int(2)]);
-    }
-
-    #[test]
-    fn string_subjects_use_byte_offsets() {
-        let mut doc = Document::from_pairs([("s", string("abc"))]).unwrap();
-        assert!(doc.try_find_and_replace("0", &string("a"), string("zz"), "s").unwrap());
-        assert_eq!(doc.get("s"), Some(&string("zbc")));
-        assert_eq!(
-            doc.try_find_and_remove("-1", &string("c"), "s").unwrap_err().message(),
-            "Cannot unset string offsets"
-        );
+        assert_eq!(doc.roles(PermissionType::Read).unwrap(), vec!["any".to_owned()]);
+        assert_eq!(doc.permissions_by_type("update").unwrap(), vec!["user:1".to_owned()]);
+        assert_eq!(doc.permissions().unwrap().len(), 2);
     }
 }

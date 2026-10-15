@@ -9,26 +9,8 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Validator\Attribute` | [`attribute::Attribute`] |
+//! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
 //! | `Validator\BigInt` | [`big_int::BigInt`] |
-//! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
-//! | `Validator\Datetime` | [`datetime::Datetime`] |
-//! | `Validator\Index` | [`index::Index`] |
-//! | `Validator\IndexDependency` | [`index_dependency::IndexDependency`] |
-//! | `Validator\IndexedQueries` | [`indexed_queries::IndexedQueries`] |
-//! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
-//! | `Validator\ObjectValidator` | [`object::ObjectValidator`] |
-//! | `Validator\Operator` | [`operator::Operator`] |
-//! | `Validator\PartialStructure` | [`partial_structure::PartialStructure`] |
-//! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
-//! | `Validator\Queries` | [`queries::Queries`] |
-//! | `Validator\Queries\Document`, `Queries\Documents` | [`queries::document::Document`], [`queries::documents::Documents`] |
-//! | `Validator\Query\Base` | [`query::base::QueryValidator`], [`query::base::MethodType`] |
-//! | `Validator\Query\{Cursor, Filter, Limit, Offset, Order, Select}` | [`query::cursor::Cursor`], [`query::filter::Filter`], [`query::limit::Limit`], [`query::offset::Offset`], [`query::order::Order`], [`query::select::Select`] |
-//! | `Validator\Sequence` | [`sequence::Sequence`] |
-//! | `Validator\Spatial` | [`spatial::Spatial`] |
-//! | `Validator\Structure` (and its format registry) | [`structure::Structure`], [`structure::formats`] |
-//! | `Validator\Vector` | [`vector::Vector`] |
 //!
 //! # State
 //!
@@ -37,34 +19,16 @@
 //! lock, so a validator is `Sync`): [`utopia_validators::Validator::description`]
 //! and each validator's inherent `description()` read it after `is_valid`.
 
+#![allow(dead_code)] // helpers of the validators still being ported
+
 use std::borrow::Cow;
 use std::sync::Mutex;
 
 use crate::document::Document;
 use crate::value::{ArrayKey, Str, Value};
 
-pub mod attribute;
 pub mod authorization;
 pub mod big_int;
-pub mod byte_length;
-pub mod datetime;
-pub mod index;
-pub mod index_dependency;
-pub mod indexed_queries;
-pub mod key;
-pub mod label;
-pub mod object;
-pub mod operator;
-pub mod partial_structure;
-pub mod permissions;
-pub mod queries;
-pub mod query;
-pub mod roles;
-pub mod sequence;
-pub mod spatial;
-pub mod structure;
-pub mod uid;
-pub mod vector;
 
 /// The message a validator reports, changed by validations (PHP's
 /// `protected string $message`).
