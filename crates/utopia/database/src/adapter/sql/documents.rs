@@ -75,78 +75,6 @@ fn int_bool(value: Value) -> Value {
     }
 }
 
-/// `is_numeric($value)`.
-fn is_numeric(value: Option<&Value>) -> bool {
-    match value {
-        Some(Value::Int(_) | Value::Float(_)) => true,
-        Some(Value::Str(s)) => php_std::value::numeric_bytes_ex(s.as_bytes()).is_some(),
-        _ => false,
-    }
-}
-
-/// `"{$value}"`.
-fn interpolate(value: Option<&Value>) -> String {
-    value.map(crate::value::to_text).unwrap_or_default()
-}
-
-/// The array a value is (`is_array()`).
-fn as_array(value: Option<&Value>) -> Option<&Array> {
-    match value {
-        Some(Value::Array(a)) => Some(a),
-        _ => None,
-    }
-}
-
-/// `SQL::convertArrayToWkt()`: a point, linestring or polygon array as
-/// WKT.
-///
-/// A private copy until the schema port's `spatial` module lands; it then
-/// replaces this.
-fn convert_array_to_wkt(geometry: &Array) -> Result<String> {
-    if geometry.is_empty() || !geometry.is_list() {
-        return Err(Error::database("Unrecognized geometry array format"));
-    }
-    let at = |a: &Array, i: i64| a.get(&ArrayKey::Int(i)).cloned();
-    let first = at(geometry, 0);
-    let second = at(geometry, 1);
-    if geometry.len() == 2 && is_numeric(first.as_ref()) && is_numeric(second.as_ref()) {
-        return Ok(format!("POINT({} {})", interpolate(first.as_ref()), interpolate(second.as_ref())));
-    }
-    let point = |point: Option<&Value>, message: &str| -> Result<String> {
-        match as_array(point) {
-            Some(p) if p.len() == 2 && is_numeric(at(p, 0).as_ref()) && is_numeric(at(p, 1).as_ref()) => {
-                Ok(format!("{} {}", interpolate(at(p, 0).as_ref()), interpolate(at(p, 1).as_ref())))
-            }
-            _ => Err(Error::database(message)),
-        }
-    };
-    if let Some(head) = as_array(first.as_ref())
-        && head.len() == 2
-        && is_numeric(at(head, 0).as_ref())
-    {
-        let points: Vec<String> = geometry
-            .values()
-            .map(|p| point(Some(p), "Invalid point format in geometry array"))
-            .collect::<Result<_>>()?;
-        return Ok(format!("LINESTRING({})", points.join(", ")));
-    }
-    if let Some(head) = as_array(first.as_ref())
-        && as_array(at(head, 0).as_ref()).is_some_and(|p| p.len() == 2)
-    {
-        let mut rings = Vec::new();
-        for ring in geometry.values() {
-            let Value::Array(ring) = ring else {
-                return Err(Error::database("Invalid ring format in polygon geometry"));
-            };
-            let points: Vec<String> =
-                ring.values().map(|p| point(Some(p), "Invalid point format in polygon ring")).collect::<Result<_>>()?;
-            rings.push(format!("({})", points.join(", ")));
-        }
-        return Ok(format!("POLYGON({})", rings.join(", ")));
-    }
-    Err(Error::database("Unrecognized geometry array format"))
-}
-
 /// A driver error, or any other, as the `DatabaseException` PHP wraps a
 /// `Throwable` in: same message and code, the error as its previous.
 fn wrap(e: Error) -> Error {
@@ -172,23 +100,9 @@ impl Sql {
     /// `encodeSpatialWriteValue()`: an array geometry as WKT.
     pub(crate) fn encode_spatial_write_value(&self, value: Value) -> Result<Value> {
         match &value {
-            Value::Array(geometry) => Ok(Value::Str(Str::from(convert_array_to_wkt(geometry)?))),
+            Value::Array(geometry) => Ok(Value::Str(Str::from(Sql::convert_array_to_wkt(geometry)?))),
             _ => Ok(value),
         }
-    }
-
-    /// `getSpatialGeometryFromText()`: `ST_GeomFromText(placeholder, SRID)`
-    /// (with MySQL's axis order); SQLite writes the placeholder alone.
-    pub(crate) fn spatial_geometry_from_text(&self, placeholder: &str) -> String {
-        if self.engine == Engine::Sqlite {
-            return placeholder.to_owned();
-        }
-        let mut sql = format!("ST_GeomFromText({placeholder}, {}", database::DEFAULT_SRID);
-        if self.supports(Capability::SpatialAxisOrder) {
-            sql.push_str(", 'axis-order=long-lat'");
-        }
-        sql.push(')');
-        sql
     }
 
     /// `buildDocumentRow()`: the row a document writes in a batch insert,
@@ -260,7 +174,7 @@ impl Sql {
             }
             if self.engine == Engine::Postgres {
                 for column in &spatial {
-                    insert_column_expression(&mut builder, column, &self.spatial_geometry_from_text("?"));
+                    insert_column_expression(&mut builder, column, &self.spatial_geometry_from_text("?", None));
                 }
             }
             for (attribute, value) in attributes.into_iter().collect::<Vec<_>>() {
@@ -268,7 +182,7 @@ impl Sql {
                 let column = self.filter(&attribute);
                 let value = if spatial.contains(&attribute) {
                     let value = self.encode_spatial_write_value(value)?;
-                    insert_column_expression(&mut builder, &column, &self.spatial_geometry_from_text("?"));
+                    insert_column_expression(&mut builder, &column, &self.spatial_geometry_from_text("?", None));
                     if self.engine == Engine::Postgres { value } else { int_bool(value) }
                 } else {
                     let value = if matches!(value, Value::Array(_)) { json_encode(&value) } else { value };
@@ -441,7 +355,7 @@ impl Sql {
         let mut builder = self.dialect_builder();
         SqlBuilder::into(&mut builder, &self.table_raw(name));
         for column in spatial {
-            insert_column_expression(&mut builder, column, &self.spatial_geometry_from_text("?"));
+            insert_column_expression(&mut builder, column, &self.spatial_geometry_from_text("?", None));
         }
         let int_bools = self.supports(Capability::IntegerBooleans);
         for document in documents {
@@ -699,7 +613,7 @@ impl Sql {
                 } else if self.engine != Engine::Sqlite && spatial.contains(&attribute) {
                     let value = self.encode_spatial_write_value(value)?;
                     let value = if self.engine == Engine::Postgres { value } else { int_bool(value) };
-                    set_raw(&mut builder, &column, &self.spatial_geometry_from_text("?"), &[value]);
+                    set_raw(&mut builder, &column, &self.spatial_geometry_from_text("?", None), &[value]);
                 } else {
                     let value = if matches!(value, Value::Array(_)) { json_encode(&value) } else { value };
                     let value = if self.engine == Engine::Postgres { value } else { int_bool(value) };
@@ -790,7 +704,7 @@ impl Sql {
             builder.set(crate::value::to_query_array(&regular)).map_err(crate::query::query_error)?;
         }
         for (column, value) in &spatial_rows {
-            set_raw(&mut builder, column, &self.spatial_geometry_from_text("?"), std::slice::from_ref(value));
+            set_raw(&mut builder, column, &self.spatial_geometry_from_text("?", None), std::slice::from_ref(value));
         }
         for (attribute, operator) in &operators {
             let column = self.filter(attribute);

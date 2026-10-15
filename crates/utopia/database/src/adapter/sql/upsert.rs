@@ -276,7 +276,7 @@ impl Sql {
         let mut builder = self.dialect_builder();
         SqlBuilder::into(&mut builder, &self.table_raw(name));
         for column in spatial {
-            let expression = self.spatial_geometry_from_text("?");
+            let expression = self.spatial_geometry_from_text("?", None);
             crate::each_builder!(&mut builder, b => {
                 b.insert_column_expression(column.as_str(), expression, utopia_query::Array::new());
             });
@@ -393,7 +393,7 @@ impl Sql {
                 }
                 let bind_key = format!("key_{bind_index}");
                 if spatial.iter().any(|s| *s == key_text(key)) && !matches!(value, Value::Null) {
-                    keys.push(self.spatial_geometry_from_text(&format!(":{bind_key}")));
+                    keys.push(self.spatial_geometry_from_text(&format!(":{bind_key}"), None));
                 } else {
                     if integer_booleans && let Value::Bool(b) = value {
                         value = Value::Int(i64::from(b));
