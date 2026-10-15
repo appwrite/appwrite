@@ -10,6 +10,7 @@ mod definition_read;
 mod epoch;
 mod invalidation;
 mod lease;
+mod purge_events;
 mod query_purge;
 mod round_trip;
 mod scope;

@@ -71,9 +71,21 @@ pub(crate) struct Observed {
     hooks: Mutex<Vec<ObservedHook>>,
     added: Mutex<Capabilities>,
     removed: Mutex<Capabilities>,
+    transactionless: std::sync::atomic::AtomicBool,
 }
 
 impl Observed {
+    /// Opens no transaction from now on: starting, committing and rolling
+    /// back do nothing (PHP's test adapters whose `withTransaction()` only
+    /// runs the callback).
+    pub(crate) fn without_transactions(&self) {
+        self.transactionless.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    fn is_transactionless(&self) -> bool {
+        self.transactionless.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
     /// `inner`, observed.
     pub(crate) fn new(inner: Arc<dyn Adapter>) -> Arc<Self> {
         Arc::new(Observed {
@@ -82,6 +94,7 @@ impl Observed {
             hooks: Mutex::new(Vec::new()),
             added: Mutex::new(Capabilities::EMPTY),
             removed: Mutex::new(Capabilities::EMPTY),
+            transactionless: std::sync::atomic::AtomicBool::new(false),
         })
     }
 
@@ -92,7 +105,10 @@ impl Observed {
         *added = added.with(capability);
     }
 
-    /// Removes `capability` from the inner adapter's.
+    /// Removes `capability` from the inner adapter's. Without
+    /// [`crate::capability::Capability::TransactionNested`], a transaction
+    /// nested in an open one runs its callback in it, as PHP's test adapters
+    /// without savepoints do.
     pub(crate) fn remove_capability(&self, capability: crate::capability::Capability) {
         let mut removed = self.removed.lock().unwrap();
         *removed = removed.with(capability);
@@ -216,17 +232,30 @@ impl Adapter for Observed {
 
     async fn start_transaction(&self) -> Result<bool> {
         self.observe(Op::Start).await?;
+        if self.is_transactionless() {
+            return Ok(true);
+        }
         self.inner.start_transaction().await
     }
     async fn commit_transaction(&self) -> Result<bool> {
         self.observe(Op::Commit).await?;
+        if self.is_transactionless() {
+            return Ok(true);
+        }
         self.inner.commit_transaction().await
     }
     async fn rollback_transaction(&self) -> Result<bool> {
         self.observe(Op::Rollback).await?;
+        if self.is_transactionless() {
+            return Ok(true);
+        }
         self.inner.rollback_transaction().await
     }
     async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
+        let nested = !self.capabilities().contains(crate::capability::Capability::TransactionNested);
+        if self.is_transactionless() || (nested && self.inner.in_transaction()) {
+            return Ok(TransactionStrategy::Direct);
+        }
         self.inner.transaction_strategy().await
     }
     fn in_transaction(&self) -> bool {
