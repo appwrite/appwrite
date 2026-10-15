@@ -710,10 +710,13 @@ final class VCSGiteaConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $all = $this->client->call(Client::METHOD_GET, $path, $headers);
-        $this->assertEquals(200, $all['headers']['status-code'], \json_encode($all['body']));
-        $names = \array_column($all['body']['branches'], 'name');
-        $this->assertCount(3, $names);
+        $names = [];
+        $this->assertEventually(function () use ($path, $headers, &$names) {
+            $all = $this->client->call(Client::METHOD_GET, $path, $headers);
+            $this->assertEquals(200, $all['headers']['status-code'], \json_encode($all['body']));
+            $names = \array_column($all['body']['branches'], 'name');
+            $this->assertCount(3, $names);
+        }, 30000, 500);
 
         $after = $this->client->call(Client::METHOD_GET, $path, $headers, [
             'queries' => [
