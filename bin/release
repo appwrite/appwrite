@@ -285,10 +285,12 @@ final class Release
             $sha = $this->sh('git rev-parse --verify ' . escapeshellarg("{$sha}^{commit}"));
         }
 
-        $tagged = $this->sh('git ls-remote origin ' . escapeshellarg("refs/tags/{$tag}"));
-        if ($tagged !== '') {
-            if ($sha !== null && !str_starts_with($tagged, $sha)) {
-                $this->fail("tag {$tag} already points at " . substr($tagged, 0, 40) . ", not {$sha}");
+        $refs = $this->sh('git ls-remote origin ' . escapeshellarg("refs/tags/{$tag}") . ' ' . escapeshellarg("refs/tags/{$tag}^{}"));
+        if ($refs !== '') {
+            $lines = explode(PHP_EOL, $refs);
+            $tagged = substr(end($lines), 0, 40);
+            if ($sha !== null && $tagged !== $sha) {
+                $this->fail("tag {$tag} already points at {$tagged}, not {$sha}");
             }
             $target = null;
         } else {

@@ -16,8 +16,10 @@ on:
                 required: true
                 type: string
 
+# Server Releases skip every job, so they get a group of their own: sharing the
+# deploy group would let one replace, and so cancel, a pending console deploy.
 concurrency:
-    group: ${{ github.workflow }}
+    group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'apps/console/')) && 'deploy' || github.run_id }}
     cancel-in-progress: false
 
 env:
