@@ -332,7 +332,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $contentRange, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileSize, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -377,6 +377,20 @@ class Create extends Action
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForSites->finalize($path, $chunks, $metadata);
+
+                    // A chunk can carry more or fewer bytes than its range announces.
+                    if (!empty($contentRange) && $deviceForSites->getFileSize($path) !== $fileSize) {
+                        $deviceForSites->delete($path);
+
+                        // Marked failed and fully uploaded so a retry returns it instead of writing to the removed source.
+                        $deployments->upload($site, $deployment->setAttributes([
+                            'status' => 'failed',
+                            'buildLogs' => 'Uploaded size does not match the size announced by Content-Range.',
+                            'sourceChunksUploaded' => $chunks,
+                        ]));
+
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
 
                     $fileSize = $deviceForSites->getFileSize($path);
                     $isNewDeployment = $deployment->isEmpty();
