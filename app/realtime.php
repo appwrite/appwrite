@@ -1504,10 +1504,19 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             $lock = new Distributed($redis, $lockKey, ttl: PresenceHandler::LOCK_TTL);
 
                             try {
-                                $lock->withLock(function () use ($dbForProject, $presenceIds, $presenceState, $redis, $projectId, $userId, &$deletedPresences): void {
+                                $lock->withLock(function () use ($lock, $dbForProject, $presenceIds, $presenceState, $redis, $projectId, $userId, &$deletedPresences): void {
                                     // Delete only on an exact zero. A negative count means Redis lost
                                     // the key while holders were open, so keep the row for expiresAt.
                                     if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
+                                        return;
+                                    }
+
+                                    // Fence before the destructive delete: refresh() proves we still
+                                    // hold the lease. If it fails the lock lapsed (our work outran the
+                                    // TTL, or the key was evicted) and another operation may already
+                                    // own this user -- a concurrent upsert could have re-created the
+                                    // row -- so leave it to expiresAt rather than wipe a live presence.
+                                    if (!$lock->refresh()) {
                                         return;
                                     }
 
