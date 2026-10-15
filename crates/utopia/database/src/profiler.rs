@@ -131,11 +131,11 @@ impl Profiler {
 
     /// Keeps the last `capacity` statements (`setCapacity()`).
     ///
-    /// Fails ([`Kind::Exception`], PHP's `InvalidArgumentException`) for a
+    /// Fails ([`Kind::InvalidArgument`]) for a
     /// capacity below 1 (`Profiler capacity must be at least 1`).
     pub fn set_capacity(&self, capacity: i64) -> Result<&Self> {
         if capacity < 1 {
-            return Err(Error::new(Kind::Exception, "Profiler capacity must be at least 1"));
+            return Err(Error::new(Kind::InvalidArgument, "Profiler capacity must be at least 1"));
         }
         let capacity = usize::try_from(capacity).unwrap_or(usize::MAX);
         let mut inner = self.lock();

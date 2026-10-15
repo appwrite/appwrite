@@ -8,6 +8,7 @@
 use std::sync::OnceLock;
 
 use crate::attribute::Attribute;
+use crate::collection::{self, Collection};
 use crate::document;
 use crate::filter::Filter;
 use crate::storage;
@@ -98,4 +99,45 @@ pub fn internal_attributes(shared_tables: bool) -> &'static [Attribute] {
         list
     };
     if shared_tables { SHARED.get_or_init(build) } else { OWN.get_or_init(build) }
+}
+
+/// The definition of the metadata collection, which stores every other
+/// collection's definition: `name`, `attributes`, `indexes` (JSON strings)
+/// and `documentSecurity`, without document security.
+///
+/// ```
+/// use utopia_database::database;
+///
+/// let definition = database::collection_definition();
+/// assert_eq!(definition.id(), database::METADATA);
+/// assert_eq!(definition.name(), "collections");
+/// ```
+///
+/// PHP: `Database::collectionDefinition()` (a copy of one shared instance,
+/// its attributes and indexes already read).
+pub fn collection_definition() -> Collection {
+    static DEFINITION: OnceLock<Collection> = OnceLock::new();
+    DEFINITION
+        .get_or_init(|| {
+            let metadata: Array = [(document::COLLECTION.into(), Value::Str(METADATA.into()))].into_iter().collect();
+            let definition = Collection::create(
+                METADATA,
+                "collections",
+                vec![
+                    Attribute::string(collection::NAME, 256).required(true),
+                    Attribute::string(collection::ATTRIBUTES, 1_000_000).filters([Filter::Json]),
+                    Attribute::string(collection::INDEXES, 1_000_000).filters([Filter::Json]),
+                    Attribute::boolean(collection::DOCUMENT_SECURITY).required(true),
+                ],
+                Vec::new(),
+                None,
+                false,
+                metadata,
+            )
+            .expect("the metadata collection's definition is valid");
+            let _ = definition.attributes();
+            let _ = definition.indexes();
+            definition
+        })
+        .clone()
 }

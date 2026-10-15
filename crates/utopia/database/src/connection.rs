@@ -160,12 +160,14 @@ pub fn has_lost_connection_code(state: Option<&str>, driver_code: Option<i64>) -
 }
 
 /// Whether `error` was caused by a lost connection:
-/// a driver error ([`crate::Kind::Pdo`]) whose state ([`crate::Error::state`])
-/// or code means one, or any error whose message does ([`has_error`]).
+/// a driver error ([`crate::Kind::Pdo`]) whose state ([`crate::Error::state`],
+/// `errorInfo[0]`) or driver code ([`crate::Error::driver_code`],
+/// `errorInfo[1]`) means one, or any error whose message does
+/// ([`has_error`]).
 ///
 /// PHP: `Connection::hasError($e)`.
 pub fn is_lost(error: &crate::Error) -> bool {
-    if error.kind() == crate::Kind::Pdo && has_lost_connection_code(error.state(), Some(error.code())) {
+    if error.kind() == crate::Kind::Pdo && has_lost_connection_code(error.state(), error.driver_code()) {
         return true;
     }
     has_error(error.message_bytes())

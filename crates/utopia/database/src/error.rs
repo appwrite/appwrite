@@ -23,9 +23,19 @@ pub struct Error {
     /// The message as PHP has it, when it is not UTF-8 (`message` is then
     /// its lossy form).
     raw: Option<Vec<u8>>,
+    /// What a driver reported, when it did (boxed: most errors carry none).
+    driver: Option<Box<Driver>>,
+}
+
+/// The codes a driver error carries besides the integer code.
+#[derive(Debug, Clone, PartialEq, Default)]
+struct Driver {
     /// The string code (a SQLSTATE such as `HY000`) the error was built
     /// with (`$state`).
     state: Option<String>,
+    /// The driver's own error code of a [`Kind::Pdo`] error
+    /// (`PDOException::$errorInfo[1]`, such as MySQL's `2006`).
+    code: Option<i64>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -126,9 +136,13 @@ pub enum Kind {
     /// `DateMalformedStringException`: `new DateTime($value)` rejected a
     /// date string.
     DateMalformedString,
-    /// `InvalidArgumentException`: an argument PHP's SPL refuses (the
-    /// integer arithmetic of [`crate::validator::big_int::BigInt`]).
+    /// `InvalidArgumentException`: an invalid argument (the integer
+    /// arithmetic of [`crate::validator::big_int::BigInt`], a profiler
+    /// capacity below 1, an invalid hook argument).
     InvalidArgument,
+    /// `BadMethodCallException`: a call the object cannot serve (a query
+    /// builder without an executor).
+    BadMethodCall,
 }
 
 impl Kind {
@@ -175,13 +189,14 @@ impl Kind {
             Kind::MongoUnexpectedValue => "MongoDB\\Driver\\Exception\\UnexpectedValueException",
             Kind::DateMalformedString => "DateMalformedStringException",
             Kind::InvalidArgument => "InvalidArgumentException",
+            Kind::BadMethodCall => "BadMethodCallException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 40] = [
+        const ALL: [Kind; 41] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Schema,
@@ -222,6 +237,7 @@ impl Kind {
             Kind::MongoUnexpectedValue,
             Kind::DateMalformedString,
             Kind::InvalidArgument,
+            Kind::BadMethodCall,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -260,7 +276,8 @@ impl Kind {
             | Kind::Mongo
             | Kind::MongoUnexpectedValue
             | Kind::DateMalformedString
-            | Kind::InvalidArgument => None,
+            | Kind::InvalidArgument
+            | Kind::BadMethodCall => None,
             Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }
@@ -270,7 +287,7 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, state: None }
+        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, driver: None }
     }
 
     /// An error of `kind` whose message is bytes (PHP messages are: one can
@@ -315,14 +332,28 @@ impl Error {
     /// The same error with a string code: kept as [`Error::state`], and as
     /// the integer [`Error::string_code`] turns it into.
     pub fn with_string_code(mut self, code: &[u8]) -> Self {
-        self.state = Some(String::from_utf8_lossy(code).into_owned());
+        self.driver.get_or_insert_default().state = Some(String::from_utf8_lossy(code).into_owned());
         self.with_code(Self::string_code(code))
     }
 
     /// The string code the error was built with, such as a SQLSTATE
     /// (`$state`); `None` for an integer code.
     pub fn state(&self) -> Option<&str> {
-        self.state.as_deref()
+        self.driver.as_ref().and_then(|d| d.state.as_deref())
+    }
+
+    /// The same error with the driver's own error code
+    /// (`PDOException::$errorInfo[1]`), which [`crate::connection::is_lost`]
+    /// reads.
+    pub fn with_driver_code(mut self, code: i64) -> Self {
+        self.driver.get_or_insert_default().code = Some(code);
+        self
+    }
+
+    /// The driver's own error code (`$errorInfo[1]`), when the error carries
+    /// one.
+    pub fn driver_code(&self) -> Option<i64> {
+        self.driver.as_ref().and_then(|d| d.code)
     }
 
     /// The same error wrapping `previous`.
@@ -412,6 +443,7 @@ impl From<php_std::EngineError> for Error {
             "ValueError" => Kind::ValueError,
             "JsonException" => Kind::Json,
             "Error" => Kind::Error,
+            "InvalidArgumentException" => Kind::InvalidArgument,
             _ => Kind::Exception,
         };
         Error::new(kind, e.message)
