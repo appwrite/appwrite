@@ -34,9 +34,9 @@ mirror-license = "MIT"
 [workspace.dependencies]
 # Support crates
 php-std = { path = "crates/support/php-std" }
-utopia-async = { path = "crates/support/async" }
 
 # Utopia crates
+utopia-async = { path = "crates/utopia/async" }
 utopia-system = { path = "crates/utopia/system" }
 utopia-validators = { path = "crates/utopia/validators" }
 utopia-http = { path = "crates/utopia/http" }
@@ -255,7 +255,7 @@ sha3 = "0.10"
 # and line numbers of each crate's public items.
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
-# The Tokio engine behind utopia-async (crates/support/async), the only crate
+# The Tokio engine behind utopia-async (crates/utopia/async), the only crate
 # that depends on it directly: every other crate reaches tasks, timers, sockets,
 # files and processes through utopia-async, so the engine can be switched there.
 # Each feature is enabled by utopia-async, for the engine or for the

@@ -85,6 +85,19 @@ pub fn id() -> Option<Id> {
     Engine::task_id().map(Id)
 }
 
+/// The output of `task`, resuming its panic.
+///
+/// # Panics
+///
+/// When the task panicked (with its panic) or was cancelled.
+pub(crate) async fn join<T: Send + 'static>(task: JoinHandle<T>) -> T {
+    match task.await {
+        Ok(output) => output,
+        Err(error) if error.is_panic() => std::panic::resume_unwind(error.into_panic()),
+        Err(error) => panic!("{error}"),
+    }
+}
+
 /// A task id: unique among the tasks alive at the same time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id(u64);

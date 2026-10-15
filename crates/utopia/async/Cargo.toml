@@ -1,6 +1,6 @@
 [package]
 name = "utopia-async"
-description = "The async engine behind one adapter: tasks, timers, sockets, files, processes and signals on Tokio (or another engine), with a runtime, test attribute and hyper glue."
+description = "Promises, timers and parallel work on an async engine behind one adapter (Tokio), with the tasks, sockets, files, processes and signals every crate uses through it."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -20,6 +20,7 @@ hyper = ["dep:http", "dep:hyper", "dep:hyper-util", "dep:tower-service"]
 [dependencies]
 futures-util.workspace = true
 pin-project-lite.workspace = true
+thiserror.workspace = true
 # The engine-independent building blocks re-exported by `io` and `sync` (the
 # I/O traits and their combinators, mutexes, semaphores, channels) and the
 # `select!`/`join!` macros: they run on any engine. The `tokio` feature adds
