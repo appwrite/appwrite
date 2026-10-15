@@ -410,9 +410,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Block hosting provider traffic': 'חסימת תנועה מספקי hosting',
   'Deny API requests from hosting provider networks.':
     'דחיית בקשות API מרשתות ספקי hosting.',
-  'Block datacenter connection traffic': 'חסימת תנועה מחיבור datacenter',
-  'Deny API requests from datacenter connection types.':
-    'דחיית בקשות API מסוגי חיבור datacenter.',
   'Add-on required': 'נדרש תוסף',
   'Premium Geo DB': 'Premium Geo DB',
   'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
