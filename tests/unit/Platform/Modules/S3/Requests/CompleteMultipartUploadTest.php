@@ -43,17 +43,15 @@ final class CompleteMultipartUploadTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function malformedBodies(): array
+    public static function malformedBodies(): \Iterator
     {
-        return [
-            'not xml' => ['<CompleteMultipartUpload><Part>'],
-            'missing etag' => ['<CompleteMultipartUpload><Part><PartNumber>1</PartNumber></Part></CompleteMultipartUpload>'],
-            'missing part number' => ['<CompleteMultipartUpload><Part><ETag>"aaa"</ETag></Part></CompleteMultipartUpload>'],
-            'non-numeric part number' => ['<CompleteMultipartUpload><Part><PartNumber>one</PartNumber><ETag>"aaa"</ETag></Part></CompleteMultipartUpload>'],
-            'doctype' => ['<!DOCTYPE CompleteMultipartUpload [<!ENTITY e "aaa">]><CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>&e;</ETag></Part></CompleteMultipartUpload>'],
-        ];
+        yield 'not xml' => ['<CompleteMultipartUpload><Part>'];
+        yield 'missing etag' => ['<CompleteMultipartUpload><Part><PartNumber>1</PartNumber></Part></CompleteMultipartUpload>'];
+        yield 'missing part number' => ['<CompleteMultipartUpload><Part><ETag>"aaa"</ETag></Part></CompleteMultipartUpload>'];
+        yield 'non-numeric part number' => ['<CompleteMultipartUpload><Part><PartNumber>one</PartNumber><ETag>"aaa"</ETag></Part></CompleteMultipartUpload>'];
+        yield 'doctype' => ['<!DOCTYPE CompleteMultipartUpload [<!ENTITY e "aaa">]><CompleteMultipartUpload><Part><PartNumber>1</PartNumber><ETag>&e;</ETag></Part></CompleteMultipartUpload>'];
     }
 
     #[DataProvider('malformedBodies')]
