@@ -164,6 +164,22 @@ impl Memory {
         self.store().permissions.clone()
     }
 
+    /// Every property of the PHP adapter holding data, by PHP name:
+    /// `databases`, `data`, `permissions`, `permissionsByDocument`,
+    /// `permissionsByPermission`, `uniqueIndexHashes`.
+    #[doc(hidden)]
+    pub fn properties(&self) -> Vec<(&'static str, Array)> {
+        let store = self.store();
+        vec![
+            ("databases", store.databases.clone()),
+            ("data", store.data.clone()),
+            ("permissions", store.permissions.clone()),
+            ("permissionsByDocument", store.by_document.clone()),
+            ("permissionsByPermission", store.by_permission.clone()),
+            ("uniqueIndexHashes", store.hashes.clone()),
+        ]
+    }
+
     /// `applyOperator($current, $operator)` (protected in PHP; its tests
     /// reach it through a subclass).
     #[doc(hidden)]
