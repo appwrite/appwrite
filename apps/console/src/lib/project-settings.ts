@@ -18,6 +18,10 @@ import {
   parsePasskeyPolicy,
   type PasskeyPolicy,
 } from '@/lib/passkey-policy'
+import {
+  parsePasswordRotationPolicy,
+  type PasswordRotationPolicy,
+} from '@/lib/password-rotation'
 
 type ProjectPolicy = Models.PolicyList['policies'][number]
 
@@ -36,13 +40,6 @@ export type PasswordPwnedPolicy = {
   sessions: boolean
   /** Reject a breached password on sign-up or password change. */
   users: boolean
-}
-
-export type PasswordRotationPolicy = {
-  /** Require a password reset once the password is older than `maxAge`. */
-  enabled: boolean
-  /** Maximum password age in seconds. */
-  maxAge: number
 }
 
 export type ProjectAuthSecuritySnapshot = {
@@ -231,14 +228,7 @@ export function parseProjectAuthSecurity(
             users: passwordPwned.users ?? false,
           }
         : null,
-    // `maxAge` only exists on the rotation policy, so it doubles as the type guard.
-    authPasswordRotation:
-      passwordRotation && 'maxAge' in passwordRotation
-        ? {
-            enabled: passwordRotation.enabled ?? false,
-            maxAge: passwordRotation.maxAge ?? 31_536_000,
-          }
-        : null,
+    authPasswordRotation: parsePasswordRotationPolicy(passwordRotation),
     authSessionAlerts:
       sessionAlert && 'enabled' in sessionAlert
         ? (sessionAlert.enabled ?? false)

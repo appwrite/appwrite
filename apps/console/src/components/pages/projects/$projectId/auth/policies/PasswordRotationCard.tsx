@@ -12,21 +12,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useUpdatePasswordRotationPolicy } from '@/lib/react-query/hooks'
-import { type PasswordRotationPolicy } from '@/lib/project-settings'
 import {
-  createTimeUnitPair,
-  fromSeconds,
-  toSeconds,
-  type TimeUnit,
-} from '@/lib/utils/time-unit-converter'
+  hasPasswordRotationChanges,
+  maxAgeSecondsFromValue,
+  maxAgeUnitPair,
+  maxAgeValueForUnit,
+  maxAgeValueInUnit,
+  passwordMaxAgeRangeError,
+  passwordRotationUpdate,
+  type PasswordRotationPolicy,
+} from '@/lib/password-rotation'
+import { type TimeUnit } from '@/lib/utils/time-unit-converter'
 import { useT } from '@/lib/i18n/translate'
-
-// The API accepts a maximum password age between 1 day and 10 years.
-const MIN_MAX_AGE_SECONDS = 86_400
-const MAX_MAX_AGE_SECONDS = 315_360_000
-
-// A password age under a day is refused by the API, so sub-day units are left out.
-const MAX_AGE_UNITS: TimeUnit[] = ['years', 'months', 'weeks', 'days']
 
 export function PasswordRotationCard({
   projectId,
@@ -36,69 +33,48 @@ export function PasswordRotationCard({
   currentPolicy: PasswordRotationPolicy
 }) {
   const t = useT()
-  const initialPair = createTimeUnitPair(currentPolicy.maxAge, {
-    units: MAX_AGE_UNITS,
-  })
+  // The maximum age is kept in seconds, the way the API stores it, and the unit
+  // only decides how it is written. Switching unit is then never an edit, and
+  // converting back and forth cannot drift the stored age.
   const [enabled, setEnabled] = useState(currentPolicy.enabled)
-  const [maxAge, setMaxAge] = useState(initialPair.value)
-  const [unit, setUnit] = useState<TimeUnit>(initialPair.unit)
+  const [maxAgeSeconds, setMaxAgeSeconds] = useState(currentPolicy.maxAge)
+  const [unit, setUnit] = useState<TimeUnit>(
+    () => maxAgeUnitPair(currentPolicy.maxAge).unit,
+  )
   const mutation = useUpdatePasswordRotationPolicy(projectId)
   const syncedPolicy = useRef(currentPolicy)
 
   useEffect(() => {
     // Adopt the stored policy only when it changes, so a refused save keeps the
-    // edit on screen. The unit stays the one the user picked; only the value is
-    // converted, which is why a unit change cannot reach this.
+    // edit on screen. The unit stays the one the user picked.
     if (mutation.isPending || syncedPolicy.current === currentPolicy) return
     syncedPolicy.current = currentPolicy
     setEnabled(currentPolicy.enabled)
-    setMaxAge(roundToUnitPrecision(fromSeconds(currentPolicy.maxAge, unit)))
-  }, [currentPolicy, mutation.isPending, unit])
+    setMaxAgeSeconds(currentPolicy.maxAge)
+  }, [currentPolicy, mutation.isPending])
 
   // Max value for the current unit, so the stepper cannot pass 10 years.
-  const maxValueForUnit = useMemo(
-    () => Math.floor(fromSeconds(MAX_MAX_AGE_SECONDS, unit)),
-    [unit],
+  const maxValueForUnit = useMemo(() => maxAgeValueForUnit(unit), [unit])
+
+  const maxAge = maxAgeValueInUnit(maxAgeSeconds, unit)
+  const rangeError = passwordMaxAgeRangeError(enabled, maxAgeSeconds)
+  const hasChanges = hasPasswordRotationChanges(
+    { enabled, maxAgeSeconds },
+    currentPolicy,
   )
 
-  const maxAgeSeconds = useMemo(() => toSeconds(maxAge, unit), [maxAge, unit])
-  const belowMin = maxAgeSeconds < MIN_MAX_AGE_SECONDS
-  const exceedsMax = maxAgeSeconds > MAX_MAX_AGE_SECONDS
-  // The maximum age is only sent while the policy is on, so an out of range
-  // value left behind by a disabled policy does not block the toggle.
-  const rangeError = enabled && (belowMin || exceedsMax)
-
-  const hasChanges = useMemo(() => {
-    if (enabled !== currentPolicy.enabled) return true
-    // Allow small floating point differences
-    return enabled && Math.abs(maxAgeSeconds - currentPolicy.maxAge) > 0.5
-  }, [enabled, maxAgeSeconds, currentPolicy])
-
-  // When unit changes, convert the current maximum age to the new unit
-  const handleUnitChange = (newUnit: TimeUnit) => {
-    const currentSeconds = toSeconds(maxAge, unit)
-    const maxForNewUnit = Math.floor(fromSeconds(MAX_MAX_AGE_SECONDS, newUnit))
-    const converted = roundToUnitPrecision(fromSeconds(currentSeconds, newUnit))
-
-    setMaxAge(Math.min(converted, maxForNewUnit))
-    setUnit(newUnit)
-  }
-
   const handleSubmit = () => {
-    mutation.mutate(
-      enabled ? { enabled, maxAge: Math.round(maxAgeSeconds) } : { enabled },
-      {
-        onSuccess: () => {
-          toast.success(t('Updated periodic password change policy'))
-        },
-        onError: (error: Error) => {
-          toast.error(
-            error.message ||
-              t('Failed to update periodic password change policy'),
-          )
-        },
+    mutation.mutate(passwordRotationUpdate(enabled, maxAgeSeconds), {
+      onSuccess: () => {
+        toast.success(t('Updated periodic password change policy'))
       },
-    )
+      onError: (error: Error) => {
+        toast.error(
+          error.message ||
+            t('Failed to update periodic password change policy'),
+        )
+      },
+    })
   }
 
   return (
@@ -151,9 +127,9 @@ export function PasswordRotationCard({
                   onChange={(e) => {
                     const value = parseFloat(e.target.value)
                     if (!isNaN(value) && value >= 0) {
-                      setMaxAge(value)
+                      setMaxAgeSeconds(maxAgeSecondsFromValue(value, unit))
                     } else if (e.target.value === '') {
-                      setMaxAge(0)
+                      setMaxAgeSeconds(0)
                     }
                   }}
                   // The maximum age only applies while the policy is on.
@@ -162,7 +138,7 @@ export function PasswordRotationCard({
                 />
                 {rangeError ? (
                   <p className="text-[12px] text-destructive">
-                    {belowMin
+                    {rangeError === 'below-min'
                       ? t('Minimum is 1 day')
                       : t('Maximum is 10 years')}
                   </p>
@@ -179,7 +155,7 @@ export function PasswordRotationCard({
               </Label>
               <Select
                 value={unit}
-                onValueChange={handleUnitChange}
+                onValueChange={(value) => setUnit(value as TimeUnit)}
                 disabled={mutation.isPending || !enabled}
               >
                 <SelectTrigger id="password-rotation-unit">
@@ -202,7 +178,7 @@ export function PasswordRotationCard({
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={!hasChanges || mutation.isPending || rangeError}
+          disabled={!hasChanges || mutation.isPending || rangeError !== null}
           onClick={handleSubmit}
         >
           {t('Update')}
@@ -210,9 +186,4 @@ export function PasswordRotationCard({
       </div>
     </div>
   )
-}
-
-/** Keeps a converted value readable instead of a long floating point tail. */
-function roundToUnitPrecision(value: number): number {
-  return Math.round(value * 100) / 100
 }

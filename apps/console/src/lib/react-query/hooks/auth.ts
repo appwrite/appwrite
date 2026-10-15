@@ -47,6 +47,10 @@ import {
   resolvePostAuthRedirect,
 } from '@/lib/post-auth-navigation'
 import { registerPasskey } from '@/lib/passkeys'
+import {
+  MAX_PASSWORD_MAX_AGE_SECONDS,
+  MIN_PASSWORD_MAX_AGE_SECONDS,
+} from '@/lib/password-rotation'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {
   buildDatabasesSidebarWidthPrefs,
@@ -904,7 +908,8 @@ export function useUpdatePasswordRotationPolicy(
       }
       if (
         policy.maxAge !== undefined &&
-        (policy.maxAge < 86_400 || policy.maxAge > 315_360_000)
+        (policy.maxAge < MIN_PASSWORD_MAX_AGE_SECONDS ||
+          policy.maxAge > MAX_PASSWORD_MAX_AGE_SECONDS)
       ) {
         throw new Error(
           'Maximum password age must be between 1 day and 10 years',
