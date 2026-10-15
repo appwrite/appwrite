@@ -1291,6 +1291,12 @@ return [
         'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::WEBHOOK_DELIVERY_FAILED => [
+        'name' => Exception::WEBHOOK_DELIVERY_FAILED,
+        'description' => 'One or more webhook deliveries failed.',
+        'code' => 502,
+        'publish' => false,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
