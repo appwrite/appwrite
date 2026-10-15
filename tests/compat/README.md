@@ -344,7 +344,7 @@ A case opens a database first. Its PostgreSQL database lives in schema `${ns}` o
 
 | Operation | Arguments | Result |
 |---|---|---|
-| `object.new` | `class`, `args` (the constructor's parameters by name), `as` | `new <class>(...args)`, encoded; stored under `as` |
+| `object.new` | `class`, `args` (the constructor's parameters by name, callbacks included), `as` | `new <class>(...args)`, encoded (with `calls` when given callbacks); stored under `as` |
 | `object.call` | `class` (a static method) or `this` (`{"$obj": <name>}`, or a value tag decoded afresh: a `$document`, `$query`, `$enum`, ...), `method`, `args`, `as` | the result, encoded; stored under `as` |
 | `object.get` | `this`, `property` | a public property |
 
