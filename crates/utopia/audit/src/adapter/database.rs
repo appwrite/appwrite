@@ -3,7 +3,7 @@
 use php_std::{Array, ArrayKey, Str, Value};
 use utopia_database::datetime;
 use utopia_database::value::{Array as DbArray, Ext, KeyRef, Value as DbValue};
-use utopia_database::{Document, Kind, Query as DbQuery};
+use utopia_database::{Collection, Document, Kind, PermissionType, Query as DbQuery};
 use utopia_query::Method;
 
 use crate::schema::{self, Attribute, BASE_ATTRIBUTES, BASE_INDEXES, Index, Sql};
@@ -45,24 +45,21 @@ impl Database {
     /// `find()` in the logs collection, with authorization skipped.
     async fn find_logs(&self, queries: Vec<DbQuery>) -> Result<Vec<Log>> {
         let db = &self.db;
-        let documents = db
-            .authorization()
-            .skip(|| db.find(schema::COLLECTION, queries, utopia_database::Database::PERMISSION_READ))
-            .await?;
+        let documents = db.authorization().skip(db.find(self.collection_name(), queries, PermissionType::Read)).await?;
         Ok(documents.iter().map(log_of).collect())
     }
 
     /// `count()` in the logs collection, with authorization skipped.
     async fn count_logs(&self, queries: Vec<DbQuery>, max: Option<i64>) -> Result<i64> {
         let db = &self.db;
-        Ok(db.authorization().skip(|| db.count(schema::COLLECTION, queries, max)).await?)
+        Ok(db.authorization().skip(db.count(self.collection_name(), queries, max)).await?)
     }
 
     /// The queries of a `getBy*()`: `filters`, the time range, the order
     /// (by sequence), the limit and the offset.
     fn page_queries(mut filters: Vec<DbQuery>, range: Range<'_>, page: Page) -> Vec<DbQuery> {
         filters.extend(time_queries(range));
-        filters.push(if page.ascending { DbQuery::order_asc("") } else { DbQuery::order_desc("") });
+        filters.push(if page.ascending { DbQuery::order_asc("", None) } else { DbQuery::order_desc("", None) });
         filters.push(DbQuery::limit(page.limit));
         filters.push(DbQuery::offset(page.offset));
         filters
@@ -82,10 +79,9 @@ impl Sql for Database {
     /// description, since the database maps types itself.
     fn column_definition(&self, id: &str) -> Result<String> {
         let attribute = self.attribute(id).ok_or_else(|| schema::not_found(id))?;
-        Ok(if attribute.size > 0 {
-            format!("{id}: {}({})", attribute.kind, attribute.size)
-        } else {
-            format!("{id}: {}", attribute.kind)
+        Ok(match attribute.size {
+            Some(size) if size > 0 => format!("{id}: {}({size})", attribute.kind.as_str()),
+            _ => format!("{id}: {}", attribute.kind.as_str()),
         })
     }
 }
@@ -111,12 +107,12 @@ fn time_queries(range: Range<'_>) -> Vec<DbQuery> {
 }
 
 fn equal_events(events: &[&str]) -> DbQuery {
-    DbQuery::equal("event", events.iter().copied())
+    DbQuery::equal("event", events.to_vec())
 }
 
 /// A log of a document (`getArrayCopy()`).
 fn log_of(document: &Document) -> Log {
-    Log::new(plain_array(&document.array_copy(&[], &[])))
+    Log::new(plain_array(&document.array_copy()))
 }
 
 /// A database array as plain PHP values: documents and other objects become
@@ -138,7 +134,7 @@ fn plain(value: &DbValue) -> Value {
         DbValue::Str(s) => Value::Str(s.clone()),
         DbValue::Array(a) => Value::Array(plain_array(a)),
         DbValue::Object(a) => Value::Object(plain_array(a)),
-        DbValue::Ext(Ext::Document(d)) => Value::Array(plain_array(&d.array_copy(&[], &[]))),
+        DbValue::Ext(Ext::Document(d)) => Value::Array(plain_array(&d.array_copy())),
         DbValue::Ext(other) => Value::Array(plain_array(&php_std::Extension::to_array(other))),
     }
 }
@@ -151,7 +147,7 @@ fn key_of(key: KeyRef<'_>) -> ArrayKey {
 }
 
 /// A plain array as a database array.
-pub(crate) fn db_array<X: php_std::Extension>(array: &php_std::Array<X>) -> DbArray {
+fn db_array<X: php_std::Extension>(array: &php_std::Array<X>) -> DbArray {
     let mut out = DbArray::with_capacity(array.len());
     for (key, value) in array.iter() {
         out.set(key_of(key), db_value(value));
@@ -174,7 +170,7 @@ fn db_value<X: php_std::Extension>(value: &php_std::Value<X>) -> DbValue {
 
 /// An audit query as a database query (`Query::parseQuery($query->toArray())`).
 fn db_query(query: &Query) -> Result<DbQuery> {
-    Ok(DbQuery::parse_query(&db_array(&query.to_array()))?)
+    Ok(DbQuery::parse_query(&query.to_array(), false)?)
 }
 
 /// `$log['time'] ??= DateTime::now()`.
@@ -214,12 +210,19 @@ impl Adapter for Database {
     /// setup` when the database does not exist.
     async fn setup(&self) -> Result<()> {
         let name = self.db.database();
-        if !self.db.exists(Some(&name), None).await? {
+        if !self.db.exists(Some(&name)).await? {
             return Err(Error::exception("You need to create the database before running Audit setup"));
         }
-        let attributes = self.attribute_documents()?;
-        let indexes = self.index_documents()?;
-        match self.db.create_collection(self.collection_name(), attributes, indexes, None, true).await {
+        let collection = Collection::create(
+            self.collection_name(),
+            "",
+            self.attribute_documents(),
+            self.index_documents(),
+            None,
+            true,
+            Default::default(),
+        )?;
+        match self.db.create_collection(collection).await {
             Ok(_) => Ok(()),
             Err(e) if e.is_a(Kind::Duplicate) => Ok(()),
             Err(e) => Err(e.into()),
@@ -228,7 +231,7 @@ impl Adapter for Database {
 
     async fn get_by_id(&self, id: &str) -> Result<Option<Log>> {
         let db = &self.db;
-        let document = db.authorization().skip(|| db.get_document(schema::COLLECTION, id, Vec::new(), false)).await?;
+        let document = db.authorization().skip(db.get_document(self.collection_name(), id, Vec::new(), false)).await?;
         Ok(if document.is_empty() { None } else { Some(log_of(&document)) })
     }
 
@@ -236,7 +239,7 @@ impl Adapter for Database {
     async fn create(&self, log: Array) -> Result<Log> {
         let document = Document::new(db_array(&with_time(log)))?;
         let db = &self.db;
-        let created = db.authorization().skip(|| db.create_document(schema::COLLECTION, document)).await?;
+        let created = db.authorization().skip(db.create_document(self.collection_name(), document)).await?;
         Ok(log_of(&created))
     }
 
@@ -251,15 +254,7 @@ impl Adapter for Database {
         }
         let db = &self.db;
         db.authorization()
-            .skip(|| {
-                db.create_documents(
-                    schema::COLLECTION,
-                    documents,
-                    utopia_database::Database::INSERT_BATCH_SIZE,
-                    None,
-                    None,
-                )
-            })
+            .skip(db.create_documents(self.collection_name(), documents, utopia_database::database::BATCH_SIZE, None))
             .await?;
         Ok(true)
     }
@@ -334,18 +329,20 @@ impl Adapter for Database {
     /// batch deletes none.
     async fn cleanup(&self, datetime: &DateTime) -> Result<bool> {
         let before = datetime::format(datetime);
-        let queries =
-            vec![DbQuery::less_than("time", before.as_str()), DbQuery::order_desc("time"), DbQuery::order_asc("")];
+        let queries = vec![
+            DbQuery::less_than("time", before.as_str()),
+            DbQuery::order_desc("time", None),
+            DbQuery::order_asc("", None),
+        ];
         let db = &self.db;
         db.authorization()
-            .skip(|| async {
+            .skip(async {
                 loop {
                     let removed = db
                         .delete_documents(
-                            schema::COLLECTION,
+                            self.collection_name(),
                             queries.clone(),
-                            utopia_database::Database::DELETE_BATCH_SIZE,
-                            None,
+                            utopia_database::database::BATCH_SIZE,
                             None,
                         )
                         .await?;

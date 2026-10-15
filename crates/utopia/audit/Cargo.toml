@@ -11,7 +11,8 @@ publish.workspace = true
 [features]
 default = ["database", "clickhouse"]
 # The Database adapter: logs as documents of a utopia-database collection.
-database = ["dep:utopia-database"]
+# The schema (attributes and indexes) is utopia-database's models either way.
+database = []
 # The ClickHouse adapter: logs as rows of a MergeTree table, over ClickHouse's
 # HTTP interface (utopia-client, with its multipart bodies).
 clickhouse = ["dep:http", "dep:utopia-client", "dep:utopia-validators"]
@@ -22,7 +23,7 @@ http = { workspace = true, optional = true }
 php-std.workspace = true
 thiserror.workspace = true
 utopia-client = { workspace = true, optional = true }
-utopia-database = { workspace = true, optional = true }
+utopia-database.workspace = true
 utopia-query.workspace = true
 utopia-validators = { workspace = true, optional = true }
 

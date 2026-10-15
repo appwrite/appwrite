@@ -47,7 +47,7 @@ try {
 
 ## Tag metrics with dimensions
 
-Tags become dedicated columns: events carry the request's path, method, status, service, resource, team, geography and client; gauges their service, resource, team and replica ordinal. `extract_columns` is what an adapter stores for a row: scalars as strings, empty strings as nothing, country and region lower-cased, and an unknown tag refused rather than dropped.
+Tags become dedicated columns: events carry the request's path, method, status, service, resource, replica ordinal, team, geography and client; gauges their service, resource, team and replica ordinal. `extract_columns` is what an adapter stores for a row: scalars as strings, empty strings as nothing, country and region lower-cased, and an unknown tag refused rather than dropped.
 
 ```
 use utopia_query::{Array, Value};
