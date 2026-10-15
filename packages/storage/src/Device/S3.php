@@ -907,12 +907,16 @@ class S3 extends Device
         $headers['host'] = $this->host;
         $headers['date'] = gmdate('D, d M Y H:i:s T');
         $headers['content-md5'] = $md5;
-        // Send an explicit Content-Length (signed, alongside content-md5). Without
-        // it the cURL transport streams the body with Transfer-Encoding: chunked —
-        // or omits the header on an empty POST — which S3-compatible services such
-        // as GCS reject with HTTP 411. The value is the full body size, so it also
-        // matches what the transport sends for a size-known stream.
-        $headers['content-length'] = (string) $length;
+        // Send an explicit Content-Length (signed, alongside content-md5) on
+        // requests that carry a body. Without it the cURL transport streams the
+        // body with Transfer-Encoding: chunked — or omits the header on an empty
+        // POST — which S3-compatible services such as GCS reject with HTTP 411.
+        // The value is the full body size, so it also matches what the transport
+        // sends for a size-known stream. Bodyless requests must not sign it:
+        // Cloudflare R2 rejects a GET with a signed Content-Length (403).
+        if ($method === Method::PUT || $method === Method::POST) {
+            $headers['content-length'] = (string) $length;
+        }
 
         $amzHeaders = array_filter($amzHeaders, fn (string $value): bool => $value !== '');
         $amzHeaders['x-amz-date'] = gmdate('Ymd\THis\Z');
