@@ -386,8 +386,10 @@ impl Builder<PostgreSqlDialect> {
     ///
     /// PHP: `updateFrom()`.
     pub fn update_from(&mut self, table: impl Into<String>, alias: impl Into<String>) -> &mut Self {
+        let table = table.into();
+        self.defer_unbound(&format!("update from table '{table}'"));
         let current = self.dialect.update_from.take().unwrap_or_default();
-        self.dialect.update_from = Some(UpdateFrom { table: table.into(), alias: alias.into(), ..current });
+        self.dialect.update_from = Some(UpdateFrom { table, alias: alias.into(), ..current });
         self
     }
 
@@ -413,8 +415,10 @@ impl Builder<PostgreSqlDialect> {
         condition: impl Into<String>,
         bindings: impl IntoValues,
     ) -> &mut Self {
+        let table = table.into();
+        self.defer_unbound(&format!("delete using table '{table}'"));
         self.dialect.delete_using = Some(DeleteUsing {
-            table: table.into(),
+            table,
             condition: condition.into(),
             bindings: bindings.into_values().values().cloned().collect(),
         });
@@ -661,7 +665,25 @@ impl Dialect for PostgreSqlDialect {
         Ok(format!("{attribute} ~ ?"))
     }
 
+    fn compile_contains_all(
+        b: &mut Builder<Self>,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
+        if let Some(sql) = b.flavored_contains_all(attribute, values, column) {
+            return Ok(sql);
+        }
+        b.base_compile_contains_all(attribute, values, column)
+    }
+
     fn compile_filter(b: &mut Builder<Self>, query: &Query) -> Result<String> {
+        if query.attribute_type() == "object"
+            && query.attribute().contains('.')
+            && let Some(check) = b.core.flavor.object_path.clone()
+        {
+            check(query.attribute())?;
+        }
         let method = query.method();
         if method.is_vector() {
             let attribute = b.resolve_and_wrap(query.attribute())?;
@@ -800,7 +822,19 @@ impl Dialect for PostgreSqlDialect {
 
 impl SqlDialect for PostgreSqlDialect {
     fn compile_search_expression(b: &mut Builder<Self>, attribute: &str, values: &Array, not: bool) -> Result<String> {
-        search_expression(b, attribute, values, not)
+        match b.flavored_search_values(values) {
+            Some(values) => search_expression(b, attribute, &values, not),
+            None => search_expression(b, attribute, values, not),
+        }
+    }
+
+    fn compile_spatial_filter(b: &mut Builder<Self>, method: Method, attribute: &str, query: &Query) -> Result<String> {
+        if method == Method::DistanceLessThan
+            && let Some(srid) = b.core.flavor.indexed_distance
+        {
+            return b.indexed_distance(attribute, query, srid);
+        }
+        sql::sql_compile_spatial_filter(b, method, attribute, query)
     }
 
     fn compile_spatial_distance(

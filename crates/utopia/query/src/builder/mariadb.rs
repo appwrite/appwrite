@@ -79,6 +79,18 @@ impl Dialect for MariaDbDialect {
         Ok(format!("{attribute} REGEXP ?"))
     }
 
+    fn compile_contains_all(
+        b: &mut Builder<Self>,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
+        if let Some(sql) = b.flavored_contains_all(attribute, values, column) {
+            return Ok(sql);
+        }
+        b.base_compile_contains_all(attribute, values, column)
+    }
+
     fn compile_filter(b: &mut Builder<Self>, query: &Query) -> Result<String> {
         sql::sql_compile_filter(b, query)
     }
@@ -122,7 +134,10 @@ impl Dialect for MariaDbDialect {
 
 impl SqlDialect for MariaDbDialect {
     fn compile_search_expression(b: &mut Builder<Self>, attribute: &str, values: &Array, not: bool) -> Result<String> {
-        mysql::search_expression(b, attribute, values, not)
+        match b.flavored_search_values(values) {
+            Some(values) => mysql::search_expression(b, attribute, &values, not),
+            None => mysql::search_expression(b, attribute, values, not),
+        }
     }
 
     fn compile_spatial_filter(b: &mut Builder<Self>, method: Method, attribute: &str, query: &Query) -> Result<String> {
