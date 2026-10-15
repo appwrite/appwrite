@@ -23,6 +23,14 @@ describe('type error message canonical form', () => {
     )
   })
 
+  test('sorts unions quoted after a contraction', () => {
+    const before = `TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '"b" | "a"'.`
+    const after = `TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '"a" | "b"'.`
+
+    expect(canonical(before)).toBe(after)
+    expect(canonical(after)).toBe(after)
+  })
+
   test('leaves messages without unions unchanged', () => {
     const message = `TS2339: Property 'prefs' does not exist on type '{}'.`
 

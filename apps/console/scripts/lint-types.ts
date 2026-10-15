@@ -35,10 +35,34 @@ type Diagnostic = {
 // change every message that quotes it. Sort the top-level members of each
 // quoted type so a message only depends on what the union holds.
 export function canonical(message: string): string {
-  return message
-    .split("'")
-    .map((part, index) => (index % 2 === 1 ? sortUnion(part) : part))
-    .join("'")
+  const quotes: number[] = []
+  for (let i = 0; i < message.length; i++) {
+    // An apostrophe inside a word, as in `can't`, does not quote a type.
+    if (
+      message[i] === "'" &&
+      !(isWord(message[i - 1]) && isWord(message[i + 1]))
+    ) {
+      quotes.push(i)
+    }
+  }
+  let result = ''
+  let last = 0
+  for (let q = 0; q + 1 < quotes.length; q += 2) {
+    result +=
+      message.slice(last, quotes[q] + 1) +
+      sortUnion(message.slice(quotes[q] + 1, quotes[q + 1]))
+    last = quotes[q + 1]
+  }
+  return result + message.slice(last)
+}
+
+function isWord(char: string | undefined): boolean {
+  return (
+    char !== undefined &&
+    ((char >= 'a' && char <= 'z') ||
+      (char >= 'A' && char <= 'Z') ||
+      (char >= '0' && char <= '9'))
+  )
 }
 
 function sortUnion(type: string): string {
