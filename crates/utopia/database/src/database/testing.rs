@@ -11,6 +11,7 @@
 #![allow(dead_code)]
 
 use std::any::Any;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
@@ -27,6 +28,7 @@ use crate::document::Document;
 use crate::error::{Error, Result};
 use crate::index::Index;
 use crate::query::Query;
+use crate::relationship::{self, Relationship, RelationshipSide};
 use crate::schema;
 use crate::value::Value;
 
@@ -182,6 +184,21 @@ pub(crate) enum Call {
         changes: Vec<Change>,
         increase: Option<String>,
     },
+    CreateRelationship {
+        collection: String,
+        relationship: Relationship,
+    },
+    UpdateRelationship {
+        collection: String,
+        relationship: Relationship,
+        side: RelationshipSide,
+        update: relationship::Update,
+    },
+    DeleteRelationship {
+        collection: String,
+        relationship: Relationship,
+        side: RelationshipSide,
+    },
 }
 
 impl Call {
@@ -225,6 +242,9 @@ impl Call {
             Call::Sum { .. } => "sum",
             Call::GetSequences { .. } => "getSequences",
             Call::UpsertDocuments { .. } => "upsertDocuments",
+            Call::CreateRelationship { .. } => "createRelationship",
+            Call::UpdateRelationship { .. } => "updateRelationship",
+            Call::DeleteRelationship { .. } => "deleteRelationship",
         }
     }
 }
@@ -253,6 +273,25 @@ pub(crate) struct StubAdapter {
     handler: Mutex<Option<Handler>>,
     calls: Mutex<Vec<Call>>,
     upserts: Mutex<bool>,
+    measures: Mutex<Measures>,
+    column_type: Mutex<Option<ColumnTypeOf>>,
+    relationships: AtomicBool,
+}
+
+/// What `getColumnType()` answers, by attribute.
+type ColumnTypeOf = Arc<dyn Fn(&Attribute) -> Option<String> + Send + Sync>;
+
+/// The answers of the stub's measures (PHP stubs' `getCountOfAttributes()`,
+/// `getCountOfIndexes()`, `getAttributeWidth()`); `None` answers 0.
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct Measures {
+    /// `getCountOfAttributes()`; `Some(-1)` counts the collection's
+    /// attributes (the default adapter's count).
+    pub(crate) attributes: Option<i64>,
+    /// `getCountOfIndexes()`; `Some(-1)` counts the collection's indexes.
+    pub(crate) indexes: Option<i64>,
+    /// `getAttributeWidth()`.
+    pub(crate) width: Option<i64>,
 }
 
 /// The limits PHP's stubs give (`new Limits(...)` of the unit tests).
@@ -292,6 +331,9 @@ impl Default for StubAdapter {
             handler: Mutex::new(None),
             calls: Mutex::new(Vec::new()),
             upserts: Mutex::new(false),
+            measures: Mutex::new(Measures::default()),
+            column_type: Mutex::new(None),
+            relationships: AtomicBool::new(false),
         }
     }
 }
@@ -333,6 +375,28 @@ impl StubAdapter {
     /// Sets the limits.
     pub(crate) fn set_limits(&self, limits: Limits) -> &Self {
         *self.limits.lock().unwrap() = Arc::new(limits);
+        self
+    }
+
+    /// Sets the measures.
+    pub(crate) fn set_measures(&self, measures: Measures) -> &Self {
+        *self.measures.lock().unwrap() = measures;
+        self
+    }
+
+    /// Answers `getColumnType()` with `column_type`.
+    pub(crate) fn set_column_type(
+        &self,
+        column_type: impl Fn(&Attribute) -> Option<String> + Send + Sync + 'static,
+    ) -> &Self {
+        *self.column_type.lock().unwrap() = Some(Arc::new(column_type));
+        self
+    }
+
+    /// Implements `Feature\Relationships`: its calls are recorded and
+    /// answered like the others (`true` by default).
+    pub(crate) fn with_relationships(&self) -> &Self {
+        self.relationships.store(true, Ordering::SeqCst);
         self
     }
 
@@ -494,15 +558,27 @@ impl Adapter for StubAdapter {
     }
 
     fn attribute_width(&self, _collection: &Collection) -> Result<i64> {
-        Ok(0)
+        Ok(self.measures.lock().unwrap().width.unwrap_or(0))
     }
 
-    fn count_of_attributes(&self, _collection: &Collection) -> Result<i64> {
-        Ok(0)
+    fn count_of_attributes(&self, collection: &Collection) -> Result<i64> {
+        let measure = self.measures.lock().unwrap().attributes;
+        match measure {
+            Some(-1) => Ok(collection.attributes()?.len() as i64 + self.limits().default_attributes),
+            other => Ok(other.unwrap_or(0)),
+        }
     }
 
-    fn count_of_indexes(&self, _collection: &Collection) -> Result<i64> {
-        Ok(0)
+    fn count_of_indexes(&self, collection: &Collection) -> Result<i64> {
+        let measure = self.measures.lock().unwrap().indexes;
+        match measure {
+            Some(-1) => Ok(collection.indexes()?.len() as i64 + self.limits().default_indexes),
+            other => Ok(other.unwrap_or(0)),
+        }
+    }
+
+    fn relationships(&self) -> Option<&dyn crate::adapter::Relationships> {
+        if self.relationships.load(Ordering::SeqCst) { Some(self) } else { None }
     }
 
     async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
@@ -559,8 +635,9 @@ impl Adapter for StubAdapter {
         }
     }
 
-    fn column_type(&self, _attribute: &Attribute) -> Result<Option<String>> {
-        Ok(None)
+    fn column_type(&self, attribute: &Attribute) -> Result<Option<String>> {
+        let column_type = self.column_type.lock().unwrap().clone();
+        Ok(column_type.and_then(|f| f(attribute)))
     }
 
     async fn create_index(
@@ -702,6 +779,50 @@ impl Adapter for StubAdapter {
     async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
         let reply = self.call(Call::GetSequences { collection: collection.clone(), documents: documents.clone() });
         documents_reply(reply, documents)
+    }
+}
+
+#[async_trait]
+impl crate::adapter::Relationships for StubAdapter {
+    async fn create_relationship(&self, collection: &str, relationship: &Relationship) -> Result<bool> {
+        bool_reply(
+            self.call(Call::CreateRelationship { collection: collection.into(), relationship: relationship.clone() }),
+            true,
+        )
+    }
+
+    async fn update_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+        update: &relationship::Update,
+    ) -> Result<bool> {
+        bool_reply(
+            self.call(Call::UpdateRelationship {
+                collection: collection.into(),
+                relationship: relationship.clone(),
+                side,
+                update: update.clone(),
+            }),
+            true,
+        )
+    }
+
+    async fn delete_relationship(
+        &self,
+        collection: &str,
+        relationship: &Relationship,
+        side: RelationshipSide,
+    ) -> Result<bool> {
+        bool_reply(
+            self.call(Call::DeleteRelationship {
+                collection: collection.into(),
+                relationship: relationship.clone(),
+                side,
+            }),
+            true,
+        )
     }
 }
 

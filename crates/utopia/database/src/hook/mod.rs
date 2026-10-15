@@ -149,6 +149,29 @@ pub trait WriteContext: Send + Sync {
     /// The name the table is stored under (`rawTable()`).
     fn raw_table(&self, table: &str) -> String;
 
+    /// A builder reading the stored table `table` (a name
+    /// [`WriteContext::raw_table`] returned) as it is, kept to no tenant
+    /// (`builder()->fromTable($table)`). By default the builder's plain
+    /// `from()`; an adapter whose builders scope `from()` overrides it.
+    fn builder_from_table(&self, table: &str) -> SqlBuilder {
+        let mut builder = self.builder();
+        match &mut builder {
+            SqlBuilder::MySql(b) => {
+                b.from(table, "");
+            }
+            SqlBuilder::MariaDb(b) => {
+                b.from(table, "");
+            }
+            SqlBuilder::PostgreSql(b) => {
+                b.from(table, "");
+            }
+            SqlBuilder::Sqlite(b) => {
+                b.from(table, "");
+            }
+        }
+        builder
+    }
+
     /// Runs a statement; the event names it to the transforms and timeouts
     /// (`run()`).
     async fn run(&self, statement: utopia_query::builder::Statement, event: Event) -> Result<bool>;
