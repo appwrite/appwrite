@@ -143,7 +143,7 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $code = $proofForCode->generate();
         $challenge = new Document([

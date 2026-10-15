@@ -6,7 +6,7 @@ namespace Utopia\NATS\JetStream;
 
 use Utopia\NATS\Connection;
 use Utopia\NATS\Exception\JetStreamException;
-use Utopia\NATS\Exception\NatsException;
+use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Headers;
 use Utopia\NATS\Inbox;
@@ -267,8 +267,8 @@ final class JetStream
             try {
                 $response = $this->conn->request($subject, $data, headers: $useHeaders);
                 break;
-            } catch (\Utopia\NATS\Exception\NatsException $e) {
-                if ($attempt >= $retryOnNoResponders || $e->getMessage() !== 'No responders for request') {
+            } catch (NoRespondersException $e) {
+                if ($attempt >= $retryOnNoResponders) {
                     throw $e;
                 }
                 $attempt++;
@@ -377,7 +377,7 @@ final class JetStream
                 // 503 with no body: JetStream is not answering on this account at all,
                 // which is the same condition publish() surfaces as "No responders".
                 if ($reply->headers instanceof Headers && $reply->headers->getStatus() === '503') {
-                    throw new NatsException('No responders for request');
+                    throw new NoRespondersException('No responders for request');
                 }
 
                 $responseData = json_decode($reply->data, true, 512, JSON_THROW_ON_ERROR);

@@ -218,7 +218,7 @@ return [
             [
                 'name' => '_APP_DNS_EXTERNAL',
                 'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -227,7 +227,7 @@ return [
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
                 'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
-                'introduction' => '2.3.1',
+                'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -488,7 +488,7 @@ return [
             [
                 'name' => '_APP_TRUSTED_PROXIES',
                 'description' => 'Comma-separated CIDRs (or exact IPs) of reverse proxies that may set `_APP_TRUSTED_HEADERS` such as X-Forwarded-For. The default covers loopback, RFC1918 and RFC 6598 (100.64.0.0/10) ranges used by Docker, Traefik and Kubernetes. When the connection comes from a trusted proxy, the client IP is the rightmost header entry that is not itself a trusted proxy. Direct clients whose connection address is not in this list are not trusted — their X-Forwarded-For is ignored. Set it to an empty value to always use the connection IP. If your load balancer has a public address, add that CIDR.',
-                'introduction' => '2.3.0',
+                'introduction' => '2.4.0',
                 'default' => TrustedProxies::DEFAULT,
                 'required' => false,
                 'question' => '',

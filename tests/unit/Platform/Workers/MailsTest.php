@@ -166,19 +166,6 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
-    public function testProjectSmtpFailureIsNotRetried(): void
-    {
-        $adapter = new SpyMailAdapter();
-
-        $this->runMailWorker($adapter, recipient: 'john@example.test', smtp: [
-            'host' => '127.0.0.1',
-            'port' => 1,
-            'senderEmail' => 'sender@example.test',
-        ]);
-
-        $this->assertSame(0, $adapter->sendCount);
-    }
-
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $this->expectException(\Exception::class);

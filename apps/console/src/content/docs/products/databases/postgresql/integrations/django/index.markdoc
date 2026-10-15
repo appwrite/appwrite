@@ -1,0 +1,145 @@
+---
+layout: article
+title: Django
+description: Use Django's ORM with an Appwrite native PostgreSQL database. Configure the DATABASES setting with TLS options, run migrations on the direct PostgreSQL port, and tune persistent connections for pooling.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so Django's ORM works against it with no Appwrite-specific configuration. Point the `DATABASES` setting at the credentials from the [Connections](/docs/products/databases/postgresql/connections) page, then use migrations, models, and the rest of Django exactly as you would against any PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection details. The primary user is `admin`, and the database name is generated for each database.
+{% /info %}
+
+# Install a driver {% #driver %}
+
+Django talks to PostgreSQL through a driver. Use [psycopg 3](https://www.psycopg.org/psycopg3/):
+
+```bash
+pip install "psycopg[binary]"
+```
+
+Django's PostgreSQL backend uses the `ENGINE` value `django.db.backends.postgresql`.
+
+# Configure `DATABASES` {% #databases %}
+
+In `settings.py`, point the `default` connection at your native PostgreSQL database and require TLS through `OPTIONS`. Appwrite Cloud terminates TLS at the edge, and the certificate is signed by a public certificate authority. Read every value from the environment so credentials stay out of source control:
+
+```python
+import os
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ["DB_USER"],
+        "PASSWORD": os.environ["DB_PASSWORD"],
+        "HOST": os.environ["DB_HOST"],
+        "PORT": os.environ["DB_PORT"],
+        "OPTIONS": {
+            "sslmode": "require",
+        },
+    }
+}
+```
+
+The PostgreSQL backend forwards everything in `OPTIONS` to the driver's connection, so `sslmode` is honored the same way `psql` honors it in a connection string. For full certificate verification, set `"sslmode": "verify-full"` with `"sslrootcert"` pointing at a trusted root store or your OS bundle, such as `/etc/ssl/certs/ca-certificates.crt`. See [Network security](/docs/products/databases/postgresql/network-security) for TLS and IP allowlist guidance.
+
+Populate the environment from the Console **Credentials** dialog or from `postgresql.get()` in the [API credentials flow](/docs/products/databases/postgresql/connections#credentials):
+
+```env
+DB_NAME=<database>
+DB_USER=admin
+DB_PASSWORD=<password>
+DB_HOST=db-<hash>.<region>.appwrite.center
+DB_PORT=5432
+```
+
+Port `5432` is the direct PostgreSQL port. Keep migrations on this port, and see [pooling](#pooling) below for when to add the pooler.
+
+# Run migrations {% #migrate %}
+
+Generate migrations from your models, then apply them against the direct PostgreSQL port:
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+`migrate` needs a session connection with DDL privileges. The primary `admin` user owns the database and can run schema changes. Narrower [database roles](/docs/products/databases/postgresql/connections#roles) (`readonly` or `readwrite`) are intended for application traffic with reduced privileges. Always run `migrate` on the direct PostgreSQL port, not through the transaction-mode pooler.
+
+# Define a model {% #model %}
+
+Models map to tables in your native PostgreSQL database. Define one in an app's `models.py`:
+
+```python
+from django.db import models
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+```
+
+Run `makemigrations` and `migrate` again to create the table, then query it through the ORM:
+
+```python
+from blog.models import Article
+
+Article.objects.create(title="Hello", body="First post")
+
+recent = Article.objects.order_by("-created_at")[:10]
+```
+
+# Persistent connections and pooling {% #pooling %}
+
+By default Django opens a new connection per request (`CONN_MAX_AGE = 0`). On a long-running WSGI server (Gunicorn, uWSGI) you can reuse connections by raising it. Each worker thread keeps its own connection, so the database must allow at least as many connections as you run worker threads:
+
+```python
+DATABASES["default"]["CONN_MAX_AGE"] = 60
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+```
+
+`CONN_HEALTH_CHECKS` revalidates a reused connection once per request, avoiding errors after an engine restart. Do not enable persistent connections under the development server, it spawns a thread per request and gains nothing, and disable them under ASGI.
+
+{% info title="Persistent connections need a session" %}
+A worker holding a connection across requests behaves like a long-lived session. Connect it to the direct PostgreSQL port or the **session-mode** pooler. The default **transaction-mode** pooler can hand each statement a different backend connection, which makes it a better fit for serverless and short-lived runtimes that open and close a connection per invocation.
+{% /info %}
+
+If you front the database with the transaction-mode [connection pooler](/docs/products/databases/postgresql/connection-pooling), point `HOST` and `PORT` at the PostgreSQL pooler on port `6432`. Also set `DISABLE_SERVER_SIDE_CURSORS = True`, since server-side cursors can't survive being moved between backend connections:
+
+```python
+DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+```
+
+For prepared statements, advisory locks, `LISTEN`/`NOTIFY`, or temporary tables, use **session mode** instead, see the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection details. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its connection details.
+2. Export them as the `DB_*` environment variables your settings read.
+3. Run `python manage.py migrate` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, its schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create scoped database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS, certificate verification, IP allowlists, and idle timeout settings.
+{% /cards_item %}
+{% /cards %}

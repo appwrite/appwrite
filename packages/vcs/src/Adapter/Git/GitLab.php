@@ -4,7 +4,7 @@ namespace Utopia\VCS\Adapter\Git;
 
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
 

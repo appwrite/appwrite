@@ -16,11 +16,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 abstract class Base extends Action
@@ -333,7 +333,8 @@ abstract class Base extends Action
                 ],
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true);
+            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true);
 
         $prompt = !empty(static::getPromptValues());
         if ($prompt) {
@@ -341,7 +342,6 @@ abstract class Base extends Action
         }
 
         $this
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -622,8 +622,8 @@ abstract class Base extends Action
     public function updateWithPrompt(
         ?string $clientId,
         ?string $clientSecret,
-        ?array $prompt,
         ?bool $enabled,
+        ?array $prompt,
         Response $response,
         Database $dbForPlatform,
         Document $project,

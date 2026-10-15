@@ -31,7 +31,7 @@ final class Mail extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,

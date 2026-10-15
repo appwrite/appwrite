@@ -3,7 +3,7 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;

@@ -30,6 +30,9 @@ class Create extends OperationsCreate
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'transactions',

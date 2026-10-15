@@ -22,7 +22,7 @@ use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -1097,6 +1097,17 @@ class Deletes extends Action
             Query::orderAsc()
         ], $dbForProject);
 
+        // Delete authenticators, including passkeys, and their pending challenges
+        $this->deleteByGroup('authenticators', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        $this->deleteByGroup('challenges', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
         // Delete identities
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
@@ -1930,7 +1941,7 @@ class Deletes extends Action
             return;
         }
 
-        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+        $expired = DateTime::addSeconds(new \DateTime(), -APP_PUSH_LEDGER_RETENTION);
 
         $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),

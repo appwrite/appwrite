@@ -13,7 +13,7 @@ $platforms = [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '22.4.0',
+                'version' => '28.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -62,7 +62,7 @@ $platforms = [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '21.4.0',
+                'version' => '27.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -81,7 +81,7 @@ $platforms = [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '14.3.0',
+                'version' => '20.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -101,7 +101,7 @@ $platforms = [
                 'key' => 'android',
                 'name' => 'Android',
                 'namespace' => 'io.appwrite',
-                'version' => '12.2.0',
+                'version' => '29.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -124,7 +124,7 @@ $platforms = [
             [
                 'key' => 'react-native',
                 'name' => 'React Native',
-                'version' => '0.24.0',
+                'version' => '1.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-react-native',
                 'package' => 'https://npmjs.com/package/react-native-appwrite',
                 'enabled' => true,
@@ -143,7 +143,7 @@ $platforms = [
             [
                 'key' => 'unity',
                 'name' => 'Unity',
-                'version' => '0.1.0',
+                'version' => '0.9.0',
                 'url' => 'https://github.com/appwrite/sdk-for-unity',
                 'package' => 'https://github.com/appwrite/sdk-for-unity',
                 'enabled' => true,
@@ -230,7 +230,7 @@ $platforms = [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '13.5.0',
+                'version' => '28.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -265,7 +265,7 @@ $platforms = [
             [
                 'key' => 'agent-skills',
                 'name' => 'AgentSkills',
-                'version' => '0.1.0',
+                'version' => '0.3.0',
                 'url' => 'https://github.com/appwrite/agent-skills.git',
                 'enabled' => true,
                 'beta' => false,
@@ -285,7 +285,7 @@ $platforms = [
             [
                 'key' => 'cursor-plugin',
                 'name' => 'CursorPlugin',
-                'version' => '0.1.0',
+                'version' => '0.2.0',
                 'url' => 'https://github.com/appwrite/cursor-plugin.git',
                 'enabled' => true,
                 'beta' => false,
@@ -355,7 +355,7 @@ $platforms = [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '22.0.1',
+                'version' => '29.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -374,7 +374,7 @@ $platforms = [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '20.0.1',
+                'version' => '30.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -393,7 +393,7 @@ $platforms = [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '15.1.0',
+                'version' => '24.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -412,7 +412,7 @@ $platforms = [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '21.0.1',
+                'version' => '28.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -431,7 +431,7 @@ $platforms = [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => 'v0.16.1',
+                'version' => 'v7.11.0',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
@@ -450,7 +450,7 @@ $platforms = [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.26.0',
+                'version' => '8.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
@@ -469,7 +469,7 @@ $platforms = [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '21.0.1',
+                'version' => '29.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
@@ -489,7 +489,7 @@ $platforms = [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
                 'namespace' => 'io.appwrite',
-                'version' => '14.0.1',
+                'version' => '22.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
                 'enabled' => true,
@@ -512,7 +512,7 @@ $platforms = [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '15.1.0',
+                'version' => '22.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
@@ -531,7 +531,7 @@ $platforms = [
             [
                 'key' => 'rust',
                 'name' => 'Rust',
-                'version' => '0.1.0',
+                'version' => '0.19.0',
                 'url' => 'https://github.com/appwrite/sdk-for-rust',
                 'package' => 'https://crates.io/crates/appwrite',
                 'enabled' => true,

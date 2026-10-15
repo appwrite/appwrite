@@ -4,7 +4,7 @@ namespace Appwrite\Migration;
 
 use Exception;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -103,6 +103,8 @@ abstract class Migration
         '2.1.0' => 'V25',
         '2.2.0' => 'V25',
         '2.3.0' => 'V25',
+        '2.4.0' => 'V25',
+        '2.5.0' => 'V25',
     ];
 
     /**
@@ -311,6 +313,10 @@ abstract class Migration
             $collectionType = 'buckets';
         }
 
+        if ($from === 'collections') {
+            $collectionType = 'databases';
+        }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
@@ -414,6 +420,10 @@ abstract class Migration
             $collectionType = 'buckets';
         }
 
+        if ($from === 'collections') {
+            $collectionType = 'databases';
+        }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
@@ -470,6 +480,10 @@ abstract class Migration
 
         if ($from === 'files') {
             $collectionType = 'buckets';
+        }
+
+        if ($from === 'collections') {
+            $collectionType = 'databases';
         }
 
         $collection = $this->collections[$collectionType][$from] ?? null;
