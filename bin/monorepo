@@ -1023,6 +1023,8 @@ function parse_workspace_toml(string $toml): array
         [$key, $raw] = array_map('trim', explode('=', $trimmed, 2));
         if ($section === 'workspace.package' && in_array($key, ['version', 'edition', 'rust-version', 'license'], true)) {
             $package[$key] = parse_toml_value($raw);
+        } elseif ($section === 'workspace.metadata.utopia' && $key === 'mirror-license') {
+            $package['mirror-license'] = parse_toml_value($raw);
         } elseif ($section === 'workspace.dependencies') {
             $dependencies[$key] = parse_toml_value($raw);
         }
@@ -1128,7 +1130,9 @@ function materialize_cargo_toml(string $toml, string $workspaceToml, string $pac
             continue;
         }
         if (preg_match('/^(\s*)license\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
-            $out[] = $match[1] . 'license = ' . format_toml_value($workspace['package']['license'] ?? 'BSD-3-Clause');
+            // The mirror's license: the workspace's `mirror-license` when it has one, else the workspace's own.
+            $license = $workspace['package']['mirror-license'] ?? $workspace['package']['license'] ?? 'BSD-3-Clause';
+            $out[] = $match[1] . 'license = ' . format_toml_value($license);
             continue;
         }
         if (preg_match('/^(\s*)publish\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
@@ -1195,8 +1199,57 @@ function materialize_crate_tree(string $commit, string $prefix, string $tree): s
     $workspace = sh("git show {$commit}:Cargo.toml");
     $materialized = materialize_cargo_toml($toml, $workspace, $package);
     $blob = sh('printf %s ' . escapeshellarg($materialized) . ' | git hash-object -w --stdin');
+    $tree = replace_tree_file($tree, 'Cargo.toml', $blob);
 
-    return replace_tree_file($tree, 'Cargo.toml', $blob);
+    // The source here keeps the repository's license; a mirror is published under the workspace's
+    // `mirror-license` when the commit has one: its LICENSE and its README's License section with it.
+    // Commits from before the setting keep their trees, so the mirrors' history is unchanged.
+    $mirror = parse_workspace_toml($workspace)['package']['mirror-license'] ?? null;
+    if (!is_string($mirror)) {
+        return $tree;
+    }
+    $license = sh('printf %s ' . escapeshellarg(mirror_license_text($mirror)) . ' | git hash-object -w --stdin');
+    $tree = replace_tree_file($tree, 'LICENSE', $license);
+    exec("git cat-file -e {$commit}:{$prefix}/README.md 2>/dev/null", $_, $noReadme);
+    if ($noReadme === 0) {
+        $readme = sh("git show {$commit}:{$prefix}/README.md") . "\n";
+        $readme = str_replace("\n## License\n\nBSD-3-Clause. See [LICENSE](LICENSE).", "\n## License\n\n{$mirror}. See [LICENSE](LICENSE).", $readme);
+        $tree = replace_tree_file($tree, 'README.md', sh('printf %s ' . escapeshellarg($readme) . ' | git hash-object -w --stdin'));
+    }
+
+    return $tree;
+}
+
+/** The text of a license a mirror can be published under, by its SPDX identifier. */
+function mirror_license_text(string $spdx): string
+{
+    return match ($spdx) {
+        'MIT' => <<<'TEXT'
+            MIT License
+
+            Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy
+            of this software and associated documentation files (the "Software"), to deal
+            in the Software without restriction, including without limitation the rights
+            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+            copies of the Software, and to permit persons to whom the Software is
+            furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in all
+            copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+
+            TEXT,
+        default => fail("no license text for mirror-license \"{$spdx}\""),
+    };
 }
 
 function split_crate(string $package): string

@@ -12,6 +12,7 @@
   "dependencies": {
     "@tanstack/react-router": "1.170.41",
     "@tanstack/react-start": "1.168.60",
+    "appwrite": "^28.3.0",
     "d3-chord": "^3.0.1",
     "d3-shape": "^3.2.0",
     "lucide-react": "^0.544.0",

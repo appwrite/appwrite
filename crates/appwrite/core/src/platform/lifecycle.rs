@@ -93,6 +93,7 @@ async fn resolve_project(ctx: &mut Context) {
     }
 }
 
+/// The `allowedHostnames` resource.
 pub(super) fn allowed_hostnames(
     ctx_state: &super::State,
     project: &Project,

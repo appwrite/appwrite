@@ -107,6 +107,43 @@ fn ephemeral_key(project: &str) -> Result<String, String> {
     Ok(format!("ephemeral_{header}.{payload}.{signature}"))
 }
 
+/// `value` as the `encrypt` database filter stores it: AES-128-GCM under the
+/// stack's `_APP_OPENSSL_KEY_V1`, in PHP's JSON envelope.
+fn encrypted(value: &str) -> Result<String, String> {
+    use base64::Engine as _;
+    let out = std::process::Command::new("docker")
+        .args(["inspect", "-f", "{{range .Config.Env}}{{println .}}{{end}}", "appwrite"])
+        .output()
+        .map_err(|e| format!("docker: {e}"))?;
+    let env = String::from_utf8_lossy(&out.stdout);
+    let secret = env.lines().find_map(|l| l.strip_prefix("_APP_OPENSSL_KEY_V1=")).unwrap_or_default();
+    // PHP's OpenSSL truncates (or zero-pads) the key to the cipher's 16 bytes.
+    let mut key = [0u8; 16];
+    let n = secret.len().min(16);
+    key[..n].copy_from_slice(&secret.as_bytes()[..n]);
+    let mut iv = [0u8; 12];
+    openssl::rand::rand_bytes(&mut iv).map_err(|e| e.to_string())?;
+    let mut tag = [0u8; 16];
+    let data = openssl::symm::encrypt_aead(
+        openssl::symm::Cipher::aes_128_gcm(),
+        &key,
+        Some(&iv),
+        b"",
+        value.as_bytes(),
+        &mut tag,
+    )
+    .map_err(|e| e.to_string())?;
+    let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    Ok(json!({
+        "data": base64::engine::general_purpose::STANDARD.encode(data),
+        "method": "aes-128-gcm",
+        "iv": hex(&iv),
+        "tag": hex(&tag),
+        "version": "1",
+    })
+    .to_string())
+}
+
 /// The addresses a container has on its networks.
 fn container_ips(name: &str) -> Vec<String> {
     std::process::Command::new("docker")
@@ -295,8 +332,20 @@ fn seed_owned_keys(
 }
 
 /// The scopes of the key scenarios use, and of the one that seeds.
-const SCOPES: &[&str] =
-    &["users.read", "users.write", "sessions.read", "sessions.write", "targets.read", "targets.write"];
+const SCOPES: &[&str] = &[
+    "users.read",
+    "users.write",
+    "sessions.read",
+    "sessions.write",
+    "targets.read",
+    "targets.write",
+    "teams.read",
+    "teams.write",
+];
+
+/// The secret of the invitation the status scenarios accept (`m3`, of `u4`
+/// to `t1`), written over the one its email carries.
+const INVITE_SECRET: &str = "compat-invite-secret";
 
 async fn twin(
     api: &Api,
@@ -351,22 +400,17 @@ async fn twin(
         json!({"platformId": format!("{project}-web"), "name": "Web", "hostname": "localhost"}),
     )
     .await?;
-    for (id, name) in [("u1", "Ada"), ("u2", "Grace")] {
+    for (id, name) in [("u1", "Ada"), ("u2", "Grace"), ("u3", "Linus"), ("u4", "Ken")] {
         post(
             "/users",
             json!({"userId": id, "email": format!("{id}@example.com"), "password": "password-1234", "name": name}),
         )
         .await?;
     }
-    // Account: `s1` signs in with its password, `u3` gets the sessions
+    // Account: `s1` signs in with its password; `u3` gets the sessions
     // scenarios delete, `u4` the tokens they exchange.
-    for (id, name) in [("s1", "Signer"), ("u3", "Deleter"), ("u4", "Exchanger")] {
-        post(
-            "/users",
-            json!({"userId": id, "email": format!("{id}@example.com"), "password": "password-1234", "name": name}),
-        )
+    post("/users", json!({"userId": "s1", "email": "s1@example.com", "password": "password-1234", "name": "Signer"}))
         .await?;
-    }
     // The mock OAuth2 provider (the browser flow and the native ID tokens).
     let console_patch = |path: String, body: Value| {
         let headers = console.headers.clone();
@@ -395,6 +439,43 @@ async fn twin(
         .await
         .map_err(|e| format!("project sequence: {e}"))?
         .get::<_, String>(0);
+    // Teams: `t1` owned by u1 (the session's user) with u2 a member, `t2`
+    // with u2 (deleted with its memberships), and u1's pending invitation
+    // of u4 to `t1`, whose secret is set to a known one.
+    post("/teams", json!({"teamId": "t1", "name": "Alpha"})).await?;
+    post("/teams", json!({"teamId": "t2", "name": "Beta"})).await?;
+    for (team, user, membership, role) in
+        [("t1", "u1", "m1", "owner"), ("t1", "u2", "m2", "member"), ("t2", "u2", "m4", "member")]
+    {
+        post(
+            &format!("/teams/{team}/memberships"),
+            json!({"userId": user, "roles": [role], "membershipId": membership}),
+        )
+        .await?;
+    }
+    let invite = api
+        .send(
+            "POST",
+            &format!("{php}/teams/t1/memberships"),
+            &[("x-appwrite-project".to_owned(), project.clone()), ("x-appwrite-session".to_owned(), session.clone())],
+            Some(&json!({"userId": "u4", "roles": ["member"], "url": "http://localhost", "membershipId": "m3"})),
+        )
+        .await?;
+    if invite.status != 201 {
+        return Err(format!("invitation: {} {}", invite.status, invite.body));
+    }
+    // The stored secret is the token's SHA-256, encrypted. Nothing read the
+    // invitation since it was created, so no cached copy holds the old one.
+    let hash: String = {
+        use sha2::Digest as _;
+        sha2::Sha256::digest(INVITE_SECRET.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    };
+    db.execute(
+        &format!("UPDATE appwrite.\"_{sequence}_memberships\" SET secret = $1 WHERE _uid = 'm3'"),
+        &[&encrypted(&hash)?],
+    )
+    .await
+    .map_err(|e| format!("invitation secret: {e}"))?;
     let account = api
         .send(
             "POST",
@@ -846,6 +927,63 @@ const ROUTES: &[Route] = &[
         Setup::None,
         Reduced,
     ),
+    // Teams. A client creating a team joins it as its owner.
+    route("teams.create", "POST", "/teams", Some(r#"{"teamId":"t{n}","name":"Team {n}"}"#)),
+    route(
+        "teams.create.duplicate",
+        "POST",
+        "/teams",
+        Some(r#"{"teamId":"t1","name":"Again","roles":["owner","lead"]}"#),
+    ),
+    route("teams.list", "GET", "/teams", None),
+    route("teams.list.search", "GET", "/teams?search=Alpha&total=false", None),
+    route("teams.list.invalid", "GET", "/teams?queries[]=bogus", None),
+    route("teams.get", "GET", "/teams/t1", None),
+    route("teams.get.missing", "GET", "/teams/missing", None),
+    route("teams.name.update", "PUT", "/teams/t1", Some(r#"{"name":"Alpha {n}"}"#)),
+    route("teams.prefs.get", "GET", "/teams/t1/prefs", None),
+    route("teams.prefs.update", "PUT", "/teams/t1/prefs", Some(r#"{"prefs":{"n":"{n}"}}"#)),
+    // Deletes its memberships too; the first identity allowed to wins.
+    route("teams.delete", "DELETE", "/teams/t2", None),
+    route("teams.delete.missing", "DELETE", "/teams/missing", None),
+    // An invitation by email: keys add a new user at once, the owner's
+    // session invites them (the email goes to the mails queue).
+    route(
+        "teams.memberships.create",
+        "POST",
+        "/teams/t1/memberships",
+        Some(r#"{"email":"i{n}@example.com","roles":["member"],"url":"http://localhost","name":"Invitee {n}"}"#),
+    ),
+    route(
+        "teams.memberships.create.user",
+        "POST",
+        "/teams/t1/memberships",
+        Some(r#"{"userId":"u3","roles":["editor"],"url":"http://localhost"}"#),
+    ),
+    route(
+        "teams.memberships.create.invalid",
+        "POST",
+        "/teams/t1/memberships",
+        Some(r#"{"roles":["member"],"url":"https://foreign.example"}"#),
+    ),
+    route("teams.memberships.list", "GET", "/teams/t1/memberships", None),
+    route("teams.memberships.get", "GET", "/teams/t1/memberships/m1", None),
+    route("teams.memberships.get.missing", "GET", "/teams/t1/memberships/missing", None),
+    route("teams.memberships.update", "PATCH", "/teams/t1/memberships/m2", Some(r#"{"roles":["member","n{n}"]}"#)),
+    route(
+        "teams.memberships.status",
+        "PATCH",
+        "/teams/t1/memberships/m3/status",
+        Some(r#"{"userId":"u4","secret":"compat-invite-secret"}"#),
+    ),
+    route(
+        "teams.memberships.status.invalid",
+        "PATCH",
+        "/teams/t1/memberships/m1/status",
+        Some(r#"{"userId":"u1","secret":"wrong"}"#),
+    ),
+    route("teams.memberships.delete", "DELETE", "/teams/t1/memberships/m2", None),
+    route("teams.memberships.delete.missing", "DELETE", "/teams/t1/memberships/missing", None),
 ];
 
 /// What else a request carries, beyond its identity and origin: the hooks
@@ -1273,11 +1411,9 @@ fn effect(args: &[String]) -> Option<Value> {
     }
 }
 
-/// The project's tables, as rows of text.
-async fn tables(
-    db: &tokio_postgres::Client,
-    prefix: &str,
-) -> Result<BTreeMap<String, Vec<Vec<Option<String>>>>, String> {
+/// The project's tables, as rows of text keyed by column (so a column's
+/// value is normalized by its name, as a document attribute is).
+async fn tables(db: &tokio_postgres::Client, prefix: &str) -> Result<Rows, String> {
     let names: Vec<String> = db
         .query(
             "SELECT tablename FROM pg_tables WHERE schemaname = 'appwrite' AND left(tablename, length($1)) = $1 ORDER BY 1",
@@ -1291,11 +1427,22 @@ async fn tables(
     let mut out = BTreeMap::new();
     for name in names {
         let mut rows = Vec::new();
-        for message in
-            db.simple_query(&format!("SELECT * FROM appwrite.\"{name}\"")).await.map_err(|e| format!("{name}: {e}"))?
+        for message in db
+            .simple_query(&format!("SELECT * FROM appwrite.\"{name}\" ORDER BY 1"))
+            .await
+            .map_err(|e| format!("{name}: {e}"))?
         {
             if let tokio_postgres::SimpleQueryMessage::Row(row) = message {
-                rows.push((0..row.len()).map(|i| row.get(i).map(str::to_owned)).collect());
+                let columns = row.columns();
+                // A permission row's `_id` is a counter no API shows: it
+                // drifts between the twins with every permission written.
+                let perms = name.ends_with("_perms");
+                rows.push(Value::Object(
+                    (0..row.len())
+                        .filter(|&i| !(perms && columns[i].name() == "_id"))
+                        .map(|i| (columns[i].name().to_owned(), row.get(i).map_or(Value::Null, |v| json!(v))))
+                        .collect(),
+                ));
             }
         }
         out.insert(name[prefix.len()..].to_owned(), rows);
@@ -1303,7 +1450,7 @@ async fn tables(
     Ok(out)
 }
 
-type Rows = BTreeMap<String, Vec<Vec<Option<String>>>>;
+type Rows = BTreeMap<String, Vec<Value>>;
 
 /// Rows each table gained and lost.
 fn delta(before: &Rows, after: &Rows) -> Value {
@@ -1435,6 +1582,24 @@ impl Normalizer {
         }
         if let Some(shape) = self.url_shape(&out) {
             return shape;
+        }
+        // A session store inside a longer string (a cookie, the
+        // `X-Fallback-Cookies` JSON), and a cookie's expiry time.
+        if out.contains("eyJ") {
+            out = embedded_sessions(&out);
+        }
+        // A token in a link (an invitation's `secret=`): random, of a fixed length.
+        if let Some(at) = out.find("secret=") {
+            let start = at + "secret=".len();
+            let run = out[start..].bytes().take_while(u8::is_ascii_hexdigit).count();
+            if run >= 32 {
+                out.replace_range(start..start + run, &format!("{{token length={run}}}"));
+            }
+        }
+        if let Some(at) = out.find("; expires=")
+            && let Some(end) = out[at + 2..].find(';')
+        {
+            out.replace_range(at + 2..at + 2 + end, "expires={time}");
         }
         if let Some(kind) = generated(&out) {
             // Two datetimes may share a millisecond in one run and not the
@@ -1624,6 +1789,31 @@ fn jwt_shape(s: &str) -> Option<String> {
     Some(format!("{{jwt header={header} claims={}}}", keys.join(",")))
 }
 
+/// `s` with each session store it contains (a run of base64 starting with
+/// `eyJ`) replaced by its [`session_shape`].
+fn embedded_sessions(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(at) = rest.find("eyJ") {
+        out.push_str(&rest[..at]);
+        let run = rest[at..]
+            .bytes()
+            .take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'/' | b'=' | b'%'))
+            .count();
+        let token = &rest[at..at + run];
+        let decoded = php_std::encoding::rawurldecode(token.as_bytes());
+        match session_shape(&String::from_utf8_lossy(&decoded)) {
+            Some((keys, id, length)) => {
+                out.push_str(&format!("{{session keys={keys} id={id} secret-length={length}}}"))
+            }
+            None => out.push_str(token),
+        }
+        rest = &rest[at + run..];
+    }
+    out.push_str(rest);
+    out
+}
+
 fn envelope_shape(s: &str) -> Option<String> {
     if !s.starts_with("{\"data\"") {
         return None;
@@ -1736,7 +1926,18 @@ async fn record(
         {
             // Purges are idempotent and independent: their order is not
             // observable. Messages keep their order.
-            if e.get("purge").is_some() { purges.push(e) } else { effects.push(e) }
+            if e.get("purge").is_some() {
+                // Likewise a purge of another project's cache (its tables'
+                // `_<sequence>` namespace).
+                if !other_namespace(&e.to_string(), twin.prefix.trim_matches('_')) {
+                    purges.push(e)
+                }
+            } else if e.to_string().contains(&twin.project) {
+                // Every message names its project: one that does not name
+                // the twin's is another run's on the same stack (a run
+                // sharing the runtime's address).
+                effects.push(e)
+            }
         }
     }
     let headers: Vec<Value> = reply
@@ -1812,6 +2013,27 @@ fn cookie_shape(header: &str) -> Value {
         })
         .collect();
     json!({"cookie": name, "value": values, "attributes": attributes})
+}
+
+/// Whether `s` names a project namespace (`_<sequence>` followed by `_` or
+/// `:`) other than `sequence`'s.
+fn other_namespace(s: &str, sequence: &str) -> bool {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while let Some(at) = s[i..].find('_') {
+        let start = i + at + 1;
+        let digits = bytes[start..].iter().take_while(|b| b.is_ascii_digit()).count();
+        let end = start + digits;
+        if digits > 0
+            && (start < 2 || !bytes[start - 2].is_ascii_alphanumeric())
+            && matches!(bytes.get(end), Some(b'_' | b':'))
+            && &s[start..end] != sequence
+        {
+            return true;
+        }
+        i = start;
+    }
+    false
 }
 
 /// The first path at which `a` and `b` differ.
@@ -1937,6 +2159,22 @@ mod tests {
         assert_eq!(args, vec!["LPUSH", "utopia-queue.queue.v1-events", r#"{"a":"x\"y"}"#]);
         let (_, args) = parse_monitor(r#"1.0 [0 127.0.0.1:1] "SET" "k" "\xff\x00""#).unwrap();
         assert_eq!(args[2], "\u{FFFD}\0");
+    }
+
+    #[test]
+    fn embedded_session_stores_keep_their_shape() {
+        // base64 of {"id":"u4","secret":"abcd"}
+        let cookie = "a_session_p=eyJpZCI6InU0Iiwic2VjcmV0IjoiYWJjZCJ9; path=/";
+        assert_eq!(embedded_sessions(cookie), "a_session_p={session keys=id,secret id=u4 secret-length=4}; path=/");
+        assert_eq!(embedded_sessions("eyJnope"), "eyJnope");
+    }
+
+    #[test]
+    fn other_projects_namespaces_are_told_apart() {
+        assert!(other_namespace("default-cache-postgresql:_208::collection:users", "207"));
+        assert!(!other_namespace("default-cache-postgresql:_207::collection:users", "207"));
+        assert!(!other_namespace("platform:console:keys:a_1", "207"));
+        assert!(other_namespace("appwrite._208_memberships", "207"));
     }
 
     #[test]

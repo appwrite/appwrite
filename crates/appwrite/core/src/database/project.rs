@@ -110,17 +110,17 @@ pub struct Project {
     pub webhooks: Vec<Webhook>,
     /// `oAuthProviders` (`<provider>Enabled`, `<provider>Appid`, ...).
     pub oauth_providers: Value,
-    /// `smtp` (custom SMTP settings).
-    pub smtp: Value,
-    /// `smtpBaseTemplate` (`email-base` by default).
-    pub smtp_base_template: String,
-    /// `templates` (custom email and SMS templates by `email.<type>-<locale>`).
-    pub templates: Value,
     /// `url`.
     pub url: String,
     /// `authWhitelistEmails` and `authWhitelistIPs` (console sign-up).
     pub auth_whitelist_emails: Vec<String>,
     pub auth_whitelist_ips: Vec<String>,
+    /// The custom SMTP server (`smtp`), `[]` when unset.
+    pub smtp: Value,
+    /// Custom email and SMS templates (`templates`), `[]` when unset.
+    pub templates: Value,
+    /// `smtpBaseTemplate`.
+    pub smtp_base_template: Option<String>,
 }
 
 impl Project {
@@ -224,12 +224,12 @@ impl Project {
             }],
             webhooks: Vec::new(),
             oauth_providers: Value::Object(oauth),
-            smtp: Value::Array(Vec::new()),
-            smtp_base_template: "email-base-styled".into(),
-            templates: Value::Array(Vec::new()),
             url: String::new(),
             auth_whitelist_emails: split("_APP_CONSOLE_WHITELIST_EMAILS"),
             auth_whitelist_ips: split("_APP_CONSOLE_WHITELIST_IPS"),
+            smtp: Value::Array(Vec::new()),
+            templates: Value::Array(Vec::new()),
+            smtp_base_template: None,
         }
     }
 
@@ -374,12 +374,12 @@ impl From<&Document> for Project {
                 .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
                 .collect(),
             oauth_providers: json_or_empty("oAuthProviders"),
-            smtp: json_or_empty("smtp"),
-            smtp_base_template: d.string("smtpBaseTemplate").unwrap_or_else(|| "email-base".to_owned()),
-            templates: json_or_empty("templates"),
             url: d.string_or_empty("url"),
             auth_whitelist_emails: d.strings("authWhitelistEmails"),
             auth_whitelist_ips: d.strings("authWhitelistIPs"),
+            smtp: json_or_empty("smtp"),
+            templates: json_or_empty("templates"),
+            smtp_base_template: d.string("smtpBaseTemplate"),
         }
     }
 }

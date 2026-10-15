@@ -1,7 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Search, X } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
-import { PageHeader, Section } from '@/components/Page'
+import { ContentColumn, DocAsideRow, PageHeader, Section } from '@/components/Page'
 import { SizeTable } from '@/components/Size'
 import { formatCount, loadLibrary, resolve, summary, type PhpFunction } from '@/lib/docs'
 
@@ -60,7 +60,8 @@ function FunctionsPage() {
   const rust = l.size?.rust
   const filtered = !!(term || group || kind)
   return (
-    <div className="grid min-w-0 gap-9">
+    <DocAsideRow reserveAside>
+      <ContentColumn>
       <PageHeader
         eyebrow={
           <Link to="/$lib" params={{ lib: l.slug }} className="hover:text-foreground">
@@ -168,7 +169,8 @@ function FunctionsPage() {
           ) : null
         })}
       </Section>
-    </div>
+      </ContentColumn>
+    </DocAsideRow>
   )
 }
 

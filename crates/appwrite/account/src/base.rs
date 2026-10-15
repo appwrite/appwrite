@@ -864,8 +864,9 @@ pub struct Mail {
 }
 
 impl Mail {
-    /// Publishes the message to the mails queue.
-    pub async fn send(self, ctx: &Context) {
+    /// Queues the message for the mails queue (published after the
+    /// request's created users' events, as PHP sends them).
+    pub async fn send(self, ctx: &mut Context) {
         let message = json!({
             "project": ctx.project.message_payload(),
             "recipient": self.recipient,
@@ -883,7 +884,8 @@ impl Mail {
             "platform": ctx.state.config.platform,
             "headers": [],
         });
-        ctx.enqueue(&ctx.state.config.queue_mails, &message).await;
+        let queue = ctx.state.config.queue_mails.clone();
+        ctx.events.queued.push((queue, message));
     }
 }
 
@@ -898,7 +900,8 @@ pub async fn send_sms(ctx: &mut Context, message_id: &str, content: &str, phone:
         "recipients": [phone],
         "providerType": "sms",
     });
-    ctx.enqueue(&ctx.state.config.queue_messaging, &message).await;
+    let queue = ctx.state.config.queue_messaging.clone();
+    ctx.events.queued.push((queue, message));
     if let Some(code) = appwrite_core::validators::calling_code(phone) {
         ctx.metric(&format!("auth.method.phone.{code}"), 1);
     }
@@ -930,7 +933,7 @@ pub async fn session_alert(ctx: &mut Context, user: &User, session: &Session) ->
     if sessions == 1 {
         return Ok(());
     }
-    let base = ctx.project.smtp_base_template.clone();
+    let base = smtp_base_template(ctx);
     if base.is_empty() || base.contains('/') || base.contains('\\') || base.contains("..") {
         return Err(Error::internal("Invalid template path"));
     }
@@ -1043,4 +1046,12 @@ fn text_json(value: &Option<String>) -> Json {
 /// carry it.
 pub fn act_as(ctx: &mut Context, user: &User) {
     ctx.events.actor = Some(user.message_payload());
+}
+
+/// `smtpBaseTemplate`: `email-base` by default, the styled one on the console.
+pub fn smtp_base_template(ctx: &Context) -> String {
+    ctx.project
+        .smtp_base_template
+        .clone()
+        .unwrap_or_else(|| if ctx.project.is_console() { "email-base-styled" } else { "email-base" }.to_owned())
 }

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LibRouteImport } from './routes/$lib'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as LibrariesRouteImport } from './routes/libraries'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
@@ -33,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 const LibRoute = LibRouteImport.update({
   id: '/$lib',
   path: '/$lib',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibrariesRoute = LibrariesRouteImport.update({
@@ -104,6 +110,7 @@ const LibPhpApiSplatRoute = LibPhpApiSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/changelog': typeof ChangelogRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lib': typeof LibRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
   '/$lib/$': typeof LibSplatRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lib'
+    | '/changelog'
     | '/libraries'
     | '/map'
     | '/$lib/$'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/changelog'
     | '/libraries'
     | '/map'
     | '/$lib/$'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lib'
+    | '/changelog'
     | '/libraries'
     | '/map'
     | '/$lib/$'
@@ -208,6 +220,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibRoute: typeof LibRouteWithChildren
+  ChangelogRoute: typeof ChangelogRoute
   LibrariesRoute: typeof LibrariesRoute
   MapRoute: typeof MapRoute
   AppwriteServiceRoute: typeof AppwriteServiceRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: '/$lib'
       fullPath: '/$lib'
       preLoaderRoute: typeof LibRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/libraries': {
@@ -350,6 +370,7 @@ const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibRoute: LibRouteWithChildren,
+  ChangelogRoute: ChangelogRoute,
   LibrariesRoute: LibrariesRoute,
   MapRoute: MapRoute,
   AppwriteServiceRoute: AppwriteServiceRoute,

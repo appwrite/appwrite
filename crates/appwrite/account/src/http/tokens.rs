@@ -176,7 +176,7 @@ async fn create_token(
 
 /// `$smtpBaseTemplate` (`FileName`-valid, else a bad request).
 fn base_template(ctx: &Context) -> Result<String> {
-    let name = ctx.project.smtp_base_template.clone();
+    let name = base::smtp_base_template(ctx);
     let valid = !name.is_empty()
         && name != "0"
         && name.chars().filter(|c| !matches!(c, '.' | '-' | '_')).all(|c| c.is_ascii_alphanumeric())
@@ -212,7 +212,7 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
     let redirect = base::Redirect::of(ctx);
     let url = ctx.optional_str("url", "", &redirect)?.unwrap_or_default();
     let phrase = utopia_validators::php::truthy(&ctx.optional("phrase", json!(false), &Boolean::STRICT)?);
-    if !ctx.state.config.smtp {
+    if ctx.state.config.smtp_host.is_empty() {
         return Err(Error::with_message(ErrorType::GeneralSmtpDisabled, "SMTP disabled"));
     }
     let phrase = if phrase { utopia_auth::proofs::Phrase::new().phrase() } else { String::new() };
@@ -291,7 +291,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &CustomId)?;
     let email = ctx.required_str("email", &EmailValidator::default())?;
     let phrase = utopia_validators::php::truthy(&ctx.optional("phrase", json!(false), &Boolean::STRICT)?);
-    if !ctx.state.config.smtp {
+    if ctx.state.config.smtp_host.is_empty() {
         return Err(Error::with_message(ErrorType::GeneralSmtpDisabled, "SMTP disabled"));
     }
     let phrase = if phrase { utopia_auth::proofs::Phrase::new().phrase() } else { String::new() };
@@ -370,7 +370,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
 pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &CustomId)?;
     let phone = ctx.required_str("phone", &Phone::default())?;
-    if !ctx.state.config.sms {
+    if ctx.state.config.sms_provider.is_empty() {
         return Err(Error::with_message(ErrorType::GeneralPhoneDisabled, "Phone provider not configured"));
     }
     let db = ctx.db()?;

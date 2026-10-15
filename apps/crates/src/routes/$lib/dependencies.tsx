@@ -3,7 +3,7 @@ import { ChevronRight, ExternalLink, Network } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { MigrationCard, MigrationOnly } from '@/components/Migration'
-import { StatusDot } from '@/components/Status'
+import { StatusDot, badge } from '@/components/Status'
 import { APPWRITE, loadLibrary, type Dependencies, type LibrarySummary, type PhpDependency, type RustDependency } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 
@@ -42,7 +42,7 @@ function Inline({ text }: { text: string }) {
 
 function Tag({ children, title }: { children: ReactNode; title?: string }) {
   return (
-    <span title={title} className="rounded bg-muted px-1.5 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+    <span title={title} className={`${badge} bg-muted text-muted-foreground`}>
       {children}
     </span>
   )

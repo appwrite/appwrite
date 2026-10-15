@@ -32,7 +32,7 @@ Rust crates live in `crates/`, not `packages/`. `packages/` is wired into Compos
 
 `crates/utopia/<name>` and `crates/support/php-std` are the writable home. `crates/appwrite/*` and `crates/tools/*` stay in this repository only.
 
-On every push to `main`, `split.yml` synthesizes each crate's history and pushes it to the mirror. Workspace inheritance (`version.workspace = true`, `bytes.workspace = true`) is expanded in that synthesized tree so a clone of the mirror builds standalone: third-party crates keep their crates.io versions, sibling Utopia crates become `git = "https://github.com/utopia-rs/<name>"`. Appwrite never sees that rewrite; it keeps using the workspace `path` entries.
+On every push to `main`, `split.yml` synthesizes each crate's history and pushes it to the mirror. Workspace inheritance (`version.workspace = true`, `bytes.workspace = true`) is expanded in that synthesized tree so a clone of the mirror builds standalone: third-party crates keep their crates.io versions, sibling Utopia crates become `git = "https://github.com/utopia-rs/<name>"`. Appwrite never sees that rewrite; it keeps using the workspace `path` entries. The mirrors are published under the license in `[workspace.metadata.utopia] mirror-license` of the root `Cargo.toml` (MIT): the split writes it into each mirror's `Cargo.toml`, `LICENSE` and README, while the source in this repository stays under the workspace's own license (BSD-3-Clause). Commits from before the setting keep their trees, so the mirrors' history is unchanged.
 
 | | PHP (`packages/<name>`) | Rust (`crates/utopia/<name>`) |
 |---|---|---|
@@ -73,6 +73,7 @@ PHP splits use the `utopia-php/monorepo` GitHub App (`SPLIT_APP_ID` / `SPLIT_APP
 | `utopia-dsn` | `packages/dsn` | DSN parsing |
 | `appwrite-core` | `src/Appwrite`, `app/` | config, errors catalogue, auth (keys, sessions, JWT, roles), crypto filter, documents, events, network (CORS, origin, IP), response models, request lifecycle |
 | `appwrite-users` | `Platform/Modules/Users` | all 47 `/v1/users` routes |
+| `appwrite-teams` | `Platform/Modules/Teams` | all 13 `/v1/teams` routes |
 | `appwrite-server` | `app/http.php` | process entry point, health probe |
 
 Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrite-*`, and service crates depend only on `appwrite-core` and Utopia crates. A Utopia crate is created only when a service needs it (Users needed the twelve above). Its internals are idiomatic Rust, not a mirror of the PHP class.
@@ -81,7 +82,7 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
 
 ```
              ┌──────────── Traefik ────────────┐
- client ───► │ /v1/users, /v1/users/*  (p=1000) │──► appwrite-rust :8080
+ client ───► │ /v1/users*, /v1/teams*  (p=1000) │──► appwrite-rust :8080
              │ everything else      (catch-all) │──► appwrite (PHP) :80
              └──────────────────────────────────┘
                      │                     │

@@ -538,7 +538,7 @@ pub async fn create_challenge(ctx: &mut Context) -> Result<Response> {
 
     match factor.as_str() {
         "phone" => {
-            if !ctx.state.config.sms {
+            if ctx.state.config.sms_provider.is_empty() {
                 return Err(Error::with_message(ErrorType::GeneralPhoneDisabled, "Phone provider not configured"));
             }
             let phone = user.phone.clone().unwrap_or_default();
@@ -551,7 +551,7 @@ pub async fn create_challenge(ctx: &mut Context) -> Result<Response> {
             base::send_sms(ctx, &challenge.id, &code, &phone).await;
         }
         "email" => {
-            if !ctx.state.config.smtp {
+            if ctx.state.config.smtp_host.is_empty() {
                 return Err(Error::with_message(ErrorType::GeneralSmtpDisabled, "SMTP disabled"));
             }
             let email = user.email.clone().unwrap_or_default();
@@ -576,7 +576,7 @@ async fn challenge_email(ctx: &mut Context, user: &User, email: &str, code: &str
     let preview = ctx.text("emails.mfaChallenge.preview", None);
     let heading = ctx.text("emails.mfaChallenge.heading", None);
     let custom = base::custom_template(ctx, "email.mfaChallenge");
-    let template = ctx.project.smtp_base_template.clone();
+    let template = base::smtp_base_template(ctx);
     let valid = !template.is_empty()
         && template != "0"
         && template.chars().filter(|c| !matches!(c, '.' | '-' | '_')).all(|c| c.is_ascii_alphanumeric());

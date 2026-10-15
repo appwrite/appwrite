@@ -1,26 +1,25 @@
 @import 'tailwindcss';
 
-/* The Utopia docs design system: a printed engineering catalogue. Warm paper
+/* The Utopia docs design system: a printed engineering catalogue. Dark paper
    and ink, the wordmark's red dot as the one accent, Archivo set wide for
    titles, Geist for text, Geist Mono for code, labels and figures. Square
-   corners, hairline rules, no shadows or gradients. Code panels are ink in
-   both themes. Colour otherwise comes only from the callout triplets
-   (status, and the yellow migration cards). */
+   corners, hairline rules, no shadows or gradients. Colour otherwise comes
+   only from the callout triplets (status, and the yellow migration cards). */
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --paper: #f5f2eb;
-  --paper-deep: #ece8de;
-  --paper-sunk: #e3ded2;
-  --ink: #14130f;
-  --ink-soft: #3d3a33;
-  --ink-mute: #77736a;
-  --rule: #d9d3c5;
-  --rule-strong: #b9b2a3;
+  --paper: #11100d;
+  --paper-deep: #1a1915;
+  --paper-sunk: #23211c;
+  --ink: #ece8de;
+  --ink-soft: #bdb8ab;
+  --ink-mute: #8a857a;
+  --rule: #2a2822;
+  --rule-strong: #46433a;
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: #faf8f3;
+  --card: #15140f;
   --muted: var(--paper-deep);
   --muted-foreground: var(--ink-mute);
   --accent: var(--paper-deep);
@@ -36,14 +35,13 @@
   --sidebar-strong: var(--ink);
   --brand: #6474ce;
   /* The accent: the wordmark's red dot. Used sparingly: markers, the active row, links on hover. */
-  --highlight: #e8173f;
-  --highlight-soft: rgba(232, 23, 63, 0.07);
-  --highlight-line: rgba(232, 23, 63, 0.4);
+  --highlight: #ff3d5f;
+  --highlight-soft: rgba(255, 61, 95, 0.09);
+  --highlight-line: rgba(255, 61, 95, 0.45);
 
-  /* Code panels are ink in both themes. */
-  --code-bg: #161510;
-  --code-header: #1d1c17;
-  --code-border: #2c2a23;
+  --code-bg: #0b0a08;
+  --code-header: #12110e;
+  --code-border: #2a2822;
   --code-header-fg: #a8a397;
   --code-plain: #ebe7dc;
   --code-module-keyword: #9fc2c9;
@@ -56,56 +54,6 @@
   --code-punctuation: #8f8a7d;
 
   /* Callout triplets: success, warning, info; planned is neutral. */
-  --ok: #2f9e55;
-  --ok-soft: #e6f0e1;
-  --ok-ink: #1d4d2c;
-  --progress: #c99a06;
-  --progress-soft: #f5edcf;
-  --progress-ink: #5f4708;
-  --started: #3a6fd8;
-  --started-soft: #e3e8f2;
-  --started-ink: #1f3a73;
-  --planned: #a29d91;
-  --planned-soft: var(--paper-deep);
-  --planned-ink: var(--ink-mute);
-  /* Migration cards: the design system's warning callout. */
-  --migration: #f6efcf;
-  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
-  --php: #7b85bd;
-  --rust: #d4692a;
-  /* The map: one colour per category. */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --chart-brand: oklch(0.55 0.24 358);
-  --migration-border: #e6d68a;
-  --migration-ink: #5f4708;
-
-  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
-  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
-}
-
-.dark {
-  --paper: #11100d;
-  --paper-deep: #1a1915;
-  --paper-sunk: #23211c;
-  --ink: #ece8de;
-  --ink-soft: #bdb8ab;
-  --ink-mute: #8a857a;
-  --rule: #2a2822;
-  --rule-strong: #46433a;
-  --card: #15140f;
-  --highlight: #ff3d5f;
-  --highlight-soft: rgba(255, 61, 95, 0.09);
-  --highlight-line: rgba(255, 61, 95, 0.45);
-  --code-bg: #0b0a08;
-  --code-header: #12110e;
-  --code-border: #2a2822;
   --ok: #4cbc72;
   --ok-soft: rgba(47, 158, 85, 0.14);
   --ok-ink: #bfe6c9;
@@ -116,9 +64,14 @@
   --started-soft: rgba(58, 111, 216, 0.16);
   --started-ink: #c9d8f7;
   --planned: #6c685e;
+  --planned-soft: var(--paper-deep);
+  --planned-ink: var(--ink-mute);
+  /* Migration cards: the design system's warning callout. */
   --migration: rgba(201, 154, 6, 0.1);
+  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
   --php: #9aa3d6;
   --rust: #ec8a4d;
+  /* The map: one colour per category. */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -127,6 +80,13 @@
   --chart-brand: oklch(0.6 0.26 358);
   --migration-border: #5a4a12;
   --migration-ink: #f1dfa0;
+
+  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
+  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
   color-scheme: dark;
 }
 
@@ -319,18 +279,95 @@
     border-color: var(--highlight);
     background: var(--highlight);
   }
-  /* Circuitry behind the hero: traces and vias in the rule colour, fading out towards the middle. */
+  /* Circuitry behind the hero (src/components/Circuit.tsx): traces and vias in the rule colour,
+     fading out towards the middle, with current running along some of them into their vias. */
   .circuit {
-    background-color: var(--rule-strong);
-    opacity: 0.4;
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
-    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
-    -webkit-mask-size: 280px 280px, 100% 100%;
-    mask-size: 280px 280px, 100% 100%;
-    -webkit-mask-repeat: repeat, no-repeat;
-    mask-repeat: repeat, no-repeat;
+    /* Clear behind the copy, and dissolving at every edge rather than cut off by the box. */
+    -webkit-mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
+  }
+  .circuit > rect {
+    opacity: 0.4;
+  }
+  .circuit .trace {
+    fill: none;
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  /* A faint pulse a sixth of the trace long, run from the tile's edge to the via in the first 15% of its clock: fast. */
+  .circuit .current {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 0.16 2;
+    stroke-dashoffset: 0.16;
+    opacity: 0.45;
+    animation: circuit-current var(--t) linear var(--d) infinite;
+  }
+  .circuit .current.glow {
+    stroke-width: 5;
+    opacity: 0.06;
+  }
+  .circuit .hot .current {
+    stroke: var(--highlight);
+  }
+  .circuit .hot .current:not(.glow) {
+    opacity: 0.6;
+  }
+  .circuit .spark {
+    fill: var(--ink);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: circuit-spark var(--t) ease-out var(--d) infinite;
+  }
+  .circuit .hot .spark {
+    fill: var(--highlight);
+  }
+  .circuit[data-idle] * {
+    animation-play-state: paused;
+  }
+  @keyframes circuit-current {
+    0% {
+      stroke-dashoffset: 0.16;
+    }
+    15%,
+    100% {
+      stroke-dashoffset: -1;
+    }
+  }
+  /* The via flares as the pulse arrives, then settles. */
+  @keyframes circuit-spark {
+    0%,
+    12% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    14% {
+      opacity: 0.45;
+      transform: scale(1.2);
+    }
+    30%,
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .circuit .current,
+    .circuit .spark {
+      display: none;
+    }
   }
   /* The red square: the wordmark's dot as a marker. */
   .marker {
@@ -346,18 +383,10 @@
    paper's tones, its blocks in three flat shades with ink hairlines, a thin
    trace between sockets, the accent for blocks in focus. */
 .factory {
-  --f-top: #fcfbf7;
-  --f-left: #e6e1d4;
-  --f-right: #cfc8b7;
-  --f-dim: var(--paper);
-  --p-top: var(--paper-deep);
-  --p-left: #d9d2c2;
-  --p-right: #c6bead;
-}
-.dark .factory {
   --f-top: #2b2924;
   --f-left: #1f1d19;
   --f-right: #171612;
+  --f-dim: var(--paper);
   --p-top: #181713;
   --p-left: #14130f;
   --p-right: #0f0e0b;
@@ -452,9 +481,6 @@
 }
 /* Floating: the board bobs a few pixels; its shadow on the ground tightens and fades as it rises. */
 .factory {
-  --f-shadow: 0.16;
-}
-.dark .factory {
   --f-shadow: 0.55;
 }
 .factory .shadow {

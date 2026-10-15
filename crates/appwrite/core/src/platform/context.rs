@@ -50,6 +50,10 @@ pub struct EventState {
     /// The `user` resource after the action replaced its attributes
     /// (`$user->setAttributes($profile)`): the events' user.
     pub actor: Option<Value>,
+    /// Messages for other worker queues (`(queue, message)`: mails, SMS),
+    /// published after the created users' events, as PHP's listeners send
+    /// those before the action's own publishers.
+    pub queued: Vec<(String, Value)>,
 }
 
 /// Request context.
@@ -314,16 +318,6 @@ impl Context {
     /// action's publishers do: `$publisherForMails->enqueue(...)`).
     pub async fn enqueue<T: Serialize>(&self, queue: &str, message: &T) {
         use utopia_queue::Publisher as _;
-        {
-            let mut listened = self.listened.lock().unwrap_or_else(|e| e.into_inner());
-            if !listened.users.is_empty() {
-                match serde_json::to_vec(message) {
-                    Ok(bytes) => listened.queued.push((queue.to_owned(), bytes)),
-                    Err(e) => tracing::warn!(error = %e, queue, "queue message encoding failed"),
-                }
-                return;
-            }
-        }
         let published = match (utopia_queue::Queue::new(queue), utopia_queue::payload(message)) {
             (Ok(queue), Ok(payload)) => self.state.publisher.publish(&queue, payload).await.map(|_| ()),
             (Err(e), _) | (_, Err(e)) => Err(e),
@@ -391,6 +385,20 @@ impl Context {
         super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found)
     }
 
+    /// The `redirectValidator` resource: `url` must be on an allowed
+    /// hostname or scheme. The error is the validator's description.
+    pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
+        let hosts = super::lifecycle::allowed_hostnames(
+            &self.state,
+            &self.project,
+            self.project_found,
+            &self.request,
+            self.rule_domain.as_deref(),
+        );
+        let schemes = super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found);
+        crate::network::validate_redirect(url, &hosts, &schemes)
+    }
+
     /// Plan flags (`$plan`); empty in CE.
     pub fn plan_allows(&self, flag: &str) -> bool {
         if self.project.is_console() {
@@ -428,9 +436,6 @@ pub struct Listened {
     /// A function was created, updated or deleted
     /// (`purge-function-events-cache`).
     pub functions: bool,
-    /// Messages published after a user was created: PHP's listener sends
-    /// the user's create events first, so these wait for them.
-    pub queued: Vec<(String, Vec<u8>)>,
 }
 
 /// Registers PHP's listeners on a project database.

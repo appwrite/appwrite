@@ -37,6 +37,7 @@ pub mod network;
 pub mod platform;
 pub mod request;
 pub mod response;
+pub mod template;
 pub mod validators;
 
 pub use error::{Error, ErrorType};

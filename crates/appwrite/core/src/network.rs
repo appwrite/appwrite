@@ -199,25 +199,17 @@ pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: 
     }
 }
 
-/// `Appwrite\Network\Validator\Redirect`: a redirect URL must go to an
-/// allowed hostname (web schemes) or an allowed scheme; the description is
-/// the PHP validator's.
+/// Redirect URL validation (`Network\Validator\Redirect`): the origin rules,
+/// with its own description on failure.
 pub fn validate_redirect(url: &str, allowed_hosts: &[String], allowed_schemes: &[String]) -> Result<(), String> {
     if url.is_empty() {
         return Err("Invalid URI.".to_owned());
     }
+    if validate_origin(url, allowed_hosts, allowed_schemes).is_ok() {
+        return Ok(());
+    }
     let scheme = url_scheme(url);
     let host = url_host(url).unwrap_or_default();
-    if let Some(s) = &scheme {
-        if WEB_SCHEMES.contains(&s.as_str()) {
-            let validator = Hostname::new(allowed_hosts.to_vec());
-            if host_allowed(&validator, &host) {
-                return Ok(());
-            }
-        } else if allowed_schemes.iter().any(|a| a == s) {
-            return Ok(());
-        }
-    }
     if host.is_empty() && scheme.is_none() {
         return Err("Invalid URI.".to_owned());
     }

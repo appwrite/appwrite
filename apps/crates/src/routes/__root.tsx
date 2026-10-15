@@ -1,12 +1,13 @@
 import { HeadContent, Outlet, Scripts, createRootRoute, useMatch, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import appCss from '../styles.css?url'
+import { Analytics } from '@/components/Analytics'
+import { Crumbs } from '@/components/Crumbs'
 import { Header } from '@/components/Header'
 import { FAVICON } from '@/components/Logo'
 import { Footer } from '@/components/Footer'
 import { LibraryMenu, Sidebar } from '@/components/Sidebar'
 import { loadIndex, type Navigation } from '@/lib/docs'
-import { THEME_SCRIPT, applyTheme, useTheme } from '@/lib/prefs'
 
 export const Route = createRootRoute({
   loader: () => loadIndex(),
@@ -28,7 +29,6 @@ export const Route = createRootRoute({
         href: 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap',
       },
     ],
-    scripts: [{ children: THEME_SCRIPT }],
   }),
   shellComponent: Shell,
   component: Layout,
@@ -36,7 +36,7 @@ export const Route = createRootRoute({
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
@@ -50,27 +50,16 @@ function Shell({ children }: { children: ReactNode }) {
 
 function Layout() {
   const index = Route.useLoaderData()
-  const theme = useTheme()
   const [menu, setMenu] = useState(false)
   const path = useRouterState({ select: (s) => s.location.pathname })
   const nav = useMatch({ from: '/$lib', shouldThrow: false })?.loaderData as Navigation | undefined
-  useEffect(() => applyTheme(theme), [theme])
-  useEffect(() => {
-    if (theme !== 'system') return
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const update = () => applyTheme('system')
-    media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [theme])
   useEffect(() => setMenu(false), [path])
   return (
     <div className="min-h-screen">
+      <Analytics />
       <Header onMenu={() => setMenu(true)} />
-      {/* Two menus, as in the Appwrite docs: the catalog, and beside it the open library's own menu. */}
-      <div className={`lg:grid ${nav ? 'lg:grid-cols-[240px_300px_minmax(0,1fr)]' : 'lg:grid-cols-[240px_minmax(0,1fr)]'}`}>
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-sidebar lg:block">
-          <Sidebar />
-        </aside>
+      {/* The site's pages are in the header; a library's pages add its own menu on the left. */}
+      <div className={nav ? 'lg:grid lg:grid-cols-[300px_minmax(0,1fr)]' : ''}>
         {nav ? (
           <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-sidebar lg:block">
             <LibraryMenu key={nav.library.slug} nav={nav} />
@@ -90,19 +79,9 @@ function Layout() {
           </div>
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
-          {index ? (
-            <>
-              <Outlet />
-              <Footer index={index} />
-            </>
-          ) : (
-            <div className="max-w-2xl border border-border bg-card p-5">
-              <h1 className="text-3xl">No documentation yet</h1>
-              <p className="mt-2 text-muted-foreground">
-                Generate it from the repository root with <code className="font-mono">bin/compat crates</code> (or <code className="font-mono">bun run generate</code> here), then reload.
-              </p>
-            </div>
-          )}
+          {nav ? null : <Crumbs />}
+          <Outlet />
+          {index ? <Footer index={index} /> : null}
         </main>
       </div>
     </div>

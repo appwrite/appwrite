@@ -1,7 +1,7 @@
 import { Link, getRouteApi } from '@tanstack/react-router'
 import { ArrowLeftRight, Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { dependents as dependentsOf, isTopLevel, moduleSplat, taskHash, type Navigation } from '@/lib/docs'
+import { dependents as dependentsOf, isTopLevel, moduleSplat, taskHash, type Index, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
@@ -9,15 +9,15 @@ import { useMigration } from '@/lib/prefs'
 const root = getRouteApi('__root__')
 
 // The active row: ink text and the red square before it.
-const row =
+export const row =
   'relative flex min-w-0 items-center gap-2 px-2 py-[5px] text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-sidebar-strong data-[status=active]:before:absolute data-[status=active]:before:top-1/2 data-[status=active]:before:-left-[11.5px] data-[status=active]:before:size-[6px] data-[status=active]:before:-translate-y-1/2 data-[status=active]:before:bg-highlight'
 
 /**
  * A menu item shown only in migration mode carries the migration marking (a yellow tint), so the
  * menu reads as the Rust docs plus what migration mode adds. Every such row and group goes through this.
  */
-const MIGRATION_TITLE = 'Shown in migration mode'
-const item = (migration?: boolean) => (migration ? `${row} nav-migration` : row)
+export const MIGRATION_TITLE = 'Shown in migration mode'
+export const item = (migration?: boolean) => (migration ? `${row} nav-migration` : row)
 
 // A group's title: mono capitals, so it never reads as one of the rows below.
 const heading = 'label mt-3 px-2 pt-2 pb-1 text-muted-foreground first:mt-0 first:pt-1'
@@ -183,12 +183,22 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   )
 }
 
+/**
+ * The categories the menus list: those with a library to show (with a crate, or any in migration
+ * mode), each with how many it shows and whether one has a crate (if none, it carries the migration marking).
+ */
+export function menuCategories(index: Index, migration: boolean) {
+  const bySlug = new Map(index.libraries.map((l) => [l.slug, l]))
+  return index.categories.flatMap((category) => {
+    const libs = category.libraries.map((s) => bySlug.get(s)).filter((l) => l && (migration || l.rust))
+    return libs.length ? [{ category, count: libs.length, rust: libs.some((l) => l?.rust) }] : []
+  })
+}
+
+/** The site's pages and categories as a column: the header's menu, in the drawer on small screens. */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const index = root.useLoaderData()
   const migration = useMigration()
-  if (!index) return null
-  // A category is in the menu when it has a library to show: with a crate, or any in migration mode.
-  const bySlug = new Map(index.libraries.map((l) => [l.slug, l]))
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
       <div className="grid gap-px">
@@ -201,26 +211,28 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Link to="/map" className={row}>
           Map
         </Link>
-        <MigrationOnly>
-          <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
-            <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-            Appwrite migration
-          </Link>
-        </MigrationOnly>
+        <Link to="/changelog" className={row}>
+          Changelog
+        </Link>
+        {index ? (
+          <MigrationOnly>
+            <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
+              <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+              Appwrite migration
+            </Link>
+          </MigrationOnly>
+        ) : null}
       </div>
-      <Section title="Categories">
-        {index.categories.map((c) => {
-          const libs = c.libraries.map((s) => bySlug.get(s)).filter((l) => l && (migration || l.rust))
-          if (!libs.length) return null
-          const rust = libs.some((l) => l?.rust)
-          return (
+      {index ? (
+        <Section title="Categories">
+          {menuCategories(index, migration).map(({ category: c, count, rust }) => (
             <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
               <span className="truncate">{c.title}</span>
-              <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{libs.length}</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{count}</span>
             </Link>
-          )
-        })}
-      </Section>
+          ))}
+        </Section>
+      ) : null}
     </nav>
   )
 }

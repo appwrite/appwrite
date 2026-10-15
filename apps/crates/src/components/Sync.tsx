@@ -2,13 +2,14 @@ import { CheckCircle2, GitCommitHorizontal, GitMerge, Tag, TriangleAlert } from 
 import { commitUrl, releaseUrl, type Commit, type LibrarySummary, type Sync } from '@/lib/docs'
 import { day } from '@/lib/time'
 import { Time } from './Time'
+import { badge } from './Status'
 
 /** A short sync badge for cards and lists. */
 export function SyncBadge({ sync }: { sync: LibrarySummary['sync'] }) {
   const pending = (sync.behind ?? 0) + (sync.upstream ?? 0)
   if (sync.state === 'behind' || pending)
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-progress-soft px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-progress-ink" title="PHP changed since the Rust crate last matched it">
+      <span className={`${badge} bg-progress-soft text-progress-ink`} title="PHP changed since the Rust crate last matched it">
         <TriangleAlert className="size-3" />
         {pending} behind PHP
       </span>

@@ -6,6 +6,7 @@ import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { PhpCounterpart } from '@/components/Php'
 import { PhpNotes } from '@/components/Migration'
+import { badge } from '@/components/Status'
 import {
   KIND_LABEL,
   KIND_ORDER,
@@ -247,7 +248,7 @@ function Legend({ kinds, counts }: { kinds: string[]; counts: boolean }) {
 
 function Badge({ kind }: { kind: string }) {
   const b = BADGE[kind] ?? BADGE.fn
-  return <span className={`grid size-4 flex-none place-items-center rounded-[4px] font-mono text-[9.5px] font-semibold ${b.tone}`}>{b.letter}</span>
+  return <span className={`grid size-4 flex-none place-items-center font-mono text-[9.5px] font-semibold ${b.tone}`}>{b.letter}</span>
 }
 
 /** The section the reader is in: the last anchor above the fold line. */
@@ -445,7 +446,7 @@ function ItemSection({ entry }: { entry: Entry }) {
         <a href={`#${itemHash(item.name)}`} className="font-mono text-[19px] font-medium tracking-tight hover:underline">
           {item.name}
         </a>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{KIND_LABEL[item.kind]}</span>
+        <span className={`${badge} bg-muted text-muted-foreground`}>{KIND_LABEL[item.kind]}</span>
         <span className="flex-1" />
         <Source file={item.file} line={item.line} />
       </div>
@@ -539,7 +540,7 @@ function ModulePage() {
           }
           title={module.path ? parts[parts.length - 1] : 'Crate root'}
           mono={!!module.path}
-          aside={<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">Module</span>}
+          aside={<span className={`${badge} bg-muted text-muted-foreground`}>Module</span>}
         >
           {module.path ? null : `What ${crate} defines at its root.`}
         </PageHeader>

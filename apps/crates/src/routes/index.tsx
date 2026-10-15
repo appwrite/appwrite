@@ -24,7 +24,16 @@ function Home() {
     const components = graph?.nodes.find((n) => n.id === APPWRITE)?.components
     return components && index ? plan(components, new Set(index.libraries.filter((l) => l.rust).map((l) => l.slug))) : null
   }, [graph, index])
-  if (!index) return null
+  if (!index) {
+    return (
+      <div className="max-w-2xl border border-border bg-card p-5">
+        <h1 className="text-3xl">No documentation yet</h1>
+        <p className="mt-2 text-muted-foreground">
+          Generate it from the repository root with <code className="font-mono">bin/compat crates</code> (or <code className="font-mono">bun run generate</code> here), then reload.
+        </p>
+      </div>
+    )
+  }
   const set = (patch: Filters) => navigate({ search: (s) => ({ ...s, ...patch }), replace: true, resetScroll: false })
   return (
     <div className="mx-auto grid max-w-[1100px] gap-10">

@@ -9,6 +9,7 @@ import type { ReactNode } from 'react'
 import { bytes, commitUrl, duration, times } from '@/lib/docs'
 import { absolute } from '@/lib/time'
 import { Time } from './Time'
+import { badge } from './Status'
 
 const num = (v: number) => (v >= 100 ? Math.round(v).toLocaleString('en') : v.toFixed(v >= 10 ? 1 : 2))
 
@@ -81,7 +82,7 @@ export function Verdict({ x, metric = 'time', goal = 'win', long = false, title 
         ? 'bg-ok-soft text-ok-ink'
         : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'
   return (
-    <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[11px] font-semibold whitespace-nowrap tabular-nums ${tone}`} title={title}>
+    <span className={`${badge} tabular-nums ${tone}`} title={title}>
       {parity ? 'at parity' : `${ratio(x)} ${better ? words[0] : words[1]}`}
     </span>
   )
@@ -207,7 +208,7 @@ export function GoalNote({ kind, reason }: { kind: 'bound' | 'compat'; reason: s
       : 'Times a PHP-compatibility codec no Rust hot path uses: published, never gated, left out of averages'
   return (
     <div className="mt-0.5 text-[11.5px] text-muted-foreground" title={hint}>
-      <span className="rounded bg-muted px-1 py-px text-[10.5px] font-medium">{kind}</span> {reason}
+      <span className={`${badge} bg-muted text-muted-foreground`}>{kind}</span> {reason}
     </div>
   )
 }
