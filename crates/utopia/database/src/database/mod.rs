@@ -58,10 +58,16 @@ mod retry;
 mod scopes;
 mod transactions;
 
+#[cfg(all(test, feature = "memory"))]
+mod cache_engine_tests;
 #[cfg(test)]
 mod core_memory_tests;
 #[cfg(test)]
 mod core_tests;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod cache_fixtures;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod observed;
 #[cfg(test)]
 pub(crate) mod fixtures;
 #[cfg(test)]

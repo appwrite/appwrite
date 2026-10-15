@@ -1,8 +1,8 @@
 //! Tests of the query cache, its invalidation and its owners.
 //!
-//! PHP: `Cache\QueryTest` and `Cache\OwnersTest` (the tests that need no
-//! PHPUnit `Cache` stub beyond what an adapter can play, nor the
-//! `OwnershipCache`/`InvalidationCache` adapters that pause activations).
+//! PHP: `Cache\QueryTest` and `Cache\OwnersTest`; the adapters PHP builds
+//! these on (`RedisLeasableCache`, `OwnershipCache`, stubbed `Cache`s) are
+//! played by [`Leasable`].
 
 use std::sync::Arc;
 
@@ -918,5 +918,196 @@ fn flush_failure_is_reported() {
             Ok(()) => {}
             Err(e) => assert_eq!(e.message(), "Failed to flush query cache"),
         }
+    });
+}
+
+// ---- The cases PHP runs on `OwnershipCache` and stubbed `Cache`s --------
+
+/// PHP's `OwnershipCache`: one value per key, generations, no fields.
+fn ownership() -> (Arc<Leasable>, Arc<Cache>) {
+    let adapter = Leasable::plain_leased();
+    let cache = over(&adapter);
+    (adapter, cache)
+}
+
+#[test]
+fn concurrent_owners_cannot_enable_the_cache_early() {
+    block_on(async {
+        for iteration in 0..10 {
+            let (adapter, _) = ownership();
+            let first = query_cache(over(&adapter));
+            let second = Arc::new(query_cache(over(&adapter)));
+            let reader = Arc::new(query_cache(over(&adapter)));
+            let key = reader.collection_key(&scope_ns(), "users");
+            let first_token = format!("first-{iteration}");
+            let second_token = format!("second-{iteration}");
+
+            let e = entry(&reader, &scope_ns(), "users", &no_queries(), "").await.unwrap();
+            assert!(fill(&reader, &e, "old").await);
+            assert_eq!(ids(query_cache(over(&adapter)).get(&e).await.unwrap()), ["old"]);
+
+            first.block_collection(&key, &first_token).await.unwrap();
+            let (paused_second, paused_reader, paused_key, paused_token) =
+                (second.clone(), reader.clone(), key.clone(), second_token.clone());
+            adapter.before_next_activation(async move {
+                paused_second.block_collection(&paused_key, &paused_token).await.unwrap();
+                assert!(entry(&paused_reader, &scope_ns(), "users", &no_queries(), "").await.is_none());
+            });
+            first.activate_collection(&key, &first_token, Scope::WRITER_TIMEOUT).await.unwrap();
+            assert!(entry(&reader, &scope_ns(), "users", &no_queries(), "").await.is_none());
+
+            second.activate_collection(&key, &second_token, Scope::WRITER_TIMEOUT).await.unwrap();
+            let fresh = entry(&reader, &scope_ns(), "users", &no_queries(), "").await.expect("enabled");
+            assert_eq!(reader.get(&fresh).await.unwrap(), None);
+            assert!(fill(&reader, &fresh, "fresh").await);
+            assert_eq!(ids(query_cache(over(&adapter)).get(&fresh).await.unwrap()), ["fresh"]);
+        }
+    });
+}
+
+#[test]
+fn an_epoch_published_after_a_later_finish_stays_usable() {
+    block_on(async {
+        let (adapter, cache) = ownership();
+        let q = Arc::new(query_cache(cache));
+        let key = q.collection_key(&scope_ns(), "users");
+        q.block_collection(&key, "first").await.unwrap();
+        let (paused, paused_key) = (q.clone(), key.clone());
+        adapter.before_next_activation(async move {
+            paused.block_collection(&paused_key, "second").await.unwrap();
+            paused.activate_collection(&paused_key, "second", Scope::WRITER_TIMEOUT).await.unwrap();
+        });
+        q.activate_collection(&key, "first", Scope::WRITER_TIMEOUT).await.unwrap();
+        let e = entry(&q, &scope_ns(), "users", &no_queries(), "").await.expect("usable once every writer finished");
+        assert!(fill(&q, &e, "fresh").await);
+        assert_eq!(ids(q.get(&e).await.unwrap()), ["fresh"]);
+    });
+}
+
+#[test]
+fn a_tombstone_older_than_its_region_still_blocks_while_its_writer_is_in_flight() {
+    block_on(async {
+        let (_, cache) = ownership();
+        let q = query_cache(cache);
+        q.set_region("users", Region { ttl: 0, enabled: true });
+        let key = q.collection_key(&Scope::default(), "users");
+        let stale = entry(&q, &Scope::default(), "users", &no_queries(), "").await.unwrap();
+        assert!(fill(&q, &stale, "stale").await);
+        q.block_collection(&key, "writer").await.unwrap();
+        assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
+        q.activate_collection(&key, "writer", Scope::WRITER_TIMEOUT).await.unwrap();
+        q.set_region("users", Region::default());
+        let fresh = entry(&q, &Scope::default(), "users", &no_queries(), "").await.expect("a fresh epoch");
+        assert_eq!(q.get(&fresh).await.unwrap(), None);
+        assert!(fill(&q, &fresh, "fresh").await);
+        assert_eq!(ids(q.get(&fresh).await.unwrap()), ["fresh"]);
+    });
+}
+
+#[test]
+fn a_cache_flush_during_or_before_activation_does_not_fail_the_invalidation() {
+    block_on(async {
+        for during in [true, false] {
+            let (adapter, cache) = ownership();
+            let q = query_cache(cache);
+            let key = q.collection_key(&Scope::default(), "users");
+            q.block_collection(&key, "owner").await.unwrap();
+            if during {
+                let weak = Arc::downgrade(&adapter);
+                let armed = std::sync::atomic::AtomicBool::new(true);
+                adapter.on_purge(move |key, _| {
+                    (key.ends_with("#finished") && armed.swap(false, std::sync::atomic::Ordering::SeqCst)).then(|| {
+                        weak.upgrade().unwrap().flush_now();
+                        Ok(true)
+                    })
+                });
+            } else {
+                adapter.flush_now();
+            }
+            q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap();
+            assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_some(), "during: {during}");
+        }
+    });
+}
+
+#[test]
+fn an_activation_purge_failure_still_propagates() {
+    block_on(async {
+        let (adapter, cache) = ownership();
+        let q = query_cache(cache);
+        let key = q.collection_key(&Scope::default(), "users");
+        q.block_collection(&key, "owner").await.unwrap();
+        adapter.on_purge(|key, _| key.ends_with("#finished").then_some(Ok(false)));
+        let error = q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap_err();
+        assert_eq!(error.kind(), Kind::Runtime);
+        assert!(error.message().contains("finish query cache invalidation"), "{}", error.message());
+        assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
+    });
+}
+
+#[test]
+fn an_invalidation_propagates_a_cache_write_failure() {
+    block_on(async {
+        let (adapter, cache) = leasable();
+        let q = query_cache(cache);
+        adapter.on_save(|_, hash, _| hash.is_empty().then_some(Ok(false)));
+        let error = q.invalidate_collection(&Scope::default(), "users").await.unwrap_err();
+        assert_eq!(error.kind(), Kind::Runtime);
+        assert!(error.message().contains("Failed to block query cache epoch"), "{}", error.message());
+    });
+}
+
+#[test]
+fn a_flushed_writer_leaves_another_writers_tombstone_in_place() {
+    block_on(async {
+        let (adapter, cache) = ownership();
+        let q = query_cache(cache);
+        let key = q.collection_key(&scope_ns(), "users");
+        q.block_collection(&key, "first").await.unwrap();
+        adapter.flush_now();
+        q.block_collection(&key, "second").await.unwrap();
+        q.activate_collection(&key, "first", Scope::WRITER_TIMEOUT).await.unwrap();
+        assert!(entry(&q, &scope_ns(), "users", &no_queries(), "").await.is_none());
+        q.activate_collection(&key, "second", Scope::WRITER_TIMEOUT).await.unwrap();
+        assert!(entry(&q, &scope_ns(), "users", &no_queries(), "").await.is_some());
+    });
+}
+
+#[test]
+fn an_owner_released_by_a_concurrent_flush_is_not_reported() {
+    block_on(async {
+        let (adapter, cache) = leasable();
+        let q = query_cache(cache);
+        let key = q.collection_key(&scope_ns(), "users");
+        q.block_collection(&key, "owner").await.unwrap();
+        let weak = Arc::downgrade(&adapter);
+        let armed = std::sync::atomic::AtomicBool::new(true);
+        adapter.on_purge(move |_, hash| {
+            if !hash.is_empty() && armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
+                weak.upgrade().unwrap().flush_now();
+            }
+            None
+        });
+        q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap();
+        let e = entry(&q, &scope_ns(), "users", &no_queries(), "").await.expect("a fresh epoch");
+        assert!(fill(&q, &e, "fresh").await);
+        assert_eq!(ids(q.get(&e).await.unwrap()), ["fresh"]);
+    });
+}
+
+#[test]
+fn an_invalidation_propagates_an_owner_registration_failure() {
+    block_on(async {
+        let (adapter, cache) = leasable();
+        let q = query_cache(cache);
+        adapter.on_save(|_, hash, _| (!hash.is_empty()).then_some(Ok(false)));
+        let before = entry(&q, &Scope::default(), "users", &no_queries(), "").await.unwrap();
+        // The fill saves under a field too: let it through.
+        adapter.on_save(|key, hash, _| (!hash.is_empty() && key.ends_with("#owners")).then_some(Ok(false)));
+        assert!(fill(&q, &before, "cached").await);
+        let error = q.invalidate_collection(&Scope::default(), "users").await.unwrap_err();
+        assert!(error.message().contains("Failed to register query cache owner"), "{}", error.message());
+        let after = entry(&q, &Scope::default(), "users", &no_queries(), "").await.expect("not blocked");
+        assert_eq!(ids(q.get(&after).await.unwrap()), ["cached"]);
     });
 }
