@@ -17,7 +17,6 @@ use crate::database::fixtures::{
     with_id,
 };
 use crate::database::observed::{Observed, Op};
-use crate::document::Document;
 use crate::error::{Error, Kind};
 use crate::index::Index;
 use crate::permission::{Permission, PermissionType};

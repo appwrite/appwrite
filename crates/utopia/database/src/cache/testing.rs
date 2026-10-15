@@ -240,14 +240,6 @@ impl Leasable {
         self.intercepts.write().unwrap().generation = Some(Box::new(move |k, _, _| intercept(k)));
     }
 
-    /// `failActivations()`: an active epoch is not saved.
-    pub(crate) fn fail_activations(&self) {
-        self.on_save(|key, _, data| {
-            (key.ends_with("#epoch") && matches!(data, Value::Str(s) if s.as_bytes().starts_with(b"active:")))
-                .then_some(Ok(false))
-        });
-    }
-
     /// `failBlocks()`: a tombstone is not saved.
     pub(crate) fn fail_blocks(&self) {
         self.on_save(|key, _, data| {
@@ -291,12 +283,6 @@ impl Leasable {
     pub(crate) fn operations(&self) -> usize {
         self.state().operations
     }
-
-    /// The loads of each key (`CountingCache::getLoads()`).
-    pub(crate) fn loads(&self) -> HashMap<String, usize> {
-        self.state().loads.clone()
-    }
-
     /// `CountingCache::resetOperations()`.
     pub(crate) fn reset_operations(&self) {
         let mut state = self.state();
@@ -323,12 +309,6 @@ impl Leasable {
         keys.extend(state.generations.keys().map(|k| (k.clone(), ())));
         keys.into_keys().collect()
     }
-
-    /// The keys holding a value.
-    pub(crate) fn stored_keys(&self) -> Vec<String> {
-        self.state().fields.keys().cloned().collect()
-    }
-
     /// `countValues()`: every value the cache holds, leaving out generations.
     pub(crate) fn count_values(&self) -> usize {
         self.state().fields.values().map(IndexMap::len).sum()

@@ -8,7 +8,7 @@ use crate::adapter::Adapter;
 use crate::cache::Query as QueryCache;
 use crate::cache::testing::{Leasable, over};
 use crate::database::fixtures::run;
-use crate::database::fixtures::{collection, doc, string, uncached_twin, unique, with_id};
+use crate::database::fixtures::{collection, doc, string, uncached_twin, unique};
 use crate::database::observed::{Observed, Op};
 use crate::database::{Database, METADATA, TTL};
 use crate::error::Result;
