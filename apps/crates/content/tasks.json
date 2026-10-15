@@ -1,6 +1,22 @@
 {
-  "updated": "2026-10-15T19:17:00Z",
+  "updated": "2026-10-15T20:02:00Z",
   "tasks": [
+    {
+      "id": "db-lanes-ci",
+      "title": "Database lanes as CI runs them",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-15T20:02:00Z",
+      "note": "CI's Postgres lane: 786 differences. About 178 are aggregate values typed as strings in Rust where PHP returns numbers; about 25 cases cascade from PHP 8.1.3 losing a transaction under load, which the runner will retry once and log."
+    },
+    {
+      "id": "async-adapter",
+      "title": "Async engine behind an adapter (utopia-async)",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-15T20:30:00Z",
+      "note": "Tokio moves behind utopia-async: an Adapter trait (the engine contract) with a Tokio adapter, and a facade every crate uses (spawn, sleep, timeout, net, fs, process, signals, hyper glue, #[utopia_async::test]). No crate but utopia-async names tokio."
+    },
     {
       "id": "users-ci-parity",
       "title": "Users parity: 44 differences in CI",
