@@ -10,6 +10,12 @@
   already could. `setup()` adds the column to an existing event table, and the
   daily materialized view still groups by resource identity, so billing sums
   every member.
+- `Usage::migrate()` brings an existing schema up to date (tables, the daily
+  materialized view, columns, skip indexes and projections) without touching
+  retention. `setup()` is now `migrate()` followed by the retention TTL, so a
+  deployment can roll out a new column without re-applying a TTL it has not
+  reviewed. Adapters inherit a `migrate()` that runs `setup()`; the ClickHouse
+  adapter overrides it.
 
 ### Breaking
 
