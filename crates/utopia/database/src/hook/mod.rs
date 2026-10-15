@@ -25,7 +25,7 @@
 //! `PreparedCreate`). The MongoDB hooks come with its adapter.
 
 pub mod permissions;
-#[allow(dead_code)] // until the relationships area lands
+#[allow(dead_code)] // until the writes area calls the hook
 pub mod relationships;
 
 pub use permissions::Permissions;
