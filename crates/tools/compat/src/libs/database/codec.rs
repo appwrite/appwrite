@@ -102,6 +102,12 @@ pub fn decode(json: &Json) -> D<Value> {
                 if let Some(bson) = o.get("$bson") {
                     return decode_bson(bson);
                 }
+                // A backed enum case held in a value: its backing value.
+                if let Some(Json::String(tag)) = o.get("$enum")
+                    && let Some(backing) = super::enums::parse_tag(tag).as_ref().and_then(super::enums::backing_value)
+                {
+                    return Ok(Value::Str(Str::from(backing)));
+                }
             }
             Value::Array(
                 o.iter()

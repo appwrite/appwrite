@@ -299,7 +299,9 @@ fn section_settings<'a>(
                 Obj::null()
             }
             "setDocumentType" => {
-                db.set_document_type(&s("collection")?, &s("className")?);
+                let class = s("className")?;
+                check_document_class(&class)?;
+                db.set_document_type(&s("collection")?, &class);
                 this(db)
             }
             "getDocumentType" => db.document_type(&s("collection")?).into_obj(),
@@ -899,6 +901,34 @@ fn section_raw_statements<'a>(
             _ => return Ok(None),
         }))
     })
+}
+
+/// The document classes the PHP driver has loaded (the e2e suite's custom
+/// document types); PHP's `setDocumentType()` refuses a class that does not
+/// exist or does not extend `Document`, which Rust, without classes, checks
+/// here against what the PHP process holds.
+const DOCUMENT_CLASSES: [&str; 4] = [
+    "Utopia\\Database\\Document",
+    "Utopia\\Database\\Collection",
+    "Tests\\E2E\\Adapter\\Support\\User",
+    "Tests\\E2E\\Adapter\\Support\\Post",
+];
+
+/// `setDocumentType()`'s `class_exists()` and `is_subclass_of()` checks,
+/// for the PHP driver's classes (`stdClass` and the library's other
+/// classes exist and are no documents).
+fn check_document_class(class: &str) -> R<()> {
+    let class = class.trim_start_matches('\\');
+    if DOCUMENT_CLASSES.contains(&class) && class != "Utopia\\Database\\Document" {
+        return Ok(());
+    }
+    let exists = class == "stdClass" || class.starts_with("Utopia\\") || DOCUMENT_CLASSES.contains(&class);
+    let message = if exists {
+        format!("Class {class} must extend Utopia\\Database\\Document")
+    } else {
+        format!("Class {class} does not exist")
+    };
+    Err(Fail::Error(Error::new(utopia_database::Kind::Database, message)))
 }
 
 fn cb_named(calls: &Calls, a: &Args, name: &str) -> R<Cb> {

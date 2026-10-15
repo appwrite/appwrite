@@ -191,3 +191,30 @@ pub fn parse_tag(tag: &str) -> Option<EnumCase> {
     let at = tag.rfind("::")?;
     Some(EnumCase { class: tag[..at].to_owned(), case: tag[at + 2..].to_owned() })
 }
+
+fn backing<E: PhpEnum>(case: &EnumCase) -> Option<&'static str> {
+    from_case::<E>(case).and_then(PhpEnum::backing)
+}
+
+/// The backing value of a backed enum case (`->value`): what an enum held
+/// in a plain value (a document attribute) stands for in Rust, whose values
+/// hold no enum objects. The library reads either (`ColumnType|string`).
+pub fn backing_value(case: &EnumCase) -> Option<&'static str> {
+    backing::<ColumnType>(case)
+        .or_else(|| backing::<IndexType>(case))
+        .or_else(|| backing::<ForeignKeyAction>(case))
+        .or_else(|| backing::<Order>(case))
+        .or_else(|| backing::<OrderDirection>(case))
+        .or_else(|| backing::<CursorDirection>(case))
+        .or_else(|| backing::<NullsPosition>(case))
+        .or_else(|| backing::<Method>(case))
+        .or_else(|| backing::<JoinType>(case))
+        .or_else(|| backing::<RelationshipType>(case))
+        .or_else(|| backing::<RelationshipSide>(case))
+        .or_else(|| backing::<RelationshipDeleteAction>(case))
+        .or_else(|| backing::<Event>(case))
+        .or_else(|| backing::<OperatorType>(case))
+        .or_else(|| backing::<Filter>(case))
+        .or_else(|| backing::<PermissionType>(case))
+        .or_else(|| backing::<SetType>(case))
+}

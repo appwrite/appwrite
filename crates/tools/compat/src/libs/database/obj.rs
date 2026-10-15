@@ -208,3 +208,8 @@ pub fn marker(tag: &str) -> Json {
 /// An `Arc` held as an object (services: the same object for every clone).
 #[derive(Clone)]
 pub struct Shared<T: ?Sized + Send + Sync>(pub Arc<T>);
+
+/// A result already in its wire form (`db.log`'s entries).
+#[derive(Clone)]
+pub struct Raw(pub Json);
+crate::php_object!(Raw, "array", |r| r.0.clone());

@@ -40,7 +40,7 @@ pub async fn call(op: &str, json: &Json, a: &Args) -> R<Obj> {
             cx.set_current(db);
             return Ok(true.into_obj());
         }
-        "db.log" => return Ok(Obj::Value(codec::decode(&Json::Array(cx.take_log()))?)),
+        "db.log" => return Ok(Obj::object(super::obj::Raw(Json::Array(cx.take_log())))),
         "db.add_format" => {
             fixtures::add_format(&a.string("name")?)?;
             return Ok(true.into_obj());
