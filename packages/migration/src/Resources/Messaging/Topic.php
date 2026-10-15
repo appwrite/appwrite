@@ -11,6 +11,8 @@ class Topic extends Resource
      * @param string $id
      * @param string $name
      * @param array<string> $subscribe
+     * @param int|null $qos MQTT delivery QoS for the topic; null lets the subscriber choose
+     * @param int|null $expiry Offline delivery retention in seconds; null inherits the providers' expiry
      */
     public function __construct(
         string $id,
@@ -18,6 +20,8 @@ class Topic extends Resource
         private readonly array $subscribe = [],
         protected string $createdAt = '',
         protected string $updatedAt = '',
+        private readonly ?int $qos = null,
+        private readonly ?int $expiry = null,
     ) {
         $this->id = $id;
     }
@@ -34,6 +38,8 @@ class Topic extends Resource
             $array['subscribe'] ?? [],
             $array['createdAt'] ?? '',
             $array['updatedAt'] ?? '',
+            $array['qos'] ?? null,
+            $array['expiry'] ?? null,
         );
     }
 
@@ -48,6 +54,8 @@ class Topic extends Resource
             'subscribe' => $this->subscribe,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
+            'qos' => $this->qos,
+            'expiry' => $this->expiry,
         ];
     }
 
@@ -72,5 +80,15 @@ class Topic extends Resource
     public function getSubscribe(): array
     {
         return $this->subscribe;
+    }
+
+    public function getQos(): ?int
+    {
+        return $this->qos;
+    }
+
+    public function getExpiry(): ?int
+    {
+        return $this->expiry;
     }
 }

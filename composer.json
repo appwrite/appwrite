@@ -174,7 +174,7 @@
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
         "psr/container": "^2.0",
-        "appwrite/appwrite": "^30.2.2",
+        "appwrite/appwrite": "^30.4.0",
         "halaxa/json-machine": "^1.2",
         "web-auth/webauthn-lib": "^5.3"
     },

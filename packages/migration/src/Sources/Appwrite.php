@@ -6,6 +6,10 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\PolicyPasskey;
+use Appwrite\Models\PolicyPasswordPwned;
+use Appwrite\Models\PolicyPasswordRotation;
+use Appwrite\Models\ProjectList;
 use Appwrite\Query;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Messaging;
@@ -71,6 +75,7 @@ use Utopia\Migration\Resources\Messaging\Message;
 use Utopia\Migration\Resources\Messaging\Provider;
 use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
+use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
@@ -330,6 +335,7 @@ class Appwrite extends Source
             Resource::TYPE_PROJECT_LABELS,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
+            Resource::TYPE_PROJECT_ENVIRONMENT,
 
             // Domains
             Resource::TYPE_RULE,
@@ -811,6 +817,9 @@ class Appwrite extends Source
         $denyDisposableEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYDISPOSABLEEMAIL());
         $denyFreeEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYFREEEMAIL());
         $denyCorporateEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYCORPORATEEMAIL());
+        $passwordPwned = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDPWNED());
+        $passwordRotation = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDROTATION());
+        $passkey = $this->getPolicyIfSupported(ProjectPolicyId::PASSKEY());
 
         $policies = new Policies(
             $this->projectId,
@@ -845,6 +854,16 @@ class Appwrite extends Source
             $denyDisposableEmail?->enabled,
             $denyFreeEmail?->enabled,
             $denyCorporateEmail?->enabled,
+            passwordPwned: !$passwordPwned instanceof PolicyPasswordPwned ? null : [
+                'enabled' => $passwordPwned->enabled,
+                'sessions' => $passwordPwned->sessions,
+                'users' => $passwordPwned->users,
+            ],
+            passwordRotation: !$passwordRotation instanceof PolicyPasswordRotation ? null : [
+                'enabled' => $passwordRotation->enabled,
+                'maxAge' => $passwordRotation->maxAge,
+            ],
+            passkeyRpId: $passkey instanceof PolicyPasskey ? $passkey->rpId : null,
         );
 
         $this->callback([$policies]);
@@ -1841,6 +1860,11 @@ class Appwrite extends Source
                 $report[Resource::TYPE_PROJECT_EMAIL_TEMPLATE] = 0;
             }
         }
+
+        if (\in_array(Resource::TYPE_PROJECT_ENVIRONMENT, $resources)) {
+            $environments = $this->listEnvironmentsIfSupported([Query::limit(1)]);
+            $report[Resource::TYPE_PROJECT_ENVIRONMENT] = $environments === null ? 0 : $environments->total;
+        }
     }
 
     /**
@@ -1917,6 +1941,76 @@ class Appwrite extends Source
                     previous: $e
                 ));
             }
+        }
+
+        if (\in_array(Resource::TYPE_PROJECT_ENVIRONMENT, $resources)) {
+            try {
+                $this->exportEnvironments($batchSize);
+            } catch (\Throwable $e) {
+                $this->addError(new Exception(
+                    Resource::TYPE_PROJECT_ENVIRONMENT,
+                    Transfer::GROUP_PROJECTS,
+                    message: $e->getMessage(),
+                    code: (int) $e->getCode() ?: Exception::CODE_INTERNAL,
+                    previous: $e
+                ));
+            }
+        }
+    }
+
+    private function exportEnvironments(int $batchSize): void
+    {
+        $lastId = null;
+
+        while (true) {
+            $queries = [Query::limit($batchSize)];
+
+            if ($lastId !== null) {
+                $queries[] = Query::cursorAfter($lastId);
+            }
+
+            $response = $this->listEnvironmentsIfSupported($queries);
+            if ($response === null || $response->projects === []) {
+                break;
+            }
+
+            $environments = [];
+
+            foreach ($response->projects as $environment) {
+                $environments[] = new Environment(
+                    $environment->id,
+                    $environment->name,
+                    createdAt: $environment->createdAt,
+                    updatedAt: $environment->updatedAt,
+                );
+
+                $lastId = $environment->id;
+            }
+
+            $this->callback($environments);
+
+            if (\count($response->projects) < $batchSize) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Environments are a Cloud feature; a source without them rejects the route.
+     *
+     * @param array<string> $queries
+     * @throws AppwriteException
+     */
+    private function listEnvironmentsIfSupported(array $queries): ?ProjectList
+    {
+        try {
+            return $this->project->listEnvironments($queries);
+        } catch (AppwriteException $e) {
+            if ($e->getCode() === 400 || $e->getCode() === 404) {
+                return null;
+            }
+
+            throw $e;
         }
     }
 
@@ -2677,6 +2771,8 @@ class Appwrite extends Source
                     $topic->subscribe ?? [],
                     $topic->createdAt ?? '',
                     $topic->updatedAt ?? '',
+                    $topic->qos,
+                    $topic->expiry,
                 );
 
                 $lastDocument = $topic->id;

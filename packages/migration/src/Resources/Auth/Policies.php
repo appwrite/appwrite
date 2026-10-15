@@ -17,6 +17,8 @@ class Policies extends Resource
     /**
      * @param array{min: int, uppercase: bool, lowercase: bool, number: bool, symbols: bool}|null $passwordStrength
      * @param array{totp: bool, email: bool, phone: bool, custom: bool}|null $mfaFactors
+     * @param array{enabled: bool, sessions: bool, users: bool}|null $passwordPwned
+     * @param array{enabled: bool, maxAge: int}|null $passwordRotation
      */
     public function __construct(
         string $id,
@@ -42,6 +44,9 @@ class Policies extends Resource
         private readonly ?bool $denyCorporateEmail = null,
         string $createdAt = '',
         string $updatedAt = '',
+        private readonly ?array $passwordPwned = null,
+        private readonly ?array $passwordRotation = null,
+        private readonly ?string $passkeyRpId = null,
     ) {
         $this->id = $id;
         $this->createdAt = $createdAt;
@@ -77,6 +82,9 @@ class Policies extends Resource
             $array['denyCorporateEmail'] ?? null,
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
+            passwordPwned: $array['passwordPwned'] ?? null,
+            passwordRotation: $array['passwordRotation'] ?? null,
+            passkeyRpId: $array['passkeyRpId'] ?? null,
         );
     }
 
@@ -107,6 +115,9 @@ class Policies extends Resource
             'denyDisposableEmail' => $this->denyDisposableEmail,
             'denyFreeEmail' => $this->denyFreeEmail,
             'denyCorporateEmail' => $this->denyCorporateEmail,
+            'passwordPwned' => $this->passwordPwned,
+            'passwordRotation' => $this->passwordRotation,
+            'passkeyRpId' => $this->passkeyRpId,
             'createdAt' => $this->createdAt,
             'updatedAt' => $this->updatedAt,
         ];
@@ -226,5 +237,26 @@ class Policies extends Resource
     public function getDenyCorporateEmail(): ?bool
     {
         return $this->denyCorporateEmail;
+    }
+
+    /**
+     * @return array{enabled: bool, sessions: bool, users: bool}|null
+     */
+    public function getPasswordPwned(): ?array
+    {
+        return $this->passwordPwned;
+    }
+
+    /**
+     * @return array{enabled: bool, maxAge: int}|null
+     */
+    public function getPasswordRotation(): ?array
+    {
+        return $this->passwordRotation;
+    }
+
+    public function getPasskeyRpId(): ?string
+    {
+        return $this->passkeyRpId;
     }
 }

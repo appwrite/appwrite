@@ -55,7 +55,7 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passwordStrength'' on mixed\.$#'
+			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Destinations/Appwrite.php
@@ -883,12 +883,6 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Property Utopia\\Migration\\Destinations\\Appwrite\:\:\$project is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: src/Destinations/Appwrite.php
-
-		-
 			message: '#^Strict comparison using \!\=\= between Utopia\\Database\\Document and false will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
 			count: 4
@@ -1358,6 +1352,24 @@ parameters:
 
 		-
 			message: '#^Parameter \$createdAt of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$passkeyRpId of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$passwordPwned of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects array\{enabled\: bool, sessions\: bool, users\: bool\}\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$passwordRotation of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects array\{enabled\: bool, maxAge\: int\}\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Auth/Policies.php
@@ -2405,6 +2417,42 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Messaging/Topic.php
+
+		-
+			message: '#^Parameter \#6 \$qos of class Utopia\\Migration\\Resources\\Messaging\\Topic constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Messaging/Topic.php
+
+		-
+			message: '#^Parameter \#7 \$expiry of class Utopia\\Migration\\Resources\\Messaging\\Topic constructor expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Messaging/Topic.php
+
+		-
+			message: '#^Parameter \#1 \$id of class Utopia\\Migration\\Resources\\Settings\\Environment constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Settings/Environment.php
+
+		-
+			message: '#^Parameter \#2 \$name of class Utopia\\Migration\\Resources\\Settings\\Environment constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Settings/Environment.php
+
+		-
+			message: '#^Parameter \$createdAt of class Utopia\\Migration\\Resources\\Settings\\Environment constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Settings/Environment.php
+
+		-
+			message: '#^Parameter \$updatedAt of class Utopia\\Migration\\Resources\\Settings\\Environment constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Settings/Environment.php
 
 		-
 			message: '#^Parameter \#1 \$id of class Utopia\\Migration\\Resources\\Settings\\Labels constructor expects string, mixed given\.$#'
@@ -7025,6 +7073,12 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: tests/Destinations/AppwriteLegacyIndexMetadataTest.php
+
+		-
+			message: '#^Method Utopia\\Migration\\Tests\\Destinations\\AppwritePoliciesTest\:\:auths\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Destinations/AppwritePoliciesTest.php
 
 		-
 			message: '#^Cannot access offset ''onDelete'' on mixed\.$#'

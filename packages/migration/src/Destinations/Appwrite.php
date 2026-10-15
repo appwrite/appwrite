@@ -15,6 +15,7 @@ use Appwrite\Enums\Runtime;
 use Appwrite\Enums\SmtpEncryption;
 use Appwrite\Enums\StatusCode;
 use Appwrite\InputFile;
+use Appwrite\Query as AppwriteQuery;
 use Appwrite\Services\Functions;
 use Appwrite\Services\Messaging;
 use Appwrite\Services\Project;
@@ -76,6 +77,7 @@ use Utopia\Migration\Resources\Messaging\Message;
 use Utopia\Migration\Resources\Messaging\Provider;
 use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
+use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
@@ -120,6 +122,8 @@ class Appwrite extends Destination
      * still hold a key stored before the rule existed.
      */
     private const VARIABLE_KEY_PATTERN = '/^[A-Za-z_]\w*$/D';
+
+    private const AUTHENTICATOR_PASSKEY = 'passkey';
 
     /** A database is provisioning while its resources transfer, ready once the run completes, or failed if creation errored. */
     private const DATABASE_STATUS_PROVISIONING = 'provisioning';
@@ -423,6 +427,7 @@ class Appwrite extends Destination
             Resource::TYPE_PROJECT_LABELS,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
+            Resource::TYPE_PROJECT_ENVIRONMENT,
 
             Resource::TYPE_BACKUP_POLICY,
 
@@ -2548,6 +2553,7 @@ class Appwrite extends Destination
                     $resource->getTeam()->getId(),
                     $resource->getRoles(),
                     userId: $user->getId(),
+                    membershipId: $resource->getId(),
                 );
                 break;
             case Resource::TYPE_AUTH_METHODS:
@@ -3127,6 +3133,8 @@ class Appwrite extends Destination
             $resource->getId(),
             $resource->getTopicName(),
             $resource->getSubscribe(),
+            $resource->getQos(),
+            $resource->getExpiry(),
         );
     }
 
@@ -3284,6 +3292,8 @@ class Appwrite extends Destination
                 false,
                 $data['html'] ?? null,
                 $scheduledAt,
+                $this->optionalString($data, 'replyToEmail'),
+                $this->optionalString($data, 'replyToName'),
             ),
             'sms' => $this->messaging->createSMS(
                 $resource->getId(),
@@ -3314,6 +3324,7 @@ class Appwrite extends Destination
                 $data['contentAvailable'] ?? null,
                 $data['critical'] ?? null,
                 null,
+                $this->optionalString($data, 'channelId'),
             ),
             default => throw new \Exception('Unknown provider type: ' . $resource->getProviderType()),
         };
@@ -3444,6 +3455,10 @@ class Appwrite extends Destination
                 /** @var EmailTemplate $resource */
                 $this->createEmailTemplate($resource);
                 break;
+            case Resource::TYPE_PROJECT_ENVIRONMENT:
+                /** @var Environment $resource */
+                $this->createEnvironment($resource);
+                break;
         }
 
         if ($resource->getStatus() !== Resource::STATUS_SKIPPED) {
@@ -3470,6 +3485,35 @@ class Appwrite extends Destination
         }
 
         return $resource;
+    }
+
+    /**
+     * An environment's ID is a project ID, unique across the platform, so the source's
+     * own is usually taken. The environment gets a new ID and is matched by name instead.
+     *
+     * @throws AppwriteException
+     */
+    protected function createEnvironment(Environment $resource): void
+    {
+        try {
+            $existing = $this->project->listEnvironments([AppwriteQuery::equal('name', [$resource->getEnvironmentName()])]);
+        } catch (AppwriteException $e) {
+            if ($e->getCode() === 400 || $e->getCode() === 404) {
+                $resource->setStatus(Resource::STATUS_SKIPPED, 'The destination does not support environments');
+
+                return;
+            }
+
+            throw $e;
+        }
+
+        if ($existing->total > 0) {
+            $resource->setStatus(Resource::STATUS_SKIPPED, 'Environment already exists');
+
+            return;
+        }
+
+        $this->project->createEnvironment(Id::unique(), $resource->getEnvironmentName());
     }
 
     protected function createProjectVariable(ProjectVariable $resource): bool
@@ -3927,6 +3971,9 @@ class Appwrite extends Destination
             'disposableEmails' => $resource->getDenyDisposableEmail(),
             'freeEmails' => $resource->getDenyFreeEmail(),
             'corporateEmails' => $resource->getDenyCorporateEmail(),
+            'passwordPwned' => $resource->getPasswordPwned(),
+            'passwordRotation' => $resource->getPasswordRotation(),
+            'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {
             if ($value !== null) {
@@ -3943,6 +3990,33 @@ class Appwrite extends Destination
         $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
 
         return true;
+    }
+
+    /**
+     * @param array<mixed> $values
+     */
+    private function optionalString(array $values, string $key): ?string
+    {
+        $value = $values[$key] ?? null;
+
+        return \is_string($value) ? $value : null;
+    }
+
+    /**
+     * Passkeys are bound to the relying party ID they were registered for, so the
+     * destination keeps its own while any user holds a passkey under it.
+     */
+    private function resolvePasskeyRpId(?string $source, string $destination): ?string
+    {
+        if ($source === null || $destination === '' || $source === $destination) {
+            return $source;
+        }
+
+        $passkey = $this->dbForProject->getAuthorization()->skip(fn () => $this->dbForProject->findOne('authenticators', [
+            Query::equal('type', [self::AUTHENTICATOR_PASSKEY]),
+        ]));
+
+        return $passkey->isEmpty() ? $source : null;
     }
 
     protected function createApiKey(ApiKey $resource): bool
