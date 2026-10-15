@@ -14,7 +14,7 @@ use utopia_migration::resources::domains::Rule;
 use utopia_migration::resources::functions::{Deployment, EnvVar, Func};
 use utopia_migration::resources::integrations::{ApiKey, Platform};
 use utopia_migration::resources::messaging::{Message, Provider, Subscriber, Topic};
-use utopia_migration::resources::settings::{Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use utopia_migration::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
 use utopia_migration::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use utopia_migration::resources::storage::{Bucket, File};
 use utopia_migration::resources::templates::EmailTemplate;
@@ -241,6 +241,9 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
                 deny_disposable_email: n.opt_bool("denyDisposableEmail")?,
                 deny_free_email: n.opt_bool("denyFreeEmail")?,
                 deny_corporate_email: n.opt_bool("denyCorporateEmail")?,
+                password_pwned: n.opt_array("passwordPwned")?,
+                password_rotation: n.opt_array("passwordRotation")?,
+                passkey_rp_id: n.opt_string("passkeyRpId", None)?,
             };
             Resource::new(Kind::Policies(p), dated(&n, id(&n)?)?)
         }
@@ -437,9 +440,17 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             dated(&n, id(&n)?)?,
         ),
         "Messaging\\Topic" => Resource::new(
-            Kind::Topic(Topic { name: n.required_string("name")?, subscribe: n.array("subscribe")? }),
+            Kind::Topic(Topic {
+                name: n.required_string("name")?,
+                subscribe: n.array("subscribe")?,
+                qos: n.opt_int("qos")?,
+                expiry: n.opt_int("expiry")?,
+            }),
             dated(&n, id(&n)?)?,
         ),
+        "Settings\\Environment" => {
+            Resource::new(Kind::Environment(Environment { name: n.required_string("name")? }), dated(&n, id(&n)?)?)
+        }
         "Settings\\Labels" => Resource::new(Kind::Labels(Labels { labels: n.array("labels")? }), dated(&n, id(&n)?)?),
         "Settings\\ProjectVariable" => Resource::new(
             Kind::ProjectVariable(ProjectVariable {
@@ -687,6 +698,7 @@ pub fn from_array(class: &str, array: &Array, provider: Option<&str>) -> utopia_
         "Settings\\ProjectVariable" => ProjectVariable::from_array(array),
         "Settings\\Protocols" => Protocols::from_array(array),
         "Settings\\Services" => Services::from_array(array),
+        "Settings\\Environment" => Environment::from_array(array),
         "Settings\\SMTP" => Smtp::from_array(array),
         "Settings\\Webhook" => Webhook::from_array(array),
         "Sites\\Deployment" => SiteDeployment::from_array(array),
@@ -801,6 +813,9 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getSessionInvalidation", bool(p.session_invalidation)),
             ("getSessionsLimit", Json::from(p.sessions_limit)),
             ("getUserLimit", Json::from(p.user_limit)),
+            ("getPasskeyRpId", opt(&p.passkey_rp_id)),
+            ("getPasswordPwned", p.password_pwned.as_ref().map_or(Json::Null, arr)),
+            ("getPasswordRotation", p.password_rotation.as_ref().map_or(Json::Null, arr)),
         ]),
         Kind::Team(t) => g.extend([
             ("getMembers", arr(&t.members)),
@@ -999,7 +1014,13 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getUserId", s(&x.user_id)),
             ("getUserName", s(&x.user_name)),
         ]),
-        Kind::Topic(t) => g.extend([("getSubscribe", arr(&t.subscribe)), ("getTopicName", s(&t.name))]),
+        Kind::Topic(t) => g.extend([
+            ("getExpiry", t.expiry.map_or(Json::Null, Json::from)),
+            ("getQos", t.qos.map_or(Json::Null, Json::from)),
+            ("getSubscribe", arr(&t.subscribe)),
+            ("getTopicName", s(&t.name)),
+        ]),
+        Kind::Environment(e) => g.push(("getEnvironmentName", s(&e.name))),
         Kind::Labels(l) => g.push(("getLabels", arr(&l.labels))),
         Kind::ProjectVariable(v) => {
             g.extend([("getKey", s(&v.key)), ("getValue", s(&v.value)), ("isSecret", bool(v.secret))])

@@ -22,14 +22,14 @@ use crate::resources::domains::Rule;
 use crate::resources::functions::{Deployment, EnvVar, Func};
 use crate::resources::integrations::{ApiKey, Platform};
 use crate::resources::messaging::{Message, Provider, Subscriber, Topic};
-use crate::resources::settings::{Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use crate::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
 use crate::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use crate::resources::storage::{Bucket, File};
 use crate::resources::templates::EmailTemplate;
 use crate::resources::{cast_bool, cast_int, cast_string, php_empty};
 use crate::sdk::{Client, Model, query};
 use crate::source::{Emitter, ResourceIds, Sink, Source};
-use crate::target::{Body, Target};
+use crate::target::{Body, Destinations, Resolver, Target};
 use crate::transfer::{Report, ResourceSelector, STORAGE_MAX_CHUNK_SIZE, group};
 
 /// Read databases through the API.
@@ -50,6 +50,11 @@ fn or(value: Value, default: Value) -> Value {
 /// `$model->prop ?? ''` as a string.
 fn s(m: &Model, prop: &str) -> String {
     m.string(prop)
+}
+
+/// A nullable integer property (`?int`).
+fn opt_int(value: Value) -> Option<i64> {
+    if matches!(value, Value::Null) { None } else { Some(cast_int(&value)) }
 }
 
 fn arr(value: Value) -> Array {
@@ -111,6 +116,7 @@ impl Appwrite {
         queries: Vec<ReaderQuery>,
     ) -> Result<Self> {
         let mut client = Client::new();
+        client.refuse_redirects();
         client.set_endpoint(endpoint)?;
         client.set_project(project_id);
         client.set_key(key);
@@ -155,6 +161,21 @@ impl Appwrite {
     /// The API key.
     pub fn key(&self) -> &str {
         &self.key
+    }
+
+    /// The SDK client the source reads the API with.
+    ///
+    /// PHP: the protected `$client`, a `Sources\Appwrite\Client`.
+    pub fn client(&self) -> &Client {
+        &self.client
+    }
+
+    /// The API reader reads through the source's client (PHP shares the
+    /// object), so it is given the client again after the client changes.
+    fn share_client(&mut self) {
+        if self.source == SOURCE_API {
+            self.reader = Box::new(ApiReader::new(self.client.clone()));
+        }
     }
 
     async fn api(&self, service: &str, method: &str, args: &[(&str, Value)]) -> Result<Model> {
@@ -543,6 +564,11 @@ impl Appwrite {
             };
             report.insert(types::PROJECT_EMAIL_TEMPLATE.to_owned(), total);
         }
+        if has(types::PROJECT_ENVIRONMENT) {
+            let environments = self.list_environments(query::list(vec![query::limit(1)])).await?;
+            let total = environments.map_or(Value::Int(0), |list| list.value("total"));
+            report.insert(types::PROJECT_ENVIRONMENT.to_owned(), total);
+        }
         Ok(())
     }
 
@@ -659,6 +685,9 @@ impl Appwrite {
         let disposable = supported("deny-disposable-email").await?;
         let free = supported("deny-free-email").await?;
         let corporate = supported("deny-corporate-email").await?;
+        let pwned = supported("password-pwned").await?;
+        let rotation = supported("password-rotation").await?;
+        let passkey = supported("passkey").await?;
         let fields = |model: &Option<Model>, keys: &[&str]| {
             model.as_ref().map(|m| {
                 let mut a = Array::new();
@@ -669,6 +698,9 @@ impl Appwrite {
             })
         };
         let enabled = |model: &Option<Model>| model.as_ref().map(|m| cast_bool(&m.value("enabled")));
+        // `$policy instanceof PolicyX ? [...] : null`: a source answering with
+        // another policy's model carries none.
+        let of = |model: Option<Model>, class: &str| model.filter(|m| m.class == class);
         let policies = Policies {
             password_history: cast_int(&history.value("total")),
             session_duration: cast_int(&duration.value("duration")),
@@ -693,6 +725,9 @@ impl Appwrite {
             deny_disposable_email: enabled(&disposable),
             deny_free_email: enabled(&free),
             deny_corporate_email: enabled(&corporate),
+            password_pwned: fields(&of(pwned, "PolicyPasswordPwned"), &["enabled", "sessions", "users"]),
+            password_rotation: fields(&of(rotation, "PolicyPasswordRotation"), &["enabled", "maxAge"]),
+            passkey_rp_id: of(passkey, "PolicyPasskey").map(|m| s(&m, "rpId")),
         };
         let r = policies.resource(self.project_id.clone(), "", "");
         out.emit(vec![r]).await
@@ -1728,8 +1763,12 @@ impl Appwrite {
             }
             let mut list = Vec::new();
             for t in response.models("topics") {
-                let topic =
-                    Topic { name: s(t, "name"), subscribe: arr(or(t.value("subscribe"), Value::Array(Array::new()))) };
+                let topic = Topic {
+                    name: s(t, "name"),
+                    subscribe: arr(or(t.value("subscribe"), Value::Array(Array::new()))),
+                    qos: opt_int(t.value("qos")),
+                    expiry: opt_int(t.value("expiry")),
+                };
                 list.push(topic.resource(s(t, "id"), s(t, "createdAt"), s(t, "updatedAt")));
                 last = Some(s(t, "id"));
             }
@@ -2042,7 +2081,51 @@ impl Appwrite {
         {
             self.target.add_error(group_error(types::PROJECT_EMAIL_TEMPLATE, group::PROJECTS, e, true));
         }
+        if has(types::PROJECT_ENVIRONMENT)
+            && let Err(e) = self.export_environments(batch, out).await
+        {
+            self.target.add_error(group_error(types::PROJECT_ENVIRONMENT, group::PROJECTS, e, true));
+        }
         Ok(())
+    }
+
+    async fn export_environments(&mut self, batch: i64, out: &mut Emitter<'_>) -> Result<()> {
+        let mut last: Option<String> = None;
+        loop {
+            let mut q = vec![query::limit(batch)];
+            if let Some(last) = &last {
+                q.push(query::cursor_after(last));
+            }
+            let Some(response) = self.list_environments(query::list(q)).await? else { break };
+            let projects = response.models("projects");
+            if projects.is_empty() {
+                break;
+            }
+            let mut list = Vec::new();
+            for e in &projects {
+                list.push(Environment { name: s(e, "name") }.resource(
+                    s(e, "id"),
+                    s(e, "createdAt"),
+                    s(e, "updatedAt"),
+                ));
+                last = Some(s(e, "id"));
+            }
+            out.emit(list).await?;
+            if (projects.len() as i64) < batch {
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    /// `listEnvironmentsIfSupported()`: environments are a Cloud feature, so
+    /// a source without them rejects the route (400 or 404: `None`).
+    async fn list_environments(&self, queries: Value) -> Result<Option<Model>> {
+        match self.api("Project", "listEnvironments", &[("queries", queries)]).await {
+            Ok(list) => Ok(Some(list)),
+            Err(Error::Appwrite { code: 400 | 404, .. }) => Ok(None),
+            Err(e) => Err(e),
+        }
     }
 
     async fn export_email_templates(&mut self, batch: i64, out: &mut Emitter<'_>) -> Result<()> {
@@ -2212,6 +2295,7 @@ impl Source for Appwrite {
             types::PROJECT_LABELS,
             types::PROJECT_SERVICES,
             types::PROJECT_EMAIL_TEMPLATE,
+            types::PROJECT_ENVIRONMENT,
             types::RULE,
         ]
     }
@@ -2222,6 +2306,24 @@ impl Source for Appwrite {
 
     fn target_mut(&mut self) -> &mut Target {
         &mut self.target
+    }
+
+    /// Pins the SDK client to the resolver's addresses too.
+    ///
+    /// PHP: `Sources\Appwrite::setResolver()`.
+    fn set_resolver(&mut self, resolver: Option<Resolver>) {
+        self.client.set_resolver(resolver.clone());
+        self.share_client();
+        self.target.set_resolver(resolver);
+    }
+
+    /// Confines the SDK client to `destinations` too.
+    ///
+    /// PHP: `Sources\Appwrite::setDestinations()`.
+    fn set_destinations(&mut self, destinations: Destinations) {
+        self.client.set_destinations(destinations.clone());
+        self.share_client();
+        self.target.set_destinations(destinations);
     }
 
     fn supports_database_status(&self) -> bool {

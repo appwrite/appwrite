@@ -791,6 +791,7 @@
             "project-labels",
             "project-services",
             "project-email-template",
+            "project-environment",
             "backup-policy",
             "rule"
           ]

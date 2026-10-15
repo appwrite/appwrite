@@ -2,7 +2,7 @@
 //! bytes, and read responses the same way, as PHP's cURL adapter.
 
 use std::io::Write as _;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::path::Path;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -80,7 +80,35 @@ const EXPECT_TIMEOUT: Duration = Duration::from_secs(1);
 #[derive(Debug, Default)]
 pub struct Http {
     options: Options,
+    pins: Arc<Vec<Pinned>>,
     kept: Arc<Mutex<Vec<Connection>>>,
+}
+
+/// Addresses a host and port connect to instead of what DNS answers.
+#[derive(Debug, Clone, PartialEq)]
+struct Pinned {
+    host: String,
+    port: u16,
+    addresses: Vec<IpAddr>,
+}
+
+impl Pinned {
+    /// A `host:port:address[,address]` entry; IPv6 addresses may be in
+    /// brackets. cURL skips an entry it cannot read, and so does this.
+    fn parse(entry: &str) -> Option<Pinned> {
+        let entry = entry.strip_prefix('+').unwrap_or(entry);
+        if entry.starts_with('-') {
+            return None;
+        }
+        let (host, rest) = entry.split_once(':')?;
+        let (port, addresses) = rest.split_once(':')?;
+        let port = port.parse().ok()?;
+        let addresses: Vec<IpAddr> = addresses
+            .split(',')
+            .filter_map(|a| a.trim().trim_start_matches('[').trim_end_matches(']').parse().ok())
+            .collect();
+        (!host.is_empty() && !addresses.is_empty()).then(|| Pinned { host: host.to_ascii_lowercase(), port, addresses })
+    }
 }
 
 impl Http {
@@ -88,12 +116,28 @@ impl Http {
     pub fn new() -> Http {
         Http::default()
     }
+
+    /// A copy that connects each `host:port` of `entries` to the addresses
+    /// they list (`host:port:address[,address]`), without asking DNS. The
+    /// [`Destinations`](crate::Destinations) still check the address each
+    /// connection reached.
+    ///
+    /// PHP: the cURL adapter's `CURLOPT_RESOLVE` option
+    /// (`new Curl(options: [CURLOPT_RESOLVE => $entries])`).
+    pub fn with_resolve<I, S>(&self, entries: I) -> Http
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        let pins = entries.into_iter().filter_map(|e| Pinned::parse(e.as_ref())).collect();
+        Http { options: self.options.clone(), pins: Arc::new(pins), kept: Arc::default() }
+    }
 }
 
 impl Clone for Http {
     /// A copy with the same options and no connection of its own yet.
     fn clone(&self) -> Http {
-        Http { options: self.options.clone(), kept: Arc::default() }
+        Http { options: self.options.clone(), pins: self.pins.clone(), kept: Arc::default() }
     }
 }
 
@@ -115,7 +159,7 @@ impl Adapter for Http {
     }
 
     fn with_options(&self, options: Options) -> Http {
-        Http { options, kept: Arc::default() }
+        Http { options, pins: self.pins.clone(), kept: Arc::default() }
     }
 }
 
@@ -385,10 +429,16 @@ impl Http {
             }
         };
 
-        let addresses: Vec<SocketAddr> = match within(deadline, tokio::net::lookup_host((host.as_str(), port))).await {
-            Err(()) => return Err(timed_out()),
-            Ok(Err(_)) => return Err(Error::Dns(format!("Could not resolve host: {host} (Domain name not found)"))),
-            Ok(Ok(found)) => found.collect(),
+        let pinned = self.pins.iter().find(|p| p.port == port && p.host.eq_ignore_ascii_case(&host));
+        let addresses: Vec<SocketAddr> = match pinned {
+            Some(pin) => pin.addresses.iter().map(|a| SocketAddr::new(*a, port)).collect(),
+            None => match within(deadline, tokio::net::lookup_host((host.as_str(), port))).await {
+                Err(()) => return Err(timed_out()),
+                Ok(Err(_)) => {
+                    return Err(Error::Dns(format!("Could not resolve host: {host} (Domain name not found)")));
+                }
+                Ok(Ok(found)) => found.collect(),
+            },
         };
         if addresses.is_empty() {
             return Err(Error::Dns(format!("Could not resolve host: {host} (Domain name not found)")));
@@ -1251,6 +1301,18 @@ impl rustls::client::danger::ServerCertVerifier for Unverified {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn resolve_entries_as_curl_reads_them() {
+        let pin = Pinned::parse("Example.com:443:10.0.0.1,[::1]").unwrap();
+        assert_eq!(pin.host, "example.com");
+        assert_eq!(pin.port, 443);
+        assert_eq!(pin.addresses, vec!["10.0.0.1".parse::<IpAddr>().unwrap(), "::1".parse().unwrap()]);
+        assert_eq!(Pinned::parse("+a:80:127.0.0.1").unwrap().host, "a");
+        assert!(Pinned::parse("-a:80").is_none());
+        assert!(Pinned::parse("a:http:127.0.0.1").is_none());
+        assert!(Pinned::parse("a:80:nowhere").is_none());
+    }
 
     #[test]
     fn status_lines_as_curl_reads_them() {

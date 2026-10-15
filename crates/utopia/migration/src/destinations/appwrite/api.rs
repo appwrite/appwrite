@@ -51,6 +51,14 @@ fn get(a: &Array, key: &str) -> Value {
     a.get_str(key).cloned().unwrap_or(Value::Null)
 }
 
+/// `optionalString()`: `$array[$key]` when it is a string, otherwise null.
+fn optional_string(a: &Array, key: &str) -> Value {
+    match get(a, key) {
+        value @ Value::Str(_) => value,
+        _ => Value::Null,
+    }
+}
+
 /// `($array[$key] ?? '') ?: null`.
 fn get_or_null(a: &Array, key: &str) -> Value {
     let value = get(a, key);
@@ -382,6 +390,7 @@ impl Appwrite {
                             ("teamId", v(&m.team.id())),
                             ("roles", Value::Array(m.roles.clone())),
                             ("userId", v(&m.user.id())),
+                            ("membershipId", v(&r.id())),
                         ],
                     )
                     .await?;
@@ -682,6 +691,8 @@ impl Appwrite {
                             ("topicId", v(&r.id())),
                             ("name", v(&t.name)),
                             ("subscribe", Value::Array(t.subscribe.clone())),
+                            ("qos", t.qos.map_or(Value::Null, Value::Int)),
+                            ("expiry", t.expiry.map_or(Value::Null, Value::Int)),
                         ],
                     )
                     .await?;
@@ -896,6 +907,8 @@ impl Appwrite {
                     ("draft", Value::Bool(false)),
                     ("html", get(d, "html")),
                     ("scheduledAt", scheduled),
+                    ("replyToEmail", optional_string(d, "replyToEmail")),
+                    ("replyToName", optional_string(d, "replyToName")),
                 ],
             ),
             "sms" => (
@@ -932,6 +945,7 @@ impl Appwrite {
                     ("contentAvailable", get(d, "contentAvailable")),
                     ("critical", get(d, "critical")),
                     ("priority", Value::Null),
+                    ("channelId", optional_string(d, "channelId")),
                 ],
             ),
             t => return Err(Error::exception(format!("Unknown provider type: {t}"), 0)),

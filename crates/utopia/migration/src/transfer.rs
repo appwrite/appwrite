@@ -76,8 +76,14 @@ pub mod group {
         t::ATTRIBUTE,
     ];
     /// `Transfer::GROUP_PROJECTS_RESOURCES`.
-    pub const PROJECTS_RESOURCES: &[&str] =
-        &[t::PROJECT_VARIABLE, t::PROJECT_PROTOCOLS, t::PROJECT_LABELS, t::PROJECT_SERVICES, t::PROJECT_EMAIL_TEMPLATE];
+    pub const PROJECTS_RESOURCES: &[&str] = &[
+        t::PROJECT_VARIABLE,
+        t::PROJECT_PROTOCOLS,
+        t::PROJECT_LABELS,
+        t::PROJECT_SERVICES,
+        t::PROJECT_EMAIL_TEMPLATE,
+        t::PROJECT_ENVIRONMENT,
+    ];
     /// `Transfer::GROUP_BACKUPS_RESOURCES`.
     pub const BACKUPS_RESOURCES: &[&str] = &[t::BACKUP_POLICY];
     /// `Transfer::GROUP_DOMAINS_RESOURCES`.
@@ -121,6 +127,7 @@ pub const ALL_PUBLIC_RESOURCES: &[&str] = &[
     types::PROJECT_LABELS,
     types::PROJECT_SERVICES,
     types::PROJECT_EMAIL_TEMPLATE,
+    types::PROJECT_ENVIRONMENT,
     types::RULE,
     types::DOCUMENT,
     types::ATTRIBUTE,

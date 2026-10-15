@@ -19,7 +19,7 @@ use crate::resources::domains::Rule;
 use crate::resources::functions::{Deployment, EnvVar, Func};
 use crate::resources::integrations::{ApiKey, Platform};
 use crate::resources::messaging::{Message, Provider, Subscriber, Topic};
-use crate::resources::settings::{Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
+use crate::resources::settings::{Environment, Labels, ProjectVariable, Protocols, Services, Smtp, Webhook};
 use crate::resources::sites::{Site, SiteDeployment, SiteEnvVar};
 use crate::resources::storage::{Bucket, File};
 use crate::resources::templates::EmailTemplate;
@@ -118,6 +118,8 @@ pub mod types {
     pub const PROJECT_SERVICES: &str = "project-services";
     /// A project email template.
     pub const PROJECT_EMAIL_TEMPLATE: &str = "project-email-template";
+    /// A project environment.
+    pub const PROJECT_ENVIRONMENT: &str = "project-environment";
     /// A domain rule.
     pub const RULE: &str = "rule";
     /// A topic subscriber.
@@ -167,6 +169,7 @@ pub const ALL_RESOURCES: &[&str] = &[
     types::PROJECT_LABELS,
     types::PROJECT_SERVICES,
     types::PROJECT_EMAIL_TEMPLATE,
+    types::PROJECT_ENVIRONMENT,
     types::RULE,
     types::PROVIDER,
     types::TOPIC,
@@ -365,6 +368,8 @@ pub enum Kind {
     Subscriber(Subscriber),
     /// `Messaging\Topic`.
     Topic(Topic),
+    /// `Settings\Environment`.
+    Environment(Environment),
     /// `Settings\Labels`.
     Labels(Labels),
     /// `Settings\ProjectVariable`.
@@ -558,6 +563,7 @@ impl Resource {
             Kind::Provider(_) => types::PROVIDER,
             Kind::Subscriber(_) => types::SUBSCRIBER,
             Kind::Topic(_) => types::TOPIC,
+            Kind::Environment(_) => types::PROJECT_ENVIRONMENT,
             Kind::Labels(_) => types::PROJECT_LABELS,
             Kind::ProjectVariable(_) => types::PROJECT_VARIABLE,
             Kind::Protocols(_) => types::PROJECT_PROTOCOLS,
@@ -592,7 +598,8 @@ impl Resource {
             Kind::Deployment(_) | Kind::EnvVar(_) | Kind::Function(_) => group::FUNCTIONS,
             Kind::ApiKey(_) | Kind::Platform(_) | Kind::Smtp(_) | Kind::Webhook(_) => group::INTEGRATIONS,
             Kind::Message(_) | Kind::Provider(_) | Kind::Subscriber(_) | Kind::Topic(_) => group::MESSAGING,
-            Kind::Labels(_)
+            Kind::Environment(_)
+            | Kind::Labels(_)
             | Kind::ProjectVariable(_)
             | Kind::Protocols(_)
             | Kind::Services(_)
@@ -643,6 +650,7 @@ impl Resource {
             Kind::Provider(_) => "Utopia\\Migration\\Resources\\Messaging\\Provider",
             Kind::Subscriber(_) => "Utopia\\Migration\\Resources\\Messaging\\Subscriber",
             Kind::Topic(_) => "Utopia\\Migration\\Resources\\Messaging\\Topic",
+            Kind::Environment(_) => "Utopia\\Migration\\Resources\\Settings\\Environment",
             Kind::Labels(_) => "Utopia\\Migration\\Resources\\Settings\\Labels",
             Kind::ProjectVariable(_) => "Utopia\\Migration\\Resources\\Settings\\ProjectVariable",
             Kind::Protocols(_) => "Utopia\\Migration\\Resources\\Settings\\Protocols",
@@ -734,6 +742,9 @@ impl Resource {
                 put("denyDisposableEmail", p.deny_disposable_email.map_or(Value::Null, Value::Bool));
                 put("denyFreeEmail", p.deny_free_email.map_or(Value::Null, Value::Bool));
                 put("denyCorporateEmail", p.deny_corporate_email.map_or(Value::Null, Value::Bool));
+                put("passwordPwned", p.password_pwned.clone().map_or(Value::Null, Value::Array));
+                put("passwordRotation", p.password_rotation.clone().map_or(Value::Null, Value::Array));
+                put("passkeyRpId", opt_str(&p.passkey_rp_id));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }
@@ -936,6 +947,14 @@ impl Resource {
                 put("id", s!(base.id));
                 put("name", s!(t.name));
                 put("subscribe", Value::Array(t.subscribe.clone()));
+                put("createdAt", s!(base.created_at));
+                put("updatedAt", s!(base.updated_at));
+                put("qos", t.qos.map_or(Value::Null, Value::Int));
+                put("expiry", t.expiry.map_or(Value::Null, Value::Int));
+            }
+            Kind::Environment(e) => {
+                put("id", s!(base.id));
+                put("name", s!(e.name));
                 put("createdAt", s!(base.created_at));
                 put("updatedAt", s!(base.updated_at));
             }

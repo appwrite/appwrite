@@ -33,6 +33,7 @@ use crate::bench::Bench;
 
 pub mod codec;
 pub mod mocks;
+mod reach;
 pub mod resources;
 mod schemaless;
 
@@ -138,6 +139,14 @@ pub const OPS: &[&str] = &[
     "nhost_source.new",
     "supabase_source.new",
     "nhost.status_code",
+    "request_target.new",
+    "resolver.new",
+    "resolver.urls",
+    "target.configure",
+    "target.request",
+    "appwrite_client.new",
+    "appwrite_client.configure",
+    "appwrite_client.call",
 ];
 
 pub const BENCHES: &[(&str, &str)] = &[
@@ -1074,6 +1083,138 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             let within = elapsed >= a.f64("min")? && elapsed < a.f64("max")?;
             Outcome::Ok(json!({ "body": body, "error": error, "within": within }))
         }
+        "request_target.new" => {
+            let mut target = utopia_migration::Target::new();
+            target.endpoint = reach::endpoint(s, a.str("endpoint")?)?;
+            Outcome::Ok(s.handle(reach::RequestTarget(target)))
+        }
+        "resolver.new" => Outcome::Ok(s.handle(reach::ResolverFixture::new(a.str("mode")?)?)),
+        "resolver.urls" => {
+            let urls = s.get::<reach::ResolverFixture>(a.value("resolver")?)?.recorded();
+            Outcome::Ok(reach::reach(s, json!(urls))?)
+        }
+        "target.configure" => {
+            let follow = a.opt_bool("follow")?;
+            let resolver = match args.get("resolver") {
+                None => None,
+                Some(Json::Null) => Some(None),
+                Some(h) => Some(Some(s.get::<reach::ResolverFixture>(h)?.resolver())),
+            };
+            let destinations = a.opt_str("destinations")?.map(reach::destinations).transpose()?;
+            let handle = a.value("target")?;
+            if let Ok(reach::RequestTarget(target)) = s.get_mut::<reach::RequestTarget>(handle) {
+                if let Some(follow) = follow {
+                    target.set_follow_redirects(follow);
+                }
+                if let Some(resolver) = resolver {
+                    target.set_resolver(resolver);
+                }
+                if let Some(destinations) = destinations {
+                    target.set_destinations(destinations);
+                }
+            } else {
+                match target(s, handle)? {
+                    TargetRef::Source(x) => {
+                        if let Some(follow) = follow {
+                            x.set_follow_redirects(follow);
+                        }
+                        if let Some(resolver) = resolver {
+                            x.set_resolver(resolver);
+                        }
+                        if let Some(destinations) = destinations {
+                            x.set_destinations(destinations);
+                        }
+                    }
+                    TargetRef::Destination(x) => {
+                        if let Some(follow) = follow {
+                            x.set_follow_redirects(follow);
+                        }
+                        if let Some(resolver) = resolver {
+                            x.set_resolver(resolver);
+                        }
+                        if let Some(destinations) = destinations {
+                            x.set_destinations(destinations);
+                        }
+                    }
+                }
+            }
+            Outcome::Ok(Json::Null)
+        }
+        "target.request" => {
+            // Rust's client never goes through an environment proxy, so
+            // `proxy` (which PHP puts in `http_proxy`) changes nothing here.
+            let params = match args.get("params") {
+                Some(p) => decode_array(p)?,
+                None => php_std::Array::new(),
+            };
+            let reach::RequestTarget(target) = s.get::<reach::RequestTarget>(a.value("target")?)?;
+            let result = target.call(a.str("method")?, a.str("path")?, &[], &params).await;
+            match result {
+                Ok((body, _)) => Outcome::Ok(json!({ "response": reach::reach(s, encode(&body.value()))? })),
+                Err(e) => {
+                    Outcome::Ok(json!({ "error": reach::failure(s, &e, a.opt_bool("message")?.unwrap_or(true))? }))
+                }
+            }
+        }
+        "appwrite_client.new" => {
+            let mut client = utopia_migration::sdk::Client::new();
+            client.refuse_redirects();
+            client.set_endpoint(&reach::endpoint(s, a.str("endpoint")?)?).map_err(|e| Fault::new(e.to_string()))?;
+            Outcome::Ok(s.handle(client))
+        }
+        "appwrite_client.configure" => {
+            let resolver = match args.get("resolver") {
+                None => None,
+                Some(Json::Null) => Some(None),
+                Some(h) => Some(Some(s.get::<reach::ResolverFixture>(h)?.resolver())),
+            };
+            let destinations = a.opt_str("destinations")?.map(reach::destinations).transpose()?;
+            let endpoint = a.opt_str("endpoint")?.map(|e| reach::endpoint(s, e)).transpose()?;
+            let client = s.get_mut::<utopia_migration::sdk::Client>(a.value("client")?)?;
+            if let Some(resolver) = resolver {
+                client.set_resolver(resolver);
+            }
+            if let Some(destinations) = destinations {
+                client.set_destinations(destinations);
+            }
+            if let Some(endpoint) = endpoint {
+                client.set_endpoint(&endpoint).map_err(|e| Fault::new(e.to_string()))?;
+            }
+            Outcome::Ok(Json::Null)
+        }
+        "appwrite_client.call" => {
+            let client = match args.get("source") {
+                Some(h) => source(s, h)?
+                    .as_any()
+                    .downcast_ref::<AppwriteSource>()
+                    .ok_or_else(|| Fault::new("appwrite_client.call takes an Appwrite source"))?
+                    .client()
+                    .clone(),
+                None => s.get::<utopia_migration::sdk::Client>(a.value("client")?)?.clone(),
+            };
+            let mut params = Vec::new();
+            if let Some(p) = args.get("params") {
+                for (k, v) in decode_array(p)?.iter() {
+                    let key = match k {
+                        php_std::types::KeyRef::Int(i) => i.to_string(),
+                        php_std::types::KeyRef::Str(b) => String::from_utf8_lossy(b).into_owned(),
+                    };
+                    params.push((key, utopia_migration::sdk::Input::Value(v.clone())));
+                }
+            }
+            let (method, path) = (a.str("method")?, a.str("path")?);
+            let result = if a.opt_str("response_type")? == Some("location") {
+                client.location(method, path, &[], &params).await.map(|l| php_std::Value::from(l.as_str()))
+            } else {
+                client.call(method, path, &[], &params).await
+            };
+            match result {
+                Ok(v) => Outcome::Ok(json!({ "response": reach::reach(s, encode(&v))? })),
+                Err(e) => {
+                    Outcome::Ok(json!({ "error": reach::failure(s, &e, a.opt_bool("message")?.unwrap_or(true))? }))
+                }
+            }
+        }
         "api.routes" | "api.requests" => {
             let base = s.service("migration-api")?.to_owned();
             let client =
@@ -1146,7 +1287,7 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
             let endpoint = if a.opt_bool("api")?.unwrap_or(false) {
                 format!("{}/v1", s.service("migration-api")?)
             } else {
-                a.opt_str("endpoint")?.unwrap_or("http://example.test/v1").to_owned()
+                reach::endpoint(s, a.opt_str("endpoint")?.unwrap_or("http://example.test/v1"))?
             };
             match AppwriteSource::new(
                 a.opt_str("project")?.unwrap_or("source-project"),
