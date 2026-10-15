@@ -417,9 +417,8 @@ async fn ddl_parity_mysql() {
 }
 
 /// Replays `tests/fixtures/sql_schema_metadata.php`: the schema paths that
-/// read a collection's stored definition through `getDocument()`. Until
-/// `getDocument()` is ported, a scenario stops (with a note) at the first
-/// step that needs it.
+/// read a collection's stored definition through `getDocument()`. A step
+/// that panics stops the scenario with a note instead of failing the others.
 async fn replay_metadata(engine: Engine, shared: bool, expected: &Json) {
     use futures_util::FutureExt;
     let Some(adapter) = connect(engine).await else { return };
@@ -616,15 +615,22 @@ mod env {
         pub async fn define(&self, collection: utopia_database::Collection) {
             use utopia_database::value::{Value, list, string};
             let metadata = utopia_database::database::collection_definition();
-            let _ = self.adapter.create_collection(utopia_database::database::METADATA, metadata.attributes().unwrap(), &[]).await;
+            let _ = self
+                .adapter
+                .create_collection(utopia_database::database::METADATA, metadata.attributes().unwrap(), &[])
+                .await;
             let mut document = collection.to_document();
             for key in ["attributes", "indexes"] {
                 let value = document.get(key).cloned().unwrap_or(Value::Null);
-                let json = php_std::json::encode(&value, php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH).unwrap();
+                let json =
+                    php_std::json::encode(&value, php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH).unwrap();
                 document.set(key, string(json)).unwrap();
             }
             document.set("$permissions", list([])).unwrap();
             let recording = std::mem::replace(&mut *self.recorder.recording.lock().unwrap(), false);
+            // A definition stored before is replaced.
+            let uid = if self.adapter.engine() == Engine::Postgres { "\"_uid\"" } else { "`_uid`" };
+            self.raw(&format!("DELETE FROM {} WHERE {uid} = '{}'", self.table("_metadata"), collection.id())).await;
             self.adapter.create_document(&metadata, document).await.unwrap();
             *self.recorder.recording.lock().unwrap() = recording;
         }
@@ -1720,8 +1726,9 @@ fn books_with_relationships() -> Vec<Attribute> {
     ]
 }
 
-/// Runs a step that reads a collection's stored definition, `None` (with a
-/// note) while `getDocument()` is not ported.
+/// Runs a step that reads a collection's stored definition through
+/// `getDocument()`; `None` (with a note) if that read panics, so the rest of
+/// a scenario still runs.
 async fn reading_definitions<T>(future: impl std::future::Future<Output = T>) -> Option<T> {
     use futures_util::FutureExt;
     match std::panic::AssertUnwindSafe(future).catch_unwind().await {
@@ -2772,5 +2779,749 @@ mod sqlite_shared_fulltext_test {
         assert!(trigger.contains("WHEN NEW.`_tenant` IS 'o''brien' BEGIN"), "{trigger}");
         let backfill = statements.iter().find(|s| s.starts_with("INSERT INTO")).unwrap();
         assert!(backfill.ends_with("FROM `namespace_notes` WHERE `_tenant` IS 'o''brien'"), "{backfill}");
+    }
+}
+
+/// Documents, definitions and reads for the ports of the PHP tests that go
+/// through `Database`: run against the adapter, with the stored definitions
+/// `Database` would keep written by `Env::define`.
+mod documents {
+    use std::sync::Arc;
+
+    use utopia_database::adapter::{Adapter, Find};
+    use utopia_database::validator::authorization::Authorization;
+    use utopia_database::value::{Array, ArrayKey, Str, Value, list, string};
+    use utopia_database::{Attribute, Collection, Document, Index, Query};
+
+    use super::env::Env;
+
+    /// A collection definition (documents readable by anyone unless
+    /// `document_security`).
+    pub fn collection(
+        id: &str,
+        attributes: Vec<Attribute>,
+        indexes: Vec<Index>,
+        document_security: bool,
+    ) -> Collection {
+        let permissions = vec![
+            r#"create("any")"#.to_owned(),
+            r#"read("any")"#.to_owned(),
+            r#"update("any")"#.to_owned(),
+            r#"delete("any")"#.to_owned(),
+        ];
+        Collection::create(id, "", attributes, indexes, Some(permissions), document_security, Array::new()).unwrap()
+    }
+
+    /// A document `id` of `pairs`, with `permissions`.
+    pub fn document(id: &str, permissions: &[&str], pairs: Vec<(&str, Value)>) -> Document {
+        let mut array = Array::new();
+        array.set(ArrayKey::Str(Str::from("$id")), string(id));
+        array.set(ArrayKey::Str(Str::from("$permissions")), list(permissions.iter().map(|p| string(*p))));
+        for (k, v) in pairs {
+            array.set(ArrayKey::normalize(Str::from(k)), v);
+        }
+        Document::new(array).unwrap()
+    }
+
+    /// Reads as a member of `roles` (`any` for everyone).
+    pub fn authorize(e: &Env, roles: &[&str]) {
+        let authorization = Authorization::new(true);
+        for role in roles {
+            authorization.add_role(role);
+        }
+        e.adapter.set_authorization(Arc::new(authorization));
+    }
+
+    /// The ids `find()` reads, sorted.
+    pub async fn ids(e: &Env, collection: &Collection, queries: Vec<Query>) -> utopia_database::Result<Vec<String>> {
+        let documents = e.adapter.find(collection, queries, Find::default()).await?;
+        let mut ids: Vec<String> = documents.iter().map(|d| d.id().to_owned()).collect();
+        ids.sort();
+        Ok(ids)
+    }
+
+    /// The attribute `key` of document `id`.
+    pub async fn attribute(e: &Env, collection: &Collection, id: &str, key: &str) -> Value {
+        let document = e.adapter.get_document(collection, id, vec![], false).await.unwrap();
+        document.get(key).cloned().unwrap_or(Value::Null)
+    }
+
+    /// The columns of a SQLite table.
+    pub async fn columns(e: &Env, table: &str) -> Vec<String> {
+        let mut pdo = e.adapter.pdo().lock().await;
+        let mut statement = pdo.query(&format!("PRAGMA table_info(`namespace_{table}`)")).await.unwrap();
+        statement
+            .fetch_all_assoc()
+            .iter()
+            .filter_map(|row| row.get_str("name").map(utopia_database::value::to_text))
+            .collect()
+    }
+
+    /// The first column of the rows of a raw SQLite query.
+    pub async fn column(e: &Env, sql: &str) -> Vec<String> {
+        let mut pdo = e.adapter.pdo().lock().await;
+        let mut statement = pdo.query(sql).await.unwrap();
+        statement.fetch_all_column(0).unwrap().iter().map(utopia_database::value::to_text).collect()
+    }
+}
+
+/// PHP: `tests/unit/Adapter/SQLiteChildSideRelationshipTest.php`, against the
+/// adapter: the relationship's columns renamed from the child side, then a
+/// relation written and read through the renamed column (the related
+/// documents `Database` nests are its own port).
+mod sqlite_child_side_relationship_test {
+    use super::documents::{attribute, collection, columns, document, ids};
+    use super::env::{Env, env};
+    use super::*;
+    use utopia_database::Query;
+    use utopia_database::value::string;
+
+    async fn setup() -> Env {
+        let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+        for name in ["authors", "books"] {
+            let definition = collection(name, vec![Attribute::string("name", 64)], vec![], false);
+            e.adapter.create_collection(name, definition.attributes().unwrap(), &[]).await.unwrap();
+            e.define(definition).await;
+        }
+        e
+    }
+
+    #[tokio::test]
+    async fn test_a_one_to_many_key_renamed_from_the_child_side_renames_its_column() {
+        let e = setup().await;
+        let relationship = Relationship::one_to_many("books").key("books").two_way(true).two_way_key("author");
+        Relationships::create_relationship(&e.adapter, "authors", &relationship).await.unwrap();
+        let child = Relationship::one_to_many("authors").key("author").two_way(true).two_way_key("books");
+        let update = relationship::Update { key: Some("writer".into()), ..Default::default() };
+        Relationships::update_relationship(&e.adapter, "books", &child, RelationshipSide::Child, &update)
+            .await
+            .unwrap();
+        let books_columns = columns(&e, "books").await;
+        assert!(books_columns.contains(&"writer".to_owned()));
+        assert!(!books_columns.contains(&"author".to_owned()));
+
+        let books =
+            collection("books", vec![Attribute::string("name", 64), Attribute::string("writer", 255)], vec![], false);
+        let authors = collection("authors", vec![Attribute::string("name", 64)], vec![], false);
+        super::documents::authorize(&e, &["any"]);
+        e.adapter.create_document(&authors, document("herbert", &[], vec![("name", string("Herbert"))])).await.unwrap();
+        e.adapter
+            .create_document(
+                &books,
+                document("dune", &[], vec![("name", string("Dune")), ("writer", string("herbert"))]),
+            )
+            .await
+            .unwrap();
+        assert_eq!(attribute(&e, &books, "dune", "writer").await, string("herbert"));
+        assert_eq!(ids(&e, &books, vec![Query::equal("writer", ["herbert"])]).await.unwrap(), ["dune"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_many_to_one_two_way_key_renamed_from_the_child_side_renames_the_parent_column() {
+        let e = setup().await;
+        let relationship = Relationship::many_to_one("authors").key("author").two_way(true).two_way_key("books");
+        Relationships::create_relationship(&e.adapter, "books", &relationship).await.unwrap();
+        let child = Relationship::many_to_one("books").key("books").two_way(true).two_way_key("author");
+        let update = relationship::Update { two_way_key: Some("writer".into()), ..Default::default() };
+        Relationships::update_relationship(&e.adapter, "authors", &child, RelationshipSide::Child, &update)
+            .await
+            .unwrap();
+        let books_columns = columns(&e, "books").await;
+        assert!(books_columns.contains(&"writer".to_owned()));
+        assert!(!books_columns.contains(&"author".to_owned()));
+
+        let books =
+            collection("books", vec![Attribute::string("name", 64), Attribute::string("writer", 255)], vec![], false);
+        super::documents::authorize(&e, &["any"]);
+        e.adapter
+            .create_document(
+                &books,
+                document("dune", &[], vec![("name", string("Dune")), ("writer", string("herbert"))]),
+            )
+            .await
+            .unwrap();
+        assert_eq!(attribute(&e, &books, "dune", "writer").await, string("herbert"));
+        assert_eq!(ids(&e, &books, vec![Query::equal("writer", ["herbert"])]).await.unwrap(), ["dune"]);
+    }
+}
+
+/// PHP: `tests/unit/Adapter/SQLiteManyToManyRelationshipRenameTest.php`,
+/// against the adapter: the junction `Database` creates (named after the
+/// collections' sequences) keeps its relations through renames of either
+/// key, from either side. Refusing a rename onto an existing related
+/// attribute is `Database`'s validation, ported with it.
+mod sqlite_many_to_many_relationship_rename_test {
+    use super::documents::{collection, column, columns, document};
+    use super::env::{Env, env};
+    use super::*;
+    use utopia_database::value::string;
+
+    /// Books and authors (sequences 1 and 2), their junction `_1_2`, and
+    /// dune written by herbert.
+    async fn setup() -> Env {
+        let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+        for name in ["books", "authors"] {
+            let definition = collection(name, vec![Attribute::string("name", 64)], vec![], false);
+            e.adapter.create_collection(name, definition.attributes().unwrap(), &[]).await.unwrap();
+            e.define(definition).await;
+        }
+        let junction =
+            collection("_1_2", vec![Attribute::string("authors", 255), Attribute::string("books", 255)], vec![], false);
+        e.adapter.create_collection("_1_2", junction.attributes().unwrap(), &[]).await.unwrap();
+        super::documents::authorize(&e, &["any"]);
+        add(&e, ("authors", "books"), "dune", "herbert").await;
+        e
+    }
+
+    /// A junction row relating `book` and `author` under the junction's
+    /// current `(author key, book key)` columns.
+    async fn add(e: &Env, keys: (&str, &str), book: &str, author: &str) {
+        let junction =
+            collection("_1_2", vec![Attribute::string(keys.0, 255), Attribute::string(keys.1, 255)], vec![], false);
+        let id = format!("{book}_{author}");
+        e.adapter
+            .create_document(&junction, document(&id, &[], vec![(keys.0, string(author)), (keys.1, string(book))]))
+            .await
+            .unwrap();
+    }
+
+    /// The authors of `book` under the junction's `(author key, book key)`.
+    async fn authors(e: &Env, keys: (&str, &str), book: &str) -> Vec<String> {
+        let mut ids =
+            column(e, &format!("SELECT `{}` FROM `namespace__1_2` WHERE `{}` = '{book}'", keys.0, keys.1)).await;
+        ids.sort();
+        ids
+    }
+
+    async fn rename(e: &Env, two_way: bool, update: relationship::Update) {
+        let relationship = Relationship::many_to_many("authors").key("authors").two_way(two_way).two_way_key("books");
+        Relationships::update_relationship(&e.adapter, "books", &relationship, RelationshipSide::Parent, &update)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_a_one_way_two_way_key_rename_keeps_existing_and_new_relations() {
+        let e = setup().await;
+        rename(&e, false, relationship::Update { two_way_key: Some("works".into()), ..Default::default() }).await;
+        let keys = ("authors", "works");
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+        add(&e, keys, "emma", "austen").await;
+        add(&e, keys, "emma", "herbert").await;
+        assert_eq!(authors(&e, keys, "emma").await, ["austen", "herbert"]);
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_one_way_key_rename_keeps_existing_and_new_relations() {
+        let e = setup().await;
+        rename(&e, false, relationship::Update { key: Some("writers".into()), ..Default::default() }).await;
+        let keys = ("writers", "books");
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+        add(&e, keys, "emma", "austen").await;
+        assert_eq!(authors(&e, keys, "emma").await, ["austen"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_one_way_rename_of_both_keys_keeps_existing_and_new_relations() {
+        let e = setup().await;
+        rename(
+            &e,
+            false,
+            relationship::Update {
+                key: Some("writers".into()),
+                two_way_key: Some("works".into()),
+                ..Default::default()
+            },
+        )
+        .await;
+        let keys = ("writers", "works");
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+        add(&e, keys, "emma", "austen").await;
+        assert_eq!(authors(&e, keys, "emma").await, ["austen"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_two_way_two_way_key_rename_keeps_both_sides_related() {
+        let e = setup().await;
+        rename(&e, true, relationship::Update { two_way_key: Some("works".into()), ..Default::default() }).await;
+        let keys = ("authors", "works");
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+        add(&e, keys, "emma", "herbert").await;
+        let mut works =
+            column(&e, "SELECT `works` FROM `namespace__1_2` WHERE `authors` = 'herbert' ORDER BY `works`").await;
+        works.sort();
+        assert_eq!(works, ["dune", "emma"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_two_way_key_rename_from_the_child_side_keeps_both_sides_related() {
+        let e = setup().await;
+        let relationship = Relationship::many_to_many("books").key("books").two_way(true).two_way_key("authors");
+        let update = relationship::Update { key: Some("works".into()), ..Default::default() };
+        Relationships::update_relationship(&e.adapter, "authors", &relationship, RelationshipSide::Child, &update)
+            .await
+            .unwrap();
+        assert_eq!(columns(&e, "_1_2").await.iter().filter(|c| *c == "works" || *c == "authors").count(), 2);
+        let keys = ("authors", "works");
+        assert_eq!(authors(&e, keys, "dune").await, ["herbert"]);
+        add(&e, keys, "emma", "herbert").await;
+        let works =
+            column(&e, "SELECT `works` FROM `namespace__1_2` WHERE `authors` = 'herbert' ORDER BY `works`").await;
+        assert_eq!(works, ["dune", "emma"]);
+    }
+}
+
+/// PHP: `tests/unit/SQLiteSchemaIndexesTest.php`, against the adapter (the
+/// stored definition `Database` keeps beside each index change written by
+/// `Env::define`).
+mod sqlite_schema_indexes_test {
+    use super::documents::{authorize, collection, document, ids};
+    use super::env::{Env, env};
+    use super::*;
+    use utopia_database::Query;
+    use utopia_database::value::string;
+    use utopia_query::schema::IndexType;
+
+    fn notes(indexes: Vec<Index>) -> utopia_database::Collection {
+        collection("notes", vec![Attribute::string("title", 64), Attribute::string("body", 64)], indexes, false)
+    }
+
+    async fn database(shared: bool) -> Env {
+        let tenant = if shared { 1.into() } else { Default::default() };
+        let e = env(Engine::Sqlite, "main", shared, tenant).await.unwrap();
+        e.adapter.create_collection("notes", notes(vec![]).attributes().unwrap(), &[]).await.unwrap();
+        e.define(notes(vec![])).await;
+        authorize(&e, &["any"]);
+        e.adapter
+            .create_document(
+                &notes(vec![]),
+                document("fox", &[], vec![("title", string("quick brown fox")), ("body", string("lazy dog"))]),
+            )
+            .await
+            .unwrap();
+        e
+    }
+
+    /// Creates `index` and stores the definition holding `indexes`.
+    async fn create(e: &Env, index: Index, indexes: &[Index]) {
+        e.adapter.create_index("notes", &index, &[], &[]).await.unwrap();
+        e.define(notes(indexes.to_vec())).await;
+    }
+
+    async fn indexes(e: &Env) -> std::collections::BTreeMap<String, (IndexType, Vec<String>)> {
+        let mut indexes = std::collections::BTreeMap::new();
+        for index in e.adapter.schema_indexes("notes").await.unwrap() {
+            assert!(
+                indexes.insert(index.name.clone(), (index.kind, index.columns)).is_none(),
+                "Each index is listed once"
+            );
+        }
+        indexes
+    }
+
+    async fn fulltext(e: &Env) -> Vec<(String, IndexType, Vec<String>)> {
+        indexes(e)
+            .await
+            .into_iter()
+            .filter(|(_, (k, _))| *k == IndexType::Fulltext)
+            .map(|(n, (k, c))| (n, k, c))
+            .collect()
+    }
+
+    fn ft(name: &str, column: &str) -> (String, IndexType, Vec<String>) {
+        (name.to_owned(), IndexType::Fulltext, vec![column.to_owned()])
+    }
+
+    #[tokio::test]
+    async fn test_fulltext_indexes_are_listed_under_their_ids() {
+        for shared in [false, true] {
+            let e = database(shared).await;
+            let title = Index::fulltext("title_search", ["title"]);
+            let body = Index::fulltext("body_search", ["body"]);
+            create(&e, title.clone(), &[title.clone()]).await;
+            create(&e, body.clone(), &[title.clone(), body.clone()]).await;
+            assert_eq!(fulltext(&e).await, [ft("body_search", "body"), ft("title_search", "title")]);
+            assert!(e.adapter.rename_index("notes", "title_search", "title_lookup").await.unwrap());
+            e.define(notes(vec![title.with_key("title_lookup"), body.clone()])).await;
+            assert_eq!(fulltext(&e).await, [ft("body_search", "body"), ft("title_lookup", "title")]);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_deleting_one_of_two_fulltext_indexes_keeps_the_other() {
+        for shared in [false, true] {
+            let e = database(shared).await;
+            let title = Index::fulltext("title_search", ["title"]);
+            let body = Index::fulltext("body_search", ["body"]);
+            create(&e, title.clone(), &[title.clone()]).await;
+            create(&e, body.clone(), &[title.clone(), body.clone()]).await;
+            assert!(e.adapter.delete_index("notes", "title_search").await.unwrap());
+            e.define(notes(vec![body.clone()])).await;
+            assert_eq!(fulltext(&e).await, [ft("body_search", "body")]);
+            let definition = notes(vec![body.clone()]);
+            assert_eq!(ids(&e, &definition, vec![Query::search("body", "lazy")]).await.unwrap(), ["fox"]);
+            // Refusing a search without a fulltext index is `Database`'s
+            // validation (`Validator\Queries\Indexed`); the adapter falls back
+            // to `LIKE`, as PHP's does.
+            create(&e, title.clone(), &[body.clone(), title.clone()]).await;
+            let definition = notes(vec![body.clone(), title.clone()]);
+            assert_eq!(ids(&e, &definition, vec![Query::search("title", "quick")]).await.unwrap(), ["fox"]);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_indexes_are_listed_under_their_ids() {
+        for shared in [false, true] {
+            let e = database(shared).await;
+            let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
+            let by_body = Index::unique("by_body", ["body"], vec![], vec![]).unwrap();
+            create(&e, by_title.clone(), &[by_title.clone()]).await;
+            create(&e, by_body.clone(), &[by_title.clone(), by_body.clone()]).await;
+            let tenant: Vec<String> = if shared { vec!["_tenant".into()] } else { vec![] };
+            let with = |column: &str| [tenant.clone(), vec![column.to_owned()]].concat();
+            let indexes = indexes(&e).await;
+            assert_eq!(indexes.get("by_title"), Some(&(IndexType::Key, with("title"))));
+            assert_eq!(indexes.get("by_body"), Some(&(IndexType::Unique, with("body"))));
+            assert!(indexes.contains_key("_index1"));
+            assert!(indexes.keys().all(|id| !id.starts_with("namespace")));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_shared_tables_list_every_tenants_index_once_and_prefer_their_own() {
+        let e = database(true).await;
+        let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
+        create(&e, by_title.clone(), &[by_title.clone()]).await;
+        e.adapter
+            .create_index("notes", &Index::key("lookup", ["title"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        e.adapter.set_tenant(2.into());
+        e.adapter
+            .create_index("notes", &Index::unique("lookup", ["body"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        let second = indexes(&e).await;
+        e.adapter.set_tenant(1.into());
+        let first = indexes(&e).await;
+        assert_eq!(first.keys().collect::<Vec<_>>(), second.keys().collect::<Vec<_>>());
+        let tenant_and = |c: &str| vec!["_tenant".to_owned(), c.to_owned()];
+        assert_eq!(first.get("by_title"), Some(&(IndexType::Key, tenant_and("title"))));
+        assert_eq!(second.get("by_title"), Some(&(IndexType::Key, tenant_and("title"))));
+        assert_eq!(first.get("lookup"), Some(&(IndexType::Key, tenant_and("title"))));
+        assert_eq!(second.get("lookup"), Some(&(IndexType::Unique, tenant_and("body"))));
+    }
+
+    #[tokio::test]
+    async fn test_an_orphan_index_is_listed_for_reconciliation() {
+        let e = database(false).await;
+        e.adapter
+            .create_index("notes", &Index::key("lookup", ["title"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        assert_eq!(indexes(&e).await.get("lookup"), Some(&(IndexType::Key, vec!["title".to_owned()])));
+        assert!(e.adapter.delete_index("notes", "lookup").await.unwrap());
+        assert!(!indexes(&e).await.contains_key("lookup"));
+        assert!(
+            e.adapter
+                .create_index("notes", &Index::unique("lookup", ["body"], vec![], vec![]).unwrap(), &[], &[])
+                .await
+                .unwrap()
+        );
+        assert_eq!(indexes(&e).await.get("lookup"), Some(&(IndexType::Unique, vec!["body".to_owned()])));
+    }
+
+    #[tokio::test]
+    async fn test_renaming_an_index_the_schema_no_longer_has_rebuilds_it_under_the_new_name() {
+        for shared in [false, true] {
+            let e = database(shared).await;
+            let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
+            create(&e, by_title.clone(), &[by_title.clone()]).await;
+            assert!(e.adapter.delete_index("notes", "by_title").await.unwrap());
+            assert!(!indexes(&e).await.contains_key("by_title"));
+            assert!(e.adapter.rename_index("notes", "by_title", "by_heading").await.unwrap());
+            let indexes = indexes(&e).await;
+            assert!(!indexes.contains_key("by_title"));
+            let mut columns: Vec<String> = if shared { vec!["_tenant".into()] } else { vec![] };
+            columns.push("title".into());
+            assert_eq!(
+                indexes.get("by_heading"),
+                Some(&(IndexType::Key, columns)),
+                "the metadata names an index the schema has"
+            );
+        }
+    }
+}
+
+/// PHP: `tests/unit/SQLiteDigitLeadingNamespaceTest.php`, against the
+/// adapter: document security reads under namespaces a digit or a hyphen
+/// leads.
+mod sqlite_digit_leading_namespace_test {
+    use super::documents::{authorize, document, ids};
+    use super::*;
+    use utopia_database::value::string;
+
+    #[tokio::test]
+    async fn test_document_security_reads_work_under_the_names() {
+        for (schema, namespace) in [("digit_leading", "ns1"), ("1db", "1ns"), ("-db", "-ns")] {
+            let adapter = connect(Engine::Sqlite).await.unwrap();
+            adapter.set_database(schema);
+            adapter.set_namespace(namespace);
+            let e = super::env::Env { adapter, recorder: Arc::new(Recorder::default()), db: schema.to_owned() };
+            let posts = utopia_database::Collection::create(
+                "posts",
+                "",
+                vec![Attribute::string("title", 64)],
+                vec![],
+                Some(vec![r#"create("any")"#.to_owned()]),
+                true,
+                Default::default(),
+            )
+            .unwrap();
+            e.adapter.create_collection("posts", posts.attributes().unwrap(), &[]).await.unwrap();
+            authorize(&e, &["any"]);
+            e.adapter
+                .create_document(&posts, document("public", &[r#"read("any")"#], vec![("title", string("Readable"))]))
+                .await
+                .unwrap();
+            e.adapter
+                .create_document(
+                    &posts,
+                    document("private", &[r#"read("user:owner")"#], vec![("title", string("Hidden"))]),
+                )
+                .await
+                .unwrap();
+            // `Hook\Permissions` (a `Database` hook) writes the permission rows.
+            let table = format!("{}_posts_perms", e.adapter.namespace());
+            for (document, role) in [("public", "any"), ("private", "user:owner")] {
+                e.raw(&format!(
+                    "INSERT INTO `{table}` (`_type`, `_permission`, `_document`) VALUES ('read', '{role}', '{document}')"
+                ))
+                .await;
+            }
+            assert_eq!(ids(&e, &posts, vec![]).await.unwrap(), ["public"], "{namespace}");
+            assert_eq!(e.adapter.count(&posts, vec![], None).await.unwrap(), 1, "{namespace}");
+            assert_eq!(e.adapter.get_document(&posts, "public", vec![], false).await.unwrap().id(), "public");
+            // Refusing to read `private` by id is `Database::getDocument()`'s
+            // authorization check; the adapter reads it by id under the name.
+            assert_eq!(e.adapter.get_document(&posts, "private", vec![], false).await.unwrap().id(), "private");
+        }
+    }
+}
+
+/// PHP: `tests/unit/Adapter/SQLiteSchemaTest.php`, the cases reading the
+/// stored definition and writing documents.
+mod sqlite_schema_documents_test {
+    use super::documents::{authorize, collection, column, document};
+    use super::env::{Env, env};
+    use super::*;
+    use utopia_database::Kind;
+    use utopia_database::value::string;
+
+    async fn setup() -> Env {
+        let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+        let notes = collection(
+            "notes",
+            vec![Attribute::string("title", 64)],
+            vec![Index::key("title_index", ["title"], vec![], vec![]).unwrap()],
+            false,
+        );
+        e.adapter.create_collection("notes", notes.attributes().unwrap(), notes.indexes().unwrap()).await.unwrap();
+        e.define(notes).await;
+        e
+    }
+
+    async fn index_names(e: &Env) -> Vec<String> {
+        column(e, "SELECT name FROM sqlite_master WHERE type = 'index' AND sql IS NOT NULL ORDER BY name")
+            .await
+            .into_iter()
+            .filter(|n| n.ends_with("_title_index") || n.ends_with("_renamed"))
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn test_renaming_an_index_the_metadata_lacks_returns_false() {
+        let e = setup().await;
+        assert!(!e.adapter.rename_index("notes", "missing", "renamed").await.unwrap());
+        assert_eq!(index_names(&e).await, ["namespace__notes_title_index"]);
+    }
+
+    #[tokio::test]
+    async fn test_renaming_an_index_of_an_unknown_collection_is_not_found() {
+        let e = setup().await;
+        let error = e.adapter.rename_index("missing", "title_index", "renamed").await.unwrap_err();
+        assert_eq!(error.kind(), Kind::NotFound);
+        assert_eq!(error.message(), "Collection not found");
+    }
+
+    #[tokio::test]
+    async fn test_renaming_a_stored_index_renames_it() {
+        let e = setup().await;
+        assert!(e.adapter.rename_index("notes", "title_index", "renamed").await.unwrap());
+        assert_eq!(index_names(&e).await, ["namespace__notes_renamed"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_long_string_is_stored_whole() {
+        let e = setup().await;
+        let articles = collection("articles", vec![Attribute::string("body", 20_000_000)], vec![], false);
+        e.adapter.create_collection("articles", articles.attributes().unwrap(), &[]).await.unwrap();
+        authorize(&e, &["any"]);
+        let value = "abc".repeat(10_000);
+        e.adapter
+            .create_document(&articles, document("long", &[], vec![("body", string(value.as_str()))]))
+            .await
+            .unwrap();
+        assert_eq!(super::sqlite_column_type(&e, "articles", "body").await.as_deref(), Some("LONGTEXT"));
+        assert_eq!(super::documents::attribute(&e, &articles, "long", "body").await, string(value.as_str()));
+    }
+
+    #[tokio::test]
+    async fn test_a_spatial_column_keeps_its_wkt_as_text() {
+        let e = setup().await;
+        let places = collection("places", vec![Attribute::point("position")], vec![], false);
+        e.adapter.create_collection("places", places.attributes().unwrap(), &[]).await.unwrap();
+        e.adapter
+            .create_documents(&places, vec![document("origin", &[], vec![("position", string("POINT(1 2)"))])])
+            .await
+            .unwrap();
+        assert_eq!(
+            column(&e, "SELECT `position` FROM `namespace_places` WHERE `_uid` = 'origin'").await,
+            ["POINT(1 2)"]
+        );
+    }
+}
+
+/// PHP: `tests/unit/SQLiteTenantIndexTest.php`, the documents a dropped
+/// unique index stops refusing.
+mod sqlite_tenant_index_documents_test {
+    use super::documents::{authorize, collection, document};
+    use super::env::env;
+    use super::*;
+    use utopia_database::value::string;
+
+    #[tokio::test]
+    async fn test_a_deleted_unique_index_stops_rejecting_duplicates() {
+        let e = env(Engine::Sqlite, "main", true, string("acme.1")).await.unwrap();
+        let profiles = collection("profiles", vec![Attribute::string("email", 64)], vec![], false);
+        e.adapter.create_collection("profiles", profiles.attributes().unwrap(), &[]).await.unwrap();
+        e.adapter
+            .create_index("profiles", &Index::unique("email", ["email"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        assert!(e.adapter.delete_index("profiles", "email").await.unwrap());
+        authorize(&e, &["any"]);
+        for id in ["first", "second"] {
+            e.adapter
+                .create_document(&profiles, document(id, &[], vec![("email", string("user@example.com"))]))
+                .await
+                .unwrap();
+        }
+        assert_eq!(
+            e.adapter.count(&profiles, vec![], None).await.unwrap(),
+            2,
+            "A deleted unique index must stop rejecting duplicates"
+        );
+    }
+}
+
+/// PHP: `tests/unit/Adapter/SQLiteSharedFulltextTest.php`, against the
+/// adapter: each string tenant's FTS5 table holds and finds only its own
+/// rows. (A tenant the driver cannot quote is refused with `Failed to quote
+/// SQLite tenant`; the library's PDO always quotes, so that case is not
+/// reachable here.)
+mod sqlite_shared_fulltext_documents_test {
+    use super::documents::{authorize, collection, column, document, ids};
+    use super::env::{Env, env};
+    use super::*;
+    use utopia_database::Query;
+    use utopia_database::value::string;
+
+    const TENANTS: [&str; 2] = ["tenant-a", "tenant'b"];
+
+    fn notes() -> utopia_database::Collection {
+        collection("notes", vec![Attribute::string("body", 128)], vec![Index::fulltext("body_search", ["body"])], false)
+    }
+
+    async fn setup() -> Env {
+        let e = env(Engine::Sqlite, "main", true, string(TENANTS[0])).await.unwrap();
+        authorize(&e, &["any"]);
+        let definition = notes();
+        for tenant in TENANTS {
+            e.adapter.set_tenant(string(tenant));
+            // The table is shared: the second tenant finds it created.
+            let _ = e.adapter.create_collection("notes", definition.attributes().unwrap(), &[]).await;
+            e.adapter
+                .create_document(
+                    &definition,
+                    document("early", &[], vec![("body", string("shared word written before the index"))]),
+                )
+                .await
+                .unwrap();
+            e.adapter.create_index("notes", &Index::fulltext("body_search", ["body"]), &[], &[]).await.unwrap();
+            e.adapter
+                .create_document(
+                    &definition,
+                    document("late", &[], vec![("body", string("shared word written after the index"))]),
+                )
+                .await
+                .unwrap();
+        }
+        e
+    }
+
+    async fn search(e: &Env, tenant: &str, term: &str) -> Vec<String> {
+        e.adapter.set_tenant(string(tenant));
+        ids(e, &notes(), vec![Query::search("body", term)]).await.unwrap()
+    }
+
+    async fn sequences(e: &Env, tenant: &str) -> Vec<String> {
+        let tenant = tenant.replace('\'', "''");
+        column(e, &format!("SELECT _id FROM `namespace_notes` WHERE _tenant = '{tenant}' ORDER BY _id")).await
+    }
+
+    async fn indexed_rows(e: &Env, tenant: &str) -> Vec<String> {
+        let names = column(
+            e,
+            &format!(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'namespace_{}_notes_%' AND name LIKE '%\\_fts' ESCAPE '\\'",
+                tenant.replace('\'', "")
+            ),
+        )
+        .await;
+        assert_eq!(names.len(), 1, "one fulltext table for {tenant}");
+        column(e, &format!("SELECT rowid FROM `{0}` WHERE `{0}` MATCH 'word OR rewritten' ORDER BY rowid", names[0]))
+            .await
+    }
+
+    #[tokio::test]
+    async fn test_a_string_tenants_fulltext_index_sees_only_its_own_rows() {
+        let e = setup().await;
+        for tenant in TENANTS {
+            assert_eq!(search(&e, tenant, "shared").await, ["early", "late"], "{tenant} finds its own rows");
+            assert_eq!(
+                sequences(&e, tenant).await,
+                indexed_rows(&e, tenant).await,
+                "{tenant} indexes only its own rows"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_another_tenants_writes_leave_the_index_alone() {
+        let e = setup().await;
+        e.adapter.set_tenant(string(TENANTS[1]));
+        let definition = notes();
+        let mut update = document("late", &[], vec![("body", string("rewritten"))]);
+        let _ = update.set("$permissions", utopia_database::value::list([]));
+        e.adapter.update_document(&definition, "late", update, true).await.unwrap();
+        assert!(e.adapter.delete_document(&definition, "early").await.unwrap());
+
+        assert_eq!(search(&e, TENANTS[0], "shared").await, ["early", "late"]);
+        assert_eq!(sequences(&e, TENANTS[0]).await, indexed_rows(&e, TENANTS[0]).await);
+        assert!(search(&e, TENANTS[1], "shared").await.is_empty());
+        assert_eq!(search(&e, TENANTS[1], "rewritten").await, ["late"]);
+        assert_eq!(sequences(&e, TENANTS[1]).await, indexed_rows(&e, TENANTS[1]).await);
     }
 }
