@@ -895,6 +895,130 @@ fn a_new_nested_many_to_many_document_without_permissions_takes_the_parent_permi
     });
 }
 
+/// The most values one query of `queries` carries, nested queries looked
+/// into (`largestValueCount()`).
+fn largest_value_count(queries: &[utopia_query::Query]) -> usize {
+    queries
+        .iter()
+        .map(|query| {
+            if query.method().is_nested() {
+                let nested: Vec<utopia_query::Query> = query
+                    .values()
+                    .values()
+                    .filter_map(|v| match v {
+                        utopia_query::Value::Ext(utopia_query::Object::Query(q)) => Some((**q).clone()),
+                        _ => None,
+                    })
+                    .collect();
+                largest_value_count(&nested)
+            } else {
+                query.values().len()
+            }
+        })
+        .max()
+        .unwrap_or(0)
+}
+
+#[test]
+fn nested_path_filters_stay_within_the_query_value_limit() {
+    block_on(async {
+        let spy = crate::database::spy::Spy::memory();
+        let counts: Arc<Mutex<Vec<(String, usize)>>> = Arc::default();
+        let seen = counts.clone();
+        spy.watch(|w| {
+            w.find = Some(Arc::new(move |(collection, queries): (Collection, Vec<Query>)| {
+                let inner: Vec<utopia_query::Query> = queries.iter().map(|q| (**q).clone()).collect();
+                let largest = largest_value_count(&inner);
+                let mut counts = seen.lock().unwrap();
+                match counts.iter_mut().find(|(c, _)| c == collection.id()) {
+                    Some((_, most)) => *most = (*most).max(largest),
+                    None => counts.push((collection.id().to_owned(), largest)),
+                }
+            }));
+        });
+        let db = database_on(spy, "relationship_hook").await;
+        db.add_hook(Hook::Relationships(Arc::new(Relationships::default()))).unwrap();
+        db.add_hook(Hook::write(Arc::new(Permissions::new()))).unwrap();
+        collection(&db, "parent", Vec::new(), crud(), false).await;
+        collection(&db, "child", Vec::new(), crud(), false).await;
+        collection(&db, "tag", Vec::new(), crud(), false).await;
+        collection(&db, "label", vec![string("name", 64)], crud(), false).await;
+        collection(&db, "owner", vec![string("name", 64)], crud(), false).await;
+        relate(&db, "parent", one_to_many(OnDelete::SetNull)).await;
+        relate(
+            &db,
+            "child",
+            Relationship::many_to_many("tag").two_way(true).key("tags").two_way_key("children").on_delete(OnDelete::SetNull),
+        )
+        .await;
+        relate(
+            &db,
+            "tag",
+            Relationship::one_to_many("label").two_way(true).key("labels").two_way_key("tag").on_delete(OnDelete::SetNull),
+        )
+        .await;
+        relate(
+            &db,
+            "child",
+            Relationship::many_to_one("owner").two_way(true).key("owner").two_way_key("children").on_delete(OnDelete::SetNull),
+        )
+        .await;
+        relate(
+            &db,
+            "parent",
+            Relationship::many_to_many("tag").two_way(true).key("topics").two_way_key("parents").on_delete(OnDelete::SetNull),
+        )
+        .await;
+
+        for number in 1..=6 {
+            let name = if number == 6 { "other" } else { "match" };
+            let n = |prefix: &str| format!("{prefix}{number}");
+            create(&db, "owner", doc(&[("$id", s(&n("owner"))), ("name", s(name))])).await;
+            create(&db, "tag", doc(&[("$id", s(&n("tag")))])).await;
+            create(&db, "label", doc(&[("$id", s(&n("label"))), ("name", s(name)), ("tag", s(&n("tag")))])).await;
+            create(&db, "child", doc(&[("$id", s(&n("child"))), ("tags", strs(&[&n("tag")])), ("owner", s(&n("owner")))]))
+                .await;
+            create(
+                &db,
+                "parent",
+                doc(&[("$id", s(&n("parent"))), ("children", strs(&[&n("child")])), ("topics", strs(&[&n("tag")]))]),
+            )
+            .await;
+        }
+
+        db.set_max_query_values(2);
+
+        let matching = names(&["parent1", "parent2", "parent3", "parent4", "parent5"]);
+        let filters: Vec<(&str, Vec<&str>, Vec<String>, Vec<&str>)> = vec![
+            ("children.tags.labels.name", vec!["match"], matching.clone(), vec!["child", "junction", "label"]),
+            ("children.owner.name", vec!["match"], matching.clone(), vec!["child", "owner"]),
+            ("topics.labels.name", vec!["match"], matching, vec!["junction", "label", "tag"]),
+            ("children.$id", vec!["child1", "child2"], names(&["parent1", "parent2"]), vec!["child"]),
+        ];
+        for (path, values, expected, collections) in filters {
+            counts.lock().unwrap().clear();
+            let found = db
+                .find("parent", vec![Query::equal(path, values), Query::select(["$id"])], PermissionType::Read)
+                .await
+                .unwrap();
+            assert_eq!(sorted_ids(&found), expected, "filtering by {path}");
+
+            let counts = counts.lock().unwrap().clone();
+            let mut read: Vec<String> = counts
+                .iter()
+                .filter(|(c, _)| c != "parent")
+                .map(|(c, _)| if c.starts_with('_') { "junction".to_owned() } else { c.clone() })
+                .collect();
+            read.sort();
+            read.dedup();
+            assert_eq!(read, names(&collections), "filtering by {path} reads only the collections on the path");
+            for (collection, largest) in counts.iter().filter(|(c, _)| c != "parent") {
+                assert!(*largest <= 2, "a read of {collection} while filtering by {path} carried {largest} values");
+            }
+        }
+    });
+}
+
 #[test]
 fn cascade_with_only_a_dangling_junction_row_deletes_the_parent() {
     block_on(async {

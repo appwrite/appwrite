@@ -12,7 +12,10 @@ mod delete_related_update;
 mod hook;
 mod links;
 mod nested_pre_check;
+mod coverage;
 mod nested_preparation;
+mod options;
+mod staged_view;
 mod prepared_create;
 
 use std::sync::Arc;
