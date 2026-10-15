@@ -16,9 +16,8 @@ trait Spatial
      */
     protected function geometryToWkt(array $geometry): string
     {
-        $ordinates = \array_is_list($geometry) ? \array_slice($geometry, 0, 2) : $geometry;
-        if ($this->isCoordinate($ordinates)) {
-            return 'POINT(' . $this->coordinateToWkt($ordinates) . ')';
+        if ($this->isCoordinate($geometry)) {
+            return 'POINT(' . $this->coordinateToWkt($geometry) . ')';
         }
 
         if ($geometry === [] || ! \array_is_list($geometry) || ! \is_array($geometry[0])) {
@@ -50,7 +49,21 @@ trait Spatial
             throw new ValidationException('Invalid geometry: a polygon ring must be a list of points');
         }
 
-        return $this->coordinatesToWkt($ring);
+        $wkt = $this->coordinatesToWkt($ring);
+
+        if (\count($ring) < 4) {
+            throw new ValidationException('Invalid geometry: a polygon ring must have at least 4 points');
+        }
+
+        /** @var array{0: int|float|string, 1: int|float|string} $first */
+        $first = $ring[0];
+        /** @var array{0: int|float|string, 1: int|float|string} $last */
+        $last = $ring[\count($ring) - 1];
+        if ((float) $first[0] !== (float) $last[0] || (float) $first[1] !== (float) $last[1]) {
+            throw new ValidationException('Invalid geometry: a polygon ring must be closed, with its first point equal to its last');
+        }
+
+        return $wkt;
     }
 
     /**

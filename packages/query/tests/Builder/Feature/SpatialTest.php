@@ -126,6 +126,7 @@ class SpatialTest extends TestCase
         return [
             'empty' => [[], 'expected an [x, y] point'],
             'single coordinate' => [[1.0], 'expected an [x, y] point'],
+            'flat point with a z ordinate' => [[1.0, 2.0, 3.0], 'expected an [x, y] point'],
             'keyed point' => [['x' => 1.0, 'y' => 2.0], 'expected an [x, y] point'],
             'non-numeric point' => [['a', 'b'], 'expected an [x, y] point'],
             'infinite coordinate' => [['1e999', 1.0], 'expected an [x, y] point'],
@@ -135,6 +136,10 @@ class SpatialTest extends TestCase
             'polygon point missing y' => [[[[0.0, 0.0], [1.0], [1.0, 1.0], [0.0, 0.0]]], 'every point must be an [x, y] pair'],
             'polygon ring that is not a list' => [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]], 'ring'], 'polygon ring must be a list of points'],
             'empty polygon ring' => [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]], []], 'polygon ring must be a list of points'],
+            'one-point polygon ring' => [[[[1.0, 2.0]]], 'polygon ring must have at least 4 points'],
+            'closed polygon ring of three points' => [[[[0.0, 0.0], [1.0, 0.0], [0.0, 0.0]]], 'polygon ring must have at least 4 points'],
+            'open polygon ring' => [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]], 'polygon ring must be closed'],
+            'open polygon hole' => [[[[0.0, 0.0], [4.0, 0.0], [4.0, 4.0], [0.0, 0.0]], [[1.0, 1.0], [2.0, 1.0], [2.0, 2.0], [1.0, 2.0]]], 'polygon ring must be closed'],
         ];
     }
 
