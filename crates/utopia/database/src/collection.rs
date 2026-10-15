@@ -8,7 +8,7 @@ use std::ops::Deref;
 use std::sync::OnceLock;
 
 use crate::attribute::Attribute;
-use crate::document::{self, Document};
+use crate::document::{self, Document, SetType};
 use crate::error::{Error, Result};
 use crate::index::Index;
 use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
@@ -135,8 +135,16 @@ impl Collection {
                 Value::Array(Array::from_list(permissions.into_iter().map(|p| Value::Str(Str::from(p))).collect())),
             );
         }
+        // `array_merge()`: string keys replace, integer keys are appended.
         for (k, v) in metadata {
-            data.set(k, v);
+            match k {
+                ArrayKey::Int(_) => {
+                    let _ = data.push(v);
+                }
+                k => {
+                    data.set(k, v);
+                }
+            }
         }
         let collection = Collection::of(Document::new(data)?);
         // The models are the ones given.
@@ -212,9 +220,46 @@ impl Collection {
     ///
     /// Fails as [`Document::set`] does.
     pub fn set(&mut self, key: &str, value: Value) -> Result<&mut Self> {
+        self.set_with(key, value, SetType::Assign)
+    }
+
+    /// Sets, appends or prepends an attribute of the definition
+    /// (`setAttribute($key, $value, $type)`), forgetting the models it
+    /// changes.
+    ///
+    /// Fails as [`Document::set_with`] does.
+    pub fn set_with(&mut self, key: &str, value: Value, how: SetType) -> Result<&mut Self> {
         self.forget(key);
-        self.document.set(key, value)?;
+        self.document.set_with(key, value, how)?;
         Ok(self)
+    }
+
+    /// Sets every attribute of `attrs` (`setAttributes()`), forgetting the
+    /// models they change.
+    ///
+    /// Fails as [`Document::set`] does.
+    pub fn set_many(&mut self, attrs: Array) -> Result<&mut Self> {
+        for k in attrs.keys() {
+            if let KeyRef::Str(s) = k {
+                self.forget(&String::from_utf8_lossy(s));
+            }
+        }
+        self.document.set_many(attrs)?;
+        Ok(self)
+    }
+
+    /// Replaces every attribute of the definition (`exchangeArray()`),
+    /// returning the previous ones. The attribute and index models are kept
+    /// when their stored lists did not change.
+    pub fn exchange_array(&mut self, data: Array) -> Array {
+        let previous = std::mem::replace(self.document.as_array_mut(), data);
+        if previous.get_str(ATTRIBUTES) != self.document.as_array().get_str(ATTRIBUTES) {
+            self.forget(ATTRIBUTES);
+        }
+        if previous.get_str(INDEXES) != self.document.as_array().get_str(INDEXES) {
+            self.forget(INDEXES);
+        }
+        previous
     }
 
     /// Removes an attribute of the definition (`removeAttribute()`).
