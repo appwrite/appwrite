@@ -321,6 +321,14 @@
             "transactionId",
             "operations"
         ],
+        "databases.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
+        ],
         "databases.createTransaction": [
             "ttl"
         ],
@@ -411,6 +419,14 @@
         "documentsDB.createOperations": [
             "transactionId",
             "operations"
+        ],
+        "documentsDB.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
         ],
         "documentsDB.createTransaction": [
             "ttl"
@@ -628,6 +644,14 @@
         "tablesDB.createOperations": [
             "transactionId",
             "operations"
+        ],
+        "tablesDB.createQuery": [
+            "databaseId",
+            "tableId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
         ],
         "tablesDB.createRow": [
             "databaseId",
@@ -1348,6 +1372,14 @@
             "required",
             "default"
         ],
+        "databases.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
+        ],
         "databases.createRelationshipAttribute": [
             "databaseId",
             "collectionId",
@@ -1747,6 +1779,14 @@
             "attributes",
             "orders",
             "lengths"
+        ],
+        "documentsDB.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
         ],
         "documentsDB.createTransaction": [
             "ttl"
@@ -3795,6 +3835,14 @@
             "required",
             "default"
         ],
+        "tablesDB.createQuery": [
+            "databaseId",
+            "tableId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
+        ],
         "tablesDB.createRelationshipColumn": [
             "databaseId",
             "tableId",
@@ -5287,6 +5335,14 @@
             "required",
             "default"
         ],
+        "databases.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
+        ],
         "databases.createRelationshipAttribute": [
             "databaseId",
             "collectionId",
@@ -5690,6 +5746,14 @@
         "documentsDB.createOperations": [
             "transactionId",
             "operations"
+        ],
+        "documentsDB.createQuery": [
+            "databaseId",
+            "collectionId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
         ],
         "documentsDB.createTransaction": [
             "ttl"
@@ -7559,6 +7623,14 @@
             "key",
             "required",
             "default"
+        ],
+        "tablesDB.createQuery": [
+            "databaseId",
+            "tableId",
+            "queries",
+            "transactionId",
+            "total",
+            "ttl"
         ],
         "tablesDB.createRelationshipColumn": [
             "databaseId",

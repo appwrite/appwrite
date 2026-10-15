@@ -4,25 +4,52 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
+use Utopia\Database\Adapter\Feature\Spatial as FeatureSpatial;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Permissions;
+use Utopia\Query\Schema\ColumnType;
 
 class Action extends AppwriteAction
 {
-    public const LIST_CACHE_FIELD_DOCUMENTS = 'documents';
-    public const LIST_CACHE_FIELD_TOTAL = 'total';
+    public const string LIST_CACHE_FIELD_DOCUMENTS = 'documents';
+    public const string LIST_CACHE_FIELD_TOTAL = 'total';
+    public const string LIST_CACHE_FIELD_OPERATIONS = 'operations';
+
+    private const string GRANT_REFUSED = 'Permissions must be one of';
 
     private string $context = DATABASE_TYPE_LEGACY;
 
     public function getDatabaseType(): string
     {
         return $this->context;
+    }
+
+    protected function supportsDefinedAttributes(Adapter $adapter): bool
+    {
+        return $adapter->supports(Capability::DefinedAttributes);
+    }
+
+    protected function supportsSpatial(Adapter $adapter): bool
+    {
+        return $adapter->hasFeature(FeatureSpatial::class);
+    }
+
+    /**
+     * Pool is a proxy and does not implement Feature interfaces, so instanceof
+     * is always false. Ask the inner adapter via hasFeature().
+     */
+    protected function supportsRelationships(Adapter $adapter): bool
+    {
+        return $adapter->hasFeature(FeatureRelationships::class);
     }
 
     /**
@@ -88,7 +115,7 @@ class Action extends AppwriteAction
     {
         $relationshipKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
             }
         }
@@ -154,14 +181,15 @@ class Action extends AppwriteAction
      * collection is a single O(1) DEL regardless of how many variations have
      * been cached.
      */
-    protected function getListCacheKey(Database $dbForProject, string $collectionId): string
+    protected function getListCacheKey(Database $dbForProject, Document $database, string $collectionId): string
     {
         return \sprintf(
-            '%s-cache:%s:%s:%s:collection:%s',
+            '%s-cache:%s:%s:%s:database:%s:collection:%s',
             $dbForProject->getCacheName(),
-            $dbForProject->getAdapter()->getHostname(),
+            $dbForProject->getHostname() ?? '',
             $dbForProject->getNamespace(),
             $dbForProject->getTenant(),
+            $database->getSequence(),
             $collectionId,
         );
     }
@@ -176,7 +204,7 @@ class Action extends AppwriteAction
      * @param Document $collection Collection document (for schema hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
-     * @param string $type LIST_CACHE_FIELD_DOCUMENTS or LIST_CACHE_FIELD_TOTAL
+     * @param string $type LIST_CACHE_FIELD_DOCUMENTS, LIST_CACHE_FIELD_TOTAL or LIST_CACHE_FIELD_OPERATIONS
      */
     protected function getListCacheField(Document $collection, array $roles, array $queries, string $type): string
     {
@@ -186,7 +214,7 @@ class Action extends AppwriteAction
         );
 
         $serialized = \array_map(
-            static fn ($query) => $query instanceof Query ? $query->toArray() : $query,
+            static fn (mixed $query): mixed => $query instanceof Query ? $query->toArray() : $query,
             $queries,
         );
 
@@ -204,42 +232,40 @@ class Action extends AppwriteAction
      *
      * One DEL on the collection's Redis hash, clearing all variations at once.
      */
-    protected function purgeListCache(Database $dbForProject, string $collectionId): bool
+    protected function purgeListCache(Database $dbForProject, Document $database, string $collectionId): bool
     {
-        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $collectionId));
+        return $dbForProject->getCache()->purge($this->getListCacheKey($dbForProject, $database, $collectionId));
     }
 
     /**
-     * Users can only grant roles they hold on a related document written through
-     * its parent. Permissions the related document already has may be sent back
-     * unchanged.
+     * The library refuses a related document granting a role the caller does not hold with the roles it holds, as
+     * main's message did; any other refusal keeps the default message.
+     */
+    protected function unauthorized(AuthorizationException $error): Exception
+    {
+        $message = \str_starts_with($error->getMessage(), self::GRANT_REFUSED) ? $error->getMessage() : null;
+
+        return new Exception(Exception::USER_UNAUTHORIZED, $message, previous: $error);
+    }
+
+    /**
+     * Refuse a write when it is staged, not first when its transaction commits, answering as the write itself would.
      *
+     * @param callable(): void $authorize Database::authorizeCreate() or Database::authorizeUpdate() for the staged write, judged on the transaction's staged view
      * @throws Exception
      */
-    protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
+    protected function authorizeStagedWrite(callable $authorize, string $notFoundType, string $collectionId): void
     {
-        if ($permissions === null) {
-            return;
-        }
-
-        $validator = new Permissions();
-        if (!$validator->isValid($permissions)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-        }
-
-        $granted = \array_diff(Permission::aggregate($permissions), $current->getPermissions());
-
-        foreach ($granted as $permission) {
-            $permission = Permission::parse($permission);
-            $role = (new Role(
-                $permission->getRole(),
-                $permission->getIdentifier(),
-                $permission->getDimension()
-            ))->toString();
-
-            if (!$authorization->hasRole($role)) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization->getRoles()) . ')');
-            }
+        try {
+            $authorize();
+        } catch (AuthorizationException $error) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $error->getMessage(), previous: $error);
+        } catch (NotFoundException $error) {
+            throw new Exception($notFoundType, previous: $error, params: [$collectionId]);
+        } catch (RelationshipException $error) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+        } catch (StructureException $error) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $error->getMessage(), previous: $error);
         }
     }
 }

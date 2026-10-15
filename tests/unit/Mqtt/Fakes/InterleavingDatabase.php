@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Mqtt\Fakes;
 
 use Utopia\Database\Database;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 
 /**
@@ -35,7 +36,8 @@ final class InterleavingDatabase extends Database
         return $this->finds[$collection] ?? [];
     }
 
-    public function find(string $collection, array $queries = [], string $forPermission = Database::PERMISSION_READ): array
+    #[\Override]
+    public function find(string $collection, array $queries = [], PermissionType $forPermission = PermissionType::Read): array
     {
         $this->finds[$collection][] = \array_map(fn (Query $query): Query => clone $query, $queries);
 

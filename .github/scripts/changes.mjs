@@ -62,10 +62,28 @@ const base = () => {
   }
 };
 
-const databaseVersion = (commit) => {
+// Every library whose queries run on the matrix databases; usage writes to ClickHouse instead.
+const databaseLibraries = [
+  "abuse",
+  "audit",
+  "database",
+  "migration",
+  "mongo",
+  "query",
+];
+
+// A branch constraint locks the branch name as the version on every update,
+// so only the source commit tells two builds of the same branch apart.
+const databaseReferences = (commit) => {
   const lock = JSON.parse(git("show", `${commit}:composer.lock`));
-  return lock.packages?.find((item) => item.name === "utopia-php/database")
-    ?.version;
+  return databaseLibraries
+    .map((name) => {
+      const entry = lock.packages?.find(
+        (item) => item.name === `utopia-php/${name}`,
+      );
+      return `${name}@${entry?.source?.reference ?? entry?.version ?? ""}`;
+    })
+    .join(",");
 };
 
 const everything =
@@ -76,6 +94,7 @@ const from = everything ? null : base();
 let server = everything || event === "push";
 let frontend = everything;
 let all = everything || event === "push";
+let databasePackagesChanged = false;
 const selected = new Set();
 
 if (!everything) {
@@ -83,6 +102,10 @@ if (!everything) {
   const files = git("diff", "--name-only", "--no-renames", from, "HEAD")
     .split("\n")
     .filter(Boolean);
+  // An absorbed library leaves the lock and moves with its packages/ directory.
+  databasePackagesChanged = files.some((file) =>
+    databaseLibraries.some((name) => file.startsWith(`packages/${name}/`)),
+  );
   for (const file of files) {
     if (claims(file, config.paths.all)) {
       server = frontend = all = true;
@@ -151,7 +174,8 @@ const full =
   event === "workflow_dispatch" ||
   (server &&
     (event === "pull_request" || event === "merge_group") &&
-    databaseVersion(from) !== databaseVersion("HEAD"));
+    (databasePackagesChanged ||
+      databaseReferences(from) !== databaseReferences("HEAD")));
 
 const outputs = {
   server,
