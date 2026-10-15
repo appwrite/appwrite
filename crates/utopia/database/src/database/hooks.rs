@@ -102,7 +102,46 @@ impl Database {
     ///
     /// Fails ([`crate::Kind::Database`]) when a relationships hook is
     /// attached to another database.
+    ///
+    /// A mirror registers a lifecycle hook on its source, where its writes
+    /// run; an invalidator on itself and its source; any other hook on
+    /// itself (a nested hook on its source too). A relationships hook is
+    /// also copied onto the source and the destination, and a write hook is
+    /// also added to the destination's adapter.
     pub fn add_hook(&self, hook: Hook) -> Result<&Self> {
+        if let Some(parts) = self.mirror_parts() {
+            match &hook {
+                Hook::Invalidator(_) => {
+                    self.add_own_hook(hook.clone())?;
+                    parts.source.add_hook(hook.clone())?;
+                }
+                Hook::Lifecycle(..) => {
+                    parts.source.add_hook(hook.clone())?;
+                }
+                Hook::Nested(nested, class) => {
+                    self.add_own_hook(hook.clone())?;
+                    parts.source.settings().nested_hooks.push(Registered { hook: nested.clone(), class });
+                }
+                _ => {
+                    self.add_own_hook(hook.clone())?;
+                }
+            }
+            if let Hook::Relationships(relationships) = &hook {
+                parts.source.add_hook(Hook::Relationships(Arc::new(relationships.fresh())))?;
+                if let Some(destination) = &parts.destination {
+                    destination.add_hook(Hook::Relationships(Arc::new(relationships.fresh())))?;
+                }
+            }
+            if let (Hook::Write(write, _), Some(destination)) = (&hook, &parts.destination) {
+                destination.adapter().add_write_hook(write.clone());
+            }
+            return Ok(self);
+        }
+        self.add_own_hook(hook)
+    }
+
+    /// `addHook()` on this database alone.
+    fn add_own_hook(&self, hook: Hook) -> Result<&Self> {
         match hook {
             Hook::Lifecycle(hook, class) => {
                 let mut settings = self.settings();
@@ -152,6 +191,28 @@ impl Database {
             Hook::Transform(_, class) => self.inner.adapter.remove_transform(class),
             _ => {}
         }
+        // A mirror also removes it from where add_hook() registered it on
+        // its source and destination.
+        if let Some(parts) = self.inner.mirror.get() {
+            match hook {
+                Hook::Lifecycle(..) | Hook::Nested(..) => {
+                    parts.source.remove_hook(hook);
+                }
+                Hook::Relationships(_) => {
+                    let class = std::any::type_name::<Relationships>();
+                    parts.source.remove_hook_class(class);
+                    if let Some(destination) = &parts.destination {
+                        destination.remove_hook_class(class);
+                    }
+                }
+                Hook::Write(h, _) => {
+                    if let Some(destination) = &parts.destination {
+                        destination.adapter().remove_write_hook(h);
+                    }
+                }
+                _ => {}
+            }
+        }
         self
     }
 
@@ -176,6 +237,22 @@ impl Database {
         }
         drop(settings);
         self.inner.adapter.remove_transform(class);
+        // A mirror also removes the class from its source (where lifecycle,
+        // nested and relationships hooks are registered) and its
+        // destination (relationships and write hooks).
+        if let Some(parts) = self.inner.mirror.get()
+            && class != std::any::type_name::<Invalidator>()
+        {
+            parts.source.remove_hook_class(class);
+            if let Some(destination) = &parts.destination {
+                if class == std::any::type_name::<Relationships>() {
+                    destination.remove_hook_class(class);
+                }
+                if class == std::any::type_name::<crate::hook::Tenancy>() {
+                    destination.adapter().remove_tenancy_hooks();
+                }
+            }
+        }
         self
     }
 
@@ -183,7 +260,12 @@ impl Database {
     /// none while events are silenced; a silenced named hook and a selective
     /// hook that does not handle the event are left out. The list is a
     /// snapshot an operation reuses for every event of its dispatch loop.
+    ///
+    /// A mirror's lifecycle hooks are its source's.
     pub(crate) fn listens(&self, event: Event) -> Vec<Arc<dyn Lifecycle>> {
+        if let Some(parts) = self.inner.mirror.get() {
+            return parts.source.listens(event);
+        }
         let hooks: Vec<Arc<dyn Lifecycle>> = {
             let settings = self.settings();
             if settings.lifecycle_hooks.is_empty() {
@@ -310,7 +392,28 @@ impl Database {
 
     /// The query cache invalidation run for a lifecycle event
     /// (`invalidate()`): block, then activate.
+    ///
+    /// A mirror also invalidates a query cache its source holds that is not
+    /// its own.
     pub(crate) async fn invalidate(&self, event: Event, data: &[crate::cache::Target]) -> Result<()> {
+        self.invalidate_own(event, data).await?;
+        if let Some(parts) = self.mirror_parts() {
+            let own = self.query_cache();
+            let source = parts.source.query_cache();
+            let same = match (&own, &source) {
+                (Some(a), Some(b)) => Arc::ptr_eq(a, b),
+                (None, None) => true,
+                _ => false,
+            };
+            if !same {
+                parts.source.invalidate_own(event, data).await?;
+            }
+        }
+        Ok(())
+    }
+
+    /// `invalidate()` on this database alone.
+    async fn invalidate_own(&self, event: Event, data: &[crate::cache::Target]) -> Result<()> {
         let Some(invalidator) = self.settings().invalidator.clone() else {
             return Ok(());
         };

@@ -89,7 +89,7 @@ pub(crate) mod testing_intercepted;
 pub(crate) mod testing_memory;
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, MutexGuard, RwLock};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, RwLock};
 
 use async_trait::async_trait;
 use php_std::datetime::DateTime;
@@ -183,6 +183,10 @@ pub(crate) struct Inner {
     /// id; a scope is open from the outermost `withInvalidationScope()` to
     /// its end).
     pub(crate) context: Scoped<Option<Arc<Context>>>,
+    /// The source, destination, write filters and error callbacks of a
+    /// database that is a [`crate::mirror::Mirror`], set once by
+    /// [`crate::mirror::Mirror::new`].
+    pub(crate) mirror: OnceLock<Arc<crate::mirror::Parts>>,
 }
 
 /// The scoped toggles of a database (PHP's `State\Value` properties).
@@ -338,6 +342,7 @@ impl Database {
                 }),
                 toggles: Toggles::default(),
                 context: Scoped::new(None),
+                mirror: OnceLock::new(),
             }),
         }
     }
@@ -386,11 +391,28 @@ impl Database {
         self.settings().relationship_hook.clone()
     }
 
+    /// What the database holds as a mirror, when it is one.
+    pub(crate) fn mirror_parts(&self) -> Option<Arc<crate::mirror::Parts>> {
+        self.inner.mirror.get().cloned()
+    }
+
+    /// A mirror's source and destination, the databases its settings also
+    /// apply to; none for a database that is not a mirror.
+    pub(crate) fn mirrored(&self) -> Vec<Database> {
+        match self.inner.mirror.get() {
+            Some(parts) => std::iter::once(parts.source.clone()).chain(parts.destination.clone()).collect(),
+            None => Vec::new(),
+        }
+    }
+
     // ---- Adapter passthroughs ------------------------------------------
 
     /// `setDatabase()`.
     pub fn set_database(&self, name: &str) -> &Self {
         self.inner.adapter.set_database(name);
+        for db in self.mirrored() {
+            db.set_database(name);
+        }
         self
     }
 
@@ -402,6 +424,9 @@ impl Database {
     /// `setNamespace()`.
     pub fn set_namespace(&self, namespace: &str) -> &Self {
         self.inner.adapter.set_namespace(namespace);
+        for db in self.mirrored() {
+            db.set_namespace(namespace);
+        }
         self
     }
 
@@ -447,6 +472,10 @@ impl Database {
             None => {}
         }
         self.reset_profile();
+        // A mirror's source shares its adapter; the destination keeps its own mode.
+        if let Some(parts) = self.inner.mirror.get() {
+            parts.source.set_schemaless(schemaless)?;
+        }
         Ok(self)
     }
 
@@ -454,7 +483,10 @@ impl Database {
     /// (`setFilters()`); handles sharing the registry see what is registered
     /// on it later.
     pub fn set_filters(&self, filters: Arc<RwLock<Registry>>) -> &Self {
-        self.settings().codecs = Some(filters);
+        self.settings().codecs = Some(filters.clone());
+        for db in self.mirrored() {
+            db.set_filters(filters.clone());
+        }
         self
     }
 
@@ -466,6 +498,11 @@ impl Database {
     /// Caches `find()` results in `query_cache`, or stops caching them
     /// (`setQueryCache()`); also makes its [`Invalidator`] this database's.
     pub fn set_query_cache(&self, query_cache: Option<Arc<QueryCache>>) -> &Self {
+        // A mirror attaches it to its source and destination first, so it
+        // takes its name and writer timeout from the mirror.
+        for db in self.mirrored() {
+            db.set_query_cache(query_cache.clone());
+        }
         let mut settings = self.settings();
         settings.invalidator = query_cache.as_ref().map(|q| Arc::new(Invalidator::new(q.clone())));
         settings.query_cache = query_cache;
@@ -480,6 +517,16 @@ impl Database {
     /// Records the queries the adapter runs in [`Database::profiler`], or
     /// stops recording them (`setProfiling()`).
     pub fn set_profiling(&self, profiling: bool) -> &Self {
+        // A mirror queries through its source's adapter, so it reports to
+        // the source's profiler.
+        if let Some(parts) = self.inner.mirror.get() {
+            parts.source.set_profiling(profiling);
+            if let Some(destination) = &parts.destination {
+                destination.set_profiling(profiling);
+            }
+            self.settings().profiler = parts.source.profiler();
+            return self;
+        }
         if !profiling {
             if let Some(p) = &self.settings().profiler {
                 p.disable();
@@ -505,7 +552,10 @@ impl Database {
 
     /// `setCache()`.
     pub fn set_cache(&self, cache: Arc<Cache>) -> &Self {
-        self.settings().cache = cache;
+        self.settings().cache = cache.clone();
+        for db in self.mirrored() {
+            db.set_cache(cache.clone());
+        }
         self
     }
 
@@ -517,6 +567,9 @@ impl Database {
     /// `setCacheName()`.
     pub fn set_cache_name(&self, name: &str) -> &Self {
         self.settings().cache_name = name.to_owned();
+        for db in self.mirrored() {
+            db.set_cache_name(name);
+        }
         self
     }
 
@@ -529,6 +582,9 @@ impl Database {
     /// as abandoned (`setCacheWriterTimeout()`; negative is 0).
     pub fn set_cache_writer_timeout(&self, seconds: i64) -> &Self {
         self.settings().cache_writer_timeout = seconds.max(0);
+        for db in self.mirrored() {
+            db.set_cache_writer_timeout(seconds);
+        }
         self
     }
 
@@ -541,6 +597,9 @@ impl Database {
     pub fn set_shared_tables(&self, shared_tables: bool) -> &Self {
         self.inner.adapter.set_shared_tables(shared_tables);
         self.reset_profile();
+        for db in self.mirrored() {
+            db.set_shared_tables(shared_tables);
+        }
         self
     }
 
@@ -551,7 +610,10 @@ impl Database {
 
     /// `setTenant()`.
     pub fn set_tenant(&self, tenant: Value) -> &Self {
-        self.inner.adapter.set_tenant(tenant);
+        self.inner.adapter.set_tenant(tenant.clone());
+        for db in self.mirrored() {
+            db.set_tenant(tenant.clone());
+        }
         self
     }
 
@@ -561,13 +623,35 @@ impl Database {
     }
 
     /// Runs `future` with `tenant` (`withTenant()`), scoped to it.
+    ///
+    /// A mirror opens the scope on itself, its source and its destination.
     pub async fn with_tenant<F: std::future::Future>(&self, tenant: Value, future: F) -> F::Output {
-        self.inner.adapter.state().tenant().with(tenant, future).await
+        let own = self.inner.adapter.state().tenant();
+        match self.inner.mirror.get() {
+            None => own.with(tenant, future).await,
+            Some(parts) => {
+                let source = parts.source.inner.adapter.state().tenant();
+                match &parts.destination {
+                    Some(destination) => {
+                        let destination = destination.inner.adapter.state().tenant();
+                        own.with(
+                            tenant.clone(),
+                            source.with(tenant.clone(), destination.with(tenant, Box::pin(future))),
+                        )
+                        .await
+                    }
+                    None => own.with(tenant.clone(), source.with(tenant, Box::pin(future))).await,
+                }
+            }
+        }
     }
 
     /// `setTenantPerDocument()`.
     pub fn set_tenant_per_document(&self, enabled: bool) -> &Self {
         self.inner.adapter.set_tenant_per_document(enabled);
+        for db in self.mirrored() {
+            db.set_tenant_per_document(enabled);
+        }
         self
     }
 
@@ -579,7 +663,10 @@ impl Database {
     /// `setAuthorization()`: on the database and its adapter.
     pub fn set_authorization(&self, authorization: Arc<Authorization>) -> &Self {
         self.inner.adapter.set_authorization(authorization.clone());
-        self.settings().authorization = authorization;
+        self.settings().authorization = authorization.clone();
+        for db in self.mirrored() {
+            db.set_authorization(authorization.clone());
+        }
         self
     }
 
@@ -592,7 +679,17 @@ impl Database {
     ///
     /// Fails ([`crate::Kind::Database`]) for an adapter without timeouts
     /// (`Adapter does not support timeouts`).
+    ///
+    /// A mirror sets it on its source, then on its destination, which
+    /// reports a failure to [`crate::mirror::Mirror::on_error`].
     pub fn set_timeout(&self, milliseconds: i64, event: Event) -> Result<&Self> {
+        if let Some(parts) = self.inner.mirror.get() {
+            parts.source.set_timeout(milliseconds, event)?;
+            if let Some(destination) = &parts.destination {
+                parts.report("setTimeout", destination.set_timeout(milliseconds, event).map(|_| ()))?;
+            }
+            return Ok(self);
+        }
         let Some(timeouts) = self.inner.adapter.timeouts() else {
             return Err(Error::database("Adapter does not support timeouts"));
         };
@@ -604,6 +701,13 @@ impl Database {
     ///
     /// Fails as [`Database::set_timeout`] does.
     pub fn clear_timeout(&self, event: Event) -> Result<()> {
+        if let Some(parts) = self.inner.mirror.get() {
+            parts.source.clear_timeout(event)?;
+            if let Some(destination) = &parts.destination {
+                parts.report("clearTimeout", destination.clear_timeout(event))?;
+            }
+            return Ok(());
+        }
         let Some(timeouts) = self.inner.adapter.timeouts() else {
             return Err(Error::database("Adapter does not support timeouts"));
         };
@@ -619,6 +723,9 @@ impl Database {
     /// Drops attributes missing from the collection schema instead of
     /// rejecting the write (`setDropUnknownAttributes()`).
     pub fn set_drop_unknown_attributes(&self, drop: bool) -> &Self {
+        for db in self.mirrored() {
+            db.set_drop_unknown_attributes(drop);
+        }
         self.settings().drop_unknown_attributes = drop;
         self
     }
@@ -627,6 +734,9 @@ impl Database {
     pub fn set_migrating(&self, migrating: bool) -> &Self {
         self.settings().migrating = migrating;
         self.reset_profile();
+        for db in self.mirrored() {
+            db.set_migrating(migrating);
+        }
         self
     }
 
@@ -642,6 +752,10 @@ impl Database {
             settings.documents_validators.clear();
         }
         settings.max_query_values = max;
+        drop(settings);
+        for db in self.mirrored() {
+            db.set_max_query_values(max);
+        }
         self
     }
 
@@ -652,11 +766,16 @@ impl Database {
 
     /// `setGlobalCollections()`: adds the collections.
     pub fn set_global_collections<S: AsRef<str>>(&self, collections: &[S]) -> &Self {
-        let mut settings = self.settings();
-        for c in collections {
-            if !settings.global_collections.iter().any(|g| g == c.as_ref()) {
-                settings.global_collections.push(c.as_ref().to_owned());
+        {
+            let mut settings = self.settings();
+            for c in collections {
+                if !settings.global_collections.iter().any(|g| g == c.as_ref()) {
+                    settings.global_collections.push(c.as_ref().to_owned());
+                }
             }
+        }
+        for db in self.mirrored() {
+            db.set_global_collections(collections);
         }
         self
     }
@@ -669,6 +788,9 @@ impl Database {
     /// `resetGlobalCollections()`.
     pub fn reset_global_collections(&self) {
         self.settings().global_collections.clear();
+        for db in self.mirrored() {
+            db.reset_global_collections();
+        }
     }
 
     /// Maps the documents of `collection` to the custom class `class`
@@ -676,6 +798,9 @@ impl Database {
     /// ([`crate::Document::class`]). PHP checks the class exists and extends
     /// `Document`; Rust has no class to check.
     pub fn set_document_type(&self, collection: &str, class: &str) -> &Self {
+        for db in self.mirrored() {
+            db.set_document_type(collection, class);
+        }
         crate::document::register_class(class);
         let mut settings = self.settings();
         match settings.document_types.iter_mut().find(|(c, _)| c == collection) {
@@ -692,11 +817,17 @@ impl Database {
 
     /// `clearDocumentType()`.
     pub fn clear_document_type(&self, collection: &str) {
+        for db in self.mirrored() {
+            db.clear_document_type(collection);
+        }
         self.settings().document_types.retain(|(c, _)| c != collection);
     }
 
     /// `clearDocumentTypes()`: the metadata collection keeps its own.
     pub fn clear_document_types(&self) {
+        for db in self.mirrored() {
+            db.clear_document_types();
+        }
         self.settings().document_types = vec![(METADATA.to_owned(), crate::collection::CLASS.to_owned())];
     }
 
@@ -706,12 +837,18 @@ impl Database {
         if self.inner.adapter.supports(Capability::AlterLock) {
             self.inner.adapter.set_locks(locks);
         }
+        for db in self.mirrored() {
+            db.set_locks(locks);
+        }
         self
     }
 
     /// `setMetadata()`: a value printed in the query comments.
     pub fn set_metadata(&self, key: &str, value: Value) -> &Self {
-        self.inner.adapter.set_metadata(key, value);
+        self.inner.adapter.set_metadata(key, value.clone());
+        for db in self.mirrored() {
+            db.set_metadata(key, value.clone());
+        }
         self
     }
 
@@ -723,6 +860,9 @@ impl Database {
     /// `resetMetadata()`.
     pub fn reset_metadata(&self) {
         self.inner.adapter.reset_metadata();
+        for db in self.mirrored() {
+            db.reset_metadata();
+        }
     }
 
     /// `removeTransform()`.

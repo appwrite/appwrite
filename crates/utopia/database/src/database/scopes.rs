@@ -15,20 +15,43 @@ use crate::state::Snapshot;
 impl Database {
     /// Runs `future` with every lifecycle hook silenced (`silent()`); a
     /// nested silence never narrows the one around it.
+    ///
+    /// A mirror silences itself and its source.
     pub async fn silent<F: Future>(&self, future: F) -> F::Output {
-        self.inner.toggles.silenced.with(true, future).await
+        match self.inner.mirror.get() {
+            Some(parts) => {
+                self.inner
+                    .toggles
+                    .silenced
+                    .with(true, parts.source.inner.toggles.silenced.with(true, Box::pin(future)))
+                    .await
+            }
+            None => self.inner.toggles.silenced.with(true, future).await,
+        }
     }
 
     /// Runs `future` with the named lifecycle hooks `hooks` silenced
     /// (`silent($callback, $hooks)`), on top of those already silenced.
+    ///
+    /// A mirror silences them on itself and its source.
     pub async fn silent_hooks<F: Future, S: AsRef<str>>(&self, hooks: &[S], future: F) -> F::Output {
-        let mut names: Vec<String> = self.inner.toggles.silenced_listeners.get().as_ref().clone();
-        for hook in hooks {
-            if !names.iter().any(|n| n == hook.as_ref()) {
-                names.push(hook.as_ref().to_owned());
+        let names = |db: &Database| {
+            let mut names: Vec<String> = db.inner.toggles.silenced_listeners.get().as_ref().clone();
+            for hook in hooks {
+                if !names.iter().any(|n| n == hook.as_ref()) {
+                    names.push(hook.as_ref().to_owned());
+                }
             }
+            Arc::new(names)
+        };
+        let own = &self.inner.toggles.silenced_listeners;
+        match self.inner.mirror.get() {
+            Some(parts) => {
+                let source = &parts.source.inner.toggles.silenced_listeners;
+                own.with(names(self), source.with(names(&parts.source), Box::pin(future))).await
+            }
+            None => own.with(names(self), future).await,
         }
-        self.inner.toggles.silenced_listeners.with(Arc::new(names), future).await
     }
 
     /// Whether every lifecycle hook is silenced (`areEventsSilenced()`).
@@ -43,6 +66,9 @@ impl Database {
 
     /// `setPreserveDates()`.
     pub fn set_preserve_dates(&self, preserve: bool) -> &Self {
+        for db in self.mirrored() {
+            db.set_preserve_dates(preserve);
+        }
         self.inner.toggles.date_preservation.set(preserve);
         self
     }
@@ -54,7 +80,38 @@ impl Database {
 
     /// Runs `future` with date preservation on or off (`withPreserveDates()`).
     pub async fn with_preserve_dates<F: Future>(&self, preserve: bool, future: F) -> F::Output {
-        self.inner.toggles.date_preservation.with(preserve, future).await
+        match self.inner.mirror.get() {
+            None => self.inner.toggles.date_preservation.with(preserve, future).await,
+            Some(_) => {
+                self.scope_mirrored(|db| &db.inner.toggles.date_preservation, preserve, true, Box::pin(future)).await
+            }
+        }
+    }
+
+    /// Runs `future` with the toggle `toggle` picks set to `value` on this
+    /// database and, for a mirror, on its source and (with `destination`) its
+    /// destination: the mirror's scope outermost.
+    async fn scope_mirrored<T, F>(
+        &self,
+        toggle: impl Fn(&Database) -> &crate::state::Scoped<T>,
+        value: T,
+        destination: bool,
+        future: F,
+    ) -> F::Output
+    where
+        T: Clone + Send + Sync + 'static,
+        F: Future,
+    {
+        let own = toggle(self);
+        let Some(parts) = self.inner.mirror.get() else {
+            return own.with(value, future).await;
+        };
+        // Only a mirror reaches here, with its future boxed.
+        let source = toggle(&parts.source);
+        match parts.destination.as_ref().filter(|_| destination) {
+            Some(d) => own.with(value.clone(), source.with(value.clone(), toggle(d).with(value, future))).await,
+            None => own.with(value.clone(), source.with(value, future)).await,
+        }
     }
 
     /// Runs `future` with creates that hit an existing id or unique key
@@ -70,6 +127,9 @@ impl Database {
 
     /// `setPreserveSequence()`.
     pub fn set_preserve_sequence(&self, preserve: bool) -> &Self {
+        for db in self.mirrored() {
+            db.set_preserve_sequence(preserve);
+        }
         self.inner.toggles.sequence_preservation.set(preserve);
         self
     }
@@ -82,13 +142,25 @@ impl Database {
     /// Runs `future` with sequence preservation on or off
     /// (`withPreserveSequence()`).
     pub async fn with_preserve_sequence<F: Future>(&self, preserve: bool, future: F) -> F::Output {
-        self.inner.toggles.sequence_preservation.with(preserve, future).await
+        match self.inner.mirror.get() {
+            None => self.inner.toggles.sequence_preservation.with(preserve, future).await,
+            Some(_) => {
+                self.scope_mirrored(|db| &db.inner.toggles.sequence_preservation, preserve, true, Box::pin(future))
+                    .await
+            }
+        }
     }
 
     /// Sets whether, while authorization is enabled, a related document
     /// given as a document may only add permissions for roles the caller
     /// holds (`setCheckGrants()`).
+    ///
+    /// A mirror sets it on its source too: the destination replays what
+    /// the source allowed.
     pub fn set_check_grants(&self, check: bool) -> &Self {
+        if let Some(parts) = self.inner.mirror.get() {
+            parts.source.set_check_grants(check);
+        }
         self.inner.toggles.grant_checking.set(check);
         self
     }
@@ -100,7 +172,10 @@ impl Database {
 
     /// Runs `future` with the grant check on or off (`withCheckGrants()`).
     pub async fn with_check_grants<F: Future>(&self, check: bool, future: F) -> F::Output {
-        self.inner.toggles.grant_checking.with(check, future).await
+        match self.inner.mirror.get() {
+            None => self.inner.toggles.grant_checking.with(check, future).await,
+            Some(_) => self.scope_mirrored(|db| &db.inner.toggles.grant_checking, check, false, Box::pin(future)).await,
+        }
     }
 
     /// Whether grants are checked now: on, and authorization enabled
@@ -111,6 +186,9 @@ impl Database {
 
     /// `setValidation()`.
     pub fn set_validation(&self, validation: bool) -> &Self {
+        for db in self.mirrored() {
+            db.set_validation(validation);
+        }
         self.inner.toggles.validation.set(validation);
         self
     }
@@ -123,7 +201,10 @@ impl Database {
 
     /// Runs `future` with validation on or off (`withValidation()`).
     pub async fn with_validation<F: Future>(&self, validation: bool, future: F) -> F::Output {
-        self.inner.toggles.validation.with(validation, future).await
+        match self.inner.mirror.get() {
+            None => self.inner.toggles.validation.with(validation, future).await,
+            Some(_) => self.scope_mirrored(|db| &db.inner.toggles.validation, validation, true, Box::pin(future)).await,
+        }
     }
 
     /// Runs `future` without validation (`skipValidation()`).
@@ -144,6 +225,9 @@ impl Database {
 
     /// `setFiltering()`.
     pub fn set_filtering(&self, filtering: bool) -> &Self {
+        for db in self.mirrored() {
+            db.set_filtering(filtering);
+        }
         self.inner.toggles.filtering.set(filtering);
         self
     }
@@ -162,7 +246,29 @@ impl Database {
     /// Runs `future` with filtering on or off (`withFiltering()`). Given
     /// filter names, filtering stays as it is and only the named filters are
     /// turned off (they become the ones turned off) or back on.
+    ///
+    /// A mirror opens the scope on its source, its destination and itself,
+    /// in that order.
     pub async fn with_filtering<F: Future, S: AsRef<str>>(
+        &self,
+        filtering: bool,
+        filters: Option<&[S]>,
+        future: F,
+    ) -> F::Output {
+        let Some(parts) = self.inner.mirror.get() else {
+            return self.filtering_scope(filtering, filters, future).await;
+        };
+        let own = Box::pin(self.filtering_scope(filtering, filters, Box::pin(future)));
+        match &parts.destination {
+            Some(d) => {
+                parts.source.filtering_scope(filtering, filters, d.filtering_scope(filtering, filters, own)).await
+            }
+            None => parts.source.filtering_scope(filtering, filters, own).await,
+        }
+    }
+
+    /// `withFiltering()` on this database alone.
+    async fn filtering_scope<F: Future, S: AsRef<str>>(
         &self,
         filtering: bool,
         filters: Option<&[S]>,
@@ -204,7 +310,12 @@ impl Database {
     /// Runs `future` with the request timestamp set (`withRequestTimestamp()`):
     /// an update of a document changed after it conflicts.
     pub async fn with_request_timestamp<F: Future>(&self, timestamp: Option<DateTime>, future: F) -> F::Output {
-        self.inner.toggles.request_timestamp.with(timestamp, future).await
+        match self.inner.mirror.get() {
+            None => self.inner.toggles.request_timestamp.with(timestamp, future).await,
+            Some(_) => {
+                self.scope_mirrored(|db| &db.inner.toggles.request_timestamp, timestamp, false, Box::pin(future)).await
+            }
+        }
     }
 
     /// The request timestamp the current future runs under.
@@ -215,6 +326,17 @@ impl Database {
     /// Runs `future` with relationships neither populated nor written
     /// (`skipRelationships()`).
     pub async fn skip_relationships<F: Future>(&self, future: F) -> F::Output {
+        match self.inner.mirror.get() {
+            Some(parts) => self.skip_relationships_scope(parts.source.skip_relationships_scope(Box::pin(future))).await,
+            None => match self.relationship_hook() {
+                Some(hook) => hook.with_enabled(false, future).await,
+                None => future.await,
+            },
+        }
+    }
+
+    /// `skip_relationships()` on this database alone.
+    async fn skip_relationships_scope<F: Future>(&self, future: F) -> F::Output {
         match self.relationship_hook() {
             Some(hook) => hook.with_enabled(false, future).await,
             None => future.await,
@@ -224,6 +346,22 @@ impl Database {
     /// Runs `future` without checking related documents exist before linking
     /// them (`skipRelationshipsExistCheck()`).
     pub async fn skip_relationships_exist_check<F: Future>(&self, future: F) -> F::Output {
+        match self.inner.mirror.get() {
+            Some(parts) => {
+                self.skip_relationships_exist_check_scope(
+                    parts.source.skip_relationships_exist_check_scope(Box::pin(future)),
+                )
+                .await
+            }
+            None => match self.relationship_hook() {
+                Some(hook) => hook.with_check_exist(false, future).await,
+                None => future.await,
+            },
+        }
+    }
+
+    /// `skip_relationships_exist_check()` on this database alone.
+    async fn skip_relationships_exist_check_scope<F: Future>(&self, future: F) -> F::Output {
         match self.relationship_hook() {
             Some(hook) => hook.with_check_exist(false, future).await,
             None => future.await,

@@ -26,6 +26,9 @@ impl Database {
     /// timestamp, ([`crate::Kind::Restricted`]) when a restricting
     /// relationship holds it.
     pub fn delete_document<'a>(&'a self, collection: &'a str, id: &'a str) -> BoxFuture<'a, Result<bool>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(async move { parts.delete_document(self, collection, id).await });
+        }
         Box::pin(async move {
             let collection = self.silent(self.get_collection(collection)).await?;
 
@@ -147,6 +150,9 @@ impl Database {
         batch_size: i64,
         on_next: Option<&mut dyn Callback<Document>>,
     ) -> Result<i64> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.delete_documents(self, collection, queries, batch_size, on_next)).await;
+        }
         let mut on_next = on_next;
         let mut batch_size = super::joins::batch_size(batch_size)?;
 

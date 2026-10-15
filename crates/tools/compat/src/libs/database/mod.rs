@@ -28,6 +28,7 @@ pub mod ctx;
 pub mod database;
 pub mod enums;
 pub mod fixtures;
+pub mod mirror;
 pub mod obj;
 pub mod objects;
 pub mod open;

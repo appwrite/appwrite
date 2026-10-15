@@ -50,6 +50,9 @@ impl Database {
     /// not store, ([`crate::Kind::Refused`]) when the adapter does not
     /// create the table, and as the definition validators do.
     pub async fn create_collection(&self, collection: Collection) -> Result<Collection> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_collection(self, collection)).await;
+        }
         let unknown: Vec<String> = collection
             .document()
             .keys()
@@ -190,6 +193,9 @@ impl Database {
     /// another tenant under shared tables), and as
     /// [`Database::update_document`] does.
     pub async fn update_collection(&self, collection: &str, update: Update) -> Result<Collection> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.update_collection(collection, update)).await;
+        }
         if let Some(permissions) = &update.permissions
             && self.is_validating()
         {
@@ -240,6 +246,9 @@ impl Database {
     /// The collection's definition, `None` when it does not exist or
     /// belongs to another tenant under shared tables (`findCollection()`).
     pub async fn find_collection(&self, collection: &str) -> Result<Option<Collection>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.source.find_collection(collection)).await;
+        }
         if collection == super::METADATA {
             let definition = super::collection_definition();
             self.trigger(Event::CollectionRead, || Domain::CollectionRead {
@@ -274,6 +283,9 @@ impl Database {
     /// The collections' definitions (`listCollections()`, by default 25
     /// from offset 0).
     pub async fn list_collections(&self, limit: i64, offset: i64) -> Result<Vec<Collection>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.list_collections(self, limit, offset)).await;
+        }
         let result = self
             .silent(self.find(METADATA, vec![Query::limit(limit), Query::offset(offset)], PermissionType::Read))
             .await?;
@@ -321,6 +333,9 @@ impl Database {
     /// when the adapter does not drop the table, and
     /// ([`crate::Kind::Database`]) when the metadata cannot be removed.
     pub async fn delete_collection(&self, collection: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.delete_collection(collection)).await;
+        }
         let definition = self.silent(self.get_own_collection(collection)).await?;
 
         for attribute in definition.attributes()? {
