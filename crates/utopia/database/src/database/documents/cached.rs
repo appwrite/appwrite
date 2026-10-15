@@ -309,7 +309,7 @@ impl Database {
         let separator = record.rfind(SEPARATOR);
         let marker = separator.map_or(record.as_str(), |i| &record[..i]);
         let stamp = separator.map_or("", |i| &record[i + 1..]);
-        if record.starts_with(BLOCKED_PREFIX) {
+        if let Some(tombstone) = record.strip_prefix(BLOCKED_PREFIX) {
             let blocked_at = if !stamp.is_empty() && stamp.bytes().all(|b| b.is_ascii_digit()) {
                 php_std::format::str_to_int(stamp.as_bytes())
             } else {
@@ -318,7 +318,6 @@ impl Database {
             if blocked_at.saturating_add(self.cache_writer_timeout()) > now {
                 return Ok(Epoch { value: None, blocked_at: Some(blocked_at) });
             }
-            let tombstone = &record[BLOCKED_PREFIX.len()..];
             let finished = cache.generation(&format!("{collection_key}#finished")).await?;
             return Ok(Epoch {
                 value: Some(format!("{LAPSED_PREFIX}{tombstone}{SEPARATOR}{finished}")),

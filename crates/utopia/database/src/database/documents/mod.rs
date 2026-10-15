@@ -20,6 +20,8 @@ mod create;
 mod cursors;
 mod delete;
 mod find;
+#[cfg(test)]
+mod find_tests;
 pub(crate) mod joins;
 mod numeric;
 mod read;

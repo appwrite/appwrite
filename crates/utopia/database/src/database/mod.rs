@@ -173,6 +173,7 @@ pub(crate) struct Toggles {
     pub(crate) filtering: Scoped<bool>,
     /// `$filterExclusions`: the names of the filters turned off (with
     /// whether each is), `None` for PHP's `null`.
+    #[allow(clippy::type_complexity)]
     pub(crate) filter_exclusions: Scoped<Option<Arc<Vec<(String, bool)>>>>,
     /// `$validation`.
     pub(crate) validation: Scoped<bool>,
@@ -265,6 +266,8 @@ pub(crate) struct Settings {
     pub(crate) cache_writer_timeout: i64,
     /// `$documentsValidatorCache`, by `documentsValidatorCacheKey()`.
     pub(crate) documents_validators: HashMap<String, Arc<DocumentsValidator>>,
+    /// `$sumValidatorCache`, by `getSumValidator()`'s key.
+    pub(crate) sum_validators: HashMap<String, Arc<crate::validator::query::aggregate::Aggregate>>,
     /// `$definitionFillsFail` (`Trait\Transactions`).
     pub(crate) definition_fills_fail: bool,
 }
@@ -305,6 +308,7 @@ impl Database {
                     authorization,
                     cache_writer_timeout: crate::cache::Scope::WRITER_TIMEOUT,
                     documents_validators: HashMap::new(),
+                    sum_validators: HashMap::new(),
                     definition_fills_fail: false,
                 }),
                 toggles: Toggles::default(),
