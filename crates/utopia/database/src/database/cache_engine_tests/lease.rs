@@ -13,7 +13,7 @@ use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
 use crate::database::fixtures::{collection, doc, string, strings, unique};
 use crate::database::observed::{Observed, Op};
-use crate::database::testing::block_on;
+use crate::database::fixtures::run;
 use crate::permission::Permission;
 use crate::query::Query;
 use crate::role::Role;
@@ -56,7 +56,7 @@ async fn name(database: &Database, queries: Vec<Query>) -> Value {
 
 #[test]
 fn a_document_purge_removes_all_variants() {
-    block_on(async {
+    run(|| async {
         let database = projects(Arc::new(Memory::new())).await;
         let projected = || vec![Query::select(["name"])];
         assert_eq!(name(&database, vec![]).await, Value::from("fresh"));
@@ -72,7 +72,7 @@ fn a_document_purge_removes_all_variants() {
 
 #[test]
 fn a_read_in_flight_during_a_purge_cannot_cache_what_it_read() {
-    block_on(async {
+    run(|| async {
         let adapter = Observed::memory();
         let database = projects(adapter.clone()).await;
         let writer = database.clone();
@@ -99,7 +99,7 @@ fn listed(document: &crate::Document) -> Value {
 
 #[test]
 fn a_stale_list_write_after_a_concurrent_purge_is_rejected() {
-    block_on(async {
+    run(|| async {
         let database = projects(Arc::new(Memory::new())).await;
         let key = database.query_cache_key("projects", None).await.unwrap();
         let document = database.get_document("projects", "project", vec![], false).await.unwrap();
@@ -134,7 +134,7 @@ fn a_stale_list_write_after_a_concurrent_purge_is_rejected() {
 
 #[test]
 fn a_list_write_lands_when_no_purge_runs_concurrently() {
-    block_on(async {
+    run(|| async {
         let database = projects(Arc::new(Memory::new())).await;
         let key = database.query_cache_key("projects", None).await.unwrap();
         let document = database.get_document("projects", "project", vec![], false).await.unwrap();
@@ -160,7 +160,7 @@ fn a_list_write_lands_when_no_purge_runs_concurrently() {
 
 #[test]
 fn collection_listings_follow_created_and_deleted_collections() {
-    block_on(async {
+    run(|| async {
         let database = Database::new(Arc::new(Memory::new()), none_cache());
         database.set_database("metadata").set_namespace(&unique("metadata_"));
         database.create(None).await.unwrap();

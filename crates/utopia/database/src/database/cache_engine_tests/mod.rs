@@ -6,6 +6,7 @@
 //! `Event/DocumentPurgeTest` and `Transactions/NoRetryTest`.
 
 mod database;
+mod epoch;
 mod lease;
 mod query_purge;
 mod scope;

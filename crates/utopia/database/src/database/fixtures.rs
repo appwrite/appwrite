@@ -15,6 +15,28 @@ use crate::permission::Permission;
 use crate::role::Role;
 use crate::value::Value;
 
+/// Builds the future `test` returns and runs it to completion, both on a
+/// 64 MiB stack: a debug build's test future can outgrow the test thread's
+/// stack before it is first polled.
+pub(crate) fn run<F, Fut>(test: F) -> Fut::Output
+where
+    F: FnOnce() -> Fut + Send,
+    Fut: std::future::Future,
+    Fut::Output: Send,
+{
+    std::thread::scope(|scope| {
+        std::thread::Builder::new()
+            .stack_size(64 * 1024 * 1024)
+            .spawn_scoped(scope, || {
+                let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("a runtime");
+                runtime.block_on(Box::pin(test()))
+            })
+            .expect("a thread")
+            .join()
+            .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+    })
+}
+
 /// A name no other test uses (PHP's `uniqid()`).
 pub(crate) fn unique(prefix: &str) -> String {
     static NEXT: AtomicU64 = AtomicU64::new(0);
@@ -46,6 +68,17 @@ pub(crate) async fn memory_database(cache: Arc<Cache>) -> Database {
 pub(crate) fn any_permissions() -> Vec<String> {
     let any = Role::any();
     vec![Permission::read(&any), Permission::create(&any), Permission::update(&any), Permission::delete(&any)]
+}
+
+/// The same database without a cache (`UncachedTwin::of()`): its writes
+/// purge nothing the original cached.
+pub(crate) fn uncached_twin(database: &Database) -> Database {
+    let none = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)));
+    let twin = Database::new(database.adapter().clone(), none);
+    twin.set_authorization(database.authorization())
+        .set_database(&database.database())
+        .set_namespace(&database.namespace());
+    twin
 }
 
 /// A collection `id` without attributes, readable and writable by any.

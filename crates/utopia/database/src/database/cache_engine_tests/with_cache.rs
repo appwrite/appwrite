@@ -8,7 +8,7 @@ use crate::adapter::memory::Memory;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
 use crate::database::fixtures::{collection, database_over, doc, ids, setup, string, strings, unavailable, with_id};
-use crate::database::testing::block_on;
+use crate::database::fixtures::run;
 use crate::document::Document;
 use crate::error::{Kind, Result};
 use crate::filter::{Callback, Codec};
@@ -87,7 +87,7 @@ fn list(items: Vec<php_std::Value>) -> php_std::Value {
 
 #[test]
 fn with_cache_caches_a_single_document() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         database
             .create_collection(collection(
@@ -121,7 +121,7 @@ fn with_cache_caches_a_single_document() {
 
 #[test]
 fn with_cache_caches_static_query_values() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         database
             .create_collection(collection("wafRules", vec![], vec![], Some(vec![Permission::read(&Role::any())]), false))
@@ -146,7 +146,7 @@ fn with_cache_caches_static_query_values() {
 
 #[test]
 fn the_query_cache_is_used_until_purged() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         waf_rules(&database, &["rule-a"]).await;
         assert_eq!(ids(&find_with_cache(&database, "wafRules", project_queries(), "_39").await), ["rule-a"]);
@@ -162,7 +162,7 @@ fn the_query_cache_is_used_until_purged() {
 
 #[test]
 fn the_query_cache_separates_entries_by_authorization_context() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         waf_rules(&database, &["rule-a"]).await;
         find_with_cache(&database, "wafRules", project_queries(), "_39").await;
@@ -178,7 +178,7 @@ fn the_query_cache_separates_entries_by_authorization_context() {
 
 #[test]
 fn the_query_cache_recasts_cache_hits() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::json_hash_memory())).await;
         database
             .create_collection(collection("metrics", vec![crate::Attribute::double("value")], vec![], Some(read_create()), false))
@@ -198,7 +198,7 @@ fn the_query_cache_recasts_cache_hits() {
 
 #[test]
 fn the_query_cache_does_not_double_decode_custom_filters() {
-    block_on(async {
+    run(|| async {
         let wrapped = Callback::new(
             "wrapped",
             |v: Value| Ok(crate::value::string(format!("encoded:{}", crate::value::to_text(&v)))),
@@ -241,7 +241,7 @@ fn the_query_cache_does_not_double_decode_custom_filters() {
 
 #[test]
 fn the_query_cache_is_bypassed_for_a_random_order() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         waf_rules(&database, &["rule-a"]).await;
         let queries = || vec![Query::equal("projectId", ["project-a"]), Query::order_random(), Query::limit(25)];
@@ -256,7 +256,7 @@ fn the_query_cache_is_bypassed_for_a_random_order() {
 
 #[test]
 fn the_query_cache_relies_on_a_purge_for_document_security_collections() {
-    block_on(async {
+    run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         let authorization = database.authorization();
         let user1 = Role::user("user-1", "");
@@ -300,7 +300,7 @@ fn the_query_cache_relies_on_a_purge_for_document_security_collections() {
 
 #[test]
 fn the_query_cache_filters_document_security_payloads_on_a_hit() {
-    block_on(async {
+    run(|| async {
         let cache = Leasable::hash_memory();
         let database = database_over(Arc::new(Memory::new()), over(&cache)).await;
         let authorization = database.authorization();
@@ -352,7 +352,7 @@ fn the_query_cache_filters_document_security_payloads_on_a_hit() {
 
 #[test]
 fn the_query_cache_rehydrates_nested_document_payloads() {
-    block_on(async {
+    run(|| async {
         let cache = Leasable::hash_memory();
         let database = database_over(Arc::new(Memory::new()), over(&cache)).await;
         database
@@ -389,7 +389,7 @@ fn the_query_cache_rehydrates_nested_document_payloads() {
 #[test]
 fn the_query_cache_refreshes_an_invalid_payload() {
     for case in 0..2 {
-        block_on(async move {
+        run(move || async move {
             let cache = Leasable::hash_memory();
             let database = database_over(Arc::new(Memory::new()), over(&cache)).await;
             waf_rules(&database, if case == 0 { &["rule-a"] } else { &["rule-a", "rule-b"] }).await;
@@ -486,7 +486,7 @@ async fn get(database: &Database, id: &str) -> Result<Value> {
 
 #[test]
 fn a_cached_value_is_refused_to_a_caller_who_cannot_read_the_collection() {
-    block_on(async {
+    run(|| async {
         let authorization = Arc::new(Authorization::new(true));
         let reader = Role::user("reader", "");
         authorization.add_role(&reader.to_string());
@@ -516,7 +516,7 @@ fn a_cached_value_is_refused_to_a_caller_who_cannot_read_the_collection() {
 
 #[test]
 fn a_cached_document_the_caller_cannot_read_is_recomputed() {
-    block_on(async {
+    run(|| async {
         let authorization = Arc::new(Authorization::new(true));
         let owner = Role::user("owner", "");
         authorization.add_role(&owner.to_string());
@@ -546,7 +546,7 @@ fn a_cached_document_the_caller_cannot_read_is_recomputed() {
 
 #[test]
 fn a_cached_value_of_a_deleted_collection_is_recomputed() {
-    block_on(async {
+    run(|| async {
         let database = reports(Arc::new(Memory::new()), memory_cache(), None, None, false).await;
         database.create_document(COLLECTION, doc(vec![("$id", Value::from("q3")), ("title", Value::from("Q3"))])).await.unwrap();
         let calls = AtomicUsize::new(0);
@@ -563,7 +563,7 @@ fn a_cached_value_of_a_deleted_collection_is_recomputed() {
 #[test]
 fn a_cache_failure_falls_back_to_the_callback() {
     for failure in ["loadEpoch", "saveEpoch", "listEpoch", "loadValue", "purge", "getGeneration", "saveWithLease"] {
-        block_on(async move {
+        run(move || async move {
             // PHP's failing cache is leasable; the leased calls fail on one
             // that is.
             let cache =
@@ -599,7 +599,7 @@ fn a_cache_failure_falls_back_to_the_callback() {
 
 #[test]
 fn a_cached_document_past_its_time_to_live_is_recomputed() {
-    block_on(async {
+    run(|| async {
         let adapter = crate::database::observed::Observed::memory();
         adapter.add_capability(crate::capability::Capability::IndexTtl);
         let database = reports(adapter, memory_cache(), None, None, false).await;

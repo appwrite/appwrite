@@ -8,7 +8,7 @@ use crate::cache::Query as QueryCache;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
 use crate::database::fixtures::{ids, open_collection, unique, with_id};
-use crate::database::testing::block_on;
+use crate::database::fixtures::run;
 use crate::permission::PermissionType;
 use crate::query::Query;
 use crate::role::Role;
@@ -40,7 +40,7 @@ async fn find(database: &Database) -> Vec<String> {
 
 #[test]
 fn purge_cached_queries_drops_the_results_find_cached() {
-    block_on(async {
+    run(|| async {
         let (reader, bypass) = databases(&unique("posts_"), None).await;
         assert_eq!(find(&reader).await, ["first"]);
         bypass.create_document("posts", with_id("second")).await.unwrap();
@@ -52,7 +52,7 @@ fn purge_cached_queries_drops_the_results_find_cached() {
 
 #[test]
 fn purge_cached_queries_reaches_the_namespace_it_names() {
-    block_on(async {
+    run(|| async {
         let namespace = unique("posts_");
         let shared = query_cache();
         let (reader, bypass) = databases(&namespace, Some(shared.clone())).await;
@@ -70,7 +70,7 @@ fn purge_cached_queries_reaches_the_namespace_it_names() {
 
 #[test]
 fn purge_cached_queries_reports_a_query_cache_it_could_not_purge() {
-    block_on(async {
+    run(|| async {
         let failing = Leasable::plain();
         let (reader, _) =
             databases(&unique("posts_"), Some(Arc::new(QueryCache::new(over(&failing), QueryCache::SLOTS).unwrap())))
@@ -82,7 +82,7 @@ fn purge_cached_queries_reports_a_query_cache_it_could_not_purge() {
 
 #[test]
 fn purge_cached_collection_invalidates_cached_finds() {
-    block_on(async {
+    run(|| async {
         let (reader, bypass) = databases(&unique("posts_"), None).await;
         assert_eq!(find(&reader).await, ["first"]);
         bypass.create_document("posts", with_id("second")).await.unwrap();
@@ -93,7 +93,7 @@ fn purge_cached_collection_invalidates_cached_finds() {
 
 #[test]
 fn purge_cached_queries_returns_false_when_the_cache_fails() {
-    block_on(async {
+    run(|| async {
         let cache = Leasable::plain();
         let database = crate::database::fixtures::database_over(Arc::new(Memory::new()), over(&cache)).await;
         database.create_collection(open_collection("posts", false)).await.unwrap();

@@ -8,6 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::future::Future;
 use std::sync::{Arc, Mutex, RwLock};
 
+use futures_util::future::BoxFuture;
 use indexmap::IndexMap;
 use php_std::Value;
 use utopia_cache::{Adapter, Cache, Result};
@@ -54,8 +55,10 @@ pub(crate) struct Leasable {
     plain: bool,
     lenient: bool,
     unleased: bool,
+    leased: bool,
     json: bool,
     intercepts: RwLock<Intercepts>,
+    before_save: Mutex<Option<(String, BoxFuture<'static, ()>)>>,
 }
 
 fn now() -> i64 {
@@ -104,6 +107,62 @@ impl Leasable {
     /// value as its JSON.
     pub(crate) fn json_hash_memory() -> Arc<Self> {
         Arc::new(Leasable { unleased: true, json: true, ..Self::default() })
+    }
+
+    /// utopia-cache's `Memory` with generations (PHP's `MemoryCache`
+    /// subclasses implementing `Leasable`).
+    pub(crate) fn plain_leased() -> Arc<Self> {
+        Arc::new(Leasable { plain: true, leased: true, ..Self::default() })
+    }
+
+    /// Runs `future` before the next save of a key containing `fragment`
+    /// lands (PHP's `beforeNextSave()`).
+    pub(crate) fn before_next_save(&self, fragment: &str, future: impl Future<Output = ()> + Send + 'static) {
+        *self.before_save.lock().unwrap() = Some((fragment.to_owned(), Box::pin(future)));
+    }
+
+    /// Whether purges advance generations.
+    fn generations(&self) -> bool {
+        self.leased || (!self.plain && !self.unleased)
+    }
+
+    /// A purge, without the intercepts or the count.
+    pub(crate) fn purge_now(&self, key: &str, hash: &str) -> bool {
+        let hash = if self.plain { "" } else { hash };
+        let mut state = self.state();
+        if !hash.is_empty() && state.failing_field_purges {
+            return false;
+        }
+        if self.generations() {
+            *state.generations.entry(key.to_owned()).or_insert(0) += 1;
+        }
+        if state.lease_grace_window > 0 {
+            let until = microtime() + state.lease_grace_window as f64 / 1000.0;
+            state.tombstones.insert(key.to_owned(), until);
+        }
+        let removed = if hash.is_empty() {
+            state.fields.shift_remove(key).is_some_and(|f| !f.is_empty())
+        } else {
+            let removed = state.fields.get_mut(key).and_then(|f| f.shift_remove(hash)).is_some();
+            if state.fields.get(key).is_some_and(IndexMap::is_empty) {
+                state.fields.shift_remove(key);
+            }
+            removed
+        };
+        removed || self.lenient || self.unleased || self.leased
+    }
+
+    /// A flush, without the count.
+    pub(crate) fn flush_now(&self) {
+        let mut state = self.state();
+        state.fields.clear();
+        state.generations.clear();
+        state.tombstones.clear();
+    }
+
+    /// A key's generation, without the intercepts or the count.
+    pub(crate) fn generation_now(&self, key: &str) -> String {
+        self.state().generations.get(key).copied().unwrap_or(0).to_string()
     }
 
     fn state(&self) -> std::sync::MutexGuard<'_, State> {
@@ -294,11 +353,22 @@ impl Adapter for Leasable {
 
     fn save(&self, key: &str, data: &Value, hash: &str, _ttl: i64) -> impl Future<Output = Result<bool>> + Send {
         self.count();
-        let saved = match self.intercept_save(key, hash, data) {
-            Some(answer) => answer,
-            None => Ok(self.save_now(key, data, hash)),
+        let before = {
+            let mut hook = self.before_save.lock().unwrap();
+            match hook.as_ref() {
+                Some((fragment, _)) if key.contains(fragment.as_str()) => hook.take().map(|(_, f)| f),
+                _ => None,
+            }
         };
-        std::future::ready(saved)
+        async move {
+            if let Some(before) = before {
+                before.await;
+            }
+            match self.intercept_save(key, hash, data) {
+                Some(answer) => answer,
+                None => Ok(self.save_now(key, data, hash)),
+            }
+        }
     }
 
     fn touch(&self, key: &str, hash: &str) -> impl Future<Output = Result<bool>> + Send {
@@ -335,39 +405,13 @@ impl Adapter for Leasable {
 
     fn purge(&self, key: &str, hash: &str) -> impl Future<Output = Result<bool>> + Send {
         self.count();
-        if let Some(answer) = self.intercepts.read().unwrap().purge.as_ref().and_then(|i| i(key, hash, &Value::Null)) {
-            return std::future::ready(answer);
-        }
-        let hash = if self.plain { "" } else { hash };
-        let mut state = self.state();
-        if !hash.is_empty() && state.failing_field_purges {
-            return std::future::ready(Ok(false));
-        }
-        if !self.plain {
-            *state.generations.entry(key.to_owned()).or_insert(0) += 1;
-        }
-        if state.lease_grace_window > 0 {
-            let until = microtime() + state.lease_grace_window as f64 / 1000.0;
-            state.tombstones.insert(key.to_owned(), until);
-        }
-        let removed = if hash.is_empty() {
-            state.fields.shift_remove(key).is_some_and(|f| !f.is_empty())
-        } else {
-            let removed = state.fields.get_mut(key).and_then(|f| f.shift_remove(hash)).is_some();
-            if state.fields.get(key).is_some_and(IndexMap::is_empty) {
-                state.fields.shift_remove(key);
-            }
-            removed
-        };
-        std::future::ready(Ok(removed || self.lenient || self.unleased))
+        let intercepted = self.intercepts.read().unwrap().purge.as_ref().and_then(|i| i(key, hash, &Value::Null));
+        std::future::ready(intercepted.unwrap_or_else(|| Ok(self.purge_now(key, hash))))
     }
 
     fn flush(&self) -> impl Future<Output = Result<bool>> + Send {
         self.count();
-        let mut state = self.state();
-        state.fields.clear();
-        state.generations.clear();
-        state.tombstones.clear();
+        self.flush_now();
         std::future::ready(Ok(true))
     }
 
@@ -386,7 +430,7 @@ impl Adapter for Leasable {
     }
 
     fn leasable(&self) -> bool {
-        !self.plain && !self.unleased
+        self.leased || (!self.plain && !self.unleased)
     }
 
     fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {

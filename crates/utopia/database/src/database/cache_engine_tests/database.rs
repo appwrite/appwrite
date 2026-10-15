@@ -16,7 +16,7 @@ use crate::database::fixtures::{
     with_id,
 };
 use crate::database::observed::{Observed, Op};
-use crate::database::testing::block_on;
+use crate::database::fixtures::run;
 use crate::document::Document;
 use crate::error::{Error, Kind};
 use crate::index::Index;
@@ -84,7 +84,7 @@ async fn assert_mutation_retires_queries<F: Future>(database: &Database, mutatio
 
 #[test]
 fn query_cache_separates_complete_execution_shapes() {
-    block_on(async {
+    run(|| async {
         let database = create(None, true, None).await;
         create_users(&database).await;
         let asc = || Query::order_asc("$id", None);
@@ -102,7 +102,7 @@ fn query_cache_separates_complete_execution_shapes() {
 #[test]
 fn find_falls_back_to_the_database_when_the_query_cache_fails() {
     for method in ["load", "generation", "lease"] {
-        block_on(async move {
+        run(move || async move {
             let adapter = Observed::memory();
             let database = create(Some(adapter.clone()), false, None).await;
             create_users(&database).await;
@@ -122,7 +122,7 @@ fn find_falls_back_to_the_database_when_the_query_cache_fails() {
 
 #[test]
 fn random_order_always_bypasses_the_query_cache() {
-    block_on(async {
+    run(|| async {
         let adapter = Observed::memory();
         let database = create(Some(adapter.clone()), true, None).await;
         create_users(&database).await;
@@ -135,7 +135,7 @@ fn random_order_always_bypasses_the_query_cache() {
 
 #[test]
 fn set_query_cache_invalidates_while_installed_and_stops_once_removed() {
-    block_on(async {
+    run(|| async {
         let database = create(None, false, None).await;
         database.create_collection(open_collection("users", false)).await.unwrap();
         let query = query_cache();
@@ -170,7 +170,7 @@ async fn named(name: &str, namespace: &str, query: Arc<QueryCache>, document: &s
 
 #[test]
 fn one_query_cache_shared_by_databases_of_different_names_keeps_their_results_apart() {
-    block_on(async {
+    run(|| async {
         let query = query_cache();
         let namespace = unique("cache_");
         let first = named("first", &namespace, query.clone(), "a").await;
@@ -189,7 +189,7 @@ fn one_query_cache_shared_by_databases_of_different_names_keeps_their_results_ap
 
 #[test]
 fn reads_and_writes_use_the_cache_name_set_after_the_query_cache() {
-    block_on(async {
+    run(|| async {
         let query = query_cache();
         let namespace = unique("cache_");
         let named = named("x", &namespace, query.clone(), "a").await;
@@ -211,7 +211,7 @@ fn reads_and_writes_use_the_cache_name_set_after_the_query_cache() {
 #[test]
 fn schema_and_collection_mutations_invalidate_queries() {
     for mutation in 0..7 {
-        block_on(async move {
+        run(move || async move {
             let database = create(None, true, None).await;
             database
                 .create_collection(collection(
@@ -251,7 +251,7 @@ fn schema_and_collection_mutations_invalidate_queries() {
 
 #[test]
 fn delete_and_recreate_cannot_reuse_old_collection_results() {
-    block_on(async {
+    run(|| async {
         let database = create(None, true, None).await;
         database.create_collection(open_collection("users", false)).await.unwrap();
         database.create_document("users", with_id("old")).await.unwrap();
@@ -265,7 +265,7 @@ fn delete_and_recreate_cannot_reuse_old_collection_results() {
 
 #[test]
 fn a_rolled_back_transaction_cannot_poison_the_query_cache() {
-    block_on(async {
+    run(|| async {
         let database = create(None, true, None).await;
         database.create_collection(open_collection("users", false)).await.unwrap();
         database.create_document("users", with_id("committed")).await.unwrap();
@@ -287,7 +287,7 @@ fn a_rolled_back_transaction_cannot_poison_the_query_cache() {
 
 #[test]
 fn a_metadata_read_started_before_a_purge_cannot_publish() {
-    block_on(async {
+    run(|| async {
         let adapter = Observed::memory();
         // PHP's data cache is `None` here: nothing is cached at all.
         let none = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::None)));
@@ -315,7 +315,7 @@ fn a_metadata_read_started_before_a_purge_cannot_publish() {
 
 #[test]
 fn a_memory_cache_separates_roles_and_execution_shapes() {
-    block_on(async {
+    run(|| async {
         let database = create(None, false, None).await;
         database.set_query_cache(Some(Arc::new(QueryCache::new(over(&Leasable::plain()), QueryCache::SLOTS).unwrap())));
         let authorization = database.authorization();
@@ -353,7 +353,7 @@ fn a_memory_cache_separates_roles_and_execution_shapes() {
 
 #[test]
 fn a_memory_cache_separates_point_selection_variants() {
-    block_on(async {
+    run(|| async {
         let database = create(None, false, Some(Leasable::plain())).await;
         database
             .create_collection(collection("users", vec![string("name"), string("email")], vec![], Some(any_permissions()), false))
@@ -381,7 +381,7 @@ fn a_memory_cache_separates_point_selection_variants() {
 
 #[test]
 fn permission_revocation_is_fresh_across_database_instances() {
-    block_on(async {
+    run(|| async {
         let adapter: Arc<dyn Adapter> = Arc::new(Memory::new());
         let authorization = Arc::new(Authorization::new(true));
         authorization.clean_roles();
@@ -422,7 +422,7 @@ fn permission_revocation_is_fresh_across_database_instances() {
 
 #[test]
 fn a_silent_permission_revocation_still_invalidates_the_query_cache() {
-    block_on(async {
+    run(|| async {
         let database = create(None, false, None).await;
         database.set_query_cache(Some(Arc::new(QueryCache::new(over(&Leasable::plain()), QueryCache::SLOTS).unwrap())));
         let authorization = database.authorization();
@@ -453,7 +453,7 @@ fn a_silent_permission_revocation_still_invalidates_the_query_cache() {
 
 #[test]
 fn a_mandatory_invalidation_failure_escapes_a_silent_scope() {
-    block_on(async {
+    run(|| async {
         let cache = Leasable::plain();
         let database = create(None, false, None).await;
         database.set_query_cache(Some(Arc::new(QueryCache::new(over(&cache), QueryCache::SLOTS).unwrap())));
@@ -509,6 +509,6 @@ async fn assert_rolls_back_on_invalidation_failure(mutation: usize) {
 #[test]
 fn writes_roll_back_when_the_mandatory_invalidation_fails() {
     for mutation in 0..4 {
-        block_on(assert_rolls_back_on_invalidation_failure(mutation));
+        run(move || assert_rolls_back_on_invalidation_failure(mutation));
     }
 }

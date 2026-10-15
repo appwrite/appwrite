@@ -8,7 +8,7 @@ use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
 use crate::database::fixtures::{ids, open_collection, unique, with_id};
 use crate::database::observed::Observed;
-use crate::database::testing::block_on;
+use crate::database::fixtures::run;
 use crate::permission::PermissionType;
 use crate::query::Query;
 use crate::role::Role;
@@ -50,7 +50,7 @@ async fn create(cache: &Arc<Leasable>, kind: usize, side: &str, seed: &str) -> (
 #[test]
 fn a_write_leaves_the_cached_results_of_another_scope_in_place() {
     for kind in 0..3 {
-        block_on(async move {
+        run(move || async move {
             let cache = Leasable::lenient();
             let (writer, _) = create(&cache, kind, "writer", "writer-seed").await;
             let (reader, reader_adapter) = create(&cache, kind, "reader", "reader-seed").await;
@@ -66,7 +66,7 @@ fn a_write_leaves_the_cached_results_of_another_scope_in_place() {
 #[test]
 fn a_pending_write_leaves_the_query_cache_of_another_scope_on() {
     for kind in 0..3 {
-        block_on(async move {
+        run(move || async move {
             let cache = Leasable::lenient();
             let (writer, writer_adapter) = create(&cache, kind, "writer", "writer-seed").await;
             let (reader, reader_adapter) = create(&cache, kind, "reader", "reader-seed").await;
@@ -110,7 +110,7 @@ async fn find_as(database: &Database, tenant: i64) -> Vec<String> {
 
 #[test]
 fn a_write_under_another_tenant_of_the_same_database_leaves_the_cached_results_in_place() {
-    block_on(async {
+    run(|| async {
         let (database, adapter) = tenants().await;
         assert_eq!(find_as(&database, 2).await, ["seed-2"]);
         adapter.reset();
@@ -122,7 +122,7 @@ fn a_write_under_another_tenant_of_the_same_database_leaves_the_cached_results_i
 
 #[test]
 fn a_write_refreshes_the_cached_results_of_its_own_tenant() {
-    block_on(async {
+    run(|| async {
         let (database, adapter) = tenants().await;
         assert_eq!(find_as(&database, 1).await, ["seed-1"]);
         database.with_tenant(Value::Int(1), database.create_document("posts", with_id("written"))).await.unwrap();
@@ -135,7 +135,7 @@ fn a_write_refreshes_the_cached_results_of_its_own_tenant() {
 
 #[test]
 fn a_transaction_refreshes_every_tenant_it_wrote_under() {
-    block_on(async {
+    run(|| async {
         let (database, adapter) = tenants().await;
         for tenant in [1, 2] {
             find_as(&database, tenant).await;
@@ -163,7 +163,7 @@ fn a_transaction_refreshes_every_tenant_it_wrote_under() {
 
 #[test]
 fn tenants_never_read_each_others_cached_results() {
-    block_on(async {
+    run(|| async {
         let (database, _) = tenants().await;
         for tenant in [1, 2, 1, 2] {
             assert_eq!(find_as(&database, tenant).await, [format!("seed-{tenant}")]);
@@ -188,7 +188,7 @@ async fn round_trips() -> (Database, Arc<Observed>, Arc<Leasable>) {
 
 #[test]
 fn a_cached_find_stays_within_the_hit_round_trip_budget() {
-    block_on(async {
+    run(|| async {
         let (database, adapter, cache) = round_trips().await;
         find(&database).await;
         adapter.reset();
@@ -201,7 +201,7 @@ fn a_cached_find_stays_within_the_hit_round_trip_budget() {
 
 #[test]
 fn an_uncached_find_stays_within_the_miss_round_trip_budget() {
-    block_on(async {
+    run(|| async {
         let (database, adapter, cache) = round_trips().await;
         adapter.reset();
         cache.reset_operations();
