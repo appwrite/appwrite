@@ -18,6 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -61,6 +62,10 @@ class Update extends Action
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/databases/update-transaction.md',
+                requestExamples: [
+                    'commit' => ['summary' => 'Commit the transaction', 'value' => ['commit' => true]],
+                    'rollback' => ['summary' => 'Roll back the transaction', 'value' => ['rollback' => true]],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -177,49 +182,65 @@ class Update extends Action
                 return;
             }
 
-            $databaseDoc = null;
-            switch ($this->getDatabaseType()) {
-                case DATABASE_TYPE_DOCUMENTSDB:
-                case DATABASE_TYPE_VECTORSDB:
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
-                    ]));
-                    break;
-                default:
-                    // Legacy/tablesdb: use project-level database
-                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
-                    break;
-            }
+            $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+            ]));
+            $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
-            try {
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committing'])
-                ));
+            $claim = function () use ($dbForProject, $transactionId) {
+                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
+                $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
+                if ($current->getAttribute('status', '') !== 'pending') {
+                    return new Document();
+                }
+
+                return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
+            };
+
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
+                : $dbForProject->withTransaction($claim);
+
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            try {
                 $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     Query::orderAsc(),
                     Query::limit(PHP_INT_MAX),
                 ]));
 
+                $databaseDsns = [$firstOperation['databaseInternalId'] => $databaseDsn];
                 $collections = [];
                 foreach ($operations as $operation) {
                     $databaseInternalId = $operation['databaseInternalId'];
                     $collectionInternalId = $operation['collectionInternalId'];
                     $collectionId = "database_{$databaseInternalId}_collection_{$collectionInternalId}";
 
+                    if (!isset($databaseDsns[$databaseInternalId])) {
+                        $operationDatabase = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$databaseInternalId])
+                        ]));
+                        $databaseDsns[$databaseInternalId] = $operationDatabase->getAttribute('database') ?: $project->getAttribute('database');
+                    }
+
+                    if ($databaseDsns[$databaseInternalId] !== $databaseDsn) {
+                        throw new Exception(Exception::TRANSACTION_INVALID, 'All operations in a transaction must target databases hosted on the same database instance.');
+                    }
+
                     if (!isset($collections[$collectionId])) {
                         $collections[$collectionId] = $authorization->skip(
-                            fn () => $dbForProject->getCollection($collectionId)
+                            fn () => $dbForDatabases->getCollection($collectionId)
                         );
                     }
                 }
 
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections) {
+                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -247,6 +268,15 @@ class Update extends Action
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
+                            }
+                        }
+
+                        if (!$isAPIKey && !$isPrivilegedUser && \in_array($action, ['create', 'update', 'upsert']) && \is_array($data)) {
+                            try {
+                                $this->validateRelationships($dbForDatabases, $collection, $data, $authorization);
+                            } catch (Exception $e) {
+                                // Rethrown as a database exception so withTransaction() rolls back without retrying.
+                                throw new AuthorizationException($e->getMessage(), previous: $e);
                             }
                         }
 
@@ -297,7 +327,22 @@ class Update extends Action
                         }
                     }
 
-                });
+                };
+
+                // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
+                // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
+                $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
+
+                // The commit already landed, so a cache error must not fail it
+                foreach ($purged as $key => $hashes) {
+                    foreach (\array_keys($hashes) as $hash) {
+                        try {
+                            $dbForDatabases->getCache()->purge($key, $hash);
+                        } catch (\Throwable $e) {
+                            Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                        }
+                    }
+                }
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
                     'transactions',
@@ -484,6 +529,9 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    $doc->removeAttribute('$collection');
+                    $doc->removeAttribute('$tenant');
+
                     // Match the key set processDocument() gives every other row and document
                     // event: the synthetic $databaseId, plus whichever of $tableId or
                     // $collectionId belongs to the surface that was called.
@@ -561,9 +609,57 @@ class Update extends Action
     }
 
     /**
+     * Related documents nested in a staged operation are written with it, so the
+     * permissions they carry are checked against the related document as it exists
+     * at this point of the commit, after any earlier operations in the transaction.
+     *
+     * @param array<string, mixed> $data
+     * @throws Exception
+     */
+    private function validateRelationships(Database $dbForDatabases, Document $collection, array $data, Authorization $authorization): void
+    {
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute['type'] !== Database::VAR_RELATIONSHIP) {
+                continue;
+            }
+
+            $related = $data[$attribute['key']] ?? null;
+            if ($related instanceof Document) {
+                $related = $related->getArrayCopy();
+            }
+
+            if (empty($related) || !\is_array($related)) {
+                continue;
+            }
+
+            $relations = \array_is_list($related) ? $related : [$related];
+
+            $relatedCollection = $authorization->skip(fn () => $dbForDatabases->getCollection($attribute['options']['relatedCollection']));
+
+            foreach ($relations as $relation) {
+                if ($relation instanceof Document) {
+                    $relation = $relation->getArrayCopy();
+                }
+
+                if (!\is_array($relation) || \array_is_list($relation)) {
+                    continue;
+                }
+
+                $relationId = $relation['$id'] ?? null;
+                $current = \is_string($relationId)
+                    ? $authorization->skip(fn () => $dbForDatabases->getDocument($relatedCollection->getId(), $relationId))
+                    : new Document();
+
+                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
+                $this->validateRelationships($dbForDatabases, $relatedCollection, $relation, $authorization);
+            }
+        }
+    }
+
+    /**
      * Handle create operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string|null $documentId
      * @param array $data
@@ -573,7 +669,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleCreateOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         ?string $documentId,
         array $data,
@@ -583,8 +679,8 @@ class Update extends Action
         if ($documentId && !isset($data['$id'])) {
             $data['$id'] = $documentId;
         }
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
-            $doc = $dbForProject->createDocument(
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
+            $doc = $dbForDatabases->createDocument(
                 $collectionId,
                 new Document($data),
             );
@@ -595,7 +691,7 @@ class Update extends Action
     /**
      * Handle update operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
@@ -606,7 +702,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleUpdateOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         string $documentId,
         array $data,
@@ -616,7 +712,7 @@ class Update extends Action
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForProject->updateDocument(
+            $state[$collectionId][$documentId] = $dbForDatabases->updateDocument(
                 $collectionId,
                 $documentId,
                 new Document($data),
@@ -624,8 +720,8 @@ class Update extends Action
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
-            $document = $dbForProject->updateDocument(
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state) {
+            $document = $dbForDatabases->updateDocument(
                 $collectionId,
                 $documentId,
                 new Document($data),
@@ -640,7 +736,7 @@ class Update extends Action
     /**
      * Handle upsert operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string|null $documentId
      * @param array $data
@@ -650,7 +746,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleUpsertOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         ?string $documentId,
         array $data,
@@ -668,15 +764,15 @@ class Update extends Action
                 }
             }
 
-            $state[$collectionId][$documentId] = $dbForProject->upsertDocument(
+            $state[$collectionId][$documentId] = $dbForDatabases->upsertDocument(
                 $collectionId,
                 $existingDoc,
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
-            $doc = $dbForProject->upsertDocument(
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
+            $doc = $dbForDatabases->upsertDocument(
                 $collectionId,
                 new Document($data),
             );
@@ -687,7 +783,7 @@ class Update extends Action
     /**
      * Handle delete operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string $documentId
      * @param \DateTime $createdAt
@@ -697,7 +793,7 @@ class Update extends Action
      * @throws NotFoundException
      */
     private function handleDeleteOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         string $documentId,
         \DateTime $createdAt,
@@ -706,13 +802,13 @@ class Update extends Action
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
-            $dbForProject->deleteDocument($collectionId, $documentId);
+            $dbForDatabases->deleteDocument($collectionId, $documentId);
             unset($state[$collectionId][$documentId]);
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, &$state) {
-            $deleted = $dbForProject->deleteDocument($collectionId, $documentId);
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, &$state) {
+            $deleted = $dbForDatabases->deleteDocument($collectionId, $documentId);
             if (!$deleted) {
                 throw new NotFoundException('');
             }
@@ -747,7 +843,7 @@ class Update extends Action
     /**
      * Handle increment operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
@@ -758,7 +854,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleIncrementOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         string $documentId,
         array $data,
@@ -769,7 +865,7 @@ class Update extends Action
         $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
+            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
@@ -779,8 +875,8 @@ class Update extends Action
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+            $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
@@ -793,7 +889,7 @@ class Update extends Action
     /**
      * Handle decrement operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
@@ -804,7 +900,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleDecrementOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         string $documentId,
         array $data,
@@ -815,7 +911,7 @@ class Update extends Action
         $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
-            $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
+            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
@@ -825,8 +921,8 @@ class Update extends Action
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
-            $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+            $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $attribute,
@@ -839,7 +935,7 @@ class Update extends Action
     /**
      * Handle bulk create operation
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param string $collectionId
      * @param array $data
      * @param \DateTime $createdAt
@@ -848,19 +944,19 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleBulkCreateOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
         array &$state
     ): int {
         $count = 0;
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state, &$count) {
+        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state, &$count) {
             $documents = \array_map(function ($doc) {
                 return $doc instanceof Document ? $doc : new Document($doc);
             }, $data);
 
-            $count = $dbForProject->createDocuments(
+            $count = $dbForDatabases->createDocuments(
                 $collectionId,
                 $documents,
                 onNext: function (Document $document) use (&$state, $collectionId) {
@@ -874,7 +970,7 @@ class Update extends Action
     /**
      * Handle bulk update operation with manual timestamp checking
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
@@ -886,7 +982,7 @@ class Update extends Action
      * @throws ConflictException
      */
     private function handleBulkUpdateOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         TransactionState $transactionState,
         string $collectionId,
         array $data,
@@ -902,7 +998,7 @@ class Update extends Action
 
         // Clone the document before passing to updateDocuments to prevent mutation
         // The database layer mutates the input document, which would corrupt transaction state
-        $count = $dbForProject->updateDocuments(
+        $count = $dbForDatabases->updateDocuments(
             $collectionId,
             clone $updateData,
             $queries,
@@ -931,7 +1027,7 @@ class Update extends Action
             }
 
             if (!empty($documentsToRewrite)) {
-                $dbForProject->upsertDocuments(
+                $dbForDatabases->upsertDocuments(
                     $collectionId,
                     $documentsToRewrite,
                     onNext: function (Document $upserted) use (&$state, $collectionId) {
@@ -947,7 +1043,7 @@ class Update extends Action
     /**
      * Handle bulk upsert operation with manual timestamp checking
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
@@ -958,7 +1054,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleBulkUpsertOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         TransactionState $transactionState,
         string $collectionId,
         array $data,
@@ -971,7 +1067,7 @@ class Update extends Action
 
         $mergedDocuments = $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);
 
-        $count = $dbForProject->upsertDocuments(
+        $count = $dbForDatabases->upsertDocuments(
             $collectionId,
             $mergedDocuments,
             onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
@@ -996,7 +1092,7 @@ class Update extends Action
     /**
      * Handle bulk delete operation with manual timestamp checking
      *
-     * @param Database $dbForProject
+     * @param Database $dbForDatabases
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
@@ -1008,7 +1104,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      */
     private function handleBulkDeleteOperation(
-        Database $dbForProject,
+        Database $dbForDatabases,
         TransactionState $transactionState,
         string $collectionId,
         array $data,
@@ -1017,7 +1113,7 @@ class Update extends Action
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
-        $count = $dbForProject->deleteDocuments(
+        $count = $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
             onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {

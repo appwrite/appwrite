@@ -497,6 +497,36 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
     }
 
+    public function testCreateSiteRuleWithNullBranch(): void
+    {
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $this->assertNotEmpty($setup['deploymentId']);
+
+        $omitted = $this->getRule($this->setupSiteRule(\uniqid() . '-site-omitted-branch.custom.localhost', $siteId));
+        $this->assertSame(200, $omitted['headers']['status-code']);
+
+        // A null branch behaves like an omitted one instead of failing the deployment lookup
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => \uniqid() . '-site-null-branch.custom.localhost',
+            'siteId' => $siteId,
+            'branch' => null,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+
+        $rule = $this->getRule($rule['body']['$id']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($omitted['body']['deploymentId'], $rule['body']['deploymentId']);
+        $this->assertSame($omitted['body']['deploymentVcsProviderBranch'], $rule['body']['deploymentVcsProviderBranch']);
+
+        $this->cleanupRule($omitted['body']['$id']);
+        $this->cleanupRule($rule['body']['$id']);
+        $this->cleanupSite($siteId);
+    }
+
     public function testCreateFunctionBranchRule(): void
     {
         $domain = \uniqid() . '-function-branch.custom.localhost';

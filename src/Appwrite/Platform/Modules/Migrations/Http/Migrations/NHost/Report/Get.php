@@ -48,7 +48,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.', enum: new Enum(name: 'NHostMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.', example: '["user"]', enum: new Enum(name: 'NHostMigrationResource'))
             ->param('subdomain', '', new Text(512), 'Source\'s Subdomain.')
             ->param('region', '', new Text(512), 'Source\'s Region.')
             ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret.')

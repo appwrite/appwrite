@@ -1,0 +1,8 @@
+/vendor/
+/.vscode/
+.phpunit.result.cache
+tests/chunk.php
+.idea/
+.env
+.DS_Store
+composer.lock

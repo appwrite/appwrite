@@ -30,11 +30,26 @@ class Create extends OperationsCreate
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/tablesdb/create-operations.md',
+                requestExamples: [
+                    'createRow' => [
+                        'summary' => 'Stage a row creation',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'tableId' => '<TABLE_ID>',
+                            'rowId' => '<ROW_ID>',
+                            'data' => ['username' => 'walter.obrien'],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(

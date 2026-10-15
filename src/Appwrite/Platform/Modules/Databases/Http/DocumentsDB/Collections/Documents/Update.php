@@ -47,6 +47,12 @@ class Update extends DocumentUpdate
                 group: $this->getSdkGroup(),
                 name: 'updateDocument',
                 description: '/docs/references/documentsdb/update-document.md',
+                requestExamples: [
+                    'update' => [
+                        'summary' => 'Update document data',
+                        'value' => ['data' => ['username' => 'walter.obrien']],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(

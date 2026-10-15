@@ -5,7 +5,10 @@ namespace Appwrite\Messaging\Adapter\Push;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
@@ -18,6 +21,10 @@ use Utopia\Telemetry\Adapter as Telemetry;
 class Appwrite extends PushAdapter
 {
     protected const NAME = 'Appwrite';
+
+    // The reserved per-user topic namespace. A recipient target resolves to `users/<userId>`, an
+    // implicit topic auto-provisioned on first publish so per-user pushes need no pre-created topic.
+    private const USER_TOPIC_PREFIX = 'users';
 
     /**
      * @param Mqtt     $broker             the broker adapter used for internal pub/sub fan-out
@@ -57,26 +64,76 @@ class Appwrite extends PushAdapter
         $payload = $this->buildPayload($message);
         $response = new Response($this->getType());
 
-        foreach ($message->getTo() as $topic) {
+        // A target is either a campaign topic id or a reserved users/<id> name. Both are the wire topic
+        // subscribers match on, so fan out under $to directly; the ledger keys by the same id, which for
+        // a reserved user topic is its md5, auto-provisioning the row on first use.
+        foreach ($message->getTo() as $to) {
             try {
-                $sequence = $this->persist($topic, $payload);
+                $id = $this->isUserTopic($to) ? $this->createUserTopic($to) : $to;
+
+                $sequence = $this->persist($id, $payload);
                 $this->broker->send(
                     $this->projectId,
                     [],
                     [],
-                    [$topic],
+                    [$to],
                     [],
-                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence],
+                    ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence, 'publishedAt' => \microtime(true)],
                 );
 
                 $response->incrementDeliveredTo();
-                $response->addResult($topic);
+                $response->addResult($to);
             } catch (\Throwable $error) {
-                $response->addResult($topic, $error->getMessage());
+                $this->broker->messagesFailed->add(1);
+                $response->addResult($to, $error->getMessage());
             }
         }
 
         return $response->toArray();
+    }
+
+    /** Whether a target is a reserved per-user topic name (users/<userId>) rather than a topic id. */
+    private function isUserTopic(string $to): bool
+    {
+        return \str_starts_with($to, self::USER_TOPIC_PREFIX . '/');
+    }
+
+    /**
+     * Resolve a reserved users/<id> topic to [id, name], creating its topics row on first publish so
+     * per-user pushes need no pre-created topic. The id is a deterministic hash of the reserved name
+     * (as domain rules key on md5 of the domain): the primary key makes the row a singleton and needs
+     * no name index. A concurrent first publish that already created it throws Duplicate and is re-read.
+     * `qos` is left null (subscriber chosen), matching a normal topic.
+     *
+     * The id space is shared with developer-created topics, so the resolved row's name is verified to
+     * be the reserved one: a normal topic squatting the hash must never carry another user's pushes.
+     *
+     * @return string the topic id
+     */
+    private function createUserTopic(string $name): string
+    {
+        $id = ID::custom(\md5($name));
+        $authorization = $this->dbForProject->getAuthorization();
+
+        $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+        if ($topic->isEmpty()) {
+            try {
+                $topic = $authorization->skip(fn () => $this->dbForProject->createDocument('topics', new Document([
+                    '$id' => $id,
+                    'name' => $name,
+                    'sequence' => 0,
+                ])));
+            } catch (Duplicate) {
+                // A concurrent first publish created it; re-read it to verify below.
+                $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
+            }
+        }
+
+        if ($topic->getAttribute('name') !== $name) {
+            throw new \RuntimeException("Reserved topic id for {$name} collides with an existing topic");
+        }
+
+        return $id;
     }
 
     /**
@@ -93,6 +150,17 @@ class Appwrite extends PushAdapter
      */
     private function persist(string $topic, string $payload): int
     {
+        $start = \microtime(true);
+
+        try {
+            return $this->persistLedger($topic, $payload);
+        } finally {
+            $this->broker->ledgerDuration->record(\microtime(true) - $start);
+        }
+    }
+
+    private function persistLedger(string $topic, string $payload): int
+    {
         $authorization = $this->dbForProject->getAuthorization();
 
         $existing = $this->findLedger($authorization, $topic);
@@ -103,7 +171,9 @@ class Appwrite extends PushAdapter
         return (int) $authorization->skip(
             fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload, $authorization): int {
                 // Lock the topic row so a concurrent attempt for the same message waits here.
-                $this->dbForProject->getDocument('topics', $topic, forUpdate: true);
+                if ($this->dbForProject->getDocument('topics', $topic, forUpdate: true)->isEmpty()) {
+                    throw new NotFound("Topic {$topic} does not exist");
+                }
 
                 // Re-check under the lock: a racing attempt may have persisted it already.
                 $existing = $this->findLedger($authorization, $topic);
@@ -112,7 +182,7 @@ class Appwrite extends PushAdapter
                 }
 
                 $sequence = (int) $this->dbForProject
-                    ->increaseDocumentAttribute('topics', $topic, 'sequence', 1)
+                    ->updateDocument('topics', $topic, new Document(['sequence' => Operator::increment(1)]))
                     ->getAttribute('sequence');
 
                 $this->dbForProject->createDocument('pushLedger', new Document([
@@ -148,6 +218,10 @@ class Appwrite extends PushAdapter
     {
         $envelope = [];
 
+        if ($this->messageId !== '') {
+            $envelope['messageId'] = $this->messageId;
+        }
+
         if ($message->getTitle() !== null) {
             $envelope['notification']['title'] = $message->getTitle();
         }
@@ -168,6 +242,9 @@ class Appwrite extends PushAdapter
         }
         if ($message->getTag() !== null) {
             $envelope['notification']['tag'] = $message->getTag();
+        }
+        if ($message->getChannelId() !== null) {
+            $envelope['notification']['channelId'] = $message->getChannelId();
         }
         if ($message->getBadge() !== null) {
             $envelope['notification']['badge'] = $message->getBadge();

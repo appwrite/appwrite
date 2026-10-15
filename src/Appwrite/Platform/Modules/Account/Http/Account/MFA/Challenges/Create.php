@@ -53,6 +53,7 @@ class Create extends Action
             ->desc('Create MFA challenge')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
@@ -142,7 +143,7 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $code = $proofForCode->generate();
         $challenge = new Document([

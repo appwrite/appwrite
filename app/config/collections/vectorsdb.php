@@ -41,6 +41,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('description'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1024,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('dimension'),
                 'type' => Database::VAR_INTEGER,
                 'size' => 0,

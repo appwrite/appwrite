@@ -225,6 +225,99 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
     }
 
+    public function testDetectionReadsVariablesFromDotenv(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'dotenv-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        \file_put_contents($workdir . '/package.json', "{\"name\": \"dotenv\", \"main\": \"index.js\"}\n");
+        $this->writeFunctionHelper($workdir, 'dotenv');
+        \file_put_contents($workdir . '/.env', "# Defaults\nPLAIN=value # inline comment\nQUOTED=\"keeps # inside quotes\"\nUNSET=null\nSECRET=pa#ss\nexport EXPORTED=yes\n");
+        $this->gitHelper('git add . && git commit -m "Add function with .env"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $detection = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', $headers, [
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $detection['headers']['status-code'], \json_encode($detection['body']));
+
+        $variables = \array_column($detection['body']['variables'], 'value', 'name');
+        \ksort($variables);
+        $this->assertSame([
+            'EXPORTED' => 'yes',
+            'PLAIN' => 'value',
+            'QUOTED' => 'keeps # inside quotes',
+            'SECRET' => 'pa#ss',
+            'UNSET' => 'null',
+        ], $variables);
+    }
+
+    public function testUpdateSiteKeepsRepositoryOnNull(): void
+    {
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'site-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $providerRepositoryId = (string) $repository['body']['id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => ID::unique(),
+            'name' => 'Gitea site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code'], \json_encode($site['body']));
+        $siteId = $site['body']['$id'];
+
+        // An explicit null keeps the site connected rather than resetting it to the empty default, which disconnects
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            'name' => 'Gitea site renamed',
+            'framework' => 'other',
+            'providerRepositoryId' => null,
+        ]);
+        $this->assertSame(200, $site['headers']['status-code'], \json_encode($site['body']));
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertSame(200, $site['headers']['status-code']);
+        $this->assertSame('Gitea site renamed', $site['body']['name']);
+        $this->assertSame($installationId, $site['body']['installationId']);
+        $this->assertSame($providerRepositoryId, $site['body']['providerRepositoryId']);
+        $this->assertSame('main', $site['body']['providerBranch']);
+
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $headers);
+    }
+
     public function testClosePullRequestRemovesAuthorization(): void
     {
         /**
@@ -588,6 +681,25 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), $params, true, false);
     }
 
+    public function testInstallationOrganizationUrl(): void
+    {
+        // createInstallationHelper() reads listInstallations, so this covers both routes
+        $installation = $this->createInstallationHelper();
+
+        $organizationUrl = $installation['organizationUrl'];
+
+        // The browser-facing host need not be reachable from here, so assert
+        // only what holds either way; FactoryTest covers which host is chosen.
+        $this->assertSame('/' . $installation['organization'], \parse_url($organizationUrl, PHP_URL_PATH));
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installation['$id'], \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($organizationUrl, $response['body']['organizationUrl']);
+    }
+
     public function testCreateInstallationWithoutState(): void
     {
         $response = $this->callGiteaCallbackHelper(['code' => 'unused']);
@@ -868,6 +980,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             [Client::METHOD_GET, $base . '/providerRepositories/1/contents', []],
             [Client::METHOD_POST, $base . '/providerRepositories', ['name' => 'cross-' . \uniqid(), 'private' => true]],
             [Client::METHOD_POST, $base . '/detections', ['providerRepositoryId' => '1', 'type' => 'runtime']],
+            [Client::METHOD_PATCH, $base . '/repositories/1', ['providerPullRequestId' => '1']],
         ];
 
         foreach ($probes as [$method, $path, $params]) {

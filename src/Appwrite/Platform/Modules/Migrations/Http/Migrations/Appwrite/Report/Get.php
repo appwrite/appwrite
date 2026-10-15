@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -47,12 +48,13 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', enum: new Enum(name: 'AppwriteMigrationResource'))
+            ->param('resources', [], new ArrayList(new WhiteList(AppwriteSource::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'AppwriteMigrationResource'))
             ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
             ->param('projectID', '', new Text(512), "Source's Project ID")
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
             ->inject('getDatabasesDB')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -62,8 +64,16 @@ class Get extends Action
         string $projectID,
         string $key,
         Response $response,
-        callable $getDatabasesDB
+        callable $getDatabasesDB,
+        PublicHostname $publicHostname
     ): void {
+        // Block a source endpoint that resolves to a private or reserved
+        // address to prevent SSRF into the internal network.
+        $hostname = $publicHostname;
+        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        }
+
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);

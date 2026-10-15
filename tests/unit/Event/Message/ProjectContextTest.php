@@ -30,6 +30,7 @@ final class ProjectContextTest extends TestCase
             'teamInternalId' => '84',
             '$createdAt' => '2026-09-03T10:00:00.000+00:00',
             'region' => 'fra',
+            'database' => 'mysql://user:secret@database/project',
         ], $context->toArray());
     }
 

@@ -5,6 +5,7 @@ namespace Appwrite\Vcs;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
@@ -22,6 +23,7 @@ class Factory
      */
     public function __construct(
         protected Cache $cache,
+        protected Client $client,
         ?array $registry = null,
     ) {
         $this->registry = $registry ?? Config::getParam('vcs', []);
@@ -61,6 +63,22 @@ class Factory
         $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
+        }
+
+        return $adapter;
+    }
+
+    /**
+     * Adapter for building links a browser will open, which can reach the
+     * provider on a different host than the server-side API does.
+     */
+    public function fromProviderForBrowser(string $key): Git
+    {
+        $adapter = $this->fromProvider($key);
+
+        $browserEndpoint = $this->registry[$key]['browserEndpoint'] ?? '';
+        if (!empty($browserEndpoint) && \method_exists($adapter, 'setEndpoint')) {
+            $adapter->setEndpoint(\rtrim($browserEndpoint, '/'));
         }
 
         return $adapter;
@@ -107,7 +125,7 @@ class Factory
         $clientSecret = $this->getEnv($key, 'clientSecret');
         $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
 
-        $oauth2 = $builder($clientId, $clientSecret, $endpoint);
+        $oauth2 = $builder($this->client, $clientId, $clientSecret, $endpoint);
 
         if (!$oauth2 instanceof OAuth2) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider "' . $key . '" oauth2 builder returned an invalid client');

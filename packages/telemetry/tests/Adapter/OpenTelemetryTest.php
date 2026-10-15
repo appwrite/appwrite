@@ -111,6 +111,32 @@ final class OpenTelemetryTest extends TestCase
         }
     }
 
+    public function testGaugesAreExportedWithoutStartTime(): void
+    {
+        $payloads = [];
+        $telemetry = new OpenTelemetry('http://localhost:4318/v1/metrics', 'namespace', 'service', 'instance', $this->transport($payloads));
+        $telemetry->createGauge('gauge')->record(4.5);
+        $telemetry->createObservableGauge('observable_gauge')->observe(fn (callable $observe) => $observe(607));
+        $telemetry->createCounter('counter')->add(1);
+
+        $this->assertTrue($telemetry->collect());
+
+        $request = new ExportMetricsServiceRequest();
+        $request->mergeFromString($payloads[0]);
+        $metrics = [];
+        foreach ($request->getResourceMetrics() as $resource) {
+            foreach ($resource->getScopeMetrics() as $scope) {
+                foreach ($scope->getMetrics() as $metric) {
+                    $metrics[$metric->getName()] = $metric;
+                }
+            }
+        }
+        $this->assertSame(0, (int) $metrics['gauge']->getGauge()->getDataPoints()[0]->getStartTimeUnixNano());
+        $this->assertSame(607, (int) $metrics['observable_gauge']->getGauge()->getDataPoints()[0]->getAsInt());
+        $this->assertSame(0, (int) $metrics['observable_gauge']->getGauge()->getDataPoints()[0]->getStartTimeUnixNano());
+        $this->assertNotSame(0, (int) $metrics['counter']->getSum()->getDataPoints()[0]->getStartTimeUnixNano());
+    }
+
     /**
      * @param list<string> $payloads
      * @return TransportInterface<string>

@@ -25,10 +25,6 @@ class Generator
         ],
     ];
 
-    private const array OPTIONAL_SERVICES = [
-        'enableAssistant' => 'appwrite-assistant',
-    ];
-
     private const array TOPOLOGY_SERVICE_GROUPS = [
         'topology' => [
             'default' => 'combined',
@@ -53,13 +49,14 @@ class Generator
     private const array HOST_PATH_REWRITABLE_BINDS = [
         './mongo-init.js:/mongo-init.js:ro',
         './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+        './clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro',
+        './clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro',
     ];
 
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
         'database' => 'postgresql',
         'hostPath' => '',
-        'enableAssistant' => false,
         'topology' => 'combined',
     ];
 
@@ -183,12 +180,6 @@ class Generator
                 if ($service !== $this->params[$param]) {
                     unset($services[$service]);
                 }
-            }
-        }
-
-        foreach (self::OPTIONAL_SERVICES as $param => $service) {
-            if (empty($this->params[$param])) {
-                unset($services[$service]);
             }
         }
 

@@ -20,10 +20,10 @@ use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
-use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
@@ -591,6 +591,20 @@ class OpenAPI3 extends Format
                 }
             }
 
+            $requestExamples = [];
+            foreach ($additionalMethods ?? [$sdk] as $method) {
+                $platforms = $method->getPlatforms();
+                if ($this->platform === null ? $platforms === [] : !\in_array($this->platform, $platforms, true)) {
+                    continue;
+                }
+                foreach ($method->getRequestExamples() as $name => $example) {
+                    if (isset($requestExamples[$name]) && $requestExamples[$name] !== $example) {
+                        throw new \RuntimeException("Conflicting request example '{$name}' for route '{$url}'.");
+                    }
+                    $requestExamples[$name] = $example;
+                }
+            }
+
             $parameterNodes = [];
 
             $parameters = $this->getMethodParameters($route, $sdk);
@@ -601,7 +615,7 @@ class OpenAPI3 extends Format
                 }
 
                 /**
-                 * @var \Utopia\Validator $validator
+                 * @var \Utopia\Validator\Validator $validator
                  */
                 $validator = $this->getValidator($param);
 
@@ -761,6 +775,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\Host::class:
                     case \Utopia\Validator\URL::class:
                     case \Appwrite\Network\Validator\Redirect::class:
+                    case \Appwrite\Network\Validator\PublicURL::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';
@@ -798,10 +813,25 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case Queries::class:
+                        // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+                    case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        break;
+                    case \Utopia\Validator\Multiple::class:
+                        // Its rules check the whole value, so an array-typed Multiple declares no
+                        // item type; its items are taken to be strings.
+                        $node['schema']['type'] = $validator->getType();
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['items'] = [
+                                'type' => 'string',
+                            ];
+                        }
+                        if (($param['example'] ?? '') !== '') {
+                            $node['schema']['example'] = $param['example'];
+                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
@@ -984,6 +1014,16 @@ class OpenAPI3 extends Format
                             break;
                         }
 
+                        // A validator of its own that takes a whole array declares no item type.
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = new \stdClass();
+                            if (($param['example'] ?? '') !== '') {
+                                $node['schema']['example'] = $param['example'];
+                            }
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
@@ -1119,6 +1159,9 @@ class OpenAPI3 extends Format
                 }
 
                 if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                    if ($requestExamples !== []) {
+                        $body['content'][$consumes[0]]['examples'] = $requestExamples;
+                    }
                     $methodTemp['requestBody'] = $body;
                 }
 
@@ -1248,6 +1291,9 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                    if (\is_array($rule['default'] ?? null) || ($rule['default'] ?? null) instanceof \stdClass) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
+                    }
                     continue;
                 }
 
@@ -1317,6 +1363,16 @@ class OpenAPI3 extends Format
                         ];
                     }
                 }
+                // Clients fill a field an older server omits from its default, as the server does.
+                if (
+                    isset($rule['default'])
+                    && $items === null
+                    && ($rule['type'] !== 'datetime' || $rule['default'] === '')
+                    && $this->defaultMatchesType($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                    && $this->shouldEmitDefaultForSchema($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                ) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'];
+                }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
@@ -1333,5 +1389,22 @@ class OpenAPI3 extends Format
         \ksort($output['paths']);
 
         return $output;
+    }
+
+    /**
+     * Typed SDK models write a default as is, so one of the wrong type, such as '' on an integer, breaks them.
+     *
+     * @param array<string, mixed> $schema
+     */
+    private function defaultMatchesType(mixed $default, array $schema): bool
+    {
+        return match ($schema['type'] ?? null) {
+            'integer' => \is_int($default),
+            'number' => \is_int($default) || \is_float($default),
+            'boolean' => \is_bool($default),
+            'string' => \is_string($default),
+            'array' => \is_array($default),
+            default => true,
+        };
     }
 }

@@ -23,6 +23,7 @@ class Get extends AttributesGet
     {
         return [
             UtopiaResponse::MODEL_COLUMN_BOOLEAN,
+            UtopiaResponse::MODEL_COLUMN_BIGINT,
             UtopiaResponse::MODEL_COLUMN_INTEGER,
             UtopiaResponse::MODEL_COLUMN_FLOAT,
             UtopiaResponse::MODEL_COLUMN_EMAIL,
@@ -31,6 +32,13 @@ class Get extends AttributesGet
             UtopiaResponse::MODEL_COLUMN_IP,
             UtopiaResponse::MODEL_COLUMN_DATETIME,
             UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
+            UtopiaResponse::MODEL_COLUMN_POINT,
+            UtopiaResponse::MODEL_COLUMN_LINE,
+            UtopiaResponse::MODEL_COLUMN_POLYGON,
+            UtopiaResponse::MODEL_COLUMN_VARCHAR,
+            UtopiaResponse::MODEL_COLUMN_TEXT,
+            UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
+            UtopiaResponse::MODEL_COLUMN_LONGTEXT,
             UtopiaResponse::MODEL_COLUMN_STRING,
         ];
     }

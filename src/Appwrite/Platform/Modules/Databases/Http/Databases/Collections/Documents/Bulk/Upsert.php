@@ -18,6 +18,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
@@ -77,7 +79,7 @@ class Upsert extends Action
             ])
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
@@ -192,10 +194,18 @@ class Upsert extends Action
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
             throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
+        } catch (NotFoundException $e) {
+            if ($dbForProject->getDocument('database_' . $database->getSequence(), $collectionId)->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
+            // The table exists, so a column the write's schema listed was deleted or renamed before the write ran
+            throw new Exception($this->getStructureNotFoundException(), 'The schema changed while this request was running. Please try again.', previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
         foreach ($upserted as $document) {

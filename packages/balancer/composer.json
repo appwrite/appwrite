@@ -1,0 +1,39 @@
+{
+    "name": "utopia-php/balancer",
+    "description": "A simple library to balance choices between multiple options.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "balancer",
+        "balancing",
+        "balancer"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Balancer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Balancer\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --configuration phpunit.xml"
+    },
+    "require": {
+        "php": ">=8.1",
+        "utopia-php/telemetry": "^0.4.0"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    }
+}

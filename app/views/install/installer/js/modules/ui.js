@@ -274,14 +274,6 @@
             httpsBadge.classList.remove('badge-success', 'badge-neutral');
             httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
         }
-
-        const assistantBadge = root.querySelector('[data-review-assistant-badge]');
-        if (assistantBadge) {
-            const hasAssistantKey = Boolean((formState?.assistantOpenAIKey || '').trim());
-            assistantBadge.textContent = hasAssistantKey ? 'Enabled' : 'Disabled';
-            assistantBadge.classList.remove('badge-success', 'badge-neutral');
-            assistantBadge.classList.add(hasAssistantKey ? 'badge-success' : 'badge-neutral');
-        }
     };
 
     window.InstallerStepsUI = {

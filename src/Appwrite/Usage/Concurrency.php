@@ -2,7 +2,7 @@
 
 namespace Appwrite\Usage;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Query\Query as UsageFilter;
 use Utopia\System\System;
 use Utopia\Usage\Metric;

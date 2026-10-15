@@ -1274,6 +1274,7 @@ final class ProjectsConsoleClientTest extends Scope
         foreach ($authsKeys as $authsKey) {
             $this->assertTrue($response['body'][$authsKey], 'Auth method should be enabled: ' . $authsKey);
         }
+        $this->assertArrayNotHasKey('authPasskey', $response['body'], 'Older response formats never see passkeys');
 
         $serviceKeys = [
             'serviceStatusForAccount',
@@ -2500,6 +2501,7 @@ final class ProjectsConsoleClientTest extends Scope
         $id = $response['body']['$id'];
 
         $auth = require(__DIR__ . '/../../../../app/config/auth.php');
+        unset($auth['passkey']); // Not exposed in these older response formats
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';
@@ -4019,6 +4021,21 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        /**
+         * SDKs send display names, and integrations such as the Terraform provider
+         * identify themselves; both must be recorded in the lowercase form.
+         */
+        foreach (['Go', 'Terraform', 'Python'] as $sdk) {
+            $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+                'x-appwrite-key' => $keySecret,
+                'x-sdk-name' => $sdk,
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
         /** Check that the API key has been updated */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -4028,9 +4045,11 @@ final class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('sdks', $response['body']);
-        $this->assertCount(2, $response['body']['sdks']);
+        $this->assertCount(4, $response['body']['sdks']);
         $this->assertContains('python', $response['body']['sdks']);
         $this->assertContains('php', $response['body']['sdks']);
+        $this->assertContains('go', $response['body']['sdks']);
+        $this->assertContains('terraform', $response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
 
@@ -4158,7 +4177,7 @@ final class ProjectsConsoleClientTest extends Scope
         $this->assertCount(2, $response['body']['events']);
         $this->assertEquals('https://appwrite.io', $response['body']['url']);
         $this->assertEquals('username', $response['body']['authUsername']);
-        $this->assertEquals('password', $response['body']['authPassword']);
+        $this->assertSame('', $response['body']['authPassword']);
 
         /**
          * Test for FAILURE
