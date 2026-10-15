@@ -10,7 +10,7 @@
 #![allow(dead_code)]
 
 use std::any::Any;
-use std::sync::atomic::{AtomicI64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
@@ -19,7 +19,7 @@ use utopia_query::schema::{ColumnType, IndexType};
 use super::METADATA;
 use crate::adapter::{
     Adapter, Casting, Connection, Feature, Features, Find, Limits, QueryBuilder, RawQuery, Relationships, Schemaless,
-    Spatial, State, Timeouts, Upserts,
+    Spatial, State, Timeouts, TransactionStrategy, Upserts,
 };
 use crate::attribute::Attribute;
 use crate::capability::{Capabilities, Capability};
@@ -57,8 +57,6 @@ pub(crate) struct Spy {
     /// Whether a transaction opened inside another is a savepoint; without,
     /// it runs in the outer one (`RelationshipMemory(savepoints: false)`).
     savepoints: std::sync::atomic::AtomicBool,
-    /// Transactions opened inside another without a savepoint, still open.
-    flattened: AtomicI64,
     /// What the spy does around the calls it watches.
     pub(crate) watches: Mutex<Watches>,
     /// Reads of the metadata collection (`getDocument()` and `find()`).
@@ -76,7 +74,6 @@ impl Spy {
             inner,
             without: Mutex::new(Vec::new()),
             savepoints: std::sync::atomic::AtomicBool::new(true),
-            flattened: AtomicI64::new(0),
             watches: Mutex::new(Watches::default()),
             metadata_reads: AtomicUsize::new(0),
             document_reads: AtomicUsize::new(0),
@@ -195,18 +192,19 @@ impl Adapter for Spy {
     }
 
     async fn start_transaction(&self) -> Result<bool> {
-        if !self.savepoints.load(Ordering::SeqCst) && self.inner.in_transaction() {
-            self.flattened.fetch_add(1, Ordering::SeqCst);
-            return Ok(true);
-        }
         self.inner.start_transaction().await
     }
 
-    async fn commit_transaction(&self) -> Result<bool> {
-        if self.flattened.load(Ordering::SeqCst) > 0 {
-            self.flattened.fetch_sub(1, Ordering::SeqCst);
-            return Ok(true);
+    /// Without savepoints, a transaction opened inside another runs its
+    /// callback in the open one (`RelationshipMemory::withTransaction()`).
+    async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
+        if !self.savepoints.load(Ordering::SeqCst) && self.inner.in_transaction() {
+            return Ok(TransactionStrategy::Direct);
         }
+        self.inner.transaction_strategy().await
+    }
+
+    async fn commit_transaction(&self) -> Result<bool> {
         let commit = self.watches.lock().unwrap().commit.clone();
         if let Some(commit) = commit
             && let Some(error) = commit(self.state().lock().in_transaction)
@@ -217,10 +215,6 @@ impl Adapter for Spy {
     }
 
     async fn rollback_transaction(&self) -> Result<bool> {
-        if self.flattened.load(Ordering::SeqCst) > 0 {
-            self.flattened.fetch_sub(1, Ordering::SeqCst);
-            return Ok(true);
-        }
         self.inner.rollback_transaction().await
     }
 
