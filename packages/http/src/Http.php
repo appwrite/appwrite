@@ -911,8 +911,6 @@ class Http
     }
 
     /**
-     * Convert a boolean string accepted by a loose Boolean validator into a real bool.
-     *
      * @param  array<string, mixed>  $param
      */
     private function coerce(array $param, mixed $value): mixed
