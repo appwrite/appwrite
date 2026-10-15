@@ -47,6 +47,7 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -96,7 +97,6 @@ if (!$container->has('pools')) {
         return $register->get('pools');
     }, ['register']);
 }
-
 
 if (!$container->has('publisherForUsage')) {
     $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
@@ -1503,30 +1503,27 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $lockKey, $presenceState, $projectId, $userId, &$deletedPresences): void {
                             $lock = new Distributed($redis, $lockKey, ttl: PresenceHandler::LOCK_TTL);
 
-                            // Could not coordinate: leave the row to its expiresAt rather than
-                            // decrement and delete outside the lock.
-                            if (!$lock->acquire(PresenceHandler::LOCK_TIMEOUT)) {
-                                return;
-                            }
-
                             try {
-                                // Delete only on an exact zero. A negative count means Redis lost
-                                // the key while holders were open, so keep the row for expiresAt.
-                                if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
-                                    return;
-                                }
-
-                                foreach ($presenceIds as $presenceId) {
-                                    $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('presenceLogs', $presenceId));
-                                    if ($presence->isEmpty()) {
-                                        continue;
+                                $lock->withLock(function () use ($dbForProject, $presenceIds, $presenceState, $redis, $projectId, $userId, &$deletedPresences): void {
+                                    // Delete only on an exact zero. A negative count means Redis lost
+                                    // the key while holders were open, so keep the row for expiresAt.
+                                    if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
+                                        return;
                                     }
 
-                                    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('presenceLogs', $presenceId));
-                                    $deletedPresences[$presence->getId()] = $presence;
-                                }
-                            } finally {
-                                $lock->release();
+                                    foreach ($presenceIds as $presenceId) {
+                                        $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('presenceLogs', $presenceId));
+                                        if ($presence->isEmpty()) {
+                                            continue;
+                                        }
+
+                                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('presenceLogs', $presenceId));
+                                        $deletedPresences[$presence->getId()] = $presence;
+                                    }
+                                }, timeout: PresenceHandler::LOCK_TIMEOUT);
+                            } catch (Contention) {
+                                // Could not coordinate: leave the row to its expiresAt rather than
+                                // decrement and delete outside the lock.
                             }
                         });
 

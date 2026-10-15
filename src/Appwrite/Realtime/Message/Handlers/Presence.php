@@ -17,6 +17,7 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
@@ -115,24 +116,22 @@ class Presence extends Action
         $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $lockKey, $presenceState, $projectId, $userId, $realtime, $connectionId): Document {
             $lock = new Distributed($redis, $lockKey, ttl: self::LOCK_TTL);
 
-            // Could not coordinate: still upsert so the user is present, but leave the counter
-            // and the hold untouched so no unsynchronised count is left behind.
-            if (!$lock->acquire(self::LOCK_TIMEOUT)) {
-                return $upsert();
-            }
-
             try {
-                $firstHold = empty($realtime->connections[$connectionId]['presences']);
-                $presence = $upsert();
+                return $lock->withLock(function () use ($upsert, $presenceState, $redis, $projectId, $userId, $realtime, $connectionId): Document {
+                    $firstHold = empty($realtime->connections[$connectionId]['presences']);
+                    $presence = $upsert();
 
-                if ($firstHold) {
-                    $presenceState->incrementConnections($redis, $projectId, $userId);
-                }
-                $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+                    if ($firstHold) {
+                        $presenceState->incrementConnections($redis, $projectId, $userId);
+                    }
+                    $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
 
-                return $presence;
-            } finally {
-                $lock->release();
+                    return $presence;
+                }, timeout: self::LOCK_TIMEOUT);
+            } catch (Contention) {
+                // Could not coordinate: still upsert so the user is present, but leave the
+                // counter and the hold untouched so no unsynchronised count is left behind.
+                return $upsert();
             }
         });
 
