@@ -10,6 +10,8 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 
 abstract class Target
 {
+    private const string PROTOCOLS = 'http,https';
+
     /**
      * Seconds to wait for a remote to accept the connection.
      */
@@ -56,6 +58,13 @@ abstract class Target
 
     private ?Client $client = null;
 
+    protected bool $followRedirects = false;
+
+    /**
+     * @var (\Closure(string): array<string>)|null
+     */
+    protected ?\Closure $resolver = null;
+
     protected string $rootResourceId = '';
 
     protected string $rootResourceType = '';
@@ -67,6 +76,29 @@ abstract class Target
     public function registerCache(Cache &$cache): void
     {
         $this->cache = &$cache;
+    }
+
+    public function setFollowRedirects(bool $followRedirects): static
+    {
+        $this->followRedirects = $followRedirects;
+        $this->client = null;
+
+        return $this;
+    }
+
+    /**
+     * The resolver receives each request URL and returns the CURLOPT_RESOLVE
+     * entries ("host:port:address[,address]") the connection must use. It
+     * throws to refuse the URL. While a resolver is set, requests never go
+     * through a proxy, which would resolve the host itself.
+     *
+     * @param  (\Closure(string): array<string>)|null  $resolver
+     */
+    public function setResolver(?\Closure $resolver): static
+    {
+        $this->resolver = $resolver;
+
+        return $this;
     }
 
     /**
@@ -129,8 +161,12 @@ abstract class Target
             default => $requests->form($method, $uri, $params, $headers),
         };
 
+        $client = $this->resolver === null
+            ? $this->client()
+            : $this->client(($this->resolver)((string) $request->getUri()));
+
         try {
-            $response = $this->client()->sendRequest($request);
+            $response = $client->sendRequest($request);
         } catch (ClientExceptionInterface $error) {
             throw new \Exception($error->getMessage(), Exception::CODE_INTERNAL, $error);
         }
@@ -146,6 +182,10 @@ abstract class Target
             $responseBody = \json_decode($responseBody, true);
         }
 
+        if (! $this->followRedirects && $responseStatus >= 300 && $responseStatus < 400) {
+            throw new \Exception($responseStatus.': Redirects are not followed', $responseStatus);
+        }
+
         if ($responseStatus >= 400) {
             if (\is_array($responseBody)) {
                 throw new \Exception(\json_encode($responseBody), $responseStatus);
@@ -158,16 +198,36 @@ abstract class Target
     }
 
     /**
-     * The HTTP client for {@see call()}, built once per target so connections are reused.
+     * The HTTP client for {@see call()}, built once per target so connections are
+     * reused. A request pinned to resolved addresses gets a client of its own.
+     *
+     * @param  array<string>|null  $resolve
      */
-    protected function client(): Client
+    protected function client(?array $resolve = null): Client
     {
-        return $this->client ??= (new Client(new CurlAdapter(options: [
+        if ($resolve === null) {
+            return $this->client ??= $this->createClient([]);
+        }
+
+        return $this->createClient([
+            \CURLOPT_RESOLVE => $resolve,
+            \CURLOPT_PROXY => '',
+        ]);
+    }
+
+    /**
+     * @param  array<int, mixed>  $options
+     */
+    private function createClient(array $options): Client
+    {
+        return (new Client(new CurlAdapter(options: $options + [
             \CURLOPT_TIMEOUT_MS => 0,
             \CURLOPT_LOW_SPEED_LIMIT => 1,
             \CURLOPT_LOW_SPEED_TIME => static::STALL_TIMEOUT,
+            \CURLOPT_PROTOCOLS_STR => self::PROTOCOLS,
+            \CURLOPT_REDIR_PROTOCOLS_STR => self::PROTOCOLS,
         ])))
-            ->withFollowRedirects()
+            ->withFollowRedirects($this->followRedirects)
             ->withConnectTimeout(static::CONNECT_TIMEOUT);
     }
 
