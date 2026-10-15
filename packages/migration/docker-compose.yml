@@ -2,28 +2,36 @@ services:
   supabase-db:
     build:
       context: .
+      dockerfile: Dockerfile
       target: supabase-db
-    ports:
-      - "5432:5432"
     networks:
       - tests
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
 
   nhost-db:
     build:
       context: .
+      dockerfile: Dockerfile
       target: nhost-db
     networks:
       - tests
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
 
   nhost-storage:
     image: mockoon/cli:latest
@@ -31,7 +39,7 @@ services:
     networks:
       - tests
     volumes:
-      - ./tests/Migration/resources/nhost:/mockoon
+      - ./tests/fixtures/nhost:/mockoon
 
   supabase-api:
     image: mockoon/cli:latest
@@ -39,21 +47,27 @@ services:
     networks:
       - tests
     volumes:
-      - ./tests/Migration/resources/supabase:/mockoon
+      - ./tests/fixtures/supabase:/mockoon
 
   tests:
-    build:
-      context: .
+    image: appwrite/base:2.1.0
+    entrypoint: ["tail", "-f", "/dev/null"]
     networks:
       - tests
     volumes:
-      - ./src:/app/src
-      - ./tests:/app/tests
-      - ./phpunit.xml:/app/phpunit.xml
+      - ./:/usr/src/code
+      # phpunit comes from the root toolchain, as on the host
+      - ../../vendor:/usr/src/toolchain:ro
+    working_dir: /usr/src/code
     depends_on:
-      - supabase-db
-      - nhost-db
-      - nhost-storage
+      supabase-db:
+        condition: service_healthy
+      nhost-db:
+        condition: service_healthy
+      nhost-storage:
+        condition: service_started
+      supabase-api:
+        condition: service_started
     environment:
       - NHOST_DB_URL=postgres://postgres:postgres@nhost-db:5432/postgres
       - SUPABASE_DB_URL=postgres://postgres:postgres@supabase-db:5432/postgres

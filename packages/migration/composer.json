@@ -13,16 +13,20 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Utopia\\Migration\\": "src/Migration"
+            "Utopia\\Migration\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Utopia\\Tests\\": "tests/Migration"
+            "Utopia\\Migration\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit --testsuite unit",
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "tests/e2e.sh"
+        ]
     },
     "require": {
         "php": ">=8.5",
@@ -31,7 +35,6 @@
         "appwrite/appwrite": "^30.2.2",
         "utopia-php/database": "^8.1.2",
         "utopia-php/storage": "4.*",
-        "utopia-php/dsn": "0.2.*",
         "halaxa/json-machine": "^1.2",
         "psr/http-client": "^1.0",
         "utopia-php/client": "^0.6",
