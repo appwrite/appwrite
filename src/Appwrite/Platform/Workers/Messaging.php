@@ -1380,7 +1380,8 @@ class Messaging extends Action
                 $credentials['authKey'] ?? '',
                 $credentials['authKeyId'] ?? '',
                 $credentials['teamId'] ?? '',
-                $credentials['bundleId'] ?? '',
+                // Earlier provider updates stored a changed bundle ID under `bundle`, leaving `bundleId` on the old one.
+                $credentials['bundle'] ?? $credentials['bundleId'] ?? '',
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
