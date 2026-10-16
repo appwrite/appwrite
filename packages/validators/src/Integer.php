@@ -33,6 +33,11 @@ class Integer extends Validator
         if ($bits === 64 && $unsigned) {
             throw new \InvalidArgumentException('64-bit unsigned integers are not supported due to PHP integer limitations');
         }
+
+        if ($bits > \PHP_INT_SIZE * 8 - ($unsigned ? 1 : 0)) {
+            throw new \InvalidArgumentException(\sprintf('%d-bit %s integers do not fit the %d-bit integers of this PHP build', $bits, $unsigned ? 'unsigned' : 'signed', \PHP_INT_SIZE * 8));
+        }
+
         $this->bits = $bits;
         $this->unsigned = $unsigned;
     }
@@ -113,13 +118,7 @@ class Integer extends Validator
 
     private function getMax(): int
     {
-        $width = \PHP_INT_SIZE * 8;
-
-        if ($this->unsigned) {
-            return $this->bits >= $width - 1 ? \PHP_INT_MAX : (1 << $this->bits) - 1;
-        }
-
-        return $this->bits >= $width ? \PHP_INT_MAX : \PHP_INT_MAX >> ($width - $this->bits);
+        return $this->unsigned ? (1 << $this->bits) - 1 : \PHP_INT_MAX >> (\PHP_INT_SIZE * 8 - $this->bits);
     }
 
     /**
