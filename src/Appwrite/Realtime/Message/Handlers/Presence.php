@@ -100,14 +100,33 @@ class Presence extends Action
         $alreadyHeld = isset($realtime->connections[$connectionId]['presence']);
         $firstWorkerHold = !$alreadyHeld && empty($realtime->presenceHolders[$projectId][$userId] ?? []);
 
-        $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
-
-        // Record the in-memory hold only after the write committed, so a failed write cannot
-        // leave a phantom hold that later decrements a count it never incremented.
+        // Reserve the hold synchronously (no coroutine yield between the check and this set) so a
+        // concurrent first message on this worker sees it and does not also count as firstWorkerHold.
         if (!$alreadyHeld) {
             $realtime->presenceHolders[$projectId][$userId][$connectionId] = true;
-            $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId];
         }
+
+        try {
+            $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
+        } catch (\Throwable $th) {
+            // Roll back the reservation so it can't decrement a count it never incremented.
+            if (!$alreadyHeld) {
+                unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
+                if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
+                    unset($realtime->presenceHolders[$projectId][$userId]);
+                }
+            }
+            throw $th;
+        }
+
+        // Tag the hold with the row id, so a delete event for a superseded row only clears holds
+        // on that row, not a recreated one.
+        $realtime->presenceHolders[$projectId][$userId][$connectionId] = $presence->getId();
+        $realtime->connections[$connectionId]['presence'] = [
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'presenceId' => $presence->getId(),
+        ];
 
         // A worker's first hold that lands connections at 1 is the global create: the user came
         // online. Guard on firstWorkerHold so a heartbeat on a single-connection user doesn't
