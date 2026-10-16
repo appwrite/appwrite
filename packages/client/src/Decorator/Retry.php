@@ -76,6 +76,7 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
             if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
                 throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
             }
+
             $adapter = $this->adapter;
             $stream = static fn (RequestInterface $request, callable $sink): ResponseInterface => $adapter->stream($request, $sink, $onResponse);
         }
