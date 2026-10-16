@@ -29,6 +29,14 @@
   or merged afterwards. ClickHouse refuses to change a column that a skip
   index covers, so the covering indexes are dropped first, then added and
   materialized again once the column is converged.
+- `migrate()` (and so `setup()`) realigns skip indexes that drifted from
+  their definition. Before, it added indexes by name with `IF NOT EXISTS`,
+  so a defined name with another expression or type stayed as it was, and an
+  index kept under an old name, such as `index-resource` on `resourceType`
+  from before the column was renamed, stayed next to the `index-resourceType`
+  that duplicates it. Both are now dropped and the defined index is added and
+  materialized, which schedules a ClickHouse mutation that builds the index
+  for existing parts. A table whose indexes match is not altered.
 - `Accumulator::flush()` writes at most 1,000 entries per `addBatch()` call
   and drops each batch from the buffer as soon as it is written. Before, it
   handed the whole buffer to one `addBatch()` call, which inserts in chunks,
