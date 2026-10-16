@@ -23,6 +23,9 @@ class Store
     /** Queue of users whose row should be deleted off the hot path. */
     private const REAP_KEY = 'presence:reap';
 
+    /** Reap entries must outlive a long deletion outage, so they never age out before being handled. */
+    private const int REAP_TTL = 2592000;
+
     public function __construct(private readonly Cache $cache)
     {
     }
@@ -83,7 +86,8 @@ class Store
 
         $live = 0;
         foreach ($this->cache->list($key) as $field) {
-            if ($this->cache->load($key, self::KEEP_ALIVE, $field) !== null) {
+            // Cache::load() returns false for a missing or expired field, not null.
+            if (\is_array($this->cache->load($key, self::KEEP_ALIVE, $field))) {
                 $live++;
             } else {
                 $this->cache->purge($key, $field);
@@ -132,7 +136,7 @@ class Store
     {
         $candidates = [];
         foreach ($this->cache->list(self::REAP_KEY) as $field) {
-            $entry = $this->cache->load(self::REAP_KEY, self::KEEP_ALIVE, $field);
+            $entry = $this->cache->load(self::REAP_KEY, self::REAP_TTL, $field);
             if (\is_array($entry) && isset($entry['projectId'], $entry['userId'])) {
                 $candidates[] = ['projectId' => (string) $entry['projectId'], 'userId' => (string) $entry['userId']];
             }

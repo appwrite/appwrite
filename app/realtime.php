@@ -475,10 +475,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     // One presence timer (~2s): reap users whose last holder left (delete row + emit offline),
     // and every ~5m re-stamp still-connected holders so they do not age out of the keep-alive.
     $presenceTick = 0;
-    Timer::tick(2000, function () use ($realtime, $presenceState, $container, &$presenceTick) {
+    Timer::tick(2000, function () use ($realtime, $presenceState, $container, $workerId, &$presenceTick) {
         $store = new PresenceStore(getCache());
 
-        foreach ($store->reapCandidates() as $candidate) {
+        // Reap on one worker only: the queue and rows are shared, so letting every worker
+        // process the same candidate would double-delete and double-emit.
+        foreach ($workerId === 0 ? $store->reapCandidates() : [] as $candidate) {
             $projectId = $candidate['projectId'];
             $userId = $candidate['userId'];
 
@@ -559,9 +561,32 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $byUser[$hold['projectId'] . "\0" . $hold['userId']][] = $hold['connectionId'];
         }
 
+        $expiresAt = DateTime::format((new \DateTime())->modify('+15 minutes'));
+        $dbForPlatform = getConsoleDB();
         foreach ($byUser as $key => $connectionIds) {
             [$projectId, $userId] = \explode("\0", $key, 2);
             $store->refresh($projectId, $userId, $connectionIds);
+
+            if ($projectId === 'console') {
+                continue;
+            }
+
+            // Keep the persisted row's expiry aligned with the live connection, or an idle
+            // client that stops upserting falls out of Get/XList after the keep-alive.
+            try {
+                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                if ($project->isEmpty()) {
+                    continue;
+                }
+
+                $dbForProject = getProjectDB($project);
+                $row = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])]));
+                if (!$row->isEmpty()) {
+                    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('presenceLogs', $row->getId(), new Document(['expiresAt' => $expiresAt])));
+                }
+            } catch (Throwable $th) {
+                Console::error('Realtime presence expiry refresh error: ' . $th->getMessage());
+            }
         }
     });
 
