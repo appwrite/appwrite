@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
-use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -58,7 +58,7 @@ class Get extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
-            ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -68,7 +68,7 @@ class Get extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        ?Key $apiKey,
+        Request $request,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -77,7 +77,7 @@ class Get extends Base
         }
 
         // Secrets are only for callers that could replace the key anyway
-        if ($apiKey !== null && !\in_array('keys.write', $apiKey->getScopes())) {
+        if (!\in_array('keys.write', $request->getScopes(), true)) {
             $key->setAttribute('secret', '');
         }
 
