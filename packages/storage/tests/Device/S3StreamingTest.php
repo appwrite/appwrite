@@ -92,7 +92,7 @@ final class S3StreamingTest extends TestCase
             $received = 0;
             $cancelled = new \RuntimeException('Downstream disconnected');
             try {
-                $device->stream('/object', static function (string $chunk) use (&$received, $cancelled): void {
+                $device->stream('/object', static function (string $chunk) use (&$received, $cancelled): never {
                     $received += strlen($chunk);
                     throw $cancelled;
                 });
