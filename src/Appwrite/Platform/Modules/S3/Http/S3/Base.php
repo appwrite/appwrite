@@ -889,12 +889,10 @@ abstract class Base extends Action
 
             try {
                 $upload['metadata']['device'] = $upload['metadata']['device'] ?? [];
-                $chunks = \count($selected);
-                if ($chunks === 1) {
-                    $this->uploadEmptyMultipartFinalChunk($deviceForFiles, $upload);
-                    $chunks = 2;
-                }
-                if (!$deviceForFiles->finalize($path, $chunks, $upload['metadata']['device'])) {
+                // A single part finalizes as one chunk: S3 backends reject any
+                // non-final part under 5 MiB, so padding it with an empty part
+                // would fail every small single-part upload.
+                if (!$deviceForFiles->finalize($path, \count($selected), $upload['metadata']['device'])) {
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Failed to finalize multipart upload.');
                 }
 
@@ -946,18 +944,6 @@ abstract class Base extends Action
             $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
         }
         $this->purgeMultipartUpload($cache, $project, $bucket, $upload);
-    }
-
-    protected function uploadEmptyMultipartFinalChunk(Device $deviceForFiles, array &$upload): void
-    {
-        $deviceForFiles->upload(
-            new Stream(''),
-            (string) $upload['path'],
-            (string) ($upload['contentType'] ?? 'application/octet-stream'),
-            2,
-            2,
-            $upload['metadata']['device']
-        );
     }
 
     protected function purgeMultipartUpload(Cache $cache, Document $project, Document $bucket, array $upload): void
