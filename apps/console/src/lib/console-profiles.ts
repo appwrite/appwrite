@@ -195,7 +195,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       analyticsTrafficFilter: false,
-      appwritePush: false,
+      appwritePush: true,
     },
   },
   'self-hosted': {
@@ -236,7 +236,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       analyticsTrafficFilter: false,
-      appwritePush: false,
+      appwritePush: true,
     },
   },
 }
