@@ -36502,55 +36502,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "NUMERIC",
-              "name": "NUMERIC",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "attribute1",
-                    "key": "attribute1",
-                    "type": "string",
-                    "size": 256,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "$document": {
-                    "$id": "index1",
-                    "key": "index1",
-                    "type": "key",
-                    "attributes": [
-                      "attribute1"
-                    ],
-                    "lengths": [
-                      null
-                    ],
-                    "orders": [
-                      "ASC"
-                    ]
-                  }
-                }
-              ],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "147"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'NUMERIC': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -36571,20 +36526,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$id": "helloWorld",
-              "attribute1": "Hello World",
-              "$collection": "NUMERIC",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -36595,20 +36539,9 @@
             "id": "helloWorld"
           },
           "expect": {
-            "$document": {
-              "attribute1": "Hello World",
-              "$sequence": "1",
-              "$id": "helloWorld",
-              "$tenant": "999",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$collection": "NUMERIC"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -36617,32 +36550,24 @@
           "args": {
             "collection": "NUMERIC"
           },
-          "expect": [
-            {
-              "$document": {
-                "attribute1": "Hello World",
-                "$id": "helloWorld",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "$collection": "NUMERIC"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.delete_collection",
           "args": {
             "collection": "NUMERIC"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.find_collection",

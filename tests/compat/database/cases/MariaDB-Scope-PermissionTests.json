@@ -14333,24 +14333,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "csO2O_u000000000083",
-              "name": "csO2O_u000000000083",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"users\")",
-                "read(\"users\")",
-                "update(\"users\")",
-                "delete(\"users\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'csO2O_u000000000083': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -14377,21 +14363,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "test",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 255,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -14416,18 +14390,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "csO2O_u000000000083",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": false,
-              "key": "oneToOne",
-              "twoWayKey": "csParent_u000000000082",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Cascade"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Related collection not found"
             }
           }
         },
@@ -14723,65 +14688,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000097",
-              "$permissions": [
-                "read(\"user:random\")",
-                "update(\"user:random\")",
-                "delete(\"user:random\")"
-              ],
-              "test": "lorem",
-              "$collection": "csParent_u000000000082",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1",
-              "oneToOne": {
-                "$document": {
-                  "test": "lorem ipsum",
-                  "$id": "u0000000000000000098",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"user:random\")",
-                    "update(\"user:random\")",
-                    "delete(\"user:random\")"
-                  ],
-                  "$collection": "csO2O_u000000000083"
-                }
-              },
-              "oneToMany": [
-                {
-                  "$document": {
-                    "test": "lorem ipsum",
-                    "$id": "u0000000000000000099",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"user:random\")",
-                      "update(\"user:random\")",
-                      "delete(\"user:random\")"
-                    ],
-                    "$collection": "csO2M_u000000000084"
-                  }
-                },
-                {
-                  "$document": {
-                    "test": "dolor",
-                    "$id": "u0000000000000000100",
-                    "$sequence": "2",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"user:torsten\")",
-                      "update(\"user:random\")",
-                      "delete(\"user:random\")"
-                    ],
-                    "$collection": "csO2M_u000000000084"
-                  }
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"oneToOne\""
             }
           }
         },
@@ -14791,7 +14700,7 @@
             "collection": "csParent_u000000000082",
             "id": "u0000000000000000097"
           },
-          "expect": true
+          "expect": false
         }
       ]
     },

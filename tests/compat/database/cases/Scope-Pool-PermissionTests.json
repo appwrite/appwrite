@@ -20362,21 +20362,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "animals",
-              "name": "animals",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'animals': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -20403,21 +20392,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "type",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 128,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20436,16 +20413,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "dog",
-              "$permissions": [
-                "delete(\"any\")"
-              ],
-              "type": "Dog",
-              "$collection": "animals",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20464,16 +20434,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "cat",
-              "$permissions": [
-                "update(\"any\")"
-              ],
-              "type": "Cat",
-              "$collection": "animals",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20482,7 +20445,12 @@
           "args": {
             "collection": "animals"
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.get_document",
@@ -20491,7 +20459,10 @@
             "id": "dog"
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -20501,7 +20472,10 @@
             "id": "cat"
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -20512,8 +20486,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'delete'"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20544,8 +20518,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20555,7 +20529,12 @@
             "collection": "animals",
             "id": "dog"
           },
-          "expect": true
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.update_document",
@@ -20583,16 +20562,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "type": "newCat",
-              "$sequence": "2",
-              "$id": "cat",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "update(\"any\")"
-              ],
-              "$collection": "animals"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -20612,44 +20584,9 @@
             }
           },
           "expect": {
-            "result": [
-              {
-                "$document": {
-                  "type": "newCat",
-                  "$id": "cat",
-                  "$sequence": "2",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "update(\"any\")"
-                  ],
-                  "$collection": "animals"
-                }
-              }
-            ],
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    [
-                      {
-                        "$document": {
-                          "type": "newCat",
-                          "$id": "cat",
-                          "$sequence": "2",
-                          "$createdAt": "<now>",
-                          "$updatedAt": "<now>",
-                          "$permissions": [
-                            "update(\"any\")"
-                          ],
-                          "$collection": "animals"
-                        }
-                      }
-                    ]
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         }

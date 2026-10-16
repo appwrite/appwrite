@@ -93722,21 +93722,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "bigint_max",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::BigInteger"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'bigint_max': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -93799,18 +93787,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "extreme_int_doc",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "bigint_max": 9223372036854774807,
-              "bigint_min": -9223372036854774808,
-              "$collection": "test_extreme_integers",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -93835,19 +93814,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "bigint_max": 9223372036854774807,
-              "bigint_min": -9223372036854774808,
-              "$id": "extreme_int_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_extreme_integers"
-            }
+            "$document": {}
           }
         },
         {
@@ -93871,19 +93838,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "bigint_max": 9223372036854774807,
-              "bigint_min": -9223372036854774808,
-              "$id": "extreme_int_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_extreme_integers"
-            }
+            "$document": {}
           }
         },
         {

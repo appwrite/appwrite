@@ -1923,165 +1923,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$id": "renameAuthors",
-                        "name": "renameAuthors",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "name",
-                              "key": "name",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "1"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$document": {
-                        "$id": "renameBooks",
-                        "name": "renameBooks",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "title",
-                              "key": "title",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [
-                          {
-                            "$document": {
-                              "$id": "byTitle",
-                              "key": "byTitle",
-                              "type": "unique",
-                              "attributes": [
-                                "title"
-                              ],
-                              "lengths": [],
-                              "orders": []
-                            }
-                          }
-                        ],
-                        "documentSecurity": true,
-                        "$permissions": [],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "2"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$value": "Relationship",
-                      "fields": {
-                        "relatedCollection": "renameBooks",
-                        "type": {
-                          "$enum": "RelationshipType::OneToMany"
-                        },
-                        "twoWay": true,
-                        "key": "books",
-                        "twoWayKey": "author",
-                        "onDelete": {
-                          "$enum": "RelationshipDeleteAction::Restrict"
-                        }
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "tolkien",
-                        "name": "Tolkien",
-                        "$collection": "renameAuthors",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$sequence": "1",
-                        "books": []
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "hobbit",
-                        "title": "The Hobbit",
-                        "$permissions": [
-                          "read(\"user:reader\")"
-                        ],
-                        "$collection": "renameBooks",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "1",
-                        "author": {
-                          "$document": {
-                            "name": "Tolkien",
-                            "$id": "tolkien",
-                            "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$collection": "renameAuthors"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "silmarillion",
-                        "title": "The Silmarillion",
-                        "$permissions": [],
-                        "$collection": "renameBooks",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$sequence": "2",
-                        "author": {
-                          "$document": {
-                            "name": "Tolkien",
-                            "$id": "tolkien",
-                            "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$collection": "renameAuthors"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_author': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -2107,9 +1951,26 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Unique",
-              "message": "Unique index violation"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "copy",
+                        "title": "The Hobbit",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },

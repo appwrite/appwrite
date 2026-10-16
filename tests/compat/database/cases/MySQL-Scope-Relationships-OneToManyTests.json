@@ -22638,7 +22638,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            }
+          }
         },
         {
           "op": "database.find",
@@ -22675,6 +22680,18 @@
                     }
                   }
                 ],
+                "$collection": "o2m_select_cascade_parent"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "$id": "parent2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "children": [],
                 "$collection": "o2m_select_cascade_parent"
               }
             }

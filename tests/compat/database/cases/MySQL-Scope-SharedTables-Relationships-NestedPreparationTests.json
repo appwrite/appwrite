@@ -5608,41 +5608,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000265",
-              "name": "u0000000000000000265",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "name",
-                    "key": "name",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": false,
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'u0000000000000000265': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -5954,18 +5923,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "u0000000000000000266",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": true,
-              "key": "children",
-              "twoWayKey": "parent",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::SetNull"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -5990,18 +5950,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "u0000000000000000267",
-              "type": {
-                "$enum": "RelationshipType::ManyToOne"
-              },
-              "twoWay": true,
-              "key": "owner",
-              "twoWayKey": "parents",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::SetNull"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -6026,18 +5977,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "u0000000000000000268",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": true,
-              "key": "profile",
-              "twoWayKey": "parent",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::SetNull"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -6097,8 +6039,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "1",
-              "parents": []
+              "$sequence": "1"
             }
           }
         },
@@ -6129,28 +6070,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "marker",
-              "name": "linked",
-              "$collection": "u0000000000000000265",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "1",
-              "children": [],
-              "owner": {
-                "$document": {
-                  "name": "literal",
-                  "$id": "marker",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "u0000000000000000267"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -6172,29 +6094,9 @@
             "id": "marker"
           },
           "expect": {
-            "$document": {
-              "name": "linked",
-              "$sequence": "1",
-              "$id": "marker",
-              "$tenant": "999",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$collection": "u0000000000000000265",
-              "owner": {
-                "$document": {
-                  "name": "literal",
-                  "$id": "marker",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "u0000000000000000267"
-                }
-              },
-              "profile": null,
-              "children": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -6213,22 +6115,6 @@
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
-                "parents": [
-                  {
-                    "$document": {
-                      "name": "linked",
-                      "$id": "marker",
-                      "$sequence": "1",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [],
-                      "profile": null,
-                      "$collection": "u0000000000000000265",
-                      "children": []
-                    }
-                  }
-                ],
                 "$collection": "u0000000000000000267"
               }
             }

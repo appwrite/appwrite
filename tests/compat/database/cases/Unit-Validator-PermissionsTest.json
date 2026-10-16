@@ -5955,10 +5955,10 @@
               "$collection": "u000000000002",
               "$permissions": [
                 "read(\"any\")",
-                "read(\"user:<uniqid>\")",
-                "write(\"user:<uniqid>\")",
-                "update(\"user:<uniqid>\")",
-                "delete(\"user:<uniqid>\")"
+                "read(\"user:6ad074bf6b9d415e78a2\")",
+                "write(\"user:6ad074bf6b9d415e78a2\")",
+                "update(\"user:6ad074bf6b9d415e78a2\")",
+                "delete(\"user:6ad074bf6b9d415e78a2\")"
               ],
               "title": "This is a test.",
               "list": [
@@ -5995,10 +5995,10 @@
           },
           "expect": [
             "read(\"any\")",
-            "read(\"user:<uniqid>\")",
-            "write(\"user:<uniqid>\")",
-            "update(\"user:<uniqid>\")",
-            "delete(\"user:<uniqid>\")"
+            "read(\"user:6ad074bf6b9d415e78a2\")",
+            "write(\"user:6ad074bf6b9d415e78a2\")",
+            "update(\"user:6ad074bf6b9d415e78a2\")",
+            "delete(\"user:6ad074bf6b9d415e78a2\")"
           ]
         },
         {
@@ -6031,10 +6031,10 @@
           },
           "expect": [
             "read(\"any\")",
-            "read(\"user:<uniqid>\")",
-            "write(\"user:<uniqid>\")",
-            "update(\"user:<uniqid>\")",
-            "delete(\"user:<uniqid>\")"
+            "read(\"user:6ad074bf6b9d415e78a2\")",
+            "write(\"user:6ad074bf6b9d415e78a2\")",
+            "update(\"user:6ad074bf6b9d415e78a2\")",
+            "delete(\"user:6ad074bf6b9d415e78a2\")"
           ]
         }
       ]

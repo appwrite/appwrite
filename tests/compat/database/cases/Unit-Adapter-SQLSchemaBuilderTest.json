@@ -1,58 +1,58 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/unit/Adapter/SQLSchemaBuilderTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQLSchemaBuilderTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLSchemaBuilderTest::testTheSchemaBuilderIsRefusedWithoutAQueryBuilder",
+      "state": [],
+      "steps": [
         {
-            "name": "SQLSchemaBuilderTest::testTheSchemaBuilderIsRefusedWithoutAQueryBuilder",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Adapter\\Memory",
-                        "args": {},
-                        "as": "o27"
-                    },
-                    "bind": "s45",
-                    "expect": {
-                        "$adapter": "Memory"
-                    }
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Database",
-                        "args": {
-                            "adapter": {
-                                "$obj": "o27"
-                            },
-                            "cache": "none"
-                        },
-                        "as": "o28"
-                    },
-                    "bind": "s46",
-                    "expect": {
-                        "$database": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o28"
-                        },
-                        "method": "schema",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$error": {
-                            "class": "Utopia\\Database\\Exception",
-                            "message": "Schema builder is not supported by this adapter"
-                        }
-                    }
-                }
-            ]
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o27"
+          },
+          "bind": "s45",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o27"
+              },
+              "cache": "none"
+            },
+            "as": "o28"
+          },
+          "bind": "s46",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "schema",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Schema builder is not supported by this adapter"
+            }
+          }
         }
-    ]
+      ]
+    }
+  ]
 }

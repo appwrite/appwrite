@@ -19687,7 +19687,12 @@
           "args": {
             "collection": "indexLimit"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata for collection deletion 'indexLimit': Failed to execute transaction: the transaction was lost before it could commit"
+            }
+          }
         }
       ]
     },

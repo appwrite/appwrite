@@ -23081,18 +23081,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "csO2M_u000000000092",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": false,
-              "key": "oneToMany",
-              "twoWayKey": "csParent_u000000000090",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Cascade"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

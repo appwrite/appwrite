@@ -11466,41 +11466,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "two_u000000000310",
-              "name": "two_u000000000310",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "name",
-                    "key": "name",
-                    "type": "string",
-                    "size": 100,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "2"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'two_u000000000310': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -11524,18 +11493,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "two_u000000000310",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": true,
-              "key": "two_u000000000310",
-              "twoWayKey": "one_u000000000309",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Related collection not found"
             }
           }
         },
@@ -11545,7 +11505,12 @@
             "collection": "two_u000000000310",
             "key": "one_u000000000309"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.create_relationship",
@@ -11568,18 +11533,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "two_u000000000310",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": true,
-              "key": "two_u000000000310",
-              "twoWayKey": "one_u000000000309",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Related collection not found"
             }
           }
         },
@@ -11595,7 +11551,12 @@
           "args": {
             "collection": "two_u000000000310"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         }
       ]
     },

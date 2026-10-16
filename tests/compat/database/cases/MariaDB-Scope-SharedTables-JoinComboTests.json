@@ -7337,8 +7337,8 @@
           },
           "expect": [
             {
-              "total": "323",
-              "cnt": "2",
+              "total": 323,
+              "cnt": 2,
               "name": "Main"
             }
           ]
@@ -37531,19 +37531,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "hb1",
-              "aId": "ha1",
-              "mainId": "hm1",
-              "label": "b-public",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jh_b",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

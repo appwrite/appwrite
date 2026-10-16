@@ -547,7 +547,7 @@
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_movies` AS `table_main`"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM `${ns}`.`ns_movies` AS `table_main`"
             },
             {
               "transform": "document_create",

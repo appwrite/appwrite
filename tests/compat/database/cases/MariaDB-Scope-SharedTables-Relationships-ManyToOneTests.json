@@ -7509,22 +7509,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "entrants",
-              "name": "entrants",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "2"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'entrants': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {

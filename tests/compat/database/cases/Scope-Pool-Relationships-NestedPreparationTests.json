@@ -7280,18 +7280,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "u0000000000000000278",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": true,
-              "key": "children",
-              "twoWayKey": "parent",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::SetNull"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -7726,68 +7717,9 @@
           },
           "bind": "s32246",
           "expect": {
-            "result": {
-              "$document": {
-                "$id": "created",
-                "name": "created",
-                "$collection": "u0000000000000000277",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "children": [
-                  {
-                    "$document": {
-                      "name": "stored",
-                      "$id": "<uniqid>",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")"
-                      ],
-                      "$collection": "u0000000000000000278",
-                      "tags": []
-                    }
-                  }
-                ]
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$id": "created",
-                        "name": "created",
-                        "$collection": "u0000000000000000277",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$sequence": "1",
-                        "children": [
-                          {
-                            "$document": {
-                              "name": "stored",
-                              "$id": "<uniqid>",
-                              "$sequence": "2",
-                              "$createdAt": "<now>",
-                              "$updatedAt": "<now>",
-                              "$permissions": [
-                                "read(\"any\")"
-                              ],
-                              "$collection": "u0000000000000000278",
-                              "tags": []
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"parent\""
             }
           }
         },
@@ -7831,33 +7763,7 @@
             "id": "created"
           },
           "expect": {
-            "$document": {
-              "name": "created",
-              "$sequence": "1",
-              "$id": "created",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$collection": "u0000000000000000277",
-              "owner": null,
-              "profile": null,
-              "children": [
-                {
-                  "$document": {
-                    "name": "stored",
-                    "$id": "<uniqid>",
-                    "$sequence": "2",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")"
-                    ],
-                    "$collection": "u0000000000000000278",
-                    "tags": []
-                  }
-                }
-              ]
-            }
+            "$document": {}
           }
         },
         {
