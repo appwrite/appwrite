@@ -5,6 +5,18 @@ if (!is_string($_SERVER['REQUEST_URI'] ?? null)) {
     throw new RuntimeException('Missing request URI.');
 }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$marker = getenv('S3_STREAM_MARKER');
+if ($marker === false) {
+    throw new RuntimeException('Missing acknowledgement path.');
+}
+$requests = $marker . '.requests';
+$count = file_exists($requests) ? (int) file_get_contents($requests) : 0;
+file_put_contents($requests, (string) ($count + 1));
+if ($path === '/truncated') {
+    header('Content-Length: 65536');
+    echo str_repeat('x', 12345);
+    return;
+}
 header('Content-Type: application/octet-stream');
 if ($path === '/missing') {
     http_response_code(404);
@@ -18,10 +30,6 @@ if ($path === '/ignores-range') {
 header('Content-Length: 8388608');
 echo str_repeat('x', 65536);
 flush();
-$marker = getenv('S3_STREAM_MARKER');
-if ($marker === false) {
-    throw new RuntimeException('Missing acknowledgement path.');
-}
 $deadline = microtime(true) + 2;
 while (!file_exists($marker) && microtime(true) < $deadline) {
     clearstatcache(true, $marker);
