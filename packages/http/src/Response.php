@@ -674,10 +674,6 @@ abstract class Response
             return;
         }
 
-        if ($end) {
-            $this->sent = true;
-        }
-
         $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime));
 
         if (!$this->headersSent) {
@@ -690,13 +686,17 @@ abstract class Response
         }
 
         if (!$this->disablePayload) {
+            if ($body !== '' && !$this->write($body)) {
+                throw new \RuntimeException('Failed to write response chunk.');
+            }
             $this->size += \strlen($body);
-            $this->write($body);
             if ($end) {
+                $this->sent = true;
                 $this->disablePayload();
                 $this->end();
             }
         } else {
+            $this->sent = true;
             $this->end();
         }
     }
