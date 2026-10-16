@@ -186,7 +186,7 @@ class Increment extends Action
         } catch (NotFoundException) {
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
+            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the maximum value of ' . $this->getReachedMaximum($collection, $attribute, $max));
         } catch (TypeException $e) {
             if ($value <= 0) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());

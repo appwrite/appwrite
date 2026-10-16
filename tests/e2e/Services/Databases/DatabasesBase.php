@@ -10719,6 +10719,70 @@ trait DatabasesBase
         $this->assertSame(3, $stored['body']['count']);
     }
 
+    public function testIncrementAndDecrementPastTheColumnRangeNameTheColumnBound(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'ColumnBoundDatabase',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'ColumnBoundCollection',
+            'permissions' => [Permission::read(Role::any()), Permission::create(Role::any()), Permission::update(Role::any())],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+            'key' => 'b',
+            'required' => true,
+            'min' => 0,
+            'max' => 10,
+        ]);
+        $this->assertSame(202, $column['headers']['status-code'], $column['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'b');
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['b' => 5],
+        ]);
+        $this->assertSame(201, $record['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $record['body']['$id']);
+        $field = $this->getRecordResource() === 'rows' ? 'Column' : 'Attribute';
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 6]);
+        $this->assertSame(400, $increased['headers']['status-code'], \json_encode($increased['body']) ?: '');
+        $this->assertSame($field . ' "b" has reached the maximum value of 10', $increased['body']['message']);
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/b/decrement', $headers, ['value' => 8]);
+        $this->assertSame(400, $decreased['headers']['status-code'], \json_encode($decreased['body']) ?: '');
+        $this->assertSame($field . ' "b" has reached the minimum value of 0', $decreased['body']['message']);
+
+        $tighter = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 4, 'max' => 8]);
+        $this->assertSame(400, $tighter['headers']['status-code']);
+        $this->assertSame($field . ' "b" has reached the maximum value of 8', $tighter['body']['message'], 'a request bound tighter than the column is the one reached');
+
+        $looser = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 6, 'max' => 20]);
+        $this->assertSame(400, $looser['headers']['status-code']);
+        $this->assertSame($field . ' "b" has reached the maximum value of 10', $looser['body']['message'], 'a request bound looser than the column leaves the column bound');
+
+        $stored = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(5, $stored['body']['b']);
+    }
+
     public function testFractionalIncrementAndDecrementOnAnIntegerRoundHalfAwayFromZero(): void
     {
         if (!$this->getSupportForAttributes()) {
