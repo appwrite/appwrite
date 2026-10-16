@@ -20,7 +20,7 @@
 //! waits.
 //!
 //! ```
-//! # tokio::runtime::Runtime::new().unwrap().block_on(async {
+//! # utopia_async::Runtime::new().unwrap().block_on(async {
 //! use std::sync::Arc;
 //!
 //! use utopia_cache::{Cache, Memory};

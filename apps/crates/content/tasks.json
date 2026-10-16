@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T22:25:00Z",
+  "updated": "2026-10-15T22:43:00Z",
   "tasks": [
     {
       "id": "db83",
@@ -16,6 +16,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "db8-mirror",
+      "title": "Database 8: Mirror in Rust",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Mirror is a Database over its source, dispatching every method PHP's Mirror overrides; filters, onError and PHP's aliasing of bulk-write inputs reproduced. Unit-Mirror, MirrorTest and core-Mirror: 0 differences; 1,276 Scope-Mirror cases pass when each runs alone.",
+      "updated": "2026-10-15T22:43:00Z"
     },
     {
       "id": "db-lanes-ci",
@@ -96,14 +104,6 @@
       "status": "progress",
       "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
       "updated": "2026-10-15T19:17:00Z"
-    },
-    {
-      "id": "db8-mirror",
-      "title": "Database 8: Mirror in Rust",
-      "area": "Database 8",
-      "status": "progress",
-      "note": "Mirror and Mirroring filters, the last unported part of the library: 55 sqlite Unit faults and every Mirror case on the redis shard.",
-      "updated": "2026-10-15T17:16:00Z"
     },
     {
       "id": "db8-green",
