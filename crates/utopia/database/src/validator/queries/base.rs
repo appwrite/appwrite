@@ -344,17 +344,24 @@ impl Queries {
     /// attribute resolves through the one join that declares it, and a
     /// search on a join alias needs a fulltext index of that collection.
     ///
-    /// Fails as [`crate::Collection::from_document`],
-    /// [`crate::Collection::attributes`] and [`crate::Collection::indexes`]
-    /// do (PHP fails when a list joins the collection).
+    /// PHP keeps the documents and reads them only when a list joins one; a
+    /// document that does not read as a collection (one whose attributes
+    /// are not attribute documents) is left out here, so a list joining it
+    /// is refused as one joining an unknown collection.
     pub fn set_joined_collections(&self, collections: &[Document]) -> Result<()> {
         let mut joined: Vec<Joinable> = Vec::with_capacity(collections.len());
         for document in collections {
-            let collection = crate::Collection::from_document(document)?;
-            let joinable = Joinable {
-                id: document.id().to_owned(),
-                definition: Arc::new(Definition::of(&collection)?),
-                indexes: collection.indexes()?.into(),
+            let read = || -> Result<Joinable> {
+                let collection = crate::Collection::from_document(document)?;
+                Ok(Joinable {
+                    id: document.id().to_owned(),
+                    definition: Arc::new(Definition::of(&collection)?),
+                    indexes: collection.indexes()?.into(),
+                })
+            };
+            let Ok(joinable) = read() else {
+                joined.retain(|j| j.id != document.id());
+                continue;
             };
             match joined.iter_mut().find(|j| j.id == joinable.id) {
                 Some(existing) => *existing = joinable,
