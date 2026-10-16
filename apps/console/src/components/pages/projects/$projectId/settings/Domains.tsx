@@ -3,7 +3,12 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
   useProject,
-  useOrganizationDomains} from '@/lib/react-query/hooks'
+  useOrganizationDomains,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canBuyOrTransferOrgDomain } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useOrganizationDomainsPlanLimit } from '@/components/pages/organizations/$orgId/domains/_components/useOrganizationDomainsPlanLimit'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -11,12 +16,14 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
@@ -25,7 +32,8 @@ import {
   FileText,
   RefreshCw,
   Trash2,
-  Globe} from 'lucide-react'
+  Globe,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
@@ -63,6 +71,14 @@ export function Domains({
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showBuy = canBuyOrTransferOrgDomain(access, features)
+  const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
+    useOrganizationDomainsPlanLimit(project?.teamId)
+  const buyDisabledTooltip = isDomainLimitReached
+    ? `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`
+    : undefined
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -100,7 +116,9 @@ export function Domains({
         className="text-[10px] shrink-0 gap-1.5"
         title={
           status === 'verifying'
-            ? t('SSL certificate is being issued. This usually takes a couple of minutes.')
+            ? t(
+                'SSL certificate is being issued. This usually takes a couple of minutes.',
+              )
             : undefined
         }
       >
@@ -180,8 +198,18 @@ export function Domains({
               params: { projectId },
             })
           }
+          onBuy={
+            showBuy
+              ? () =>
+                  navigate({
+                    to: '/projects/$projectId/settings/domains/buy',
+                    params: { projectId },
+                  })
+              : undefined
+          }
           addDisabled={createDisabled}
           addDisabledTooltip={createDisabledTooltip}
+          buyDisabledTooltip={buyDisabledTooltip}
         />
       ) : paginatedRules.length === 0 ? (
         <EmptyState icon={ExternalLink} hasFilters variant="card" />
@@ -269,14 +297,18 @@ export function Domains({
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
-                                  <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
+                                  <MenuItemContent icon={FileText}>
+                                    {t('Logs')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               {canRetry(rule.status) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
-                                  <MenuItemContent icon={RefreshCw}>{t('Retry')}</MenuItemContent>
+                                  <MenuItemContent icon={RefreshCw}>
+                                    {t('Retry')}
+                                  </MenuItemContent>
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
@@ -290,7 +322,9 @@ export function Domains({
                                       to: '/organizations/$orgId/domains/$domainId',
                                       params: {
                                         orgId: project.teamId,
-                                        domainId: orgDomainId}})
+                                        domainId: orgDomainId,
+                                      },
+                                    })
                                   }
                                 }}
                                 disabled={
@@ -302,12 +336,16 @@ export function Domains({
                                   )
                                 }
                               >
-                                <MenuItemContent icon={Globe}>{t('Records')}</MenuItemContent>
+                                <MenuItemContent icon={Globe}>
+                                  {t('Records')}
+                                </MenuItemContent>
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(rule)}
                               >
-                                <MenuItemContent icon={Trash2}>{t('Delete')}</MenuItemContent>
+                                <MenuItemContent icon={Trash2}>
+                                  {t('Delete')}
+                                </MenuItemContent>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -354,7 +392,8 @@ export function Domains({
                 params: { projectId },
                 search: reconfigureDomain
                   ? { domain: reconfigureDomain }
-                  : undefined})
+                  : undefined,
+              })
             }}
             onVerifySuccess={() => {
               toast.success(t('Domain verified successfully'))

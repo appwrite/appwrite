@@ -16,8 +16,13 @@ import {
   finalizeDomainPurchase,
   fetchDomainPrice,
 } from '@/lib/react-query/hooks/domains'
-import { BuyDomainCheckout, type BuyDomainSelection } from './BuyDomainCheckout'
-import type { BuyDomainWizardSearch } from '@/routes/_public/organizations.$orgId.domains.buy'
+import {
+  BuyDomainCheckout,
+  type BuyDomainPurchaseResult,
+  type BuyDomainSelection,
+} from './BuyDomainCheckout'
+import { fetchDomain } from '@/lib/react-query/hooks/domains'
+import type { BuyDomainWizardSearch } from '@/lib/domains/buy-wizard'
 import { UpgradePlanLink } from '@/components/global/shared/UpgradePlanLink'
 import { useOrganizationDomainsPlanLimit } from './useOrganizationDomainsPlanLimit'
 import { DomainSearchResults } from './DomainSearchResults'
@@ -31,11 +36,23 @@ import { useT } from '@/lib/i18n/translate'
 
 export function BuyDomainWizard({
   routeSearch,
+  orgId: orgIdProp,
+  fallbackPath: fallbackPathProp,
+  onPurchaseComplete,
 }: {
   routeSearch: BuyDomainWizardSearch
+  orgId?: string
+  fallbackPath?: string
+  /**
+   * When set, the wizard hands the purchased domain back instead of opening
+   * the organization domain detail page. Used when buying from a project,
+   * function, or site so a rule can be assigned next.
+   */
+  onPurchaseComplete?: (result: BuyDomainPurchaseResult) => void
 }) {
   const t = useT()
-  const { orgId } = useParams({ strict: false })
+  const { orgId: orgIdFromParams } = useParams({ strict: false })
+  const orgId = orgIdProp ?? orgIdFromParams
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [stage, setStage] = useState<'search' | 'checkout'>('search')
@@ -46,7 +63,7 @@ export function BuyDomainWizard({
   const { isAtLimit: isDomainLimitReached, limit: domainsLimit } =
     useOrganizationDomainsPlanLimit(orgId)
 
-  const fallbackPath = `/organizations/${orgId}/domains/`
+  const fallbackPath = fallbackPathProp ?? `/organizations/${orgId}/domains/`
   const [searchValue, setSearchValue] = useState(routeSearch.domain ?? '')
   const searching = searchValue.trim().length > 0
 
@@ -71,6 +88,15 @@ export function BuyDomainWizard({
             queryKey: ['domains', 'organization', orgId],
           })
           toast.success(t('Payment confirmed'))
+          if (onPurchaseComplete) {
+            let domain = routeSearch.domain?.trim().toLowerCase() ?? ''
+            if (!domain) {
+              const purchased = await fetchDomain(result.domainId)
+              domain = purchased.domain
+            }
+            onPurchaseComplete({ domainId: result.domainId, domain })
+            return
+          }
           navigate({
             to: '/organizations/$orgId/domains/$domainId',
             params: { orgId, domainId: result.domainId },
@@ -78,6 +104,20 @@ export function BuyDomainWizard({
           })
         } else {
           toast.error(t('Purchase could not be completed'))
+          if (!onPurchaseComplete) {
+            navigate({
+              to: '/organizations/$orgId/domains/buy',
+              params: { orgId },
+              search: {},
+              replace: true,
+            })
+          }
+        }
+      } catch (e) {
+        toast.error(
+          e instanceof Error ? e.message : t('Failed to complete purchase'),
+        )
+        if (!onPurchaseComplete) {
           navigate({
             to: '/organizations/$orgId/domains/buy',
             params: { orgId },
@@ -85,25 +125,17 @@ export function BuyDomainWizard({
             replace: true,
           })
         }
-      } catch (e) {
-        toast.error(
-          e instanceof Error ? e.message : t('Failed to complete purchase'),
-        )
-        navigate({
-          to: '/organizations/$orgId/domains/buy',
-          params: { orgId },
-          search: {},
-          replace: true,
-        })
       }
     })()
   }, [
     routeSearch.payment,
     routeSearch.invoiceId,
+    routeSearch.domain,
     orgId,
     navigate,
     queryClient,
     t,
+    onPurchaseComplete,
   ])
 
   useEffect(() => {
@@ -158,10 +190,7 @@ export function BuyDomainWizard({
     t,
   ])
 
-  const handleSelectDomain = (
-    full: string,
-    opts?: DomainSelectionQuote,
-  ) => {
+  const handleSelectDomain = (full: string, opts?: DomainSelectionQuote) => {
     if (isDomainLimitReached) {
       toast.error(
         `${t('Your current plan includes up to')} ${domainsLimit} ${t('domains')}.`,
@@ -185,6 +214,7 @@ export function BuyDomainWizard({
         orgId={orgId}
         selection={checkoutSelection}
         fallbackPath={fallbackPath}
+        onPurchaseSuccess={onPurchaseComplete}
         onBackToSearch={() => {
           setStage('search')
           setCheckoutSelection(null)
