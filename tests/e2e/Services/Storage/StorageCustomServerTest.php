@@ -158,7 +158,7 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals(true, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
         $this->assertEquals(true, $bucket['body']['antivirus']);
-        $this->assertTrue($bucket['body']['stripMetadata']);
+        $this->assertFalse($bucket['body']['stripMetadata']);
         $bucketId = $bucket['body']['$id'];
 
         /**
@@ -421,7 +421,7 @@ final class StorageCustomServerTest extends Scope
             'maximumFileSize' => 1000000,
             'compression' => Compression::GZIP,
             'encryption' => false,
-            'stripMetadata' => false,
+            'stripMetadata' => true,
         ]);
         $this->assertSame(201, $bucket['headers']['status-code']);
 
@@ -440,7 +440,7 @@ final class StorageCustomServerTest extends Scope
         $this->assertSame(1000000, $bucket['body']['maximumFileSize']);
         $this->assertSame(Compression::GZIP, $bucket['body']['compression']);
         $this->assertFalse($bucket['body']['encryption']);
-        $this->assertFalse($bucket['body']['stripMetadata']);
+        $this->assertTrue($bucket['body']['stripMetadata']);
 
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], $headers);
     }

@@ -75,7 +75,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -110,7 +109,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
@@ -194,7 +192,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -225,7 +222,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -273,7 +269,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
@@ -427,7 +422,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'maximumFileSize' => 6000000001,
@@ -506,7 +500,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'View Content Types',
             'compression' => 'gzip',
             'permissions' => [
@@ -570,7 +563,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Folders',
             'fileSecurity' => true,
             'permissions' => [
@@ -685,7 +677,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -735,7 +726,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -819,7 +809,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
@@ -1285,7 +1274,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'SVG View Safety',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1688,7 +1676,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Partial Upload',
             'fileSecurity' => true,
             'permissions' => [
@@ -1779,7 +1766,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Chunked Upload No Read Permission',
             'fileSecurity' => true,
             'permissions' => [
@@ -1875,7 +1861,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Out of Order Upload',
             'fileSecurity' => true,
             'permissions' => [
@@ -2040,7 +2025,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Parallel Upload',
             'antivirus' => false,
             'encryption' => false,
@@ -2177,7 +2161,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Parallel Chunk Upload',
             'fileSecurity' => true,
             'maximumFileSize' => $totalSize,
@@ -2372,7 +2355,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Delete',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000,
@@ -2445,7 +2427,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Size',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2511,7 +2492,6 @@ trait StorageBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => Id::unique(),
-            'stripMetadata' => false,
             'name' => 'Test Bucket Parent Filter',
             'fileSecurity' => true,
             'permissions' => [
