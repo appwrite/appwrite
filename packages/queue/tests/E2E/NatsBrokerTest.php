@@ -699,13 +699,31 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
+     * Pairs of credentials that can land in different accounts on one server: as
+     * [user, pass] for the connection that confirms the owner and the one that then
+     * publishes. A NATS user is named by user and password together, so the same
+     * user with another password can be another account's user.
+     *
+     * @return iterable<string, array{array{?string, ?string}, array{?string, ?string}}>
+     */
+    public static function otherAccount(): iterable
+    {
+        yield 'another user' => [[null, null], ['other-account', 'secret']];
+        yield 'same user, another password' => [['shared', 'one'], ['shared', 'two']];
+    }
+
+    /**
      * A stream's owner confirmed on one account is not trusted on another, where the
      * same stream name is a different stream. The test server has no authorization,
      * so it accepts any credentials, and a second account is stood in for by a
      * connection with other credentials; the stream is replaced between the two by
      * the colliding queue's, as the other account would hold it.
+     *
+     * @param array{?string, ?string} $hereCredentials
+     * @param array{?string, ?string} $thereCredentials
      */
-    public function testAnOwnerConfirmedOnOneAccountIsNotTrustedOnAnother(): void
+    #[DataProvider('otherAccount')]
+    public function testAnOwnerConfirmedOnOneAccountIsNotTrustedOnAnother(array $hereCredentials, array $thereCredentials): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $suffix = substr(md5(uniqid('', true)), 0, 6);
@@ -714,7 +732,7 @@ final class NatsBrokerTest extends TestCase
         $stream = 'Q_O_' . strtoupper($suffix);
         $js = Connection::connect($url)->jetStream();
 
-        $here = new Nats(Connection::connect($url));
+        $here = new Nats(Connection::connect(new ConnectionOptions(servers: $url, user: $hereCredentials[0], pass: $hereCredentials[1])));
         $here->provision($mine);
         $this->assertTrue($here->publish($mine, ['task' => 'here']), 'confirms the owner on this account');
         $here->close();
@@ -724,7 +742,7 @@ final class NatsBrokerTest extends TestCase
         $owner = new Nats(Connection::connect($url));
         $owner->provision($colliding);
 
-        $there = new Nats(Connection::connect(new ConnectionOptions(servers: $url, user: 'other-account', pass: 'secret')));
+        $there = new Nats(Connection::connect(new ConnectionOptions(servers: $url, user: $thereCredentials[0], pass: $thereCredentials[1])));
         $refusal = null;
         try {
             $there->publish($mine, ['task' => 'there']);

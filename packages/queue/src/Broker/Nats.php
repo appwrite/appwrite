@@ -667,9 +667,11 @@ class Nats implements Synchronous, Consumer, Bounded
      * server does not name the account a connection lands in, and asking JetStream
      * costs the very request the ownership cache exists to save. Over-splitting is
      * cheap (two spellings of one cluster read the owner twice); merging two accounts
-     * is the bug, so every server and credential option is in the key, and a token
-     * or JWT provider, being a closure, is told apart by object. Hashed so no
-     * credential sits in the map as a key.
+     * is the bug, so every option that can select the user is in the key: the user
+     * and its password, a token, an nkey and its seed, a credentials file, and the
+     * TLS client certificate and key, which a server can map to a user. A token or
+     * JWT provider, being a closure, is told apart by object. Hashed so no
+     * credential sits in the map as a key; the serialized form is never kept.
      */
     private function account(): string
     {
@@ -678,9 +680,13 @@ class Nats implements Synchronous, Consumer, Bounded
         return hash('xxh128', serialize([
             $options->servers,
             $options->user,
+            $options->pass,
             $options->token,
             $options->nkey,
+            $options->nkeySeed,
             $options->credentialsFile,
+            $options->tlsCertFile,
+            $options->tlsKeyFile,
             $options->tokenProvider instanceof \Closure ? spl_object_id($options->tokenProvider) : null,
             $options->jwtProvider instanceof \Closure ? spl_object_id($options->jwtProvider) : null,
         ]));
