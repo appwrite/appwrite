@@ -252,11 +252,21 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
+        // Providers a batch actually ran through, for the message search; $providers is only a lookup cache.
+        $used = [];
+
         // Topics already published over Appwrite push, so a topic is sent once per message, not once per page.
         $appwriteTopics = [];
 
-        $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
-            && $this->checkAppwritePushEnabled($dbForProject, $default);
+        // The enabled Appwrite push provider, whichever provider is the default; empty when there is none.
+        $appwrite = $providerType === MESSAGE_TYPE_PUSH
+            ? $this->getAppwritePushProvider($dbForProject, $default)
+            : new Document();
+        if (!$appwrite->isEmpty()) {
+            $providers[$appwrite->getId()] = $appwrite;
+        }
+
+        $isWakeupSignalEnabled = !$appwrite->isEmpty();
 
         $mqttUsers = [];
         $topicInternalIds = [];
@@ -276,7 +286,7 @@ class Messaging extends Action
             }
         }
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as [$page, $topicId]) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default, $appwrite) as [$page, $topicId]) {
             $perUser = $topicId === null;
 
             /**
@@ -383,11 +393,13 @@ class Messaging extends Action
             $hasRecipients = true;
 
             /**
-             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool}> $results
+             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}> $results
              */
             $results = batch($tasks);
 
             foreach ($results as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
+
                 // Wake-up signals are billed, but they don't count toward the message's delivered/failed
                 // totals — a dead token here shouldn't fail a message that was already delivered over MQTT.
                 if ($result['wake']) {
@@ -422,6 +434,7 @@ class Messaging extends Action
         // not named in the send still gets woken. Topic sends already woke their devices per page above.
         if (\count($mqttUsers) > 0) {
             foreach (batch($this->buildWakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
                 $wakeSignals += $result['delivered'];
             }
         }
@@ -440,13 +453,13 @@ class Messaging extends Action
 
         $message->removeAttribute('to');
 
-        foreach ($providers as $provider) {
+        foreach ($used as $provider) {
             $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
         }
 
         Span::add('message.providers', \implode(',', \array_unique(\array_map(
             fn (Document $provider) => $provider->getAttribute('provider'),
-            \array_values($providers)
+            \array_values($used)
         ))));
 
         $message->setAttribute('deliveredTotal', $deliveredTotal);
@@ -484,7 +497,8 @@ class Messaging extends Action
         array $targetIds,
         array $emails,
         string $providerType,
-        Document $default
+        Document $default,
+        Document $appwrite
     ): \Generator {
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->skipFilters(
@@ -609,7 +623,8 @@ class Messaging extends Action
 
             // Appwrite push needs no device target: reach existing users with no registered target on
             // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
-            if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+            // Uses the enabled Appwrite provider even when another push provider is the default.
+            if (!$appwrite->isEmpty()) {
                 $targetless = \array_values(\array_filter(
                     $existingUserIds,
                     fn (string $userId) => !isset($reachedViaTarget[$userId]),
@@ -621,7 +636,7 @@ class Messaging extends Action
                         $identifiers[$userId] = $userId;
                     }
 
-                    yield [[$default->getId() => $identifiers], null];
+                    yield [[$appwrite->getId() => $identifiers], null];
                 }
             }
         }
@@ -733,18 +748,18 @@ class Messaging extends Action
         return $provider;
     }
 
-    private function checkAppwritePushEnabled(Database $dbForProject, Document $default): bool
+    /** The default provider when it is Appwrite push, else the first enabled one; empty when none is enabled. */
+    private function getAppwritePushProvider(Database $dbForProject, Document $default): Document
     {
         if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
-            return true;
+            return $default;
         }
 
-        return !$dbForProject->findOne('providers', [
+        return $dbForProject->findOne('providers', [
             Query::equal('provider', [self::APPWRITE_PUSH_PROVIDER]),
             Query::equal('type', [MESSAGE_TYPE_PUSH]),
             Query::equal('enabled', [true]),
-            Query::select(['$id']),
-        ])->isEmpty();
+        ]);
     }
 
     /**
@@ -1028,7 +1043,7 @@ class Messaging extends Action
      *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
-     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool}
+     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}
      */
     private function sendBatch(
         array $batch,
@@ -1076,6 +1091,7 @@ class Messaging extends Action
             'recipients' => $recipients,
             'errors' => $errors,
             'wake' => $wake,
+            'provider' => $provider,
         ];
     }
 
