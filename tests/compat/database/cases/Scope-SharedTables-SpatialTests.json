@@ -108811,6 +108811,12 @@
               ]
             }
           },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "PostgreSQL returns the pg_attribute rows the test reads without an ORDER BY in the order of the plan it picks (the catalog index, by attnum, or the heap, where altering a column moves its row), so the column order depends on the server, not the runtime"
+          },
           "expect": [
             {
               "$document": {
@@ -109496,6 +109502,12 @@
                 "\"${ns}\".\"_spatial_required_populated\""
               ]
             }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "PostgreSQL returns the pg_attribute rows the test reads without an ORDER BY in the order of the plan it picks (the catalog index, by attnum, or the heap, where altering a column moves its row), so the column order depends on the server, not the runtime"
           },
           "expect": [
             {

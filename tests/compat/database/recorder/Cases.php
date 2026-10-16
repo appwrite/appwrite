@@ -470,6 +470,13 @@ final class Cases
     /** The recording profile's name. */
     private static string $profileName = '';
 
+    /**
+     * Why a raw read of a table's columns from pg_attribute is masked: the
+     * tests read it into a map, and the postgres snapshot compares the
+     * columns in attnum order.
+     */
+    private const string UNORDERED_COLUMNS = 'PostgreSQL returns the pg_attribute rows the test reads without an ORDER BY in the order of the plan it picks (the catalog index, by attnum, or the heap, where altering a column moves its row), so the column order depends on the server, not the runtime';
+
     /** Whether the cases run on MariaDB/MySQL (InnoDB). */
     private static bool $innodb = false;
 
@@ -502,6 +509,10 @@ final class Cases
         }
         if (self::$mysql && $step->op === 'database.get_schema_attributes') {
             return ['paths' => [''], 'reason' => 'MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order'];
+        }
+        $query = $step->op === 'db.adapter' && ($step->args['method'] ?? '') === 'rawQuery' ? (string) ($step->args['args']['query'] ?? '') : '';
+        if (str_contains($query, 'FROM pg_attribute') && !str_contains($query, 'ORDER BY')) {
+            return ['paths' => [''], 'reason' => self::UNORDERED_COLUMNS];
         }
         if (self::lists($step)) {
             return ['paths' => [''], 'reason' => 'a MongoDB listing names every database on the server, other runs\' included'];
