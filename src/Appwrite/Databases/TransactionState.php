@@ -658,9 +658,12 @@ class TransactionState
 
         $selections = [];
         $aliases = [];
+        $distinct = false;
         foreach ($queries as $query) {
             $method = $query->getMethod();
-            if ($method->isJoin()) {
+            if ($method === Method::Distinct) {
+                $distinct = true;
+            } elseif ($method->isJoin()) {
                 $aliases[$query->getAlias()] = true;
             } elseif ($method === Method::Select) {
                 $values = $query->getValues();
@@ -677,19 +680,18 @@ class TransactionState
             return $doc;
         }
 
-        // Create a new document with only selected attributes
         $projected = new Document();
 
-        // Always preserve internal attributes
-        $projected->setAttribute('$id', $doc->getId());
-        $projected->setAttribute('$collection', $doc->getCollection());
-        $projected->setAttribute('$createdAt', $doc->getCreatedAt());
-        $projected->setAttribute('$updatedAt', $doc->getUpdatedAt());
-        if ($doc->offsetExists('$permissions')) {
-            $projected->setAttribute('$permissions', $doc->getPermissions());
+        if (!$distinct) {
+            $projected->setAttribute('$id', $doc->getId());
+            $projected->setAttribute('$collection', $doc->getCollection());
+            $projected->setAttribute('$createdAt', $doc->getCreatedAt());
+            $projected->setAttribute('$updatedAt', $doc->getUpdatedAt());
+            if ($doc->offsetExists('$permissions')) {
+                $projected->setAttribute('$permissions', $doc->getPermissions());
+            }
         }
 
-        // Add selected attributes
         foreach ($selections as $attribute) {
             if ($doc->offsetExists($attribute)) {
                 $projected->setAttribute($attribute, $doc->getAttribute($attribute));
