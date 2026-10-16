@@ -46,21 +46,12 @@ class Integer extends Validator
     {
         $signedness = $this->unsigned ? 'unsigned' : 'signed';
 
-        // Calculate min and max values based on bit size and signed/unsigned
-        if ($this->unsigned) {
-            $min = 0;
-            $max = (2 ** $this->bits) - 1;
-        } else {
-            $min = -(2 ** ($this->bits - 1));
-            $max = (2 ** ($this->bits - 1)) - 1;
-        }
-
         return \sprintf(
             'Value must be a valid %s %d-bit integer between %s and %s',
             $signedness,
             $this->bits,
-            number_format($min),
-            number_format($max),
+            \number_format($this->getMin()),
+            \number_format($this->getMax()),
         );
     }
 
@@ -115,6 +106,16 @@ class Integer extends Validator
         return $prefix . $this->bits;
     }
 
+    private function getMin(): int
+    {
+        return $this->unsigned ? 0 : -$this->getMax() - 1;
+    }
+
+    private function getMax(): int
+    {
+        return $this->unsigned ? (1 << $this->bits) - 1 : \PHP_INT_MAX >> (64 - $this->bits);
+    }
+
     /**
      * Is valid
      *
@@ -132,15 +133,6 @@ class Integer extends Validator
             return false;
         }
 
-        // Calculate min and max values based on bit size and signed/unsigned
-        if ($this->unsigned) {
-            $min = 0;
-            $max = (2 ** $this->bits) - 1;
-        } else {
-            $min = -(2 ** ($this->bits - 1));
-            $max = (2 ** ($this->bits - 1)) - 1;
-        }
-        // Check if value is within range
-        return $value >= $min && $value <= $max;
+        return $value >= $this->getMin() && $value <= $this->getMax();
     }
 }
