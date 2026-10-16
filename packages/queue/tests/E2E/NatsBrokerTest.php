@@ -1497,13 +1497,6 @@ final class NatsBrokerTest extends TestCase
         $broker->close();
     }
 
-    /**
-     * A handler still running when the broker reconnects must still be able to
-     * acknowledge. An ack is a publish to the delivery's reply subject, which no
-     * connection owns, so nothing about the old socket is needed to send it --
-     * dropping the delivery instead turned the commit into a silent no-op, and the
-     * server redelivered work that had already been done.
-     */
     public function testACommitAfterAReconnectStillAcknowledges(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
@@ -1526,11 +1519,6 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
-    /**
-     * A batch receive whose first fetch delivered and whose top-up fetch then failed
-     * returns what it already has. Dropping it would leave the delivery unacked until
-     * ackWait, spending an attempt no handler used.
-     */
     public function testATopUpFetchThatFailsKeepsTheDeliveriesAlreadyFetched(): void
     {
         $state = new PublishFaults(0);
@@ -1569,8 +1557,7 @@ final class NatsBrokerTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function lostReceiveConnection(): iterable
     {
-        // What a Kubernetes Job meets after a long handler: nothing serviced the
-        // receive connection's pings, so the server dropped it as stale.
+        // Nothing serviced the receive connection's pings during a long handler.
         yield 'server reported the connection stale' => ['stale'];
         yield 'socket closed before the fetch' => ['before'];
     }
@@ -1660,11 +1647,6 @@ final class NatsBrokerTest extends TestCase
         )), ackWait: 2.0, maxDeliver: 3);
     }
 
-    /**
-     * A receive on a connection the server has already dropped reconnects and
-     * fetches again, instead of throwing. Only the receive connection is rebuilt:
-     * the commands connection a handler may be acking on is left alone.
-     */
     #[DataProvider('lostReceiveConnection')]
     public function testAReceiveSurvivesTheServerHavingClosedItsConnection(string $fault): void
     {

@@ -764,12 +764,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 try {
                     return $this->pull($queue, $timeout, max(1, $n));
                 } catch (ConnectionException|ProtocolException $error) {
-                    // Once, on a fresh receive connection. The server drops a receive
-                    // socket nobody serviced -- a Kubernetes Job's, while a long handler
-                    // ran -- and the next fetch finds out. pull() keeps whatever reached
-                    // this process, so only the first fetch fails here, and it handed
-                    // nothing over. Anything the server sent onto the dead socket comes
-                    // back after ackWait, as it did before this retry.
+                    // Once. Only pull()'s first fetch fails here, and it handed nothing over.
                     if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
                         throw $error;
                     }
@@ -819,9 +814,7 @@ class Nats implements Synchronous, Consumer, Bounded
         // Fetch one message first so a sparse queue never waits for a batch to fill.
         $deliveries = $this->fetch($this->consumers[$key], 1, (float) $timeout, false);
 
-        // Whatever else is already waiting, on a poll that cannot block. Optional: if it
-        // fails, the deliveries already in hand are still returned rather than dropped
-        // to come back after ackWait, each having spent an attempt no handler used.
+        // Whatever else is already waiting, on a poll that cannot block.
         if ($deliveries !== [] && \count($deliveries) < $max) {
             try {
                 $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
@@ -1064,12 +1057,8 @@ class Nats implements Synchronous, Consumer, Bounded
      *
      * Everything derived from the old sockets is dropped rather than reused:
      * consumer handles and subscriptions belong to the connection that created
-     * them. In-flight deliveries are kept. An ack is a publish to the delivery's
-     * reply subject, which no connection owns, and every ack path already sends
-     * it through onCommands() on whichever commands connection is current -- so a
-     * handler still running when the broker reconnects can commit, release or
-     * reject as before. Dropping them made that commit a silent no-op, and the
-     * server redelivered work that was already done.
+     * them. In-flight deliveries are kept: every ack goes out on the current
+     * commands connection, so a handler still running can still acknowledge.
      */
     public function reconnect(): bool
     {
@@ -1102,13 +1091,8 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
-     * Rebuild only the receive connection, under the receive lock receive() holds.
-     *
-     * The commands connection is left alone: a handler may be mid-ack on it under
-     * the commands lock, which this path does not hold, and closing it there would
-     * lose that ack. It recovers on its own in command() when it is the one that
-     * failed. Everything bound to the receive socket is dropped with it -- consumer
-     * handles, advisory subscriptions, and the provisioning that created them.
+     * Rebuild only the receive connection. The commands connection may be mid-ack
+     * under a lock this path does not hold; command() rebuilds it if it fails.
      */
     private function reconnectReceive(): bool
     {
@@ -1120,7 +1104,7 @@ class Nats implements Synchronous, Consumer, Bounded
         try {
             $this->connection?->close();
         } catch (\Throwable) {
-            // Already gone. The point is to stop using it, not to close it well.
+            // Already gone.
         }
 
         $this->connection = null;
