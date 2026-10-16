@@ -262,12 +262,6 @@ class Get extends Base
                 return;
             }
 
-            if (\strlen($body) === ($range === null ? $size : $range[1] - $range[0] + 1)) {
-                $response->send($body);
-                return;
-            }
-
-            $response->removeHeader('Content-Length');
             $offset = $range[0] ?? 0;
             $remaining = $range === null ? $size : $range[1] - $range[0] + 1;
             $started = false;
@@ -282,16 +276,14 @@ class Get extends Base
                     $offset += $length;
                     $remaining -= $length;
                     if ($remaining > 0) {
-                        unset($body);
                         $body = (string) $deviceForFiles->read($path, $offset, \min(MAX_OUTPUT_CHUNK_SIZE, $remaining));
                     }
                 } while ($remaining > 0);
             } catch (\Throwable $error) {
-                // Closing before the terminal chunk makes truncation visible to
-                // clients; never append XML or replay an already-sent prefix.
+                // Once bytes have been sent, finish short rather than append XML to
+                // the object or replay its prefix. Content-Length exposes truncation.
                 if ($started) {
-                    $response->getSwooleResponse()->close();
-                    $response->disablePayload()->chunk('', true);
+                    $response->chunk('', true);
                 }
                 throw $error;
             }
