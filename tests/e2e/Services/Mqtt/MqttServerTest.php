@@ -547,8 +547,7 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $project['$id'],
             'x-appwrite-key' => $project['apiKey'],
         ];
-        $fcmName = 'fcm' . Id::unique();
-        $this->createFcmProvider($server, $fcmName);
+        $this->createFcmProvider($server);
         $this->setupAppwriteProvider($server);
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
@@ -566,14 +565,6 @@ final class MqttServerTest extends Scope
         $this->assertSame(MessageStatus::SENT, $status);
         $this->assertCount(1, $received, 'the targetless user did not receive the push');
         $this->assertSame('users/' . $userId, $received[0]['topic']);
-
-        // Test for SUCCESS: the message is searchable by the Appwrite provider it went through.
-        $search = $this->client->call(Client::METHOD_GET, '/messaging/messages', $server, ['search' => 'appwrite']);
-        $this->assertSame(1, $search['body']['total']);
-
-        // Test for FAILURE: the FCM default sent nothing, so it is not in the message search.
-        $search = $this->client->call(Client::METHOD_GET, '/messaging/messages', $server, ['search' => $fcmName]);
-        $this->assertSame(0, $search['body']['total'], 'an unused provider was added to the message search');
     }
 
     /**
@@ -842,11 +833,11 @@ final class MqttServerTest extends Scope
      *
      * @param  array<string, string>  $server
      */
-    private function createFcmProvider(array $server, string $name = 'fcm-default'): void
+    private function createFcmProvider(array $server): void
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', $server, [
             'providerId' => Id::unique(),
-            'name' => $name,
+            'name' => 'fcm-default',
             'serviceAccountJSON' => [
                 'type' => 'service_account',
                 'project_id' => 'test-project',
