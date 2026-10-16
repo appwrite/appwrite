@@ -475,6 +475,19 @@ final class S3Test extends TestCase
         $this->assertArrayNotHasKey('uploadId', $metadata);
     }
 
+    public function testWrappedLegacyClientRetainsBufferedStreamingFallback(): void
+    {
+        $legacy = new ScriptedClient([new Response(200, body: new Stream('original'))]);
+        $client = new Retry(new \Utopia\Client\Client($legacy));
+        $device = new S3('/root', 'key', 'secret', 'https://s3.example.com', 'us-east-1', client: $client);
+        $body = '';
+        $device->stream('/root/object', static function (string $chunk) use (&$body): void {
+            $body .= $chunk;
+        });
+        $this->assertSame('original', $body);
+        $this->assertCount(1, $legacy->requests);
+    }
+
     public function testNoSuchKeyBecomesNotFoundException(): void
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>';

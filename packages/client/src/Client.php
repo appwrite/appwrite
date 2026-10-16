@@ -175,6 +175,11 @@ final class Client implements Adapter, ResponseStreamingClientInterface
         return $this->adapter->sendRequest($this->prepare($request));
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return $this->adapter instanceof ResponseStreamingClientInterface && $this->adapter->supportsResponseStreaming();
+    }
+
     /**
      * Send a request and pass each response body chunk to $sink as it arrives.
      * The returned response carries the status and headers; its body is empty.
@@ -189,7 +194,7 @@ final class Client implements Adapter, ResponseStreamingClientInterface
             return $this->adapter->stream($this->prepare($request), $sink);
         }
 
-        if (!$this->adapter instanceof ResponseStreamingClientInterface) {
+        if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
             throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
         }
 

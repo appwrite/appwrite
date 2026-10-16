@@ -355,7 +355,7 @@ class S3 extends Device
      */
     public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void
     {
-        if (!$this->client instanceof ResponseStreamingClientInterface) {
+        if (!$this->client instanceof ResponseStreamingClientInterface || !$this->client->supportsResponseStreaming()) {
             parent::stream($path, $sink, $offset, $length, $etag);
             return;
         }
@@ -394,8 +394,12 @@ class S3 extends Device
                     return;
                 }
                 if ($length !== null || $offset > 0) {
-                    if ($code !== 206 || !preg_match('/^bytes (\\d+)-(\\d+)\\/(\\d+)$/', $response->getHeaderLine('content-range'), $matches)
-                        || (int) $matches[1] !== $offset || ($length !== null && (int) $matches[2] !== $offset + $length - 1)) {
+                    [$unit, $extent] = array_pad(explode(' ', $response->getHeaderLine('content-range'), 2), 2, '');
+                    [$span, $total] = array_pad(explode('/', $extent, 2), 2, '');
+                    [$start, $end] = array_pad(explode('-', $span, 2), 2, '');
+                    if ($code !== 206 || $unit !== 'bytes' || !ctype_digit($start) || !ctype_digit($end) || !ctype_digit($total)
+                        || (int) $start !== $offset || (int) $end < $offset || (int) $total <= (int) $end
+                        || (int) $end !== ($length === null ? (int) $total - 1 : min($offset + $length - 1, (int) $total - 1))) {
                         throw new RemoteException('Backend did not honor the requested byte range.');
                     }
                 } elseif ($code !== 200) {
@@ -403,6 +407,9 @@ class S3 extends Device
                 }
             }
         );
+        if (!$status->success) {
+            throw new RemoteException('Backend returned an unexpected object response.');
+        }
     }
 
     /**

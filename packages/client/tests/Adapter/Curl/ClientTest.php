@@ -44,6 +44,26 @@ final class ClientTest extends AdapterContract
         });
     }
 
+    public function testResponseNotificationOnlySeesTheFinalRedirectHop(): void
+    {
+        Http::serve(function (int $port): void {
+            $statuses = [];
+            $body = '';
+            new Client()->withFollowRedirects()->stream(
+                new Request(Method::GET, \Utopia\Psr7\Uri::parse('http://127.0.0.1:' . $port . '/redirect')),
+                function (string $chunk) use (&$body, &$statuses): void {
+                    $this->assertSame([200], $statuses);
+                    $body .= $chunk;
+                },
+                static function (ResponseInterface $response) use (&$statuses): void {
+                    $statuses[] = $response->getStatusCode();
+                }
+            );
+            $this->assertSame([200], $statuses);
+            $this->assertSame('final', $body);
+        });
+    }
+
     public function testEmptyResponseStillNotifiesHeaders(): void
     {
         Http::raw("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n", function (int $port): void {

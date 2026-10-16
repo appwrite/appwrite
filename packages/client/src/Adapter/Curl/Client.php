@@ -189,6 +189,11 @@ class Client implements Adapter, ResponseStreamingClientInterface
         );
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return true;
+    }
+
     /**
      * @param callable(string): void $sink
      *
