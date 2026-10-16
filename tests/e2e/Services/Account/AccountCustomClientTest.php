@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
+use function Swoole\Coroutine\run;
 
 final class AccountCustomClientTest extends Scope
 {
@@ -5944,6 +5948,73 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * APNs provider updates before #14589 stored a changed bundle ID under `credentials.bundle`, leaving
+     * `bundleId` on the one from creation. The API can no longer write that, so the row is seeded directly.
+     * Routing, the API and the next provider save all treat the legacy value as the current bundle ID.
+     */
+    public function testPushTargetRoutesApnsByLegacyBundleKey(): void
+    {
+        $session = $this->createDeviceSession();
+        $before = 'io.appwrite.e2e.' . Id::unique();
+        $after = 'io.appwrite.e2e.' . Id::unique();
+        $providerId = $this->createApnsProvider($before, sandbox: false);
+
+        $credentials = $this->providerCredentials($providerId);
+        $credentials['bundle'] = $after;
+        $this->providerCredentials($providerId, $credentials);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Create routes by the legacy value.
+        $target = $this->createPushTarget($session, ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($providerId, $target['body']['providerId']);
+
+        // Update re-routes a providerless target by it too.
+        $other = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($other, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+        $this->assertEmpty($legacy['body']['providerId']);
+
+        $updated = $this->updatePushTarget($other, $legacy['body']['$id'], ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame($providerId, $updated['body']['providerId']);
+
+        // The API shows the legacy value as bundleId and hides the stray key.
+        $provider = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $this->assertSame($after, $provider['body']['credentials']['bundleId']);
+        $this->assertArrayNotHasKey('bundle', $provider['body']['credentials']);
+
+        // Any provider save repairs the row: the legacy value moves into bundleId and the stray key goes.
+        $save = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/apns/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'apns-renamed',
+        ]);
+        $this->assertEquals(200, $save['headers']['status-code']);
+
+        $credentials = $this->providerCredentials($providerId);
+        $this->assertSame($after, $credentials['bundleId']);
+        $this->assertArrayNotHasKey('bundle', $credentials);
+
+        /**
+         * Test for FAILURE
+         */
+        // The bundle ID from creation no longer routes to the provider.
+        $target = $this->createPushTarget($this->createDeviceSession(), ['bundleId' => $before, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId']);
+    }
+
+    /**
      * An install that registered before routing holds a providerless target. Its next registration,
      * now routed, adopts that target instead of leaving it live on the default provider beside a new one.
      */
@@ -6025,6 +6096,39 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         return $provider['body']['$id'];
+    }
+
+    /**
+     * Read a provider's stored credentials, or replace them when $credentials is given, straight from
+     * the project database (decrypted on read, encrypted on write).
+     *
+     * @param  array<string, mixed>|null  $credentials
+     * @return array<string, mixed>
+     */
+    private function providerCredentials(string $providerId, ?array $credentials = null): array
+    {
+        $stored = [];
+        $access = function () use ($providerId, $credentials, &$stored): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(function () use ($factory, $providerId, $credentials, &$stored): void {
+                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+                $provider = $credentials === null
+                    ? $dbForProject->getDocument('providers', $providerId)
+                    : $dbForProject->updateDocument('providers', $providerId, new Document(['credentials' => $credentials]));
+                $stored = $provider->getAttribute('credentials', []);
+            });
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $access();
+        } else {
+            run($access);
+        }
+
+        return $stored;
     }
 
     /**
