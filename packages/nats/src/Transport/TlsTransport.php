@@ -26,10 +26,7 @@ final class TlsTransport implements Transport
 
         $context = stream_context_create(['ssl' => $this->buildSslOptions()]);
 
-        // TCP first, then the handshake, so a server that is not there
-        // (refused, unreachable, timed out) is told apart from one whose
-        // certificate this configuration rejects. A tls:// connect folds both
-        // into one failure with no reason attached.
+        // Connect TCP first so a refused connection is told apart from a failed handshake.
         $stream = @stream_socket_client(
             $address,
             $errno,

@@ -14,19 +14,8 @@ use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Exception\TlsException;
 use Utopia\NATS\Tests\Support\FakeTransport;
 
-/**
- * connect() behind a load-balanced address. A server in lame-duck mode closes
- * its client listener while its pod stays Ready, so a new connection can land
- * on it and be refused; the next connection to the same address picks a
- * backend afresh. connect() makes another pass over the pool for failures a
- * fresh connection can fix, and only for those.
- */
 final class ConnectRetryTest extends TestCase
 {
-    /**
-     * What TcpTransport throws when nothing is listening on the backend the
-     * connection was routed to.
-     */
     private static function refusal(): ConnectionException
     {
         return new ConnectionException('Failed to connect to tcp://nats.cloud:4222: [111] Connection refused');
@@ -71,7 +60,6 @@ final class ConnectRetryTest extends TestCase
         $this->assertTrue($conn->isConnected());
         $this->assertSame(3, $connects, 'two refusals and the connect that got through');
 
-        // The connection that came back is the one the third connect built.
         $conn->publish('jobs', 'payload');
         $this->assertStringContainsString("PUB jobs 7\r\npayload\r\n", $accepted->written);
     }
@@ -135,9 +123,6 @@ final class ConnectRetryTest extends TestCase
     }
 
     /**
-     * -ERR replies a server sends to CONNECT that the next connection would
-     * get back identically, so another pass would only repeat it.
-     *
      * @return \Iterator<string, array{string, class-string<\Throwable>}>
      */
     public static function rejectionProvider(): \Iterator
@@ -156,8 +141,6 @@ final class ConnectRetryTest extends TestCase
         $factory = static function () use (&$connects, $reply): FakeTransport {
             $connects++;
             $transport = new FakeTransport();
-            // A real server answers the CONNECT with the -ERR and closes, so
-            // the PING behind it never gets its PONG.
             $transport->answerPings = false;
             $transport->onWrite = static function (string $data, FakeTransport $fake) use ($reply): void {
                 if (str_starts_with($data, 'CONNECT ')) {
@@ -204,8 +187,7 @@ final class ConnectRetryTest extends TestCase
         /** @var list<FakeTransport> $transports */
         $transports = [];
         $factory = static function () use (&$transports): FakeTransport {
-            // Connects and sends INFO, then never answers the PING: the
-            // attempt fails after its socket is up.
+            // Sends INFO, then never answers the PING.
             $transport = new FakeTransport();
             $transport->answerPings = false;
             $transports[] = $transport;
@@ -248,9 +230,6 @@ final class ConnectRetryTest extends TestCase
     }
 
     /**
-     * Refusals that come back at once, well inside connectTimeout, with a wait
-     * between passes that does not fit what is left of it.
-     *
      * @return \Iterator<string, array{float, float, int}>
      */
     public static function pauseOverrunsDeadlineProvider(): \Iterator
@@ -287,7 +266,6 @@ final class ConnectRetryTest extends TestCase
         foreach ($starts as $start) {
             $this->assertLessThan($connectTimeout, $start - $called, 'a pass started after connectTimeout');
         }
-        // Nor does it sleep past the deadline only to give up afterwards.
         $this->assertLessThan($connectTimeout, $returned - $called);
     }
 
@@ -296,7 +274,6 @@ final class ConnectRetryTest extends TestCase
         $connects = 0;
         $factory = static function () use (&$connects): FakeTransport {
             $connects++;
-            // A backend that takes a while to fail, as a timing-out one does.
             usleep(20_000);
             $transport = new FakeTransport();
             $transport->refuse = new TimeoutException('Failed to connect to tcp://nats.cloud:4222: [110] Connection timed out');
@@ -312,8 +289,7 @@ final class ConnectRetryTest extends TestCase
         }
         $elapsed = hrtime(true) / 1e9 - $started;
 
-        // Timeouts are retried while inside the window, but the window, not
-        // connectAttempts, is what ends it: about five 20ms passes, not 1000.
+        // The deadline ends it, not connectAttempts.
         $this->assertGreaterThanOrEqual(2, $connects);
         $this->assertLessThan(20, $connects);
         $this->assertLessThan(0.5, $elapsed);

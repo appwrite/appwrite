@@ -72,15 +72,13 @@ final class TlsTest extends TestCase
 
     public function testUntrustedServerCertificateIsNotRetried(): void
     {
-        // No CA: the server's certificate does not chain to anything the client
-        // trusts, which no number of fresh connections changes.
+        // No CA, so the server's certificate is untrusted.
         $connects = 0;
 
         try {
             Connection::connect(new ConnectionOptions(
                 servers: $this->url,
                 connectAttempts: 3,
-                // Counts the connects; the transport is the one tls:// builds.
                 transportFactory: function () use (&$connects): TlsTransport {
                     $connects++;
 

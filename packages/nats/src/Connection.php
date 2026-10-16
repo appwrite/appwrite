@@ -635,9 +635,7 @@ final class Connection
                 } catch (\Throwable $e) {
                     $lastError = $e;
                     $retryable = $retryable && self::retriesConnect($e);
-                    // A failure after the socket connected (no INFO, a handshake
-                    // timeout, a failed upgrade) leaves it open, and the next
-                    // attempt replaces the transport without closing it.
+                    // Close the failed attempt's socket before the next one.
                     if (isset($this->transport)) {
                         $this->transport->close();
                     }
@@ -648,10 +646,7 @@ final class Connection
                 break;
             }
 
-            // A pause that ends at or past the deadline is not taken, since the
-            // pass after it would start outside connectTimeout. Shortening it to
-            // fit would start that pass at once, before the backend had the wait
-            // to drain, so the connect gives up instead.
+            // Give up rather than start a pass after connectTimeout.
             $pause = $this->options->connectRetryWait + mt_rand() / mt_getrandmax() * $this->options->connectRetryJitter;
             if (microtime(true) + $pause >= $deadline) {
                 break;
@@ -668,12 +663,7 @@ final class Connection
     }
 
     /**
-     * Whether another pass over the pool can succeed after this failure to
-     * connect. Yes for the socket and the server going away under us -- a
-     * refusal, a reset, a timeout, a server -ERR a reconnect would also retry.
-     * No for what the next connection would present identically: credentials
-     * the server rejected, a TLS handshake this configuration fails, a reply
-     * that is not NATS, an -ERR {@see self::reconnectsAfter()} refuses.
+     * Whether a new connection could succeed: not for rejected auth or a failed TLS handshake.
      */
     private static function retriesConnect(\Throwable $error): bool
     {
@@ -683,9 +673,7 @@ final class Connection
     }
 
     /**
-     * Sleep without holding the thread when called from a coroutine, whatever
-     * Swoole's hook flags are: other requests on the worker keep running while
-     * this connect waits out a draining server.
+     * Sleep without blocking other coroutines.
      */
     private static function pause(float $seconds): void
     {

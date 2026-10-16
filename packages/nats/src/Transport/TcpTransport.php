@@ -155,7 +155,6 @@ final class TcpTransport implements Transport
 
         if ($result !== true) {
             $reason = error_get_last()['message'] ?? 'no reason given';
-            // The socket is left mid-handshake and cannot carry NATS either way.
             $this->close();
             throw new TlsException("Failed to upgrade connection to TLS: {$reason}");
         }

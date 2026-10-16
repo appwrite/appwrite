@@ -30,10 +30,7 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
-    /**
-     * Thrown by connect() when set, the way a real transport reports a server
-     * that refused or dropped the connection before INFO.
-     */
+    /** Thrown by connect() when set. */
     public ?\Throwable $refuse = null;
 
     /** The host connect() was asked for. */

@@ -10,10 +10,6 @@ use Utopia\NATS\Exception\TlsException;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\TlsTransport;
 
-/**
- * The transports tell a server that is not there apart from a TLS handshake
- * that failed, because Connection retries the first and not the second.
- */
 final class TlsFailureTest extends TestCase
 {
     public function testFailedTlsUpgradeRaisesTlsException(): void
@@ -55,8 +51,6 @@ final class TlsFailureTest extends TestCase
         $transport = new TcpTransport();
         $transport->connect($host, (int) $port, 2.0);
 
-        // The peer answers the ClientHello with something that is not TLS and
-        // stays connected, so only the client can end the connection.
         $peer = stream_socket_accept($server, 1.0);
         $this->assertIsResource($peer);
         fwrite($peer, "HTTP/1.1 400 Bad Request\r\n\r\n");
@@ -69,8 +63,7 @@ final class TlsFailureTest extends TestCase
 
         $this->assertFalse($transport->isConnected());
 
-        // The peer sees the connection end: it reads to EOF instead of timing
-        // out on a socket the client still holds open.
+        // The peer reads EOF once the client closes.
         stream_set_timeout($peer, 1);
         while (!feof($peer) && !stream_get_meta_data($peer)['timed_out']) {
             fread($peer, 8192);
