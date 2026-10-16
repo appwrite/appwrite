@@ -79,19 +79,46 @@ export function maxAgeValueInUnit(seconds: number, unit: TimeUnit): number {
   return roundToUnitPrecision(fromSeconds(seconds, unit))
 }
 
+/** The decimals `roundToUnitPrecision` leaves a value with. */
+function unitDisplayDecimals(value: number): number {
+  if (value === 0 || Math.abs(value) >= 1) return UNIT_DISPLAY_DIGITS
+  // Significant digits: the last one sits that many places below the first.
+  return UNIT_DISPLAY_DIGITS - 1 - Math.floor(Math.log10(Math.abs(value)))
+}
+
+/**
+ * An end of the API's range written in this unit, rounded towards the inside of
+ * the range: up for the minimum, down for the maximum. Rounding to the nearest
+ * instead pushes a bound the unit cannot write exactly outwards, and the field
+ * then advertises an age the API refuses — 0.0027 years is 85,147s and 121.67
+ * months is 315,368,640s, both outside the range this card checks in seconds.
+ */
+function maxAgeBoundInUnit(
+  seconds: number,
+  unit: TimeUnit,
+  inwards: 1 | -1,
+): number {
+  const displayed = maxAgeValueInUnit(seconds, unit)
+  if (inwards * (toSeconds(displayed, unit) - seconds) >= 0) return displayed
+  return roundToUnitPrecision(
+    displayed + inwards * 10 ** -unitDisplayDecimals(displayed),
+  )
+}
+
 /**
  * The range the value field advertises in this unit, written with the same
  * conversion as the value itself so the two cannot disagree: a stored day is
- * 0.0027 years rather than the whole 1 the field used to demand, and 10 years
- * is 121.67 months rather than the 121 it used to cap them at.
+ * 0.0028 years rather than the whole 1 the field used to demand, and 10 years
+ * is 121.66 months rather than the 121 it used to cap them at. Every bound here
+ * is saveable, which is the point of rounding them inwards.
  */
 export function maxAgeRangeInUnit(unit: TimeUnit): {
   min: number
   max: number
 } {
   return {
-    min: maxAgeValueInUnit(MIN_PASSWORD_MAX_AGE_SECONDS, unit),
-    max: maxAgeValueInUnit(MAX_PASSWORD_MAX_AGE_SECONDS, unit),
+    min: maxAgeBoundInUnit(MIN_PASSWORD_MAX_AGE_SECONDS, unit, 1),
+    max: maxAgeBoundInUnit(MAX_PASSWORD_MAX_AGE_SECONDS, unit, -1),
   }
 }
 

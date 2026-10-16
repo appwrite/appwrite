@@ -50,9 +50,20 @@ export function PasswordRotationCard({
   const syncedPolicy = useRef(currentPolicy)
 
   useEffect(() => {
-    // Adopt the stored policy only when it changes, so a refused save keeps the
-    // edit on screen. The unit stays the one the user picked.
-    if (mutation.isPending || syncedPolicy.current === currentPolicy) return
+    // Adopt the stored policy only when its values change, so a refused save
+    // keeps the edit on screen. Compare the values, not the object: the
+    // snapshot hook reparses the policy list on every refetch and any sibling
+    // policy's save invalidates it, so holding an edit through that must not
+    // rest on React Query reusing the reference for an unchanged policy.
+    // The unit stays the one the user picked.
+    const synced = syncedPolicy.current
+    if (
+      mutation.isPending ||
+      (currentPolicy.enabled === synced.enabled &&
+        currentPolicy.maxAge === synced.maxAge)
+    ) {
+      return
+    }
     syncedPolicy.current = currentPolicy
     setEnabled(currentPolicy.enabled)
     setMaxAgeSeconds(currentPolicy.maxAge)

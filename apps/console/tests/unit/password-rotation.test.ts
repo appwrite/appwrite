@@ -120,18 +120,29 @@ describe('maxAgeUnitPair', () => {
 
 describe('maxAgeRangeInUnit', () => {
   test('is the API range written in the chosen unit', () => {
-    expect(maxAgeRangeInUnit('years')).toEqual({ min: 0.0027, max: 10 })
-    expect(maxAgeRangeInUnit('months')).toEqual({ min: 0.033, max: 121.67 })
-    expect(maxAgeRangeInUnit('weeks')).toEqual({ min: 0.14, max: 521.43 })
+    // Rounded inwards, so a unit that cannot write an end of the range exactly
+    // advertises the nearest age it can write that the API still accepts.
+    expect(maxAgeRangeInUnit('years')).toEqual({ min: 0.0028, max: 10 })
+    expect(maxAgeRangeInUnit('months')).toEqual({ min: 0.034, max: 121.66 })
+    expect(maxAgeRangeInUnit('weeks')).toEqual({ min: 0.15, max: 521.42 })
     expect(maxAgeRangeInUnit('days')).toEqual({ min: 1, max: 3650 })
   })
 
-  test('never writes a minimum that reads as 0', () => {
-    // The field used to hardcode `min={1}` while two decimals wrote the stored
-    // day as `0` years, so a valid policy rendered as out of range with no
-    // error. A unit added above years must not bring that back.
+  test('advertises only bounds that can be saved', () => {
+    // Every bound is an age the user can type and save. Rounding to the
+    // nearest pushed them outside the range the card then checks in seconds:
+    // 0.0027 years is 85,147s and 121.67 months is 315,368,640s, so typing the
+    // minimum the field itself showed produced "Minimum is 1 day" and left
+    // Update disabled. A minimum that reads as 0, which is what the hardcoded
+    // `min={1}` replaced, fails this too.
     for (const unit of PASSWORD_MAX_AGE_UNITS) {
-      expect(maxAgeRangeInUnit(unit).min).toBeGreaterThan(0)
+      const { min, max } = maxAgeRangeInUnit(unit)
+      for (const bound of [min, max]) {
+        const seconds = maxAgeSecondsFromValue(bound, unit)
+        expect(seconds).toBeGreaterThanOrEqual(MIN_PASSWORD_MAX_AGE_SECONDS)
+        expect(seconds).toBeLessThanOrEqual(MAX_PASSWORD_MAX_AGE_SECONDS)
+        expect(passwordMaxAgeRangeError(true, seconds)).toBeNull()
+      }
     }
   })
 })

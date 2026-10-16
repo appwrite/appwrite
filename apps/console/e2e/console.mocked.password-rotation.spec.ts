@@ -18,6 +18,9 @@ const NOW = '2026-09-09T09:30:00.000+00:00'
 const ROTATION_ID = 'password-rotation'
 
 const ROTATION_POLICY_PATH = `/project/policies/${ROTATION_ID}`
+/** Mirrors `ProjectPolicyId.Passworddictionary`: the sibling card used below. */
+const DICTIONARY_POLICY_PATH = '/project/policies/password-dictionary'
+const POLICIES_PATH = '/project/policies'
 
 /** The API's default maximum password age: 1 year. */
 const ONE_YEAR = 31_536_000
@@ -111,9 +114,12 @@ type MockOptions = {
 }
 
 type Calls = {
-  /** The stored policy, as the mock keeps it between requests. */
+  /** The stored policy, as the mock keeps it between requests. Assign to it to
+   * change the policy out from under the page, the way another tab would. */
   rotation: RotationPolicy | null
   patches: Request[]
+  /** The sibling policy the refetch tests save, kept so its card reads back. */
+  dictionary: boolean
 }
 
 function corsHeaders(route: Route): Record<string, string> {
@@ -142,6 +148,7 @@ async function mockAppwriteApi(
         ? { enabled: false, maxAge: ONE_YEAR }
         : options.rotation,
     patches: [],
+    dictionary: false,
   }
 
   await page.route('**/*', async (route) => {
@@ -173,6 +180,13 @@ async function mockAppwriteApi(
         enabled: body.enabled ?? calls.rotation?.enabled ?? false,
         maxAge: body.maxAge ?? calls.rotation?.maxAge ?? ONE_YEAR,
       }
+      return json(200, PROJECT)
+    }
+
+    // A sibling policy on the same page. Saving it invalidates the auth
+    // snapshot, which is the refetch an edit in progress has to survive.
+    if (apiPath === DICTIONARY_POLICY_PATH && request.method() === 'PATCH') {
+      calls.dictionary = request.postDataJSON()?.enabled ?? false
       return json(200, PROJECT)
     }
 
@@ -223,22 +237,22 @@ async function mockAppwriteApi(
       return json(200, PROJECT)
     // `fetchProjectAuthSecurity` swallows failures on both of these, so a
     // mis-pathed mock would read back as the default snapshot, not as an error.
-    if (apiPath === '/project/policies')
-      return json(200, {
-        total: calls.rotation ? 2 : 1,
-        policies: [
-          // Always present, so the page has a card to render either way.
-          {
-            $id: 'password-strength',
-            min: 8,
-            uppercase: false,
-            lowercase: false,
-            number: false,
-            symbols: false,
-          },
-          ...(calls.rotation ? [{ $id: ROTATION_ID, ...calls.rotation }] : []),
-        ],
-      })
+    if (apiPath === POLICIES_PATH) {
+      const policies = [
+        // Always present, so the page has a card to render either way.
+        {
+          $id: 'password-strength',
+          min: 8,
+          uppercase: false,
+          lowercase: false,
+          number: false,
+          symbols: false,
+        },
+        { $id: 'password-dictionary', enabled: calls.dictionary },
+        ...(calls.rotation ? [{ $id: ROTATION_ID, ...calls.rotation }] : []),
+      ]
+      return json(200, { total: policies.length, policies })
+    }
     if (apiPath === '/project/platforms')
       return json(200, { total: 0, platforms: [] })
     if (apiPath === '/project/mock-phones')
@@ -273,6 +287,36 @@ function unitTrigger(page: Page) {
 
 function updateButton(page: Page) {
   return card(page).getByRole('button', { name: 'Update', exact: true })
+}
+
+/**
+ * Save the Dictionary policy, a sibling card on this page. Its mutation
+ * invalidates the auth snapshot both cards read, so this is how a refetch that
+ * the rotation card did not ask for arrives. Resolves once the refetched policy
+ * list is back.
+ */
+async function saveSiblingPolicy(page: Page) {
+  const dictionaryCard = page
+    .locator('#password-dictionary-enabled')
+    .locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]')
+  const update = dictionaryCard.getByRole('button', {
+    name: 'Update',
+    exact: true,
+  })
+  const refetched = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'GET' &&
+      new URL(response.url()).pathname === `/v1${POLICIES_PATH}`,
+  )
+  await dictionaryCard.locator('#password-dictionary-enabled').click()
+  await update.click()
+  await expect(
+    page.getByText('Updated password dictionary check.', { exact: true }),
+  ).toBeVisible()
+  await refetched
+  // Its own Update goes quiet only once the refetched snapshot has reached the
+  // page, so by here the rotation card has been handed the same new object.
+  await expect(update).toBeDisabled()
 }
 
 async function openPasswordPolicies(page: Page) {
@@ -480,8 +524,11 @@ test.describe('periodic password change policy (mocked API)', () => {
     await expect(unitTrigger(page)).toContainText('Days')
 
     await openSelectAndChoose(page, unitTrigger(page), 'Years')
+    // The stored day itself, not the advertised minimum: years cannot write
+    // 86,400s, so the age is shown as it converts and the bound is rounded up
+    // to the nearest age in years the API would still accept.
     await expect(maxAgeInput(page)).toHaveValue('0.0027')
-    await expect(maxAgeInput(page)).toHaveAttribute('min', '0.0027')
+    await expect(maxAgeInput(page)).toHaveAttribute('min', '0.0028')
     await expect(card(page)).toContainText('Between 1 day and 10 years')
     // Still the stored day, so there is nothing to save.
     await expect(updateButton(page)).toBeDisabled()
@@ -490,9 +537,11 @@ test.describe('periodic password change policy (mocked API)', () => {
     await maxAgeInput(page).fill('10')
     await openSelectAndChoose(page, unitTrigger(page), 'Months')
     await expect(maxAgeInput(page)).toHaveValue('121.67')
-    await expect(maxAgeInput(page)).toHaveAttribute('max', '121.67')
+    await expect(maxAgeInput(page)).toHaveAttribute('max', '121.66')
     await expect(card(page)).toContainText('Between 1 day and 10 years')
 
+    // The age is the one that was typed, in seconds, not the number of months
+    // on screen read back.
     await expect(updateButton(page)).toBeEnabled()
     await updateButton(page).click()
     await expect.poll(() => calls.patches.length).toBe(1)
@@ -500,6 +549,99 @@ test.describe('periodic password change policy (mocked API)', () => {
       enabled: true,
       maxAge: TEN_YEARS,
     })
+  })
+
+  test('saves an age typed as the advertised bound', async ({ page }) => {
+    // Both bounds used to round outwards, so the field advertised ages the API
+    // refuses: typing the `min` it showed in Years (0.0027, 85,147s) or the
+    // `max` it showed in Months (121.67, 315,368,640s) produced the range
+    // error and left Update disabled. The card displayed a value as valid and
+    // then would not save it.
+    const calls = await mockAppwriteApi(page, {
+      rotation: { enabled: true, maxAge: ONE_YEAR },
+    })
+    await openPasswordPolicies(page)
+    await expect(unitTrigger(page)).toContainText('Years')
+
+    const typeAdvertisedBound = async (bound: 'min' | 'max') => {
+      const value = await maxAgeInput(page).getAttribute(bound)
+      await maxAgeInput(page).fill(String(value))
+      await expect(card(page)).toContainText('Between 1 day and 10 years')
+      await expect(updateButton(page)).toBeEnabled()
+      await updateButton(page).click()
+    }
+
+    await typeAdvertisedBound('min')
+    await expect.poll(() => calls.patches.length).toBe(1)
+
+    await openSelectAndChoose(page, unitTrigger(page), 'Months')
+    await typeAdvertisedBound('max')
+    await expect.poll(() => calls.patches.length).toBe(2)
+
+    // 0.0028 years and 121.66 months, both inside `Range(86400, 315360000)`.
+    expect(bodies(calls.patches)).toEqual([
+      { enabled: true, maxAge: 88_301 },
+      { enabled: true, maxAge: 315_342_720 },
+    ])
+    await expect(updateButton(page)).toBeDisabled()
+  })
+
+  test('keeps an edit through a refetch it did not ask for', async ({
+    page,
+  }) => {
+    // Every sibling card's save invalidates the snapshot this card reads, so a
+    // refetch lands mid-edit. The edit survives because adoption compares the
+    // stored values. It survives on an object comparison too: React Query's
+    // structural sharing reuses the reference for a policy whose values did
+    // not change. This repo turns that default off on other queries, so the
+    // contract is pinned here rather than left resting on it.
+    const calls = await mockAppwriteApi(page, {
+      rotation: { enabled: true, maxAge: ONE_YEAR },
+    })
+    await openPasswordPolicies(page)
+
+    await openSelectAndChoose(page, unitTrigger(page), 'Days')
+    await maxAgeInput(page).fill('90')
+    await expect(updateButton(page)).toBeEnabled()
+
+    await saveSiblingPolicy(page)
+
+    // Nothing about the rotation policy changed, so the edit is untouched.
+    await expect(maxAgeInput(page)).toHaveValue('90')
+    await expect(unitTrigger(page)).toContainText('Days')
+    await expect(toggle(page)).toBeChecked()
+    await expect(updateButton(page)).toBeEnabled()
+
+    await updateButton(page).click()
+    await expect.poll(() => calls.patches.length).toBe(1)
+    expect(calls.patches[0].postDataJSON()).toEqual({
+      enabled: true,
+      maxAge: THREE_MONTHS,
+    })
+  })
+
+  test('adopts a stored policy that changed under the edit', async ({
+    page,
+  }) => {
+    // The other half of the same rule: the card follows the server when the
+    // stored values really do change, so a policy saved in another tab is not
+    // left behind by the comparison that keeps an edit.
+    const calls = await mockAppwriteApi(page, {
+      rotation: { enabled: true, maxAge: ONE_YEAR },
+    })
+    await openPasswordPolicies(page)
+
+    await maxAgeInput(page).fill('2')
+    await expect(updateButton(page)).toBeEnabled()
+
+    calls.rotation = { enabled: false, maxAge: ONE_YEAR * 5 }
+    await saveSiblingPolicy(page)
+
+    // Still in Years, the unit the user picked.
+    await expect(maxAgeInput(page)).toHaveValue('5')
+    await expect(toggle(page)).not.toBeChecked()
+    await expect(updateButton(page)).toBeDisabled()
+    expect(calls.patches).toHaveLength(0)
   })
 
   test('keeps the edit when the server refuses the save', async ({ page }) => {
