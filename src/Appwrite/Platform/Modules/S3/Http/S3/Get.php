@@ -18,7 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\S3;
+use Utopia\Storage\DeviceType;
 
 class Get extends Base
 {
@@ -139,7 +139,7 @@ class Get extends Base
                     $size = (int) $file->getAttribute('sizeOriginal', 0);
                     $range = $this->range($request, $size);
                     $etag = '"' . $file->getAttribute('signature', '') . '"';
-                    if (!$deviceForFiles instanceof S3 && !$isHead && !$isAcl && !$isUnsupported
+                    if ($deviceForFiles->getType() === DeviceType::Local && !$isHead && !$isAcl && !$isUnsupported
                         && $ifNoneMatch !== $etag && ($ifMatch === '' || $ifMatch === $etag) && $range !== false) {
                         $body = $range === null
                             ? $deviceForFiles->read($file->getAttribute('path', ''))
@@ -241,7 +241,7 @@ class Get extends Base
                     return;
                 }
 
-                if ($body === null && !$deviceForFiles instanceof S3) {
+                if ($body === null && $deviceForFiles->getType() === DeviceType::Local) {
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Missing object stream.');
                 }
 
@@ -249,7 +249,7 @@ class Get extends Base
                 $response->setAcceptEncoding('');
                 $delivery->remaining = $range === null ? $size : $range[1] - $range[0] + 1;
                 try {
-                    if ($deviceForFiles instanceof S3) {
+                    if ($deviceForFiles->getType() !== DeviceType::Local) {
                         $small = $delivery->remaining <= MAX_OUTPUT_CHUNK_SIZE;
                         $delivery->buffer = '';
                         if (!$small) {
