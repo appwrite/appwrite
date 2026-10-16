@@ -173,7 +173,10 @@ fn platform_name(scheme: &str) -> Option<&'static str> {
 pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: &[String]) -> Result<(), String> {
     let scheme = url_scheme(origin);
     let host = url_host(origin).unwrap_or_default();
-    if let Some(s) = &scheme {
+    // URL parsers split an http(s) authority holding `\` differently: only
+    // `host[:port]` is accepted, so the browser and the API agree on the host.
+    let normalized = !matches!(scheme.as_deref(), Some("http" | "https")) || normalized_authority(origin);
+    if let Some(s) = scheme.as_ref().filter(|_| normalized) {
         if WEB_SCHEMES.contains(&s.as_str()) {
             let validator = Hostname::new(allowed_hosts.to_vec());
             if host_allowed(&validator, &host) {
@@ -197,6 +200,17 @@ pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: 
             if host.is_empty() { String::new() } else { format!("({host}) ") }
         )),
     }
+}
+
+/// An origin's authority (between `://` and its path, query or fragment) is
+/// non-empty, without `\`, `@` or control characters
+/// (`Origin::hasNormalizedAuthority`).
+fn normalized_authority(origin: &str) -> bool {
+    let Some((_, rest)) = origin.split_once("://") else {
+        return false;
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+    !authority.is_empty() && !authority.bytes().any(|b| b == b'\\' || b == b'@' || b.is_ascii_control())
 }
 
 /// Redirect URL validation (`Network\Validator\Redirect`): the origin rules,
@@ -283,6 +297,11 @@ mod tests {
         let allowed = vec!["localhost".to_owned()];
         assert!(validate_origin("http://localhost", &allowed, &[]).is_ok());
         assert!(validate_origin("http://127.0.0.1", &allowed, &[]).is_ok());
+        assert!(validate_origin("http://localhost:3000/a?b#c", &allowed, &[]).is_ok());
+        // Only `host[:port]` as the http(s) authority.
+        for origin in ["http://evil.com\\@localhost", "https://user@localhost", "http://local\thost", "http://"] {
+            assert!(validate_origin(origin, &allowed, &[]).is_err(), "{origin}");
+        }
         assert_eq!(
             validate_origin("http://evil.com", &allowed, &[]).unwrap_err(),
             "Invalid Origin. Register your new client (evil.com) as a new Web platform on your project console dashboard"

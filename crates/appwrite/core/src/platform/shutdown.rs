@@ -450,7 +450,7 @@ impl Job {
             "project": self.project.message_payload(),
             "user": self.actor,
             "impersonatorUser": [],
-            // `audits.payload`, which no route Rust serves sets.
+            // PHP no longer sends the response (`audits.payload` is gone).
             "payload": [],
             "resource": resource,
             "mode": if self.mode == Mode::Admin { "admin" } else { "default" },
