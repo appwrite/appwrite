@@ -474,7 +474,7 @@ impl Builder<crate::builder::PostgreSqlDialect> {
             _ => Array::new(),
         };
         let filter = crate::builder::SpatialDistanceFilter::from_tuple(&tuple)?;
-        let wkt = crate::builder::sql::wkt_of(&filter.geometry, POSTGRES)?;
+        let wkt = crate::builder::sql::wkt_of(&filter.geometry)?;
         let geometry = format!("ST_GeomFromText(?, {srid})");
         if !filter.meters {
             self.add_binding(wkt.clone(), None);
@@ -505,9 +505,6 @@ impl Builder<crate::builder::PostgreSqlDialect> {
         Ok(format!("({attribute} && ST_Expand({geometry}, ?, ?) AND {distance})"))
     }
 }
-
-/// The class PHP names the closures of `Builder\Postgres` after.
-const POSTGRES: &str = "Utopia\\Database\\Builder\\Postgres";
 
 /// A degree of latitude spans at least this many meters.
 const METERS_PER_LATITUDE_DEGREE: f64 = 110574.0;

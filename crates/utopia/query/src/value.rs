@@ -311,7 +311,7 @@ const PHP_SOURCES: &str = "/usr/src/code/packages/query/src/";
 
 /// A typed PHP parameter that a query value, of whatever type the client
 /// sent, is passed to: converts the value as PHP's coercive typing mode does
-/// ([`Param::string`], [`Param::bool`], [`Param::array_or_string`]) or checks
+/// ([`Param::string`]) or checks
 /// it ([`Param::array`]), failing with PHP's `TypeError`.
 ///
 /// A library function's `string` parameter rejects `null`, arrays and
@@ -388,26 +388,6 @@ impl<'f> Param<'f> {
         match value {
             Value::Array(a) => Ok(a),
             other => Err(self.type_error("array", other)),
-        }
-    }
-
-    /// The boolean PHP passes for `value` to a `bool` parameter (scalars by
-    /// their truthiness), or its `TypeError`.
-    pub(crate) fn bool(&self, value: &Value) -> Result<bool, crate::Error> {
-        match value {
-            Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => Ok(value.truthy()),
-            Value::Null if matches!(self.callee, Callee::Internal) => Ok(false),
-            other => Err(self.type_error("bool", other)),
-        }
-    }
-
-    /// What PHP passes for `value` to a `string|array` parameter: arrays and
-    /// strings as they are, other scalars as strings; or its `TypeError`.
-    pub(crate) fn array_or_string(&self, value: &Value) -> Result<Value, crate::Error> {
-        match value {
-            Value::Array(_) | Value::Str(_) => Ok(value.clone()),
-            Value::Int(_) | Value::Float(_) | Value::Bool(_) => Ok(string(to_php_string(value))),
-            other => Err(self.type_error("array|string", other)),
         }
     }
 

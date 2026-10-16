@@ -845,7 +845,7 @@ impl SqlDialect for PostgreSqlDialect {
     ) -> Result<String> {
         let filter = sql::distance_filter(values, "Builder/PostgreSQL.php", 832)?;
         let operator = distance_operator(method);
-        b.add_binding(wkt_of(&filter.geometry, Self::CLASS)?, None);
+        b.add_binding(wkt_of(&filter.geometry)?, None);
         b.add_binding(Value::Float(filter.distance), None);
         if filter.meters {
             return Ok(format!(

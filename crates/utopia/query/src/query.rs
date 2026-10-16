@@ -420,6 +420,12 @@ impl Query {
             ));
         }
 
+        if method == Method::Distinct && (!attribute.is_empty() || !values.is_empty()) {
+            return Err(Error::query(
+                "Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names",
+            ));
+        }
+
         if method.is_join() {
             return Query::parse_join(method, attribute, &values, alias, allow_raw);
         }
@@ -437,7 +443,7 @@ impl Query {
             let mut parsed = Array::with_capacity(values.len());
             for (key, value) in values.iter() {
                 let child =
-                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 268).array(value)?;
+                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 273).array(value)?;
                 parsed.set(key.to_owned(), Value::from(Query::parse_query(child, allow_raw)?));
             }
             values = parsed;
@@ -885,17 +891,13 @@ impl Query {
             match method {
                 Method::OrderAsc | Method::OrderDesc | Method::OrderRandom => {}
                 Method::Limit => {
-                    if parsed.limit.is_none()
-                        && let Some(v) = first.filter(|v| is_numeric(v))
-                    {
-                        parsed.limit = Some(intval(v));
+                    if parsed.limit.is_none() {
+                        parsed.limit = first.and_then(to_integer);
                     }
                 }
                 Method::Offset => {
-                    if parsed.offset.is_none()
-                        && let Some(v) = first.filter(|v| is_numeric(v))
-                    {
-                        parsed.offset = Some(intval(v));
+                    if parsed.offset.is_none() {
+                        parsed.offset = first.and_then(to_integer);
                     }
                 }
                 Method::CursorAfter | Method::CursorBefore => {
@@ -1581,17 +1583,27 @@ pub(crate) fn is_numeric(value: &Value) -> bool {
     }
 }
 
-/// `intval($value)`.
-pub(crate) fn intval(value: &Value) -> i64 {
-    match value {
-        Value::Int(i) => *i,
-        Value::Float(f) => php_std::format::dval_to_lval(*f),
-        Value::Str(s) => php_std::format::Arg::Str(s.as_bytes()).to_int(),
-        Value::Bool(b) => *b as i64,
-        Value::Null => 0,
-        Value::Array(a) => !a.is_empty() as i64,
-        Value::Object(_) | Value::Ext(_) => 1,
+/// PHP's `Query::toInteger()`: an integer, an integral numeric string, or
+/// a finite number in range, truncated; `None` for anything else.
+fn to_integer(value: &Value) -> Option<i64> {
+    use php_std::filter as f;
+    let text = match value {
+        Value::Int(i) => return Some(*i),
+        _ if !is_numeric(value) => return None,
+        Value::Float(x) => f::Value::Float(*x),
+        Value::Str(s) => f::Value::Str(s.as_bytes().to_vec()),
+        _ => return None,
+    };
+    if let Ok(f::Filtered { value: f::Value::Int(i), .. }) =
+        f::filter_var(&text, f::FILTER_VALIDATE_INT, &f::Options::Flags(0))
+    {
+        return Some(i);
     }
+    let number = value.to_double();
+    if !number.is_finite() || number < i64::MIN as f64 || number >= i64::MAX as f64 {
+        return None;
+    }
+    Some(number as i64)
 }
 
 /// PHP's `sort()` order for strings (`zend_compare` on two strings: numeric

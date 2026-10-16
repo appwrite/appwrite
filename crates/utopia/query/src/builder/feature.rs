@@ -991,7 +991,8 @@ impl<D: Returning> Builder<D> {
 impl<D: Spatial> Builder<D> {
     /// The distance from `point` (`[x, y]`) compares to `distance` with
     /// `operator` (`<`, `>`, `=`, `!=`; anything else is `<`), in meters when
-    /// `meters`.
+    /// `meters`. Fails with [`Error::Validation`](crate::Error::Validation)
+    /// unless `point` is an `[x, y]` pair of finite numbers.
     ///
     /// PHP: `filterDistance()`.
     pub fn filter_distance(
@@ -1001,11 +1002,9 @@ impl<D: Spatial> Builder<D> {
         operator: &str,
         distance: f64,
         meters: bool,
-    ) -> &mut Self {
-        let coordinate = |i: i64| {
-            php_std::number::to_string(point.get(&php_std::ArrayKey::Int(i)).map(Value::to_double).unwrap_or(0.0))
-        };
-        let wkt = format!("POINT({} {})", coordinate(0), coordinate(1));
+    ) -> crate::Result<&mut Self> {
+        let point = Value::Array(point.clone());
+        let wkt = format!("POINT({})", crate::builder::sql::point_wkt(Some(&point))?);
         let method = match operator {
             ">" => crate::Method::DistanceGreaterThan,
             "=" => crate::Method::DistanceEqual,
@@ -1014,7 +1013,7 @@ impl<D: Spatial> Builder<D> {
         };
         let tuple = crate::value::list([crate::value::string(wkt), Value::Float(distance), Value::Bool(meters)]);
         self.core.pending.push(Query::new(method, attribute, crate::value::list([Value::Array(tuple)]), ""));
-        self
+        Ok(self)
     }
 
     /// The geometry column intersects `geometry`.

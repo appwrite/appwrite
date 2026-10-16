@@ -293,7 +293,7 @@ pub(crate) fn spatial_distance<D: MySqlFamily>(
     values: &Array,
 ) -> Result<String> {
     let filter = sql::distance_filter(values, "Builder/MySQL.php", 432)?;
-    let wkt = wkt_of(&filter.geometry, MYSQL_CLASS)?;
+    let wkt = wkt_of(&filter.geometry)?;
     let operator = distance_operator(method);
     b.add_binding(wkt, None);
     b.add_binding(Value::Float(filter.distance), None);

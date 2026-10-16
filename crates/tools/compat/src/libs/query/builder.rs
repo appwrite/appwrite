@@ -732,7 +732,7 @@ features!(json, feature::Json, |b, a| {
 features!(spatial, feature::Spatial, |b, a| {
     "filterDistance" => {
         let point = a.array(1, "point")?;
-        b.filter_distance(a.str(0, "attribute")?, &point, &a.str(2, "operator")?, a.float(3, "distance")?, a.bool_or(4, "meters", false)?);
+        b.filter_distance(a.str(0, "attribute")?, &point, &a.str(2, "operator")?, a.float(3, "distance")?, a.bool_or(4, "meters", false)?)?;
         Ok(Ret::This)
     },
     "filterIntersects" => { b.filter_intersects(a.str(0, "attribute")?, a.array(1, "geometry")?); Ok(Ret::This) },

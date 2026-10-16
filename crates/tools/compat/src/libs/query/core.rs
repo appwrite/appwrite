@@ -275,6 +275,7 @@ fn query_static(method: &str, a: &mut Args) -> Option<Outcome> {
             "or" => Query::logical(Method::Or, a.array(0, "queries")?),
             "and" => Query::logical(Method::And, a.array(0, "queries")?),
             "elemMatch" => Query::new(Method::ElemMatch, attr(a)?, a.array(1, "queries")?, ""),
+            "relationship" => Query::new(Method::Relationship, attr(a)?, a.array(1, "queries")?, ""),
             "having" => Query::logical(Method::Having, a.array(0, "queries")?),
             "union" => Query::logical(Method::Union, a.array(0, "queries")?),
             "unionAll" => Query::logical(Method::UnionAll, a.array(0, "queries")?),

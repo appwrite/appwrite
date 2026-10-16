@@ -453,15 +453,46 @@ impl SpatialDistanceFilter {
     /// The filter from the `[geometry, distance, meters]` value of a `distance*` query.
     ///
     /// PHP: `SpatialDistanceFilter::fromTuple()`.
-    /// Fails with PHP's `TypeError` when the geometry is not a string or an
-    /// array (other scalars become strings), or `meters` is not a scalar.
+    /// Fails with [`Error::Validation`] unless the geometry is a WKT string
+    /// or a coordinate array, the distance a finite number (a numeric
+    /// string counts), and `meters` a boolean as `FILTER_VALIDATE_BOOL`
+    /// reads one (`true`, `1`, `"on"`, `"no"`, ...; absent is `false`).
     pub fn from_tuple(tuple: &Array) -> crate::Result<Self> {
-        const NEW: &str = "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct";
-        const FILE: &str = "Builder/SpatialDistanceFilter.php";
-        let at = |i: i64| tuple.get(&php_std::ArrayKey::Int(i)).unwrap_or(&Value::Null);
-        let distance = at(1).to_double();
-        let geometry = crate::value::Param::method(NEW, 1, "geometry", FILE, 26).array_or_string(at(0))?;
-        let meters = crate::value::Param::method(NEW, 3, "meters", FILE, 26).bool(at(2))?;
+        let at = |i: i64| tuple.get(&php_std::ArrayKey::Int(i)).filter(|v| !matches!(v, Value::Null));
+        let geometry = match at(0) {
+            Some(g @ (Value::Str(_) | Value::Array(_))) => g.clone(),
+            _ => {
+                return Err(Error::Validation(
+                    "Invalid distance query: the geometry must be a WKT string or a coordinate array".into(),
+                ));
+            }
+        };
+        let distance = at(1).filter(|d| crate::query::is_numeric(d)).map(Value::to_double);
+        let Some(distance) = distance.filter(|d| d.is_finite()) else {
+            return Err(Error::Validation("Invalid distance query: the distance must be a finite number".into()));
+        };
+        let Some(meters) = at(2).map_or(Some(false), filter_bool) else {
+            return Err(Error::Validation("Invalid distance query: meters must be a boolean".into()));
+        };
         Ok(SpatialDistanceFilter { geometry, distance, meters })
+    }
+}
+
+/// `filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE)`:
+/// `None` when the value is not a boolean.
+fn filter_bool(value: &Value) -> Option<bool> {
+    use php_std::filter as f;
+    let value = match value {
+        Value::Null => f::Value::Null,
+        Value::Bool(b) => f::Value::Bool(*b),
+        Value::Int(i) => f::Value::Int(*i),
+        Value::Float(x) => f::Value::Float(*x),
+        Value::Str(s) => f::Value::Str(s.as_bytes().to_vec()),
+        // Neither an array nor an object without `__toString()` is a scalar.
+        _ => return None,
+    };
+    match f::filter_var(&value, f::FILTER_VALIDATE_BOOL, &f::Options::Flags(f::FILTER_NULL_ON_FAILURE)) {
+        Ok(f::Filtered { value: f::Value::Bool(b), .. }) => Some(b),
+        _ => None,
     }
 }

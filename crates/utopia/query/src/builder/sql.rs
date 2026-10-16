@@ -182,52 +182,79 @@ fn at(array: &Array, index: i64) -> Option<&Value> {
     array.get(&ArrayKey::Int(index))
 }
 
-/// The PHP class whose `Spatial` trait [`geometry_to_wkt`] names in its errors.
-const MYSQL: &str = "Utopia\\Query\\Builder\\MySQL";
-
 /// A coordinate array as WKT: `[x, y]` a point, a list of points a line, a
-/// list of rings a polygon. Fails with PHP's `TypeError` when a point or a
-/// ring is not an array.
+/// list of closed rings of at least 4 points a polygon. Fails with
+/// [`Error::Validation`](crate::Error::Validation) on any other shape, or a
+/// point that is not an `[x, y]` pair of finite numbers.
 ///
 /// PHP: `Spatial::geometryToWkt()`.
 pub fn geometry_to_wkt(geometry: &Array) -> Result<String> {
-    wkt(geometry, MYSQL)
+    if is_coordinate(geometry) {
+        return Ok(format!("POINT({})", coordinate_wkt(geometry)));
+    }
+    let Some(Value::Array(first)) = at(geometry, 0).filter(|_| geometry.is_list()) else {
+        return Err(invalid("expected an [x, y] point, a list of points or a list of rings"));
+    };
+    if let Some(Value::Array(_)) = at(first, 0) {
+        let rings = geometry.values().map(|ring| Ok(format!("({})", ring_wkt(ring)?))).collect::<Result<Vec<_>>>()?;
+        return Ok(format!("POLYGON({})", rings.join(", ")));
+    }
+    if geometry.len() == 1 {
+        return Ok(format!("POINT({})", point_wkt(at(geometry, 0))?));
+    }
+    Ok(format!("LINESTRING({})", points_wkt(geometry)?))
 }
 
-/// [`geometry_to_wkt`] as `class` (the class using PHP's `Spatial` trait)
-/// runs it: its closures are named after the class.
-pub(crate) fn wkt(geometry: &Array, class: &str) -> Result<String> {
-    let first = at(geometry, 0);
-    if geometry.len() == 2 && first.is_some_and(is_numeric) && at(geometry, 1).is_some_and(is_numeric) {
-        return Ok(format!("POINT({} {})", coordinate(first), coordinate(at(geometry, 1))));
+fn invalid(reason: &str) -> crate::Error {
+    crate::Error::Validation(format!("Invalid geometry: {reason}"))
+}
+
+/// PHP's `Spatial::ringToWkt()`: a closed ring of at least 4 points.
+fn ring_wkt(ring: &Value) -> Result<String> {
+    let ring = match ring {
+        Value::Array(ring) if !ring.is_empty() && ring.is_list() => ring,
+        _ => return Err(invalid("a polygon ring must be a list of points")),
+    };
+    let wkt = points_wkt(ring)?;
+    if ring.len() < 4 {
+        return Err(invalid("a polygon ring must have at least 4 points"));
     }
-    if let Some(Value::Array(first_item)) = first {
-        let point = |line: u32, p: &Value| -> Result<String> {
-            let closure =
-                format!("{class}::{{closure:Utopia\\Query\\Builder\\Trait\\Spatial::geometryToWkt():{line}}}");
-            let p = Param::closure(&closure, 1, "p").array(p)?;
-            Ok(format!("{} {}", coordinate(at(p, 0)), coordinate(at(p, 1))))
-        };
-        if let Some(Value::Array(_)) = at(first_item, 0) {
-            const ARRAY_MAP: Param<'static> = Param::internal("array_map", 2, "array");
-            let mut rings = Vec::with_capacity(geometry.len());
-            for ring in geometry.values() {
-                let points = ARRAY_MAP.array(ring)?.values().map(|p| point(30, p)).collect::<Result<Vec<_>>>()?;
-                rings.push(format!("({})", points.join(", ")));
-            }
-            return Ok(format!("POLYGON({})", rings.join(", ")));
-        }
-        if geometry.len() == 1 {
-            return Ok(format!("POINT({} {})", coordinate(at(first_item, 0)), coordinate(at(first_item, 1))));
-        }
-        let points = geometry.values().map(|p| point(47, p)).collect::<Result<Vec<_>>>()?;
-        return Ok(format!("LINESTRING({})", points.join(", ")));
+    let xy = |p: Option<&Value>| match p {
+        Some(Value::Array(p)) => (number(at(p, 0)), number(at(p, 1))),
+        _ => (0.0, 0.0),
+    };
+    if xy(at(ring, 0)) != xy(at(ring, ring.len() as i64 - 1)) {
+        return Err(invalid("a polygon ring must be closed, with its first point equal to its last"));
     }
-    Ok(format!(
-        "POINT({} {})",
-        coordinate(first.or(Some(&Value::Int(0)))),
-        coordinate(at(geometry, 1).or(Some(&Value::Int(0))))
-    ))
+    Ok(wkt)
+}
+
+/// PHP's `Spatial::coordinatesToWkt()`.
+fn points_wkt(points: &Array) -> Result<String> {
+    Ok(points.values().map(|p| point_wkt(Some(p))).collect::<Result<Vec<_>>>()?.join(", "))
+}
+
+/// PHP's `Spatial::coordinateToWkt()`: `x y`, or an error unless `point` is
+/// an `[x, y]` pair of finite numbers.
+pub(crate) fn point_wkt(point: Option<&Value>) -> Result<String> {
+    match point {
+        Some(Value::Array(p)) if is_coordinate(p) => Ok(coordinate_wkt(p)),
+        _ => Err(invalid("every point must be an [x, y] pair of finite numbers")),
+    }
+}
+
+fn coordinate_wkt(point: &Array) -> String {
+    format!("{} {}", coordinate(at(point, 0)), coordinate(at(point, 1)))
+}
+
+/// PHP's `Spatial::isCoordinate()`: a list of two finite numbers.
+fn is_coordinate(value: &Array) -> bool {
+    let finite = |v: Option<&Value>| v.is_some_and(|v| is_numeric(v) && v.to_double().is_finite());
+    value.len() == 2 && value.is_list() && finite(at(value, 0)) && finite(at(value, 1))
+}
+
+fn number(value: Option<&Value>) -> f64 {
+    value.map(Value::to_double).unwrap_or(0.0)
 }
 
 /// `$this->geometryToWkt($values[0])` in `class`, called from `file` at
@@ -235,7 +262,7 @@ pub(crate) fn wkt(geometry: &Array, class: &str) -> Result<String> {
 pub(crate) fn predicate_wkt(values: &Array, class: &str, file: &'static str, line: u32) -> Result<String> {
     let geometry = values.get(&ArrayKey::Int(0)).unwrap_or(&Value::Null);
     let function = format!("{class}::geometryToWkt");
-    wkt(Param::method(&function, 1, "geometry", file, line).array(geometry)?, class)
+    geometry_to_wkt(Param::method(&function, 1, "geometry", file, line).array(geometry)?)
 }
 
 /// `SpatialDistanceFilter::fromTuple($values[0])`, called from `file` at `line`.
@@ -245,10 +272,10 @@ pub(crate) fn distance_filter(values: &Array, file: &'static str, line: u32) -> 
     SpatialDistanceFilter::from_tuple(param.array(tuple)?)
 }
 
-/// The WKT of a distance filter's geometry in `class` (a WKT string stays as is).
-pub(crate) fn wkt_of(geometry: &Value, class: &str) -> Result<Value> {
+/// The WKT of a distance filter's geometry (a WKT string stays as is).
+pub(crate) fn wkt_of(geometry: &Value) -> Result<Value> {
     Ok(match geometry {
-        Value::Array(a) => crate::value::string(wkt(a, class)?),
+        Value::Array(a) => crate::value::string(geometry_to_wkt(a)?),
         other => other.clone(),
     })
 }
