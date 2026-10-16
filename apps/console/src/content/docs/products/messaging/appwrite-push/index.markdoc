@@ -11,8 +11,8 @@ Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs
 # How it works {% #how-it-works %}
 
 - **Every user has their own topic.** A signed-in user can subscribe to `users/<USER_ID>` without creating a topic first. A message sent with `users: ['<USER_ID>']` reaches all of that user's connected devices.
-- **Targets only when you need them.** Sending to a user needs no target. Register an [Appwrite push target](#push-target) to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs.
-- **The SDK holds the connection.** `Push` connects with the session the app signed in with, so there is no extra token to manage. When the user is blocked or deleted, Appwrite closes their connections.
+- **Targets only when you need them.** Sending to a user with no push targets needs no setup. Register an [Appwrite push target](#push-target) to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs.
+- **The SDK holds the connection.** `Push` connects with the session the app signed in with, so there is no extra token to manage. When the user is blocked or deleted, Appwrite closes their connections. Signing out doesn't close connections on the user's other devices.
 - **Missed messages are replayed.** With the default delivery guarantee, Appwrite keeps each message for up to 7 days and replays the ones a device missed when it reconnects.
 - **Clients only receive.** Devices can't publish messages. Everything is sent from your server or the Console through [Messaging](/docs/products/messaging/messages).
 
@@ -27,7 +27,7 @@ The provider has two optional settings:
 * Description
 ---
 * **Quality of service**
-* The default delivery guarantee for topics on this provider. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** lets each subscription decide.
+* The delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once and lets each subscription decide.
 ---
 * **Message expiry**
 * How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Applies to topics that don't set their own expiry. Leave it empty to keep messages for 7 days.
@@ -332,7 +332,7 @@ $message = $messaging->createPush(
 
 A message to a user needs no target or topic. Appwrite creates the user's topic the first time you send to it.
 
-If the user has FCM or APNs targets but no Appwrite push target, the message goes to those providers only, so it isn't delivered twice. To reach that user over Appwrite Push too, register an [Appwrite push target](#push-target).
+This works per user, not per device. Once any of the user's devices registers an FCM or APNs target, for example when the Apple SDK subscribes with `background: true`, messages to that user go to FCM or APNs only, and none of their devices receive them over Appwrite Push, web included. Registering an [Appwrite push target](#push-target) on any of their devices brings Appwrite Push back for all of them.
 {% /section %}
 
 # Appwrite push target {% #push-target %}
@@ -341,7 +341,7 @@ A push target on the Appwrite provider tells Appwrite that a device listens over
 
 - Receive messages sent to [topics](#topics).
 - Show messages while an iOS app is suspended, see [Background delivery on iOS](#background-ios).
-- Receive messages over Appwrite Push when the user also has FCM or APNs targets.
+- Receive messages over Appwrite Push when the user also has FCM or APNs targets. FCM still gets the full notification, so an Android app that registers both can show a message twice. Skip duplicates by `messageId`, or register only one of them.
 
 Create it once after the user signs in. The identifier is a placeholder, so pass a unique value, and always pass the ID of your Appwrite provider. A target without a provider ID follows the project's default push provider.
 
@@ -408,7 +408,7 @@ Your callback receives the message as JSON in `message.data`. It contains only t
 }
 ```
 
-`notification` can also carry `icon`, `color`, `sound`, `tag`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
+`notification` can also carry `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
 
 # Topics {% #topics %}
 
@@ -435,9 +435,9 @@ const news = await push.subscribe(['news'], (message) => {
 });
 ```
 
-Topic names are exact. Wildcards like `+` and `#` are refused, and a user can only subscribe to their own `users/<USER_ID>` topic. When you remove the user as a subscriber, Appwrite drops the device's live subscription to that topic.
+Topic names are exact. Wildcards like `+` and `#` are refused, and a user can only subscribe to their own `users/<USER_ID>` topic. When the user is no longer a subscriber of the topic through any of their targets, Appwrite drops the device's live subscription to it.
 
-Topics take the same quality of service and message expiry settings as the provider, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A topic's own setting wins over the provider's. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
+Topics take quality of service and message expiry settings too, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription. A topic without an expiry uses the lowest expiry of your Appwrite providers. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
 
 # Subscription options {% #subscription-options %}
 
@@ -561,13 +561,13 @@ Messages arrive while the page is open. Messages sent while the tab was closed a
 
 # Offline replay {% #offline-replay %}
 
-With at-least-once delivery, Appwrite stores each message and replays the newest ones a device missed, oldest first, when it subscribes again. Replay keeps up to 5 messages per topic, and only messages younger than the topic's expiry.
+With at-least-once delivery, Appwrite stores each message and replays the newest ones a device missed, oldest first, when it subscribes again. Replay sends up to 5 messages per topic, and only messages younger than the topic's expiry. Replay needs at-least-once delivery on both the topic and the subscription.
 
 Replay is tracked per device, so leave `setPushClientId` unset. The SDK derives a stable ID per user and install. A random client ID on every launch loses the backlog.
 
 # Sign out {% #sign-out %}
 
-Close `Push` when the user signs out. It closes the connection and stops background delivery, saved subscriptions included.
+Close `Push` when the user signs out. It closes the connection and stops background delivery, saved subscriptions included. Deleting the session doesn't close a connection that is already open.
 
 ```ts
 push.close();
@@ -576,7 +576,7 @@ await account.deleteSession({ sessionId: 'current' });
 
 # Self-hosting {% #self-hosting %}
 
-A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik serves MQTT over TLS on port `8883` and MQTT over secure WebSocket on port `8084`. See the [MQTT environment variables](/docs/advanced/self-hosting/configuration/environment-variables#mqtt) to change the ports and replay depth.
+A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik serves MQTT over TLS on port `8883` and MQTT over secure WebSocket on port `8084`. See the [MQTT environment variables](/docs/advanced/self-hosting/configuration/environment-variables#mqtt) to change the ports, the replay depth, and the maximum packet size.
 
 The SDKs connect to `push.<YOUR_API_HOST>` by default. Either point a `push.` DNS record at your server, or set the broker address on the client:
 
@@ -598,7 +598,7 @@ client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web
 * Newest 5 missed messages
 ---
 * Message size
-* 64 KB per MQTT packet
+* 64,000 bytes per MQTT packet, including the topic and headers
 ---
 * Connections
 * 128 new connections per user per minute

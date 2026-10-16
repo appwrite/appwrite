@@ -2958,7 +2958,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite Push",
     "description": "Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.",
     "layout": "article",
-    "readingTimeMinutes": 12
+    "readingTimeMinutes": 13
   },
   {
     "slug": "products/messaging/fcm",

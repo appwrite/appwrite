@@ -14,13 +14,13 @@ faqs:
   - question: "Which SDKs support Appwrite Push?"
     answer: "Web `appwrite` 29.0.0, Flutter `appwrite` 28.0.0, React Native `react-native-appwrite` 2.0.0, Android `io.appwrite:sdk-for-android` 30.0.0, and Apple `sdk-for-apple` 21.0.0, and later versions."
   - question: "Do I need a push target to send a message to a user?"
-    answer: "No. A signed-in user subscribes to their own topic, and a message sent with `users: ['<USER_ID>']` reaches all their connected devices. You register an Appwrite push target only to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs."
+    answer: "Not when the user has no other push targets. A signed-in user subscribes to their own topic, and a message sent with `users: ['<USER_ID>']` reaches all their connected devices. Register an Appwrite push target to use topics or iOS background delivery, or when any of the user's devices also has an FCM or APNs target. See [Appwrite push target](/docs/products/messaging/appwrite-push#push-target)."
   - question: "Does Appwrite Push work when the app is closed?"
     answer: "On Android, yes: the SDK wakes the app on a schedule to reconnect, and with a foreground service it delivers immediately, even in Doze. On iOS, the Apple SDK uses an APNs wake-up and a Notification Service Extension to show the real message while the app is suspended. On the web, messages arrive while the tab is open and missed ones are replayed when it reconnects."
   - question: "What happens to messages sent while a device is offline?"
     answer: "With at-least-once delivery, the default, Appwrite keeps each message for up to 7 days and replays the newest messages a device missed, oldest first, when it reconnects. You can shorten how long messages are kept on the provider or on each topic."
   - question: "Can I keep using FCM and APNs?"
-    answer: "Yes. Appwrite Push is another provider next to FCM and APNs, and you can enable them together. A user with FCM or APNs targets gets the FCM or APNs notification. Register an Appwrite push target for them to also receive messages over Appwrite Push, without duplicates."
+    answer: "Yes. Appwrite Push is another provider next to FCM and APNs, and you can enable them together. A user with FCM or APNs targets gets the FCM or APNs notification. Register an Appwrite push target for them to also receive messages over Appwrite Push. On iOS, APNs then only wakes the app, so each message shows once. FCM still sends the full notification, so an Android app that registers both should skip duplicates by `messageId`."
   - question: "Can I use Appwrite Push when self-hosting?"
     answer: "Yes. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
 ---
@@ -40,7 +40,7 @@ await push.subscribe((message) => {
 # What Appwrite Push gives you
 
 - **Nothing to configure.** The provider takes no credentials. Create it in the Console and you can send.
-- **Every user has their own topic.** A signed-in user subscribes to their own topic with one call. Send to `users: ['<USER_ID>']` and the message reaches all of their devices, with no target to register first.
+- **Every user has their own topic.** A signed-in user subscribes to their own topic with one call. Send to `users: ['<USER_ID>']` and the message reaches all of their devices. If they don't use FCM or APNs too, there's no target to register first.
 - **Five SDKs, one API.** `Push` works the same way in the Web, Flutter, React Native, Android, and Apple SDKs.
 - **Delivery while the app is closed.** On Android, the SDK wakes the app to reconnect, or keeps a foreground service running for immediate delivery. On iOS, it works together with APNs to show the real message while the app is suspended.
 - **Missed messages are replayed.** Messages are kept for up to 7 days and replayed when a device reconnects, so a phone that was offline for the night still gets the evening's messages.

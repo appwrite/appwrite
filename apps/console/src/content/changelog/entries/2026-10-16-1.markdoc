@@ -8,7 +8,7 @@ tags: messaging, sdk
 
 [Appwrite Push](/docs/products/messaging/appwrite-push) is a new push provider in Appwrite Messaging. Your app subscribes with the Appwrite SDK, and messages you send from the Console or a Server SDK arrive on the device, with no Firebase project, service account, or device token.
 
-Messages sent to a user reach all their devices, and missed messages are replayed for up to 7 days. On Android the SDK keeps delivering while the app is closed, and on iOS it works with APNs and a Notification Service Extension to show messages while the app is suspended.
+Messages sent to a user reach all their connected devices, and missed messages are replayed for up to 7 days. On Android the SDK keeps delivering while the app is closed, and on iOS it works with APNs and a Notification Service Extension to show messages while the app is suspended.
 
 ```ts
 const push = new Push(client);
