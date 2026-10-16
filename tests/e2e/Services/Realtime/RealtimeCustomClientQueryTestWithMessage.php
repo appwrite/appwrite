@@ -8,10 +8,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -241,7 +241,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertNotSame($initialSubscriptionId, $mintedId);
         $this->assertNotEmpty($mintedId);
 
-        $explicitNewId = ID::unique();
+        $explicitNewId = Id::unique();
         $qExplicit = [Query::equal('status', ['explicit'])->toString()];
         $rExplicit = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $explicitNewId,
@@ -415,7 +415,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
 
         // Unknown subscriptionId upserts as a new subscription.
-        $ghostId = ID::unique();
+        $ghostId = Id::unique();
         $ghost = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $ghostId,
             'channels' => ['account'],
@@ -806,7 +806,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Query Message Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -816,7 +816,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Query Message Test Collection',
             'permissions' => [
                 Permission::create(Role::user($userId)),
@@ -844,8 +844,8 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
-        $otherDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
+        $otherDocumentId = Id::unique();
 
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
@@ -911,14 +911,14 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -946,12 +946,12 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
     }
 
     /**
-     * Open a console connection (root session) in message mode and subscribe to a
-     * `console.tail.<projectId>` channel with optional filter queries.
+     * Open a console connection (root session, or a console JWT when given) in message
+     * mode and subscribe to a `console.tail.<projectId>` channel with optional filter queries.
      *
      * @param array<int,string> $queries
      */
-    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1'): WebSocketClient
+    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1', ?string $jwt = null): WebSocketClient
     {
         $queryString = \http_build_query(['project' => 'console']);
         $client = new WebSocketClient(
@@ -959,7 +959,9 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             [
                 'headers' => [
                     'origin' => 'http://localhost',
-                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                    ...($jwt === null
+                        ? ['cookie' => 'a_session_console=' . $this->getRoot()['session']]
+                        : ['x-appwrite-jwt' => $jwt]),
                 ],
                 'timeout' => 10,
             ]
@@ -1013,7 +1015,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Spiderman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1042,6 +1044,68 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $client->close();
     }
 
+    public function testConsoleTailEndsWithJwt(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'duration' => 2,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        $client = $this->openConsoleTail($projectId, jwt: $jwt);
+
+        // Expiry fires no event; wait until the HTTP API refuses the JWT.
+        $this->assertEventually(function () use ($jwt) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => 'console',
+                'x-appwrite-jwt' => $jwt,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => Id::unique(),
+            'data' => ['name' => 'Spiderman'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - no tail frames after expiry, then a 401 and the socket closes
+         */
+        $frames = [];
+        while ($client->isConnected() && \count($frames) < 10) {
+            try {
+                $frames[] = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
+            } catch (ConnectionException) {
+                // Socket closed by the server
+                break;
+            }
+        }
+
+        $this->assertFalse($client->isConnected(), 'Server did not close the socket. Frames: ' . \json_encode($frames));
+        foreach ($frames as $frame) {
+            $this->assertNotEquals('console.tail', $frame['data']['events'][0] ?? null, 'Tail delivered after expiry: ' . \json_encode($frames));
+        }
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
+    }
+
     public function testConsoleTailServerSideFilter(): void
     {
         ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
@@ -1058,7 +1122,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
 
         // create — must be filtered out (never reaches the token bucket).
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Ironman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1136,7 +1200,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail ACL DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -1145,7 +1209,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // documentSecurity ON and NO read(any) at the collection level, so the only read
         // grant comes from the document's own (restricted) permission.
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Secrets',
             'documentSecurity' => true,
             'permissions' => [Permission::create(Role::any())],
@@ -1169,7 +1233,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // Read restricted to a user that is NOT the console user → the console viewer
         // could never read this document directly, yet the tail must surface its event.
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'top secret'],
             'permissions' => [Permission::read(Role::user('not-the-console-user'))],
         ]);

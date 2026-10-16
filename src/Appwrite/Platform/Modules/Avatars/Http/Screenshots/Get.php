@@ -35,20 +35,20 @@ class Get extends Action
     use HTTP;
 
     /**
-     * The browser resolves the host itself, so a rebound DNS answer can point
-     * the target origin at an internal address. These headers are what cloud
-     * metadata services require before answering, or would retarget the
-     * request to another virtual host.
+     * Guests can call this endpoint, and the browser resolves the host itself,
+     * so a rebound DNS answer can point the target origin at an internal
+     * address. Credential-shaped headers (Authorization, Cookie, cloud metadata
+     * tokens, Host) could then unlock an internal service, so only content
+     * negotiation is forwarded. Blocking internal destinations, redirects and
+     * script navigation is the browser service's destination policy
+     * (appwrite/docker-browser), not this action's.
      */
-    private const BLOCKED_HEADERS = [
-        'host',
-        'metadata',
-        'metadata-flavor',
-        'x-google-metadata-request',
-        'x-aws-ec2-metadata-token',
-        'x-aws-ec2-metadata-token-ttl-seconds',
-        'x-aliyun-ecs-metadata-token',
+    private const ALLOWED_HEADERS = [
+        'accept',
+        'accept-language',
     ];
+
+    private const HEADER_VALUE_MAX_LENGTH = 512;
 
     public static function getName(): string
     {
@@ -83,8 +83,8 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE_PNG
             ))
-            ->param('url', '', new PublicURL(), 'Website URL which you want to capture.', example: 'https://example.com')
-            ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true, example: '{"Authorization":"Bearer token123","X-Custom-Header":"value"}')
+            ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to capture.', false, ['publicURL'], example: 'https://example.com')
+            ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Only Accept and Accept-Language are allowed. Defaults to empty.', true, example: '{"Accept-Language":"en-US,en;q=0.9"}')
             ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true, example: '1920')
             ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true, example: '1080')
             ->param('scale', 1, new Range(0.1, 3, Range::TYPE_FLOAT), 'Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.', true, example: '2')
@@ -114,15 +114,14 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        foreach (\array_keys($headers) as $key) {
-            if (\in_array(\strtolower(\trim((string) $key)), self::BLOCKED_HEADERS, true)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed.");
+        foreach ($headers as $key => $value) {
+            if (!\in_array(\strtolower((string) $key), self::ALLOWED_HEADERS, true)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' is not allowed. Allowed headers: Accept, Accept-Language.");
             }
-        }
 
-        // Convert indexed array to empty array (should not happen due to Assoc validator)
-        if (count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
-            $headers = [];
+            if (!\is_string($value) || \strlen($value) > self::HEADER_VALUE_MAX_LENGTH || !\ctype_print($value)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Header '{$key}' must be a non-empty printable ASCII string of at most " . self::HEADER_VALUE_MAX_LENGTH . ' characters.');
+            }
         }
 
         // Create a new object to ensure proper JSON serialization

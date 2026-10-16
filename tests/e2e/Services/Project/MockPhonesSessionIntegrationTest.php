@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class MockPhonesSessionIntegrationTest extends Scope
 {
@@ -56,7 +56,7 @@ final class MockPhonesSessionIntegrationTest extends Scope
 
         // Step 2 (Phone A): sign-in flow that also creates the user (userId = unique()).
         $tokenA = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $clientHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $phoneA,
         ]);
         $this->assertSame(201, $tokenA['headers']['status-code']);
@@ -97,7 +97,7 @@ final class MockPhonesSessionIntegrationTest extends Scope
 
         // Step 3 (Phone B): pre-create the user server-side, then sign in with the mock OTP.
         $precreated = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $phoneB,
         ]);
         $this->assertSame(201, $precreated['headers']['status-code']);
@@ -150,5 +150,66 @@ final class MockPhonesSessionIntegrationTest extends Scope
         // Cleanup mock phone config to avoid polluting project state for later tests.
         $this->client->call(Client::METHOD_DELETE, '/project/mock-phones/' . \urlencode($phoneA), $serverHeaders);
         $this->client->call(Client::METHOD_DELETE, '/project/mock-phones/' . \urlencode($phoneB), $serverHeaders);
+    }
+
+    public function testMockPhoneSessionWithSessionsKey(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $sessionsHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['sessions.write']),
+        ];
+
+        $clientHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $phone = '+1' . \random_int(2000000000, 9999999999);
+        $otp = '333333';
+
+        $mock = $this->client->call(Client::METHOD_POST, '/project/mock-phones', $serverHeaders, [
+            'number' => $phone,
+            'otp' => $otp,
+        ]);
+        $this->assertSame(201, $mock['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $token = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $sessionsHeaders, [
+            'userId' => Id::unique(),
+            'phone' => $phone,
+        ]);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertSame('', $token['body']['secret']);
+        $userId = $token['body']['userId'];
+
+        // The phone owner still signs in with the code delivered to the phone.
+        $session = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $clientHeaders, [
+            'userId' => $userId,
+            'secret' => $otp,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $this->assertSame($userId, $session['body']['userId']);
+
+        // Keys with users.write can already mint tokens, so they still receive the secret.
+        $token = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $serverHeaders, [
+            'userId' => $userId,
+            'phone' => $phone,
+        ]);
+        $this->assertSame(201, $token['headers']['status-code']);
+        $this->assertNotEmpty($token['body']['secret']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/mock-phones/' . \urlencode($phone), $serverHeaders);
     }
 }

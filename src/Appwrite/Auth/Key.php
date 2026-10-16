@@ -28,6 +28,7 @@ class Key
         protected bool $projectCheckDisabled = false,
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
+        protected bool $runtimeEphemeral = false,
     ) {
     }
 
@@ -76,12 +77,10 @@ class Key
         return $this->disabledMetrics;
     }
 
-
     public function getHostnameOverride(): bool
     {
         return $this->hostnameOverride;
     }
-
 
     public function isBannerDisabled(): bool
     {
@@ -101,6 +100,30 @@ class Key
     public function isProjectCheckDisabled(): bool
     {
         return $this->projectCheckDisabled;
+    }
+
+    public function isRuntimeEphemeral(): bool
+    {
+        return $this->runtimeEphemeral;
+    }
+
+    /**
+     * @param array<Document> $keys
+     */
+    public static function find(array $keys, string $secret): ?Document
+    {
+        if ($secret === '') {
+            return null;
+        }
+
+        return \array_find(
+            $keys,
+            static function (Document $candidate) use ($secret): bool {
+                $stored = $candidate->getAttribute('secret');
+
+                return \is_string($stored) && \hash_equals($stored, $secret);
+            },
+        );
     }
 
     /**
@@ -163,6 +186,7 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
+                $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
@@ -183,14 +207,11 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored
+                    $deploymentStatusIgnored,
+                    $runtimeEphemeral
                 );
             case API_KEY_STANDARD:
-                $key = $project->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($project->getAttribute('keys', []), $key);
 
                 if (!$key) {
                     return $guestKey;
@@ -215,11 +236,7 @@ class Key
                     $expired
                 );
             case API_KEY_ACCOUNT:
-                $key = $user->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($user->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {
@@ -251,11 +268,7 @@ class Key
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                $key = $team->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($team->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {

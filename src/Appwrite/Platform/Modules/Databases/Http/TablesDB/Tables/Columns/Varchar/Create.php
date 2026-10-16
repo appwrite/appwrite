@@ -10,11 +10,11 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class Create extends VarcharCreate
 {
@@ -62,8 +62,10 @@ class Create extends VarcharCreate
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', true, example: 'Hello World')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')

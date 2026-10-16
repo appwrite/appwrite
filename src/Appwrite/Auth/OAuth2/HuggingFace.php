@@ -3,8 +3,6 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
-use Utopia\Client\Client;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
@@ -248,7 +246,7 @@ class HuggingFace extends OAuth2
 
     public function verifyCredentials(): void
     {
-        $response = (new Client(new CurlAdapter()))
+        $response = $this->client
             ->withTimeout(15)
             ->withFollowRedirects(maxHops: 5)
             ->sendRequest((new RequestFactory())->form(

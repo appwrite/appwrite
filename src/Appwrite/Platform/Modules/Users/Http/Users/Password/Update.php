@@ -15,16 +15,16 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
-use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
+use Utopia\Validator\Validator;
 
 class Update extends Action
 {
@@ -60,7 +60,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? [], allowEmpty: true), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true)], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
             ->inject('response')
             ->inject('project')
@@ -68,10 +68,11 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('hooks')
             ->inject('pwnedPasswords')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords): void
+    public function action(string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, PasswordPwned $pwnedPasswords, ProofsPassword $proofForPassword): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -110,10 +111,8 @@ class Update extends Action
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
-        // Create Argon2 hasher with default settings
-        $hasher = new Argon2();
-
-        $newPassword = $hasher->hash($password);
+        $newPassword = $proofForPassword->hash($password);
+        $hasher = $proofForPassword->getHash();
 
         $hash = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -146,13 +145,9 @@ class Update extends Action
             'hashOptions' => $user->getAttribute('hashOptions'),
         ]));
 
-        $sessions = $user->getAttribute('sessions', []);
-        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
+        $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? true;
         if ($invalidate) {
-            foreach ($sessions as $session) {
-                /** @var Document $session */
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
+            User::invalidateAuthentication($dbForProject, $user);
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\VCSGitea;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class VCSGiteaConsoleClientTest extends Scope
@@ -64,7 +66,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea VCS',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -187,7 +189,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git push origin main', $workdir);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea root directory',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -225,6 +227,127 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
     }
 
+    /**
+     * A tag template builds on a branch clone, which already has the branch
+     * checked out; a branch template resolves the head commit and builds on a
+     * detached commit clone.
+     *
+     * @return \Iterator<string, array{string, (string | null)}>
+     */
+    public static function templateReferences(): \Iterator
+    {
+        yield 'branch clone' => ['tag', null];
+        yield 'commit clone' => ['branch', 'main'];
+    }
+
+    #[DataProvider('templateReferences')]
+    public function testCreateTemplateDeploymentIntoRepository(string $type, ?string $reference): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/starter', $headers);
+        $this->assertEquals(200, $template['headers']['status-code'], \json_encode($template['body']));
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea template',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'src/main.js',
+            'commands' => 'npm install',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/template', $headers, [
+            'repository' => $template['body']['providerRepositoryId'],
+            'owner' => $template['body']['providerOwner'],
+            'rootDirectory' => 'node/starter',
+            'type' => $type,
+            'reference' => $reference ?? $template['body']['providerVersion'],
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->waitForDeploymentReadyHelper($functionId, $deploymentId);
+
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/branches/main');
+        $this->assertEquals(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+        $this->assertStringStartsWith('Create Gitea template function', $branch['body']['commit']['message']);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $headers);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertSame($branch['body']['commit']['id'], $deployment['body']['providerCommitHash']);
+
+        $file = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/contents/src/main.js?ref=main');
+        $this->assertEquals(200, $file['headers']['status-code'], \json_encode($file['body']));
+    }
+
+    public function testDetectionReadsVariablesFromDotenv(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'dotenv-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '.git';
+
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        \file_put_contents($workdir . '/package.json', "{\"name\": \"dotenv\", \"main\": \"index.js\"}\n");
+        $this->writeFunctionHelper($workdir, 'dotenv');
+        \file_put_contents($workdir . '/.env', "# Defaults\nPLAIN=value # inline comment\nQUOTED=\"keeps # inside quotes\"\nUNSET=null\nSECRET=pa#ss\nexport EXPORTED=yes\n");
+        $this->gitHelper('git add . && git commit -m "Add function with .env"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+
+        $detection = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/detections', $headers, [
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'type' => 'runtime',
+        ]);
+        $this->assertEquals(200, $detection['headers']['status-code'], \json_encode($detection['body']));
+
+        $variables = \array_column($detection['body']['variables'], 'value', 'name');
+        \ksort($variables);
+        $this->assertSame([
+            'EXPORTED' => 'yes',
+            'PLAIN' => 'value',
+            'QUOTED' => 'keeps # inside quotes',
+            'SECRET' => 'pa#ss',
+            'UNSET' => 'null',
+        ], $variables);
+    }
+
     public function testUpdateSiteKeepsRepositoryOnNull(): void
     {
         $headers = \array_merge([
@@ -243,7 +366,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $providerRepositoryId = (string) $repository['body']['id'];
 
         $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Gitea site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -285,7 +408,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->createGiteaUserHelper(self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
 
         $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
-            'name' => 'pull-requests-' . ID::unique(),
+            'name' => 'pull-requests-' . Id::unique(),
             'auto_init' => true,
             'default_branch' => 'main',
             'private' => false,
@@ -307,7 +430,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         }, 30000, 1000);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea pull requests',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -635,6 +758,61 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), $params, true, false);
     }
 
+    public function testListRepositoryBranchesPaginatesByCursor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'branches-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $branchesPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '/branches';
+        foreach (['alpha', 'beta'] as $name) {
+            $branch = $this->giteaApiHelper(Client::METHOD_POST, $branchesPath, [
+                'new_branch_name' => $name,
+                'old_branch_name' => 'main',
+            ]);
+            $this->assertEquals(201, $branch['headers']['status-code'], \json_encode($branch['body']));
+        }
+
+        $path = '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $repository['body']['id'] . '/branches';
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $names = [];
+        $this->assertEventually(function () use ($path, $headers, &$names) {
+            $all = $this->client->call(Client::METHOD_GET, $path, $headers);
+            $this->assertEquals(200, $all['headers']['status-code'], \json_encode($all['body']));
+            $names = \array_column($all['body']['branches'], 'name');
+            $this->assertCount(3, $names);
+        }, 30000, 500);
+
+        $after = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                '{"method":"cursorAfter","values":["' . $names[0] . '"]}',
+            ],
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code'], \json_encode($after['body']));
+        $this->assertSame([$names[1]], \array_column($after['body']['branches'], 'name'));
+
+        $before = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                '{"method":"cursorBefore","values":["' . $names[2] . '"]}',
+            ],
+        ]);
+        $this->assertEquals(200, $before['headers']['status-code'], \json_encode($before['body']));
+        $this->assertSame([$names[1]], \array_column($before['body']['branches'], 'name'));
+    }
+
     public function testInstallationOrganizationUrl(): void
     {
         // createInstallationHelper() reads listInstallations, so this covers both routes
@@ -778,7 +956,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'VCS Tenant',
@@ -802,7 +980,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'cookie' => 'a_session_console=' . $sessionCookie,
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'VCS Tenant Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
@@ -815,7 +993,7 @@ final class VCSGiteaConsoleClientTest extends Scope
                 'cookie' => 'a_session_console=' . $sessionCookie,
                 'x-appwrite-project' => 'console',
             ], [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => 'VCS Tenant Project',
                 'teamId' => $team['body']['$id'],
@@ -934,6 +1112,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             [Client::METHOD_GET, $base . '/providerRepositories/1/contents', []],
             [Client::METHOD_POST, $base . '/providerRepositories', ['name' => 'cross-' . \uniqid(), 'private' => true]],
             [Client::METHOD_POST, $base . '/detections', ['providerRepositoryId' => '1', 'type' => 'runtime']],
+            [Client::METHOD_PATCH, $base . '/repositories/1', ['providerPullRequestId' => '1']],
         ];
 
         foreach ($probes as [$method, $path, $params]) {

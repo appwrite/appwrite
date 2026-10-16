@@ -222,6 +222,36 @@ trait LocaleBase
         return [];
     }
 
+    public function testListTotal(): void
+    {
+        $lists = [
+            '/locale/codes' => 'localeCodes',
+            '/locale/countries' => 'countries',
+            '/locale/countries/eu' => 'countries',
+            '/locale/countries/phones' => 'phones',
+            '/locale/continents' => 'continents',
+            '/locale/currencies' => 'currencies',
+            '/locale/languages' => 'languages',
+        ];
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        foreach ($lists as $path => $key) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['total' => true]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(\count($response['body'][$key]), $response['body']['total'], $path);
+            $this->assertGreaterThan(0, $response['body']['total'], $path);
+
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['total' => false]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(0, $response['body']['total'], $path);
+            $this->assertNotEmpty($response['body'][$key], $path);
+        }
+    }
+
     public function testLanguages(): array
     {
         /**

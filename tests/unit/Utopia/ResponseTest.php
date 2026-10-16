@@ -7,6 +7,7 @@ namespace Tests\Unit\Utopia;
 use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V28;
+use Appwrite\Utopia\Response\Filters\V29;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Appwrite\Utopia\Response\Model\Provider as ProviderModel;
 use Exception;
@@ -119,7 +120,8 @@ final class ResponseTest extends TestCase
         $this->response->setModel(new ProjectModel());
         $this->response->setModel(new ProviderModel());
 
-        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V28.
+        // The generated PHP SDK sends a response format older than 2.3.0, so its responses pass through V29 and V28.
+        $this->response->addFilter(new V29());
         $this->response->addFilter(new V28());
 
         $document = new Document([
@@ -282,5 +284,98 @@ final class ResponseTest extends TestCase
         $this->assertTrue($payload['inner']['state']);
         $this->assertTrue($payload['afterInner']);
         $this->assertFalse($isShowingSensitive->getValue($this->response));
+    }
+
+    /**
+     * @param array<int, Document> $attributes
+     */
+    private function collectionDocument(array $attributes): Document
+    {
+        return new Document([
+            '$id' => 'col',
+            '$createdAt' => '2026-08-14T00:00:00.000+00:00',
+            '$updatedAt' => '2026-08-14T00:00:00.000+00:00',
+            '$permissions' => [],
+            'databaseId' => 'db',
+            'name' => 'Collection',
+            'enabled' => true,
+            'documentSecurity' => false,
+            'attributes' => $attributes,
+            'indexes' => [],
+            'bytesMax' => 0,
+            'bytesUsed' => 0,
+        ]);
+    }
+
+    private function schemaAttribute(string $key, mixed $type): Document
+    {
+        return new Document([
+            '$id' => $key,
+            '$createdAt' => '2026-08-14T00:00:00.000+00:00',
+            '$updatedAt' => '2026-08-14T00:00:00.000+00:00',
+            'key' => $key,
+            'type' => $type,
+            'status' => 'available',
+            'error' => '',
+            'required' => false,
+            'array' => false,
+        ]);
+    }
+
+    public function testCollectionOutputMatchesStringAndEnumSchemaTypes(): void
+    {
+        $stringTypes = $this->response->output($this->collectionDocument([
+            $this->schemaAttribute('name', 'string'),
+            $this->schemaAttribute('count', 'integer'),
+            $this->schemaAttribute('total', 'bigint'),
+            $this->schemaAttribute('body', 'mediumtext'),
+            $this->schemaAttribute('notes', 'longtext'),
+            $this->schemaAttribute('title', 'varchar'),
+            $this->schemaAttribute('legacyTotal', 'biginteger'),
+        ]), Response::MODEL_COLLECTION);
+
+        $this->assertSame('string', $stringTypes['attributes'][0]['type']);
+        $this->assertSame('integer', $stringTypes['attributes'][1]['type']);
+        $this->assertSame('bigint', $stringTypes['attributes'][2]['type']);
+        $this->assertSame('mediumtext', $stringTypes['attributes'][3]['type']);
+        $this->assertSame('longtext', $stringTypes['attributes'][4]['type']);
+        $this->assertSame('varchar', $stringTypes['attributes'][5]['type']);
+        $this->assertSame('bigint', $stringTypes['attributes'][6]['type']);
+
+        $enumTypes = $this->response->output($this->collectionDocument([
+            $this->schemaAttribute('total', \Utopia\Query\Schema\ColumnType::BigInteger),
+            $this->schemaAttribute('body', \Utopia\Query\Schema\ColumnType::MediumText),
+            $this->schemaAttribute('count', \Utopia\Query\Schema\ColumnType::Integer),
+        ]), Response::MODEL_COLLECTION);
+
+        $this->assertSame('bigint', $enumTypes['attributes'][0]['type']);
+        $this->assertSame('mediumtext', $enumTypes['attributes'][1]['type']);
+        $this->assertSame('integer', $enumTypes['attributes'][2]['type']);
+    }
+
+    public function testTableOutputMatchesNumericColumnTypes(): void
+    {
+        $table = new Document([
+            '$id' => 'tbl',
+            '$createdAt' => '2026-08-14T00:00:00.000+00:00',
+            '$updatedAt' => '2026-08-14T00:00:00.000+00:00',
+            '$permissions' => [],
+            'databaseId' => 'db',
+            'name' => 'Table',
+            'enabled' => true,
+            'documentSecurity' => false,
+            'attributes' => [
+                $this->schemaAttribute('integer_field', 'integer'),
+                $this->schemaAttribute('bigint_field', 'bigint'),
+            ],
+            'indexes' => [],
+            'bytesMax' => 0,
+            'bytesUsed' => 0,
+        ]);
+
+        $output = $this->response->output($table, Response::MODEL_TABLE);
+
+        $this->assertSame('integer', $output['columns'][0]['type']);
+        $this->assertSame('bigint', $output['columns'][1]['type']);
     }
 }

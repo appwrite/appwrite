@@ -11,22 +11,23 @@ use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
@@ -44,6 +45,7 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -61,6 +63,7 @@ class Migrations extends Action
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
+    protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
 
@@ -106,6 +109,7 @@ class Migrations extends Action
             ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -127,6 +131,7 @@ class Migrations extends Action
         UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
+        PublicHostname $publicHostname,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -153,6 +158,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
+        $this->publicHostname = $publicHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -170,6 +176,7 @@ class Migrations extends Action
             $this->dbForProject = null;
             $this->dbForPlatform = null;
             $this->project = null;
+            $this->publicHostname = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -268,7 +275,8 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+                $this->publicHostname->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],
@@ -337,6 +345,8 @@ class Migrations extends Action
                 ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
                 ->setProject($projectId)
                 ->setKey($key)
+                ->setConnectTimeout(Target::CONNECT_TIMEOUT)
+                ->setTimeout(Target::REQUEST_TIMEOUT)
         );
 
         try {
@@ -350,7 +360,12 @@ class Migrations extends Action
                 $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
             }
         } catch (AppwriteException $error) {
-            throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
+            // No status means no response came back, which says nothing about the key.
+            $type = $error->getCode() === 0
+                ? Exception::MIGRATION_PROVIDER_ERROR
+                : Exception::MIGRATION_SOURCE_UNAUTHORIZED;
+
+            throw new Exception($type, previous: $error);
         }
     }
 
@@ -640,6 +655,13 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
+            // Sources wrap what failed; the innermost cause names the request that failed.
+            for ($previous = $th->getPrevious(); $previous !== null; $previous = $previous->getPrevious()) {
+                Console::error('Caused by: ' . $previous::class . ': ' . $previous->getMessage());
+                Console::error('File: ' . $previous->getFile() . ':' . $previous->getLine());
+                Console::error($previous->getTraceAsString());
+            }
+
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');
 
@@ -820,7 +842,7 @@ class Migrations extends Action
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
         $algorithm = Compression::NONE;
-        $fileId = ID::unique();
+        $fileId = Id::unique();
 
         $sizeMB = \round($size / (1000 * 1000), 2);
 

@@ -10,6 +10,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -18,9 +19,10 @@ use Utopia\Auth\Store;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 
@@ -58,7 +60,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -68,11 +70,17 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('store')
             ->inject('proofForToken')
+            ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken): void
+    public function action(string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Geo $geo, Event $queueForEvents, Store $store, Token $proofForToken, Authorization $authorization, User $authUser): void
     {
+        if (!$authUser->isKey($authorization->getRoles()) && !$authUser->isPrivileged($authorization->getRoles())) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -81,11 +89,11 @@ class Create extends Action
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'provider' => SESSION_PROVIDER_SERVER,

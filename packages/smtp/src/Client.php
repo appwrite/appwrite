@@ -97,10 +97,16 @@ final class Client
 
         if ($refusal instanceof \Utopia\SMTP\Reply && $accepted === []) {
             if ($this->ready) {
-                $this->reset();
+                try {
+                    $this->reset();
+                } catch (SmtpException) {
+                    // A session that will not reset is not one to reuse, and
+                    // its refusal of RSET says nothing about the recipients.
+                    $this->discard();
+                }
             }
 
-            throw new TransactionException($refusal, 'Every recipient was refused');
+            throw new TransactionException($refusal, 'Every recipient was refused', $rejected);
         }
 
         $this->command('DATA', [354]);
@@ -265,8 +271,15 @@ final class Client
     {
         try {
             $this->capabilities = Capabilities::fromReply($this->command("EHLO {$this->domain}", [250]));
-        } catch (TransactionException) {
-            // A server too old for ESMTP still has to answer HELO.
+        } catch (TransactionException $exception) {
+            // A server too old for ESMTP refuses EHLO outright, and still has to
+            // answer HELO (RFC 5321 section 4.1.4). A 4xx is something else: the
+            // server is busy or closing, and a 421 has already ended the session,
+            // so there is nothing left to send HELO on.
+            if (!$exception->isPermanent()) {
+                throw $exception;
+            }
+
             $this->command("HELO {$this->domain}", [250]);
             $this->capabilities = Capabilities::none();
         }

@@ -5,6 +5,7 @@ namespace Appwrite\Event\Message;
 use Appwrite\Event\Event;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Database\Id;
 
 final class Func extends Base
 {
@@ -24,6 +25,8 @@ final class Func extends Base
         public readonly array $headers = [],
         public readonly string $method = '',
         public readonly array $platform = [],
+        // Names one triggered event, so a redelivery of it can be told from a new one.
+        public readonly string $eventId = '',
     ) {
     }
 
@@ -44,6 +47,7 @@ final class Func extends Base
             payload: $payload,
             events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
+            eventId: Id::unique(),
         );
     }
 
@@ -52,8 +56,8 @@ final class Func extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
+            'user' => $this->user === null ? null : UserContext::fromDocument($this->user)->toArray(),
             'userId' => $this->userId,
             'function' => $this->function?->getArrayCopy(),
             'functionId' => $this->functionId,
@@ -67,6 +71,7 @@ final class Func extends Base
             'headers' => $this->headers,
             'method' => $this->method,
             'platform' => $platform,
+            'eventId' => $this->eventId,
         ];
     }
 
@@ -88,6 +93,7 @@ final class Func extends Base
             headers: $data['headers'] ?? [],
             method: $data['method'] ?? '',
             platform: $data['platform'] ?? [],
+            eventId: $data['eventId'] ?? '',
         );
     }
 }

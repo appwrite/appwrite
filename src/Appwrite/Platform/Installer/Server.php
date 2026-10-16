@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer;
 
+use Appwrite\Installer\Secret;
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
@@ -36,6 +37,8 @@ class Server
     public const string STATUS_ERROR = 'error';
 
     public const string CSRF_COOKIE = 'appwrite-installer-csrf';
+
+    private static ?Secret $secret = null;
 
     public const array INSTALLER_CSP = [
         "default-src 'self'",
@@ -120,14 +123,29 @@ class Server
             $this->startDockerInstaller($opts);
         }
 
+        self::$secret = Secret::fromEnvironment();
+        $this->printInstallerSecret();
         $this->printInstallerUrl($host, $port);
         $this->startSwooleServer($host, (int) $port, $readyFile);
+    }
+
+    public static function secret(): Secret
+    {
+        return self::$secret ??= new Secret('');
+    }
+
+    private function printInstallerSecret(): void
+    {
+        fwrite(STDOUT, PHP_EOL);
+        fwrite(STDOUT, 'Installer secret: ' . self::secret()->value . PHP_EOL);
+        fwrite(STDOUT, 'Provide it as the ' . Secret::HEADER . ' header, or open the URL below.' . PHP_EOL);
+        fwrite(STDOUT, PHP_EOL);
     }
 
     private function printInstallerUrl(string $host, string $port): void
     {
         $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
-        $url = "http://$displayHost:$port";
+        $url = "http://$displayHost:$port/?secret=" . self::secret()->value;
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 

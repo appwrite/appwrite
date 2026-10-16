@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
@@ -13,24 +14,28 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -126,13 +131,13 @@ class Create extends Action
                     ),
                 )
             ])
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'], example: '[{"$id":"example1","username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}]')
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -145,10 +150,11 @@ class Create extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('eventProcessor')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass|null $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass|null $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor, TransactionState $transactionState): void
     {
         $data = $this->normalizeData($data ?? []);
 
@@ -225,20 +231,15 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $hasRelationships = \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-        );
-
-        if ($isBulk && $hasRelationships) {
+        if ($isBulk && $this->hasRelationships($collection)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() . ' with relationship ' . $this->getStructureContext());
         }
 
         $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk, $authorization) {
             $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
+                PermissionType::Read,
+                PermissionType::Update,
+                PermissionType::Delete,
             ];
 
             // If bulk, we need to validate permissions explicitly per document
@@ -259,17 +260,17 @@ class Create extends Action
                 $permissions = [];
                 if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
-                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                        $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                     }
                 }
             }
 
             // Users can only manage their own roles, API keys and Admin users can manage any
             if (!$isAPIKey && !$isPrivilegedUser) {
-                foreach (Database::PERMISSIONS as $type) {
+                foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                     foreach ($permissions as $permission) {
                         $permission = Permission::parse($permission);
-                        if ($permission->getPermission() != $type) {
+                        if ($permission->getPermission() != $type->value) {
                             continue;
                         }
                         $role = (new Role(
@@ -287,93 +288,14 @@ class Create extends Action
             $document->setAttribute('$permissions', $permissions);
         };
 
-        $operations = 0;
+        $dbForDatabases = $getDatabasesDB($database, $collection);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations, $authorization) {
-            $operations++;
-
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-
-            $validCollection = $authorization->isValid(
-                new Input($permission, $collection->getPermissionsByType($permission))
-            );
-            if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$validCollection) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-            }
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-
-                $isList = \is_array($related) && \array_values($related) === $related;
-
-                if ($isList) {
-                    $relations = $related;
-                } else {
-                    $relations = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = $authorization->skip(
-                    fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
-                );
-
-                foreach ($relations as &$relation) {
-                    if (
-                        \is_array($relation)
-                        && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
-                    ) {
-                        $relation['$id'] = ID::unique();
-                        $relation = new Document($relation);
-                    }
-
-                    $this->validateRelationship($relation);
-
-                    if ($relation instanceof Document) {
-                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
-
-                        $current = $authorization->skip(
-                            fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
-                        );
-
-                        if ($current->isEmpty()) {
-                            $type = Database::PERMISSION_CREATE;
-
-                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
-                                $relation['$id'] = ID::unique();
-                            }
-                        } else {
-                            $relation->setAttribute('$collection', $relatedCollection->getId());
-                            $type = Database::PERMISSION_UPDATE;
-                        }
-
-                        $checkPermissions($relatedCollection, $relation, $type);
-                    }
-                }
-
-                if ($isList) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } else {
-                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
-                }
-            }
-        };
-
-        $documents = \array_map(function ($document) use ($collection, $permissions, $checkPermissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $dbForProject, $database, $transactionId) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
             $sourceId = $isBulk
-                ? ($document['$id'] ?? ID::unique())
+                ? ($document['$id'] ?? Id::unique())
                 : $documentId;
 
             // If bulk, we need to validate ID explicitly
@@ -385,13 +307,16 @@ class Create extends Action
             }
 
             // Assign a unique ID if needed, otherwise use the provided ID.
-            $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
+            $document['$id'] = $sourceId === CustomId::UNIQUE ? Id::unique() : $sourceId;
+            $document = $this->prepareRelationships($document, $collection, $dbForProject, $database, $isAPIKey || $isPrivilegedUser, $transactionId !== null);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);
-            $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
+
             return $document;
         }, $documents);
+
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -421,8 +346,18 @@ class Create extends Action
                 );
             }
 
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach ($documents as $document) {
+                    $this->authorizeStagedWrite(
+                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document, $transactionState->stagedView($database, $transaction)),
+                        $this->getParentNotFoundException(),
+                        $collectionId,
+                    );
+                }
+            }
+
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -463,17 +398,31 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        foreach ($documents as $document) {
+            $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
+        }
+
+        $writes = Operations::writes($collection, $documents, fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
+        $created = [];
         try {
-            $created = [];
             $dbForDatabases->withPreserveDates(
-                function () use (&$created, $dbForDatabases, $collectionTableId, $documents) {
-                    $dbForDatabases->createDocuments(
-                        $collectionTableId,
+                true,
+                function () use (&$created, $dbForDatabases, $collection, $collectionTableId, $documents) {
+                    $this->withRelationshipTransaction(
+                        $dbForDatabases,
+                        $collection,
                         $documents,
-                        onNext: function ($doc) use (&$created) {
-                            $created[] = $doc;
+                        function (array $documents) use (&$created, $dbForDatabases, $collectionTableId) {
+                            $created = [];
+                            $dbForDatabases->createDocuments(
+                                $collectionTableId,
+                                $documents,
+                                onNext: function (Document $document) use (&$created) {
+                                    $created[] = $document;
+                                }
+                            );
                         }
                     );
                 }
@@ -481,13 +430,23 @@ class Create extends Action
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
-        } catch (NotFoundException) {
-            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            throw $isBulk
+                ? $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e)
+                : new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
+        } catch (NotFoundException $e) {
+            if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
+            // The table exists, so a column the write's schema listed was deleted or renamed before the insert ran
+            throw new Exception($this->getStructureNotFoundException(), 'The schema changed while this request was running. Please try again.', previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (AuthorizationException $e) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
         $queueForEvents
@@ -497,23 +456,11 @@ class Create extends Action
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
-        $collectionsCache = [];
-        foreach ($created as $document) {
-            $this->processDocument(
-                database: $database,
-                collection: $collection,
-                document: $document,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization
-            );
-        }
-
         $usage
             ->setResource('database')
             ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations));
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $writes));
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
@@ -538,14 +485,23 @@ class Create extends Action
             return;
         }
 
-        $queueForEvents
-            ->setParam('documentId', $created[0]->getId())
-            ->setParam('rowId', $created[0]->getId())
-            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
-
         $response->dynamic(
             $created[0],
             $this->getResponseModel()
         );
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
+            )
+        );
+
+        $queueForEvents
+            ->setParam('documentId', $created[0]->getId())
+            ->setParam('rowId', $created[0]->getId())
+            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+            ->setPayload($response->getPayload(), sensitive: $relationships);
     }
 }

@@ -9,6 +9,8 @@ use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Extend\Exception;
 use Appwrite\Vcs\InstallationTokens;
 use PHPUnit\Framework\TestCase;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -357,7 +359,7 @@ final class InstallationTokensTest extends TestCase
 
             public function __construct(protected bool $emptyUserId, protected string $refresh)
             {
-                parent::__construct('id', 'secret', '');
+                parent::__construct(new Client(new CurlAdapter()), 'id', 'secret', '');
             }
 
             public function getName(): string

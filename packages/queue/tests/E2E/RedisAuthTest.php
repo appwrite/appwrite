@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Utopia\Queue\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\DSN\DSN;
 use Utopia\Queue\Connection\Redis;
 
 /**
  * Runs against the `redis-auth` compose service: `requirepass secretpw` for the
- * default user and an ACL user `worker` with password `workerpw`.
+ * default user, an ACL user `worker` with password `workerpw`, and an ACL user
+ * `encoded` whose password `p@ss:w/rd+` must be URL-encoded in a DSN.
  */
 final class RedisAuthTest extends TestCase
 {
@@ -37,6 +39,21 @@ final class RedisAuthTest extends TestCase
     public function testWrongPasswordIsRejected(): void
     {
         $this->assertRejected(new Redis(self::HOST, self::PORT, self::USER, 'not-the-password'));
+    }
+
+    public function testDsnPasswordAuthenticatesDefaultUser(): void
+    {
+        $this->assertRoundTrip(Redis::fromDSN(new DSN('redis://:secretpw@127.0.0.1:16380')));
+    }
+
+    public function testDsnUserAndEncodedPasswordAuthenticateAclUser(): void
+    {
+        $this->assertRoundTrip(Redis::fromDSN(new DSN('redis://encoded:p%40ss%3Aw%2Frd%2B@127.0.0.1:16380')));
+    }
+
+    public function testDsnWithoutCredentialsIsRejected(): void
+    {
+        $this->assertRejected(Redis::fromDSN(new DSN('redis://127.0.0.1:16380')));
     }
 
     /**
