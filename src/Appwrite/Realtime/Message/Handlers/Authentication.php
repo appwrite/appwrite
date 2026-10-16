@@ -129,13 +129,14 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['jwtExpire'] = null;
         }
 
-        // Carry the presence hold across a re-auth to the same user; on a user change give up
-        // this connection's hold on the previous user (and its worker count at 1->0).
+        // Carry the presence hold across a re-auth to the same user whose connection entry was
+        // restored. Otherwise -- a user change, or the connection entry could not be restored --
+        // give up this connection's hold on the previous user, releasing the worker count at 1->0,
+        // so the holder index never outlives a hold that onClose can no longer release.
         if ($presenceHold !== null && !empty($projectId) && $projectId !== 'console') {
-            if ($previousUserId === $user->getId()) {
-                if (isset($realtime->connections[$connectionId])) {
-                    $realtime->connections[$connectionId]['presence'] = $presenceHold;
-                }
+            if ($previousUserId === $user->getId() && isset($realtime->connections[$connectionId])) {
+                $realtime->connections[$connectionId]['presence'] = $presenceHold;
+                $realtime->presenceHolders[$projectId][$previousUserId][$connectionId] = (string) ($presenceHold['presenceId'] ?? '');
             } else {
                 unset($realtime->presenceHolders[$projectId][$previousUserId][$connectionId]);
                 if (empty($realtime->presenceHolders[$projectId][$previousUserId] ?? [])) {

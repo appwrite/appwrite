@@ -225,15 +225,6 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
-                case 'presenceLogs':
-                    try {
-                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create attribute \"connections\" in collection {$id}: {$th->getMessage()}");
-                    }
-                    $this->dbForProject->purgeCachedCollection($id);
-                    break;
-
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {
@@ -423,7 +414,22 @@ class V25 extends Migration
 
                 case 'presenceLogs':
                     // Added in 1.9.5 and created only by V24, which an install that ran
-                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran.
+                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran. Create it
+                    // if missing, and add the connections attribute for installs that already
+                    // have it from V24 without it.
+                    try {
+                        $this->createCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"connections\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
