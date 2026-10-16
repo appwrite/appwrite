@@ -13,7 +13,9 @@
 
 use serde_json::{Value as Json, json};
 use utopia_database::operator::{Number, Operator, OperatorType};
+use utopia_database::aggregation::Aggregation;
 use utopia_database::query::{ParsedQuery, Query};
+use utopia_database::relationship::page::Page;
 use utopia_database::value::{self, Array, ArrayKey, Ext, Str, Value};
 use utopia_database::{Error, Kind};
 use utopia_query::{Method, NullsPosition, Value as QValue};
@@ -26,6 +28,47 @@ use crate::libs::database::enums::{self, PhpEnum};
 use crate::libs::database::obj::{EnumCase, Obj};
 use crate::libs::database::values;
 use crate::php_object;
+
+/// A `Relationship\Page`.
+#[derive(Clone)]
+pub struct PageObj(pub Page);
+
+php_object!(PageObj, "Relationship\\Page", |this| json!({
+    "$value": "Relationship\\Page",
+    "fields": {
+        "limit": this.0.limit,
+        "offset": this.0.offset,
+        "cursor": this.0.cursor,
+        "before": this.0.before,
+    }
+}));
+
+/// An `Aggregation` (`Aggregation::from()`'s result): no public property.
+#[derive(Clone)]
+pub struct AggregationObj(pub Aggregation);
+
+php_object!(AggregationObj, "Aggregation", |_this| json!({"$value": "Aggregation", "fields": {}}));
+
+/// A `$value` tag of a class of this module.
+pub fn decode_value(class: &str, fields: &Json) -> R<Option<Obj>> {
+    Ok(match class {
+        "Relationship\\Page" => {
+            let f = values::Fields::of(fields)?;
+            let limit = match f.value("limit")? {
+                Value::Null => None,
+                v => Some(value::to_long(&v)),
+            };
+            let cursor = match f.value("cursor")? {
+                Value::Null => None,
+                v => Some(value::to_text(&v)),
+            };
+            let offset = value::to_long(&f.value("offset")?);
+            let before = f.value("before")?.truthy();
+            Some(Obj::object(PageObj(Page { limit, offset, cursor, before })))
+        }
+        _ => None,
+    })
+}
 
 /// A `ParsedQuery` (`Query::groupByType()`'s result).
 #[derive(Clone)]
@@ -90,6 +133,30 @@ pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> 
         "Operator" => operator_static(method, a),
         "Query\\Method" => enum_static::<Method>(method, a, Method::CASES),
         "OperatorType" => enum_static::<OperatorType>(method, a, OperatorType::CASES),
+        "Relationship\\Page" if method == "from" => {
+            let (page, rest) = Page::from(a.queries("queries")?);
+            let page = match page {
+                Some(page) => Obj::object(PageObj(page)),
+                None => Obj::null(),
+            };
+            Ok(Some(Obj::List(vec![page, Obj::List(rest.into_iter().map(IntoObj::into_obj).collect())])))
+        }
+        "Aggregation" => match method {
+            "alias" => Ok(Some(Aggregation::alias(&a.query("query")?).into_obj())),
+            "from" => {
+                let db = a.req::<crate::libs::database::database::DatabaseObj>("database")?;
+                let collection = a.collection("collection")?;
+                let mut joined = Vec::new();
+                if let Some(Json::Object(map)) = a.raw("joined") {
+                    for (alias, definition) in map {
+                        joined.push((alias.clone(), args::collection_of(&a.cx, definition)?));
+                    }
+                }
+                let queries = a.queries("queries")?;
+                Ok(Some(Obj::object(AggregationObj(Aggregation::from(&db.0, &collection, &joined, &queries)))))
+            }
+            _ => Ok(None),
+        },
         _ => Ok(None),
     }
 }
@@ -112,13 +179,30 @@ pub async fn invoke(this: &mut Obj, method: &str, a: &Args) -> R<Option<Obj>> {
             }))
         }
         Obj::Enum(e) => enum_method(e, method),
-        Obj::Object(o) => match o.downcast_ref::<ParsedQueryObj>() {
-            Some(p) => Ok(match method {
-                "isAggregation" => Some(p.0.is_aggregation().into_obj()),
-                _ => None,
-            }),
-            None => Ok(None),
-        },
+        Obj::Object(o) => {
+            if let Some(page) = o.downcast_ref::<PageObj>() {
+                return Ok(match method {
+                    "slice" => Some(Obj::List(
+                        page.0.slice(&a.documents("documents")?).into_iter().map(IntoObj::into_obj).collect(),
+                    )),
+                    _ => None,
+                });
+            }
+            if let Some(aggregation) = o.downcast_ref::<AggregationObj>() {
+                let aggregation = aggregation.0.clone();
+                return Ok(match method {
+                    "decode" => Some(crate::libs::database::convert::ok(aggregation.decode(a.array("row")?).await)?),
+                    _ => None,
+                });
+            }
+            match o.downcast_ref::<ParsedQueryObj>() {
+                Some(p) => Ok(match method {
+                    "isAggregation" => Some(p.0.is_aggregation().into_obj()),
+                    _ => None,
+                }),
+                None => Ok(None),
+            }
+        }
         _ => Ok(None),
     }
 }

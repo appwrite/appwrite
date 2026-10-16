@@ -24,6 +24,7 @@
   "generators": {},
   "waivers": {
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapters own their connections (reconnect behaviour is converted with Adapter::reconnect)",
+    "Utopia\\Database\\Adapter\\SQL\\Plan::__construct": "Accessors subsumed by Rust types: the readonly value SQL::plan() builds for find(), count() and sum(), which no caller constructs; its effect is covered by their cases",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
   "tests_waived": {},

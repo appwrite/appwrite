@@ -1,659 +1,519 @@
 {
-  "source": [
-    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/JoinRelationshipTests.php",
-    "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
-  ],
-  "cases": [
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipOnTheParentSideOfAOneToManyMatchesTheTwoWayKey",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/JoinRelationshipTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
+    ],
+    "cases": [
         {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipOnTheParentSideOfAOneToManyMatchesTheTwoWayKey",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipKeepsEveryOtherRelationshipAsBefore",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipIsMatchedByEveryRead",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheJoinedRowsTheCallerCanRead",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipCursorPagesEveryJoinedRowOnce",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
+            "name": "JoinRelationshipTests::testJoinRelationshipIteratesEveryJoinedRowOnceOrFailsBeforeYieldingARow",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
+            "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheCurrentTenantsRows",
+            "state": [
+                "mongo@database-mongo"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "engine": "mongo",
+                        "schemaless": true
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipKeepsEveryOtherRelationshipAsBefore",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipIsMatchedByEveryRead",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheJoinedRowsTheCallerCanRead",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipCursorPagesEveryJoinedRowOnce",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipIteratesEveryJoinedRowOnceOrFailsBeforeYieldingARow",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheCurrentTenantsRows",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    }
-  ]
+    ]
 }

@@ -1,254 +1,411 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/unit/MongoQueryFilterTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/unit/MongoQueryFilterTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MongoQueryFilterTest::testDocumentsValidatorRejectsRandomOrderWithoutTheCapability",
+      "state": [],
+      "steps": [
         {
-            "name": "MongoQueryFilterTest::testDocumentsValidatorRejectsRandomOrderWithoutTheCapability",
-            "state": [],
-            "steps": [
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o11043"
+          },
+          "bind": "s18324",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o11043"
+              },
+              "capabilities": [
                 {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Adapter\\Limits",
-                        "args": {
-                            "string": 0,
-                            "varchar": 0,
-                            "integer": 0,
-                            "bigInteger": 0,
-                            "attributes": 0,
-                            "indexes": 0,
-                            "defaultAttributes": 0,
-                            "defaultIndexes": 0,
-                            "indexLength": 0,
-                            "uidLength": 36,
-                            "documentSize": 0,
-                            "minDateTime": {
-                                "$datetime": "0000-01-01T00:00:00.000000+00:00"
-                            },
-                            "maxDateTime": {
-                                "$datetime": "9999-12-31T00:00:00.000000+00:00"
-                            },
-                            "idType": {
-                                "$enum": "Query\\Schema\\ColumnType::Integer"
-                            },
-                            "keywords": [],
-                            "internalIndexKeys": []
-                        },
-                        "as": "o11068"
-                    },
-                    "bind": "s18373"
+                  "$enum": "Capability::DefinedAttributes"
                 },
                 {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Adapter\\Profile",
-                        "args": {
-                            "limits": {
-                                "$obj": "o11068"
-                            },
-                            "capabilities": [
-                                {
-                                    "$enum": "Capability::DefinedAttributes"
-                                },
-                                {
-                                    "$enum": "Capability::UnsignedBigInt"
-                                }
-                            ],
-                            "features": [],
-                            "sharedTables": false,
-                            "migrating": false
-                        },
-                        "as": "o11069"
-                    },
-                    "bind": "s18374"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Queries\\Documents",
-                        "args": {
-                            "attributes": [],
-                            "indexes": [],
-                            "profile": {
-                                "$obj": "o11069"
-                            }
-                        },
-                        "as": "o11070"
-                    },
-                    "bind": "s18375"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "orderRandom",
-                        "args": {},
-                        "as": "o11071"
-                    },
-                    "bind": "s18376",
-                    "mask": {
-                        "paths": [
-                            ""
-                        ],
-                        "reason": "Query::orderRandom() returns the documents in a random order"
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o11070"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": [
-                                {
-                                    "$obj": "o11071"
-                                }
-                            ]
-                        }
-                    },
-                    "mask": {
-                        "paths": [
-                            ""
-                        ],
-                        "reason": "Query::orderRandom() returns the documents in a random order"
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o11070"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Adapter\\Limits",
-                        "args": {
-                            "string": 0,
-                            "varchar": 0,
-                            "integer": 0,
-                            "bigInteger": 0,
-                            "attributes": 0,
-                            "indexes": 0,
-                            "defaultAttributes": 0,
-                            "defaultIndexes": 0,
-                            "indexLength": 0,
-                            "uidLength": 36,
-                            "documentSize": 0,
-                            "minDateTime": {
-                                "$datetime": "0000-01-01T00:00:00.000000+00:00"
-                            },
-                            "maxDateTime": {
-                                "$datetime": "9999-12-31T00:00:00.000000+00:00"
-                            },
-                            "idType": {
-                                "$enum": "Query\\Schema\\ColumnType::Integer"
-                            },
-                            "keywords": [],
-                            "internalIndexKeys": []
-                        },
-                        "as": "o11072"
-                    },
-                    "bind": "s18379"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Adapter\\Profile",
-                        "args": {
-                            "limits": {
-                                "$obj": "o11072"
-                            },
-                            "capabilities": [
-                                {
-                                    "$enum": "Capability::DefinedAttributes"
-                                },
-                                {
-                                    "$enum": "Capability::UnsignedBigInt"
-                                },
-                                {
-                                    "$enum": "Capability::OrderRandom"
-                                }
-                            ],
-                            "features": [],
-                            "sharedTables": false,
-                            "migrating": false
-                        },
-                        "as": "o11073"
-                    },
-                    "bind": "s18380"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Queries\\Documents",
-                        "args": {
-                            "attributes": [],
-                            "indexes": [],
-                            "profile": {
-                                "$obj": "o11073"
-                            }
-                        },
-                        "as": "o11074"
-                    },
-                    "bind": "s18381"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "orderRandom",
-                        "args": {},
-                        "as": "o11075"
-                    },
-                    "bind": "s18382",
-                    "mask": {
-                        "paths": [
-                            ""
-                        ],
-                        "reason": "Query::orderRandom() returns the documents in a random order"
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o11074"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": [
-                                {
-                                    "$obj": "o11075"
-                                }
-                            ]
-                        }
-                    },
-                    "mask": {
-                        "paths": [
-                            ""
-                        ],
-                        "reason": "Query::orderRandom() returns the documents in a random order"
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o11074"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
+                  "$enum": "Capability::UnsignedBigInt"
                 }
-            ]
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o11044"
+          },
+          "bind": "s18325",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [],
+              "indexes": [],
+              "profile": {
+                "$obj": "o11044"
+              }
+            },
+            "as": "o11045"
+          },
+          "bind": "s18326",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderRandom",
+            "args": {},
+            "as": "o11046"
+          },
+          "bind": "s18327",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11045"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o11046"
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11045"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Random order is not supported by this adapter"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o11047"
+          },
+          "bind": "s18330",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o11047"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o11048"
+          },
+          "bind": "s18331",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [],
+              "indexes": [],
+              "profile": {
+                "$obj": "o11048"
+              }
+            },
+            "as": "o11049"
+          },
+          "bind": "s18332",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderRandom",
+            "args": {},
+            "as": "o11050"
+          },
+          "bind": "s18333",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11049"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o11050"
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11049"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
         }
-    ]
+      ]
+    }
+  ]
 }

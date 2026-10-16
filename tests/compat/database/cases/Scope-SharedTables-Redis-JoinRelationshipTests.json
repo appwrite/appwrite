@@ -1,631 +1,498 @@
 {
-  "source": [
-    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/JoinRelationshipTests.php",
-    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/RedisTest.php"
-  ],
-  "cases": [
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipOnTheParentSideOfAOneToManyMatchesTheTwoWayKey",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/JoinRelationshipTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/RedisTest.php"
+    ],
+    "cases": [
         {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipOnTheParentSideOfAOneToManyMatchesTheTwoWayKey",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipKeepsEveryOtherRelationshipAsBefore",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipIsMatchedByEveryRead",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheJoinedRowsTheCallerCanRead",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
+            "name": "JoinRelationshipTests::testJoinRelationshipCursorPagesEveryJoinedRowOnce",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
+            "name": "JoinRelationshipTests::testJoinRelationshipIteratesEveryJoinedRowOnceOrFailsBeforeYieldingARow",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
+            "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheCurrentTenantsRows",
+            "state": [
+                "redis-json@database-redis-adapter"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "redis": true,
+                        "cache": "none",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Joins"
+                            }
+                        }
+                    }
+                }
+            ]
         }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipKeepsEveryOtherRelationshipAsBefore",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipIsMatchedByEveryRead",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheJoinedRowsTheCallerCanRead",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipCursorPagesEveryJoinedRowOnce",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipIteratesEveryJoinedRowOnceOrFailsBeforeYieldingARow",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "JoinRelationshipTests::testJoinRelationshipReadsOnlyTheCurrentTenantsRows",
-      "state": [
-        "redis-json@database-redis-adapter"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "redis": true,
-            "cache": "none",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "supports",
-            "args": {
-              "capability": {
-                "$enum": "Capability::Joins"
-              }
-            }
-          },
-          "expect": false
-        }
-      ]
-    }
-  ]
+    ]
 }

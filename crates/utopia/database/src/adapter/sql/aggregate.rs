@@ -491,3 +491,37 @@ impl Sql {
 fn union_all(left: &mut SqlBuilder, right: &mut SqlBuilder) -> Result<()> {
     super::find::union(left, right, true)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::sum_of;
+    use crate::value::{Array, Str, Value};
+
+    fn sent(sum: Option<&str>) -> Value {
+        let mut row = Array::new();
+        row.set(crate::value::ArrayKey::from("sum"), sum.map_or(Value::Null, |s| Value::Str(Str::from(s))));
+        sum_of(&row)
+    }
+
+    // PHP: tests/unit/Adapter/SumResultTest.php, sums(): `yield 'double with an exponent' => ['1e308', 1e308]`
+    // and the rest of the sums MariaDB, MySQL and SQLite send.
+    #[test]
+    fn a_sum_is_read_as_the_number_the_engine_sent() {
+        assert_eq!(sent(Some("2785")), Value::Int(2785));
+        assert_eq!(sent(Some("10.50")), Value::Float(10.5));
+        assert_eq!(sent(Some("1e308")), Value::Float(1e308));
+        assert_eq!(sent(Some("-1.5e300")), Value::Float(-1.5e300));
+        assert_eq!(sent(Some("18446744073709551614")), Value::Float(18446744073709551614.0));
+        assert_eq!(sent(None), Value::Int(0));
+        assert_eq!(sent(Some("INF")), Value::Float(f64::INFINITY));
+        assert_eq!(sent(Some("-INF")), Value::Float(f64::NEG_INFINITY));
+        assert_eq!(sent(Some("Inf")), Value::Float(f64::INFINITY));
+        assert_eq!(sent(Some("overflow")), Value::Int(0));
+    }
+
+    // PHP: SumResultTest::testANotANumberSumIsReadAsNan, `$this->assertNan($this->sumOf('NAN'))`.
+    #[test]
+    fn a_not_a_number_sum_is_read_as_nan() {
+        assert!(matches!(sent(Some("NAN")), Value::Float(f) if f.is_nan()));
+    }
+}

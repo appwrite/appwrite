@@ -58,8 +58,9 @@ const OBJECTS: [ColumnType; 2] = [ColumnType::Json, ColumnType::Object];
 /// float otherwise; `min()` and `max()` are typed as their attribute.
 ///
 /// PHP: `Utopia\Database\Aggregation`.
-pub struct Aggregation<'a> {
-    database: &'a Database,
+#[derive(Clone)]
+pub struct Aggregation {
+    database: Database,
     /// The method of each aggregate, by its alias.
     aggregates: Vec<(String, Method)>,
     /// The attribute each aggregate reads, by its alias.
@@ -89,16 +90,17 @@ fn assign<T>(map: &mut Vec<(String, T)>, key: &str, value: T) {
     }
 }
 
-impl<'a> Aggregation<'a> {
+impl Aggregation {
     /// The aggregation of `queries` (each aggregate aliased) over
     /// `collection` and the collections its joins read, by alias
     /// (`from()`); `database`'s filters decode the groups.
     pub fn from(
-        database: &'a Database,
+        database: &Database,
         collection: &Collection,
         joined: &[(String, Collection)],
         queries: &[Query],
     ) -> Self {
+        let database = database;
         let internal = database.internal_attributes();
 
         let mut schema: Vec<(String, Attribute)> = Vec::new();
@@ -117,7 +119,7 @@ impl<'a> Aggregation<'a> {
         }
 
         let mut aggregation = Aggregation {
-            database,
+            database: database.clone(),
             aggregates: Vec::new(),
             operands: Vec::new(),
             groups: Vec::new(),

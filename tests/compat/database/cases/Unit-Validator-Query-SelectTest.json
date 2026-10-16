@@ -1,1902 +1,3319 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/unit/Validator/Query/SelectTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/SelectTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SelectTest::test_value_success",
+      "state": [],
+      "steps": [
         {
-            "name": "SelectTest::test_value_success",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14817"
-                    },
-                    "bind": "s25631"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14818"
-                    },
-                    "bind": "s25632"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14818"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14819"
-                    },
-                    "bind": "s25633"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14819"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14820"
-                    },
-                    "bind": "s25634"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14817"
-                                },
-                                {
-                                    "$obj": "o14820"
-                                }
-                            ]
-                        },
-                        "as": "o14821"
-                    },
-                    "bind": "s25635"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "*",
-                                "attr"
-                            ]
-                        },
-                        "as": "o14822"
-                    },
-                    "bind": "s25636"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14821"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14822"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "artist.name"
-                            ]
-                        },
-                        "as": "o14823"
-                    },
-                    "bind": "s25638"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14821"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14823"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14567"
+          },
+          "bind": "s25002",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
         },
         {
-            "name": "SelectTest::test_value_failure",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14824"
-                    },
-                    "bind": "s25640"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14825"
-                    },
-                    "bind": "s25641"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14825"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14826"
-                    },
-                    "bind": "s25642"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14826"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14827"
-                    },
-                    "bind": "s25643"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14824"
-                                },
-                                {
-                                    "$obj": "o14827"
-                                }
-                            ]
-                        },
-                        "as": "o14828"
-                    },
-                    "bind": "s25644"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "limit",
-                        "args": {
-                            "value": 1
-                        },
-                        "as": "o14829"
-                    },
-                    "bind": "s25645"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14828"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14829"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14828"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "name.artist"
-                            ]
-                        },
-                        "as": "o14830"
-                    },
-                    "bind": "s25648"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14828"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14830"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14568"
+          },
+          "bind": "s25003",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
         },
         {
-            "name": "SelectTest::testANestedPathOnAPlainAttributeIsRefused",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14831"
-                    },
-                    "bind": "s25650"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14832"
-                    },
-                    "bind": "s25651"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14832"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14833"
-                    },
-                    "bind": "s25652"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14833"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14834"
-                    },
-                    "bind": "s25653"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14831"
-                                },
-                                {
-                                    "$obj": "o14834"
-                                }
-                            ]
-                        },
-                        "as": "o14835"
-                    },
-                    "bind": "s25654"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "attr.x"
-                            ]
-                        },
-                        "as": "o14836"
-                    },
-                    "bind": "s25655"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14835"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14836"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14835"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14568"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14569"
+          },
+          "bind": "s25004",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
                 }
-            ]
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
         },
         {
-            "name": "SelectTest::testANestedPathOnAnObjectAttributeIsAccepted",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14837"
-                    },
-                    "bind": "s25658"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14838"
-                    },
-                    "bind": "s25659"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14838"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14839"
-                    },
-                    "bind": "s25660"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14839"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14840"
-                    },
-                    "bind": "s25661"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14837"
-                                },
-                                {
-                                    "$obj": "o14840"
-                                }
-                            ]
-                        },
-                        "as": "o14841"
-                    }
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "meta",
-                                "key": "meta",
-                                "type": "object",
-                                "array": false
-                            }
-                        },
-                        "as": "o14842"
-                    },
-                    "bind": "s25663"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14842"
-                                }
-                            ]
-                        },
-                        "as": "o14843"
-                    },
-                    "bind": "s25664"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "meta.key"
-                            ]
-                        },
-                        "as": "o14844"
-                    },
-                    "bind": "s25665"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14843"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14844"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14843"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14569"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14570"
+          },
+          "bind": "s25005",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
         },
         {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#nested array",
-            "state": [],
-            "steps": [
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
                 {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14845"
-                    },
-                    "bind": "s25668"
+                  "$obj": "o14567"
                 },
                 {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14846"
-                    },
-                    "bind": "s25669"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14846"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14847"
-                    },
-                    "bind": "s25670"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14847"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14848"
-                    },
-                    "bind": "s25671"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14845"
-                                },
-                                {
-                                    "$obj": "o14848"
-                                }
-                            ]
-                        },
-                        "as": "o14849"
-                    },
-                    "bind": "s25672"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                [
-                                    "attr"
-                                ]
-                            ]
-                        },
-                        "as": "o14850"
-                    },
-                    "bind": "s25673"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14849"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14850"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14849"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
+                  "$obj": "o14570"
                 }
-            ]
+              ]
+            },
+            "as": "o14571"
+          },
+          "bind": "s25006",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
         },
         {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#nested wildcard",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14851"
-                    },
-                    "bind": "s25676"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14852"
-                    },
-                    "bind": "s25677"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14852"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14853"
-                    },
-                    "bind": "s25678"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14853"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14854"
-                    },
-                    "bind": "s25679"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14851"
-                                },
-                                {
-                                    "$obj": "o14854"
-                                }
-                            ]
-                        },
-                        "as": "o14855"
-                    },
-                    "bind": "s25680"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                [
-                                    "*"
-                                ]
-                            ]
-                        },
-                        "as": "o14856"
-                    },
-                    "bind": "s25681"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14855"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14856"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14855"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "*",
+                "attr"
+              ]
+            },
+            "as": "o14572"
+          },
+          "bind": "s25007",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "*",
+                "attr"
+              ]
+            }
+          }
         },
         {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#mixed flat and nested",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14857"
-                    },
-                    "bind": "s25684"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14858"
-                    },
-                    "bind": "s25685"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14858"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14859"
-                    },
-                    "bind": "s25686"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14859"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14860"
-                    },
-                    "bind": "s25687"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14857"
-                                },
-                                {
-                                    "$obj": "o14860"
-                                }
-                            ]
-                        },
-                        "as": "o14861"
-                    },
-                    "bind": "s25688"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                "attr",
-                                [
-                                    "x"
-                                ]
-                            ]
-                        },
-                        "as": "o14862"
-                    },
-                    "bind": "s25689"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14861"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14862"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14861"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14571"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14572"
+              }
+            }
+          },
+          "expect": true
         },
         {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#assoc array",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14863"
-                    },
-                    "bind": "s25692"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14864"
-                    },
-                    "bind": "s25693"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14864"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14865"
-                    },
-                    "bind": "s25694"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14865"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14866"
-                    },
-                    "bind": "s25695"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14863"
-                                },
-                                {
-                                    "$obj": "o14866"
-                                }
-                            ]
-                        },
-                        "as": "o14867"
-                    },
-                    "bind": "s25696"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                {
-                                    "a": 1
-                                }
-                            ]
-                        },
-                        "as": "o14868"
-                    },
-                    "bind": "s25697"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14867"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14868"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14867"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "artist.name"
+              ]
+            },
+            "as": "o14573"
+          },
+          "bind": "s25009",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "artist.name"
+              ]
+            }
+          }
         },
         {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#integer",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14869"
-                    },
-                    "bind": "s25700"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14870"
-                    },
-                    "bind": "s25701"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14870"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14871"
-                    },
-                    "bind": "s25702"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14871"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14872"
-                    },
-                    "bind": "s25703"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14869"
-                                },
-                                {
-                                    "$obj": "o14872"
-                                }
-                            ]
-                        },
-                        "as": "o14873"
-                    },
-                    "bind": "s25704"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                1
-                            ]
-                        },
-                        "as": "o14874"
-                    },
-                    "bind": "s25705"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14873"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14874"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14873"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SelectTest::testANonStringSelectionIsRefusedByType#null",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14875"
-                    },
-                    "bind": "s25708"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14876"
-                    },
-                    "bind": "s25709"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14876"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14877"
-                    },
-                    "bind": "s25710"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14877"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14878"
-                    },
-                    "bind": "s25711"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14875"
-                                },
-                                {
-                                    "$obj": "o14878"
-                                }
-                            ]
-                        },
-                        "as": "o14879"
-                    },
-                    "bind": "s25712"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Query",
-                        "args": {
-                            "method": {
-                                "$enum": "Query\\Method::Select"
-                            },
-                            "values": [
-                                null
-                            ]
-                        },
-                        "as": "o14880"
-                    },
-                    "bind": "s25713"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14879"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14880"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14879"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SelectTest::testTwoNestedSelectionsReportTheTypeNotAFalseDuplicate",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14881"
-                    },
-                    "bind": "s25716"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14882"
-                    },
-                    "bind": "s25717"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14882"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14883"
-                    },
-                    "bind": "s25718"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14883"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14884"
-                    },
-                    "bind": "s25719"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14881"
-                                },
-                                {
-                                    "$obj": "o14884"
-                                }
-                            ]
-                        },
-                        "as": "o14885"
-                    },
-                    "bind": "s25720"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "parse",
-                        "args": {
-                            "query": "{\"method\":\"select\",\"values\":[[\"a\"],[\"b\"]]}"
-                        },
-                        "as": "o14886"
-                    },
-                    "bind": "s25721"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14885"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14886"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14885"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SelectTest::testTheLegitimateFlatFormStillPasses",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14887"
-                    },
-                    "bind": "s25724"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14888"
-                    },
-                    "bind": "s25725"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14888"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14889"
-                    },
-                    "bind": "s25726"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14889"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14890"
-                    },
-                    "bind": "s25727"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14887"
-                                },
-                                {
-                                    "$obj": "o14890"
-                                }
-                            ]
-                        },
-                        "as": "o14891"
-                    },
-                    "bind": "s25728"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "attr"
-                            ]
-                        },
-                        "as": "o14892"
-                    },
-                    "bind": "s25729"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14891"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14892"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "*"
-                            ]
-                        },
-                        "as": "o14893"
-                    },
-                    "bind": "s25731"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14891"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14893"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "$id",
-                                "$createdAt"
-                            ]
-                        },
-                        "as": "o14894"
-                    },
-                    "bind": "s25733"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14891"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14894"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "artist.name"
-                            ]
-                        },
-                        "as": "o14895"
-                    },
-                    "bind": "s25735"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14891"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14895"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SelectTest::testDottedJoinAliasIsAcceptedAfterAllowJoinAliases",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14896"
-                    },
-                    "bind": "s25737"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14897"
-                    },
-                    "bind": "s25738"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14897"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14898"
-                    },
-                    "bind": "s25739"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14898"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14899"
-                    },
-                    "bind": "s25740"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14896"
-                                },
-                                {
-                                    "$obj": "o14899"
-                                }
-                            ]
-                        },
-                        "as": "o14900"
-                    },
-                    "bind": "s25741"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14900"
-                        },
-                        "method": "allowJoinAliases",
-                        "args": {
-                            "aliases": [
-                                "ord"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "ord.amount"
-                            ]
-                        },
-                        "as": "o14901"
-                    },
-                    "bind": "s25743"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14900"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14901"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "ord.$id"
-                            ]
-                        },
-                        "as": "o14902"
-                    },
-                    "bind": "s25745"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14900"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14902"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SelectTest::testUnqualifiedAmountIsStillRejected",
-            "state": [],
-            "steps": [
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": "attr",
-                                "key": "attr",
-                                "type": "string",
-                                "array": false
-                            }
-                        },
-                        "as": "o14903"
-                    },
-                    "bind": "s25747"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Relationship",
-                        "method": "manyToOne",
-                        "args": {
-                            "relatedCollection": "artists"
-                        },
-                        "as": "o14904"
-                    },
-                    "bind": "s25748"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Attribute",
-                        "method": "relationship",
-                        "args": {
-                            "key": "artist",
-                            "relationship": {
-                                "$obj": "o14904"
-                            },
-                            "side": {
-                                "$enum": "RelationshipSide::Parent"
-                            }
-                        },
-                        "as": "o14905"
-                    },
-                    "bind": "s25749"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14905"
-                        },
-                        "method": "toDocument",
-                        "args": {},
-                        "as": "o14906"
-                    },
-                    "bind": "s25750"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Query\\Select",
-                        "args": {
-                            "attributes": [
-                                {
-                                    "$obj": "o14903"
-                                },
-                                {
-                                    "$obj": "o14906"
-                                }
-                            ]
-                        },
-                        "as": "o14907"
-                    },
-                    "bind": "s25751"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14907"
-                        },
-                        "method": "allowJoinAliases",
-                        "args": {
-                            "aliases": [
-                                "ord"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Query",
-                        "method": "select",
-                        "args": {
-                            "attributes": [
-                                "amount"
-                            ]
-                        },
-                        "as": "o14908"
-                    },
-                    "bind": "s25753"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14907"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o14908"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o14907"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    }
-                }
-            ]
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14571"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14573"
+              }
+            }
+          },
+          "expect": true
         }
-    ]
+      ]
+    },
+    {
+      "name": "SelectTest::test_value_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14574"
+          },
+          "bind": "s25011",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14575"
+          },
+          "bind": "s25012",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14575"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14576"
+          },
+          "bind": "s25013",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14576"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14577"
+          },
+          "bind": "s25014",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14574"
+                },
+                {
+                  "$obj": "o14577"
+                }
+              ]
+            },
+            "as": "o14578"
+          },
+          "bind": "s25015",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o14579"
+          },
+          "bind": "s25016",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14578"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14579"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14578"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "name.artist"
+              ]
+            },
+            "as": "o14580"
+          },
+          "bind": "s25019",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "name.artist"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14578"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14580"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANestedPathOnAPlainAttributeIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14581"
+          },
+          "bind": "s25021",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14582"
+          },
+          "bind": "s25022",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14582"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14583"
+          },
+          "bind": "s25023",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14583"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14584"
+          },
+          "bind": "s25024",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14581"
+                },
+                {
+                  "$obj": "o14584"
+                }
+              ]
+            },
+            "as": "o14585"
+          },
+          "bind": "s25025",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "attr.x"
+              ]
+            },
+            "as": "o14586"
+          },
+          "bind": "s25026",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "attr.x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14585"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14586"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14585"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot select nested attribute on: attr"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANestedPathOnAnObjectAttributeIsAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14587"
+          },
+          "bind": "s25029",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14588"
+          },
+          "bind": "s25030",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14588"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14589"
+          },
+          "bind": "s25031",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14589"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14590"
+          },
+          "bind": "s25032",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14587"
+                },
+                {
+                  "$obj": "o14590"
+                }
+              ]
+            },
+            "as": "o14591"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "meta",
+                "key": "meta",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o14592"
+          },
+          "bind": "s25034",
+          "expect": {
+            "$document": {
+              "$id": "meta",
+              "key": "meta",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14592"
+                }
+              ]
+            },
+            "as": "o14593"
+          },
+          "bind": "s25035",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "meta.key"
+              ]
+            },
+            "as": "o14594"
+          },
+          "bind": "s25036",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "meta.key"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14593"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14594"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14593"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#nested array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14595"
+          },
+          "bind": "s25039",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14596"
+          },
+          "bind": "s25040",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14596"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14597"
+          },
+          "bind": "s25041",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14597"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14598"
+          },
+          "bind": "s25042",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14595"
+                },
+                {
+                  "$obj": "o14598"
+                }
+              ]
+            },
+            "as": "o14599"
+          },
+          "bind": "s25043",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "attr"
+                ]
+              ]
+            },
+            "as": "o14600"
+          },
+          "bind": "s25044",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "attr"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14599"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14600"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14599"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#nested wildcard",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14601"
+          },
+          "bind": "s25047",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14602"
+          },
+          "bind": "s25048",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14602"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14603"
+          },
+          "bind": "s25049",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14603"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14604"
+          },
+          "bind": "s25050",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14601"
+                },
+                {
+                  "$obj": "o14604"
+                }
+              ]
+            },
+            "as": "o14605"
+          },
+          "bind": "s25051",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            },
+            "as": "o14606"
+          },
+          "bind": "s25052",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "*"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14605"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14606"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14605"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#mixed flat and nested",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14607"
+          },
+          "bind": "s25055",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14608"
+          },
+          "bind": "s25056",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14608"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14609"
+          },
+          "bind": "s25057",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14609"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14610"
+          },
+          "bind": "s25058",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14607"
+                },
+                {
+                  "$obj": "o14610"
+                }
+              ]
+            },
+            "as": "o14611"
+          },
+          "bind": "s25059",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                "attr",
+                [
+                  "x"
+                ]
+              ]
+            },
+            "as": "o14612"
+          },
+          "bind": "s25060",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "attr",
+                [
+                  "x"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14611"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14612"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14611"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#assoc array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14613"
+          },
+          "bind": "s25063",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14614"
+          },
+          "bind": "s25064",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14614"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14615"
+          },
+          "bind": "s25065",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14615"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14616"
+          },
+          "bind": "s25066",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14613"
+                },
+                {
+                  "$obj": "o14616"
+                }
+              ]
+            },
+            "as": "o14617"
+          },
+          "bind": "s25067",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                {
+                  "a": 1
+                }
+              ]
+            },
+            "as": "o14618"
+          },
+          "bind": "s25068",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                {
+                  "a": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14617"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14618"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14617"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14619"
+          },
+          "bind": "s25071",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14620"
+          },
+          "bind": "s25072",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14620"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14621"
+          },
+          "bind": "s25073",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14621"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14622"
+          },
+          "bind": "s25074",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14619"
+                },
+                {
+                  "$obj": "o14622"
+                }
+              ]
+            },
+            "as": "o14623"
+          },
+          "bind": "s25075",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                1
+              ]
+            },
+            "as": "o14624"
+          },
+          "bind": "s25076",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14623"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14624"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14623"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got int"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANonStringSelectionIsRefusedByType#null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14625"
+          },
+          "bind": "s25079",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14626"
+          },
+          "bind": "s25080",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14626"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14627"
+          },
+          "bind": "s25081",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14627"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14628"
+          },
+          "bind": "s25082",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14625"
+                },
+                {
+                  "$obj": "o14628"
+                }
+              ]
+            },
+            "as": "o14629"
+          },
+          "bind": "s25083",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Select"
+              },
+              "values": [
+                null
+              ]
+            },
+            "as": "o14630"
+          },
+          "bind": "s25084",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14629"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14630"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14629"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got null"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testTwoNestedSelectionsReportTheTypeNotAFalseDuplicate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14631"
+          },
+          "bind": "s25087",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14632"
+          },
+          "bind": "s25088",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14632"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14633"
+          },
+          "bind": "s25089",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14633"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14634"
+          },
+          "bind": "s25090",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14631"
+                },
+                {
+                  "$obj": "o14634"
+                }
+              ]
+            },
+            "as": "o14635"
+          },
+          "bind": "s25091",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"select\",\"values\":[[\"a\"],[\"b\"]]}"
+            },
+            "as": "o14636"
+          },
+          "bind": "s25092",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                [
+                  "a"
+                ],
+                [
+                  "b"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14635"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14636"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14635"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute selection must be a string, got array"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testTheLegitimateFlatFormStillPasses",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14637"
+          },
+          "bind": "s25095",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14638"
+          },
+          "bind": "s25096",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14638"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14639"
+          },
+          "bind": "s25097",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14639"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14640"
+          },
+          "bind": "s25098",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14637"
+                },
+                {
+                  "$obj": "o14640"
+                }
+              ]
+            },
+            "as": "o14641"
+          },
+          "bind": "s25099",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "attr"
+              ]
+            },
+            "as": "o14642"
+          },
+          "bind": "s25100",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "attr"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14641"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14642"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "*"
+              ]
+            },
+            "as": "o14643"
+          },
+          "bind": "s25102",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "*"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14641"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14643"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "$id",
+                "$createdAt"
+              ]
+            },
+            "as": "o14644"
+          },
+          "bind": "s25104",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "$id",
+                "$createdAt"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14641"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14644"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "artist.name"
+              ]
+            },
+            "as": "o14645"
+          },
+          "bind": "s25106",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "artist.name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14641"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14645"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testDottedJoinAliasIsAcceptedAfterAllowJoinAliases",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14646"
+          },
+          "bind": "s25108",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14647"
+          },
+          "bind": "s25109",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14647"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14648"
+          },
+          "bind": "s25110",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14648"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14649"
+          },
+          "bind": "s25111",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14646"
+                },
+                {
+                  "$obj": "o14649"
+                }
+              ]
+            },
+            "as": "o14650"
+          },
+          "bind": "s25112",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14650"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "ord"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "ord.amount"
+              ]
+            },
+            "as": "o14651"
+          },
+          "bind": "s25114",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "ord.amount"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14650"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14651"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "ord.$id"
+              ]
+            },
+            "as": "o14652"
+          },
+          "bind": "s25116",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "ord.$id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14650"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14652"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testUnqualifiedAmountIsStillRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14653"
+          },
+          "bind": "s25118",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14654"
+          },
+          "bind": "s25119",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14654"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14655"
+          },
+          "bind": "s25120",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14655"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14656"
+          },
+          "bind": "s25121",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14653"
+                },
+                {
+                  "$obj": "o14656"
+                }
+              ]
+            },
+            "as": "o14657"
+          },
+          "bind": "s25122",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14657"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "ord"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "amount"
+              ]
+            },
+            "as": "o14658"
+          },
+          "bind": "s25124",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "amount"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14657"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14658"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14657"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: amount"
+        }
+      ]
+    }
+  ]
 }
