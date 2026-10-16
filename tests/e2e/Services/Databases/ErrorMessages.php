@@ -25,6 +25,44 @@ trait ErrorMessages
         }
     }
 
+    public function testIncrementOfARowTheCallerCannotReadLooksLikeAMissingRow(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('Needs a caller bound by row permissions');
+        }
+
+        $headers = $this->getErrorMessagesHeaders();
+        [$databaseId, $collectionId] = $this->createErrorMessagesCollection('incrementUnreadable', [Permission::create(Role::any())], true);
+        $hiddenId = $this->createErrorMessagesRecord($databaseId, $collectionId, ['count' => 1], []);
+        $callerHeaders = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $fields = $this->getSupportForAttributes() ? ['nope', 'count'] : ['count'];
+        foreach ($fields as $field) {
+            foreach (['increment', 'decrement'] as $direction) {
+                $responses = [];
+                foreach (['missing' => Id::unique(), 'unreadable' => $hiddenId] as $case => $recordId) {
+                    $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId) . '/' . $field . '/' . $direction, $callerHeaders, [
+                        'value' => 1,
+                    ]);
+                    $responses[$case] = [
+                        $response['headers']['status-code'],
+                        $response['body']['type'] ?? null,
+                        \str_replace($recordId, '{id}', $response['body']['message'] ?? ''),
+                    ];
+                }
+
+                $this->assertSame([404, $this->isTablesAPI() ? Exception::ROW_NOT_FOUND : Exception::DOCUMENT_NOT_FOUND, $this->getRecordNoun() . " with the requested ID '{id}' could not be found."], $responses['missing'], "{$direction} {$field}");
+                $this->assertSame($responses['missing'], $responses['unreadable'], "{$direction} {$field}: a row the caller cannot read answers as a missing row");
+            }
+        }
+
+        $stored = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $hiddenId), $headers);
+        $this->assertSame(1, $stored['body']['count'], 'the hidden row is left unchanged');
+    }
+
     public function testIncrementOfAMissingFieldNamesTheField(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -149,9 +187,10 @@ trait ErrorMessages
     }
 
     /**
+     * @param list<string>|null $permissions
      * @return array{string, string}
      */
-    private function createErrorMessagesCollection(string $name): array
+    private function createErrorMessagesCollection(string $name, ?array $permissions = null, bool $documentSecurity = false): array
     {
         $headers = $this->getErrorMessagesHeaders();
 
@@ -164,11 +203,12 @@ trait ErrorMessages
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($database['body']['$id']), $headers, [
             $this->getContainerIdParam() => Id::unique(),
             'name' => $name,
-            'permissions' => [
+            'permissions' => $permissions ?? [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
                 Permission::update(Role::any()),
             ],
+            $this->getSecurityParam() => $documentSecurity,
         ]);
         $this->assertSame(201, $collection['headers']['status-code'], $collection['body']['message'] ?? '');
 
@@ -186,13 +226,15 @@ trait ErrorMessages
 
     /**
      * @param array<string, mixed> $data
+     * @param list<string>|null $permissions
      */
-    private function createErrorMessagesRecord(string $databaseId, string $collectionId, array $data): string
+    private function createErrorMessagesRecord(string $databaseId, string $collectionId, array $data, ?array $permissions = null): string
     {
-        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getErrorMessagesHeaders(), [
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getErrorMessagesHeaders(), \array_filter([
             $this->getRecordIdParam() => Id::unique(),
             'data' => $data,
-        ]);
+            'permissions' => $permissions,
+        ], static fn (mixed $value): bool => $value !== null));
         $this->assertSame(201, $record['headers']['status-code'], $record['body']['message'] ?? '');
 
         return $record['body']['$id'];

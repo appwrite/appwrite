@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
@@ -184,10 +185,13 @@ class Decrement extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            $stored = $authorization->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $documentId));
-            throw $stored->isEmpty()
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
                 ? new Exception($this->getNotFoundException(), params: [$documentId])
                 : new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+        } catch (AuthorizationException $e) {
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the minimum value of ' . $min);
         } catch (TypeException $e) {
