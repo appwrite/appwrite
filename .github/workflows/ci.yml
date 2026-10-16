@@ -447,7 +447,13 @@ jobs:
     name: Build
     needs: changes
     if: needs.changes.outputs.server == 'true'
-    runs-on: gcrunner=${{ github.run_id }}/runner=build
+    # gcrunner refuses jobs from forks, so fork pull requests build on a
+    # GitHub-hosted runner and hand the image on as an artifact instead.
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner=build', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repository
@@ -466,12 +472,14 @@ jobs:
       # The runner injects GCRUNNER_REGISTRY into the shell only; action inputs
       # read ${{ env.* }}, which needs it promoted to GITHUB_ENV first.
       - name: Expose the runner registry to workflow expressions
+        if: runner.environment == 'self-hosted'
         run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
       - name: Build and push Appwrite
+        if: runner.environment == 'self-hosted'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: .
@@ -485,9 +493,37 @@ jobs:
             TESTING=true
             VERSION=dev
 
+      # No layer cache: a fork's GitHub Actions cache can only grow the shared
+      # 10 GB quota and would evict the caches main relies on.
+      - name: Build Appwrite
+        if: runner.environment == 'github-hosted'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          tags: ${{ env.IMAGE }}
+          outputs: type=docker,dest=${{ runner.temp }}/appwrite.tar
+          target: development
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+
+      - name: Upload Appwrite image
+        if: runner.environment == 'github-hosted'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: appwrite-image
+          path: ${{ runner.temp }}/appwrite.tar
+          retention-days: 1
+          if-no-files-found: error
+
   unit:
     name: Tests / Unit
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner=e2e', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 15
     needs: build
     permissions:
@@ -528,7 +564,11 @@ jobs:
 
   e2e_general:
     name: Tests / E2E / General
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner=e2e', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 15
     needs: build
     permissions:
@@ -580,7 +620,11 @@ jobs:
 
   e2e_security:
     name: Tests / E2E / Security
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner=e2e', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 25
     needs: build
     permissions:
@@ -624,7 +668,11 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
-    runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner={1}', github.run_id, matrix.service.runner)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 35
     needs: [build, changes]
     if: needs.changes.outputs.services != '[]'
@@ -786,7 +834,11 @@ jobs:
   # as an operator would, so it runs where no other test's jobs are in flight.
   e2e_grouped:
     name: Tests / E2E / ${{ matrix.config.label }} (${{ matrix.mode }})
-    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    runs-on: >-
+      ${{ (github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository)
+      && format('gcrunner={0}/runner=e2e', github.run_id)
+      || 'ubuntu-24.04' }}
     timeout-minutes: 35
     needs: [build, changes]
     if: needs.changes.outputs.groups != '[]'
@@ -916,7 +968,12 @@ jobs:
 
   benchmark:
     name: Benchmark
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    # Fork pull requests get a read-only token that cannot post the results, and
+    # a GitHub-hosted runner is too noisy to compare against anyway.
+    if: >-
+      github.event_name == 'push'
+      || (github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
     timeout-minutes: 20
     needs: build
