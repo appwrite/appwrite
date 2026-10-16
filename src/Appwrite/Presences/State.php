@@ -137,7 +137,9 @@ class State
         Document $presenceDocument,
         string $userId,
         bool $firstWorkerHold,
+        ?bool &$created = null,
     ): Document {
+        $created = false;
         try {
             // Not this worker's first hold: the counter is already correct, so just refresh the
             // value with a sparse update (connections is not in the document, so it is left as is).
@@ -160,7 +162,7 @@ class State
             // unique-userId race, retry once: the row now exists, so the retry increments it.
             for ($attempt = 1; ; $attempt++) {
                 try {
-                    return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId) {
+                    return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created) {
                         $existing = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                         );
@@ -170,9 +172,12 @@ class State
                                 $presenceDocument->setAttribute('$id', Id::unique());
                             }
                             $presenceDocument->setAttribute('connections', 1);
+                            $created = true;
 
                             return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                         }
+
+                        $created = false;
 
                         $current = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
