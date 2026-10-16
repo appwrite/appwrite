@@ -142,6 +142,34 @@ trait ErrorMessages
         $this->assertSame(($this->isTablesAPI() ? 'Column' : 'Attribute') . ' "label" is not a number', $commit['body']['message']);
     }
 
+    public function testIndexLengthPastTheFieldSizeNamesBothSizes(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        [$databaseId, $collectionId] = $this->createErrorMessagesCollection('indexLengthPastSize');
+        $headers = $this->getErrorMessagesHeaders();
+
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $headers, [
+            'key' => 'title',
+            'size' => 64,
+            'required' => false,
+        ]);
+        $this->assertSame(202, $attribute['headers']['status-code'], $attribute['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'title');
+
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $headers, [
+            'key' => 'byTitle',
+            'type' => 'key',
+            $this->getIndexAttributesParam() => ['title'],
+            'lengths' => [65],
+        ]);
+
+        $this->assertSame(400, $index['headers']['status-code'], \json_encode($index['body']) ?: '');
+        $this->assertStringEndsWith('Index length 65 is larger than the size for title: 64', $index['body']['message']);
+    }
+
     public function testBulkCreateOfAnExistingIdNamesTheId(): void
     {
         [$databaseId, $collectionId] = $this->createErrorMessagesCollection('bulkCreateExisting');
