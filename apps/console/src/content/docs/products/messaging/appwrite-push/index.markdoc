@@ -27,10 +27,10 @@ The provider has two optional settings:
 * Description
 ---
 * **Quality of service**
-* The delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once and lets each subscription decide.
+* The delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once, and each subscription can lower it with `retry`.
 ---
 * **Message expiry**
-* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Applies to topics that don't set their own expiry. Leave it empty to keep messages for 7 days.
+* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
 {% /table %}
 
 You can also create the provider with a [Server SDK](/docs/sdks#server).
@@ -258,7 +258,7 @@ Account(client).createEmailPasswordSession(email, password)
 // Pass an Activity so Push can ask for the notification permission
 val push = Push(client, activity)
 
-// subscribe waits for the broker, so call it off the main thread
+// subscribe can block, so call it off the main thread
 val subscription = push.subscribe { message ->
     Log.d("push", message.data)
 }
@@ -280,7 +280,7 @@ let subscription = try await push.subscribe { message in
 ```
 {% /multicode %}
 
-`subscribe` returns once the broker has accepted the subscription. Each message has `topic`, `data` (the payload as text), `payload` (the raw bytes), and `qos`.
+`subscribe` returns once the broker has accepted the subscription. On Android, a background subscription returns once the SDK's background service has taken it. Each message has `topic`, `data` (the payload as text), `payload` (the raw bytes), and `qos`.
 
 `Push` connects with the session the app signed in with through this client, or a JWT or session you set on the client. Background delivery reconnects with the same credential, so prefer a session over a short-lived JWT.
 
@@ -387,7 +387,7 @@ let target = try await account.createPushTarget(
 ```
 {% /multicode %}
 
-Targets belong to the session that created them. When the user signs out, Appwrite deletes the session's targets for you.
+Targets belong to the session that created them. When the user signs out with `deleteSession`, Appwrite deletes that session's targets for you.
 
 # Message format {% #message-format %}
 
@@ -498,7 +498,7 @@ On Android, Flutter, and React Native apps, the SDK saves background subscriptio
 * Within about 60 seconds
 ---
 * Awake, no exact alarms
-* Inexact, battery saver can defer it
+* About every 15 seconds, but inexact, so battery saver can defer it
 ---
 * Doze (screen off, idle)
 * About every 9 minutes
@@ -527,7 +527,7 @@ if (status.bestEffort) {
 }
 ```
 
-For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove `io.appwrite.services.PushService` and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
+For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove the push service (`io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, `io.appwrite.reactnative.services.PushService` on React Native) and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
 
 ## iOS {% #background-ios %}
 
@@ -551,19 +551,33 @@ To set it up:
 1. Register an [Appwrite push target](#push-target) after sign-in. Without it, Appwrite sends the full APNs notification instead of the wake-up.
 1. Subscribe with `background: true`. The SDK registers the device with APNs and creates its APNs push target for you.
 
-The SDK registers for remote notifications on its own. To handle the APNs device token and remote notifications yourself, set `AppwritePushAutoRegistration` to `NO` in `Info.plist` and call `Push.setDeviceToken(_:)` and `Push.handleRemoteNotification(_:)` from your app delegate.
+The SDK registers for remote notifications on its own. To handle registration yourself, set `AppwritePushAutoRegistration` to `NO` in `Info.plist`, call `UIApplication.shared.registerForRemoteNotifications()`, and pass the device token to `Push.setDeviceToken(_:)` from your app delegate. `Push.handleRemoteNotification(_:)` and `Push.isDelivered(_:)` are optional helpers.
 
 Flutter and React Native apps on iOS deliver while the app runs and for a short time after it is backgrounded. Once iOS suspends the app, messages wait until it is opened again, and the broker then replays what was missed.
 
 ## Web {% #background-web %}
 
-Messages arrive while the page is open. Messages sent while the tab was closed are replayed when it reconnects.
+Messages arrive while the page is open. To replay messages sent while the tab was closed, give each browser a stable client ID, see [Offline replay](#offline-replay).
 
 # Offline replay {% #offline-replay %}
 
 With at-least-once delivery, Appwrite stores each message and replays the newest ones a device missed, oldest first, when it subscribes again. Replay sends up to 5 messages per topic, and only messages younger than the topic's expiry. Replay needs at-least-once delivery on both the topic and the subscription.
 
-Replay is tracked per device, so leave `setPushClientId` unset. The SDK derives a stable ID per user and install. A random client ID on every launch loses the backlog.
+Replay is tracked per client ID, and a client ID the broker hasn't seen before gets no backlog.
+
+- **Android**: the SDK derives a stable ID per user and install, so leave `setPushClientId` unset. This includes Flutter and React Native apps on Android.
+- **iOS and the web**: the SDK's default ID is shared by all of the user's iOS devices, or tied to one browser tab. If missed messages must be replayed, set a client ID you persist per device, for example in the Keychain or `localStorage`.
+
+```ts
+let clientId = localStorage.getItem('pushClientId');
+if (!clientId) {
+    clientId = crypto.randomUUID();
+    localStorage.setItem('pushClientId', clientId);
+}
+client.setPushClientId(clientId);
+```
+
+A random client ID on every launch loses the backlog.
 
 # Sign out {% #sign-out %}
 
@@ -581,9 +595,11 @@ A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik
 The SDKs connect to `push.<YOUR_API_HOST>` by default. Either point a `push.` DNS record at your server, or set the broker address on the client:
 
 ```ts
-client.setPushEndpoint('mqtts://appwrite.example.com:8883'); // Android, Apple, Flutter, React Native
-client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web
+client.setPushEndpoint('mqtts://appwrite.example.com:8883'); // Android, Apple, React Native, Flutter on mobile
+client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web, Flutter on the web
 ```
+
+A Flutter app that runs on both picks the endpoint with `kIsWeb`.
 
 # Limits {% #limits %}
 
@@ -601,7 +617,7 @@ client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web
 * 64,000 bytes per MQTT packet, including the topic and headers
 ---
 * Connections
-* 128 new connections per user per minute
+* 128 new connections per user per minute. On self-hosted Appwrite, this applies when `_APP_OPTIONS_ABUSE` is enabled.
 {% /table %}
 
 # Troubleshooting {% #troubleshooting %}
@@ -623,7 +639,7 @@ client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web
 * Register an Appwrite push target for the device.
 ---
 * Messages sent while offline never arrive
-* A random `setPushClientId` on each launch, `retry` set to `false`, or the message expired.
+* A client ID that changes between launches, such as the default on iOS and the web, `retry` set to `false`, or the message expired. See [Offline replay](#offline-replay).
 ---
 * No notification while the app is open
 * Expected. Set `notifyInForeground` to `true` on Android, Flutter, or React Native.
@@ -634,7 +650,7 @@ client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web
 * iOS shows "New message" instead of the real message
 * The Notification Service Extension is missing, or `AppwritePushAppGroup` isn't set in both `Info.plist` files.
 ---
-* `NetworkOnMainThreadException` on Android
+* The UI freezes or the app stops responding on Android
 * Call `subscribe` off the main thread.
 ---
 * React Native fails with "background delivery needs the SDK's native Android module"

@@ -16,7 +16,7 @@ faqs:
   - question: "Do I need a push target to send a message to a user?"
     answer: "Not when the user has no other push targets. A signed-in user subscribes to their own topic, and a message sent with `users: ['<USER_ID>']` reaches all their connected devices. Register an Appwrite push target to use topics or iOS background delivery, or when any of the user's devices also has an FCM or APNs target. See [Appwrite push target](/docs/products/messaging/appwrite-push#push-target)."
   - question: "Does Appwrite Push work when the app is closed?"
-    answer: "On Android, yes: the SDK wakes the app on a schedule to reconnect, and with a foreground service it delivers immediately, even in Doze. On iOS, the Apple SDK uses an APNs wake-up and a Notification Service Extension to show the real message while the app is suspended. On the web, messages arrive while the tab is open and missed ones are replayed when it reconnects."
+    answer: "On Android, yes: the SDK wakes the app on a schedule to reconnect, and with a foreground service it delivers immediately, even in Doze. On iOS, the Apple SDK uses an APNs wake-up and a Notification Service Extension to show the real message while the app is suspended. On the web, messages arrive while the tab is open, and with a stable client ID, missed ones are replayed when the page opens again."
   - question: "What happens to messages sent while a device is offline?"
     answer: "With at-least-once delivery, the default, Appwrite keeps each message for up to 7 days and replays the newest messages a device missed, oldest first, when it reconnects. You can shorten how long messages are kept on the provider or on each topic."
   - question: "Can I keep using FCM and APNs?"
@@ -123,7 +123,7 @@ class NotificationService: AppwriteNotificationService {}
 
 The [iOS background delivery guide](/docs/products/messaging/appwrite-push#background-ios) covers the App Group and the Appwrite push target the extension needs.
 
-**On the web**, messages arrive while the tab is open, and the ones sent while it was closed are replayed when it reconnects.
+**On the web**, messages arrive while the tab is open. Give each browser a stable client ID with `client.setPushClientId()`, and the ones sent while it was closed are replayed when the page opens again.
 
 # Topics, delivery guarantees, and expiry
 
