@@ -194,7 +194,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
         "app/controllers/api/projects.php",
-        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsCalculations.php",
+        "src/Appwrite/Platform/Workers/StatsEvents.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
         "src/Appwrite/Certificates/"
@@ -294,9 +295,10 @@
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
         "src/Appwrite/Platform/Modules/Storage/",
-        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsCalculations.php",
+        "src/Appwrite/Platform/Workers/StatsEvents.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "src/Appwrite/Platform/Tasks/StatsResources.php",
+        "src/Appwrite/Platform/Tasks/StatsCalculations.php",
         "src/Appwrite/Platform/Tasks/UsageSetup.php",
         "src/Appwrite/Platform/Workers/Executions.php",
         "src/Appwrite/Databases/",
@@ -420,7 +422,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Project/",
         "app/controllers/api/project.php",
-        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsCalculations.php",
+        "src/Appwrite/Platform/Workers/StatsEvents.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "packages/smtp/"
       ]
