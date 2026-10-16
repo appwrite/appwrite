@@ -385,9 +385,6 @@ mod postgres_distance_test {
                 "point",
             ),
             typed(Query::distance_less_than("location", point(179.99, 0.0), 5000, true), "point"),
-            typed(Query::distance_less_than("location", ints(10, 20), f64::NAN, true), "point"),
-            typed(Query::distance_less_than("location", ints(10, 20), f64::INFINITY, true), "point"),
-            typed(Query::distance_less_than("location", ints(10, 20), f64::NEG_INFINITY, true), "point"),
         ];
         for query in cases {
             let condition = builder::postgres().compile_filters(&[query]).unwrap();
@@ -396,6 +393,17 @@ mod postgres_distance_test {
                 r#"ST_Distance(("location"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?"#
             );
             assert_eq!(condition.bindings.len(), 2);
+        }
+    }
+
+    /// The PHP test lists these with the ranges no box holds; utopia-php/query
+    /// now refuses a distance that is not finite before any is compiled.
+    #[test]
+    fn distance_less_than_in_meters_refuses_a_distance_that_is_not_finite() {
+        for distance in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let query = typed(Query::distance_less_than("location", ints(10, 20), distance, true), "point");
+            let error = builder::postgres().compile_filters(&[query]).unwrap_err();
+            assert_eq!(error.to_string(), "Invalid distance query: the distance must be a finite number");
         }
     }
 

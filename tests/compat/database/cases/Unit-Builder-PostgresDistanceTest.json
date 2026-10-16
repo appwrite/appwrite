@@ -708,15 +708,9 @@
             "as": "o1887"
           },
           "expect": {
-            "$value": "Query\\Builder\\Condition",
-            "fields": {
-              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
-              "bindings": [
-                "POINT(10 20)",
-                {
-                  "$float": "NAN"
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Query\\Exception\\ValidationException",
+              "message": "Invalid distance query: the distance must be a finite number"
             }
           }
         }
@@ -807,15 +801,9 @@
             "as": "o1889"
           },
           "expect": {
-            "$value": "Query\\Builder\\Condition",
-            "fields": {
-              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
-              "bindings": [
-                "POINT(10 20)",
-                {
-                  "$float": "INF"
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Query\\Exception\\ValidationException",
+              "message": "Invalid distance query: the distance must be a finite number"
             }
           }
         }
@@ -906,15 +894,9 @@
             "as": "o1891"
           },
           "expect": {
-            "$value": "Query\\Builder\\Condition",
-            "fields": {
-              "expression": "ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?",
-              "bindings": [
-                "POINT(10 20)",
-                {
-                  "$float": "-INF"
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Query\\Exception\\ValidationException",
+              "message": "Invalid distance query: the distance must be a finite number"
             }
           }
         }
