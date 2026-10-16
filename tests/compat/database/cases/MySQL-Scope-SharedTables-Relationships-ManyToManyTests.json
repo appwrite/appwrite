@@ -14707,9 +14707,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for '_2_1': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "articles",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -14741,9 +14750,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+            "$document": {
+              "$id": "article1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "title": "Great Article",
+              "published": false,
+              "$collection": "articles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tags": [
+                {
+                  "$document": {
+                    "name": "Tech",
+                    "color": "blue",
+                    "$id": "tag1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "tags"
+                  }
+                }
+              ]
             }
           }
         },
@@ -14776,7 +14813,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "1"
+              "$sequence": "2",
+              "articles": []
             }
           }
         },
@@ -14801,7 +14839,54 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "Great Article",
+              "published": false,
+              "$sequence": "1",
+              "$id": "article1",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "articles",
+              "tags": [
+                {
+                  "$document": {
+                    "name": "Tech",
+                    "color": "blue",
+                    "$id": "tag1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "tags"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "News",
+                    "color": "red",
+                    "$id": "tag2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "tags"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14811,7 +14896,54 @@
             "id": "article1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "Great Article",
+              "published": false,
+              "$sequence": "1",
+              "$id": "article1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "articles",
+              "tags": [
+                {
+                  "$document": {
+                    "name": "Tech",
+                    "color": "blue",
+                    "$id": "tag1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "tags"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "News",
+                    "color": "red",
+                    "$id": "tag2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "tags"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14843,7 +14975,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "1"
+              "$sequence": "2",
+              "tags": []
             }
           }
         },
@@ -14872,7 +15005,54 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Tech",
+              "color": "blue",
+              "$sequence": "1",
+              "$id": "tag1",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "tags",
+              "articles": [
+                {
+                  "$document": {
+                    "title": "Great Article",
+                    "published": false,
+                    "$id": "article1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "articles"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Another Article",
+                    "published": true,
+                    "$id": "article2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "articles"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14882,7 +15062,54 @@
             "id": "tag1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Tech",
+              "color": "blue",
+              "$sequence": "1",
+              "$id": "tag1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "tags",
+              "articles": [
+                {
+                  "$document": {
+                    "title": "Great Article",
+                    "published": false,
+                    "$id": "article1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "articles"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Another Article",
+                    "published": true,
+                    "$id": "article2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "articles"
+                  }
+                }
+              ]
+            }
           }
         },
         {

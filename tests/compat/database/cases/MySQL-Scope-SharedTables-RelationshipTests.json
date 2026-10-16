@@ -32273,21 +32273,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "name",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 255,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -32916,79 +32904,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "rest1",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "name": "NYC Diner",
-              "location": [
-                -74.006,
-                40.7128
-              ],
-              "$collection": "restaurantsSpatial",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1",
-              "supplier": {
-                "$document": {
-                  "company": "Fresh Foods Inc",
-                  "warehouseLocation": [
-                    -74.006,
-                    40.7128
-                  ],
-                  "deliveryArea": [
-                    [
-                      [
-                        -74.1,
-                        40.7
-                      ],
-                      [
-                        -73.9,
-                        40.7
-                      ],
-                      [
-                        -73.9,
-                        40.8
-                      ],
-                      [
-                        -74.1,
-                        40.8
-                      ],
-                      [
-                        -74.1,
-                        40.7
-                      ]
-                    ]
-                  ],
-                  "deliveryRoute": [
-                    [
-                      -74.006,
-                      40.7128
-                    ],
-                    [
-                      -73.9851,
-                      40.7589
-                    ],
-                    [
-                      -73.9857,
-                      40.7484
-                    ]
-                  ],
-                  "$id": "supplier1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "suppliersSpatial"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -33013,79 +32931,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "rest2",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "name": "LA Bistro",
-              "location": [
-                -118.2437,
-                34.0522
-              ],
-              "$collection": "restaurantsSpatial",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "2",
-              "supplier": {
-                "$document": {
-                  "company": "Ocean Seafood",
-                  "warehouseLocation": [
-                    -118.2437,
-                    34.0522
-                  ],
-                  "deliveryArea": [
-                    [
-                      [
-                        -118.3,
-                        34.0
-                      ],
-                      [
-                        -118.1,
-                        34.0
-                      ],
-                      [
-                        -118.1,
-                        34.1
-                      ],
-                      [
-                        -118.3,
-                        34.1
-                      ],
-                      [
-                        -118.3,
-                        34.0
-                      ]
-                    ]
-                  ],
-                  "deliveryRoute": [
-                    [
-                      -118.2437,
-                      34.0522
-                    ],
-                    [
-                      -118.2468,
-                      34.0407
-                    ],
-                    [
-                      -118.2456,
-                      34.0336
-                    ]
-                  ],
-                  "$id": "supplier2",
-                  "$sequence": "2",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "suppliersSpatial"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -33110,79 +32958,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "rest3",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "name": "Denver Steakhouse",
-              "location": [
-                -104.9903,
-                39.7392
-              ],
-              "$collection": "restaurantsSpatial",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "3",
-              "supplier": {
-                "$document": {
-                  "company": "Mountain Meats",
-                  "warehouseLocation": [
-                    -104.9903,
-                    39.7392
-                  ],
-                  "deliveryArea": [
-                    [
-                      [
-                        -105.1,
-                        39.7
-                      ],
-                      [
-                        -104.8,
-                        39.7
-                      ],
-                      [
-                        -104.8,
-                        39.8
-                      ],
-                      [
-                        -105.1,
-                        39.8
-                      ],
-                      [
-                        -105.1,
-                        39.7
-                      ]
-                    ]
-                  ],
-                  "deliveryRoute": [
-                    [
-                      -104.9903,
-                      39.7392
-                    ],
-                    [
-                      -104.9847,
-                      39.7294
-                    ],
-                    [
-                      -104.9708,
-                      39.7197
-                    ]
-                  ],
-                  "$id": "supplier3",
-                  "$sequence": "3",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "suppliersSpatial"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -33209,84 +32987,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "NYC Diner",
-                "location": [
-                  -74.006,
-                  40.7128
-                ],
-                "$id": "rest1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Fresh Foods Inc",
-                    "warehouseLocation": [
-                      -74.006,
-                      40.7128
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -74.1,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -74.006,
-                        40.7128
-                      ],
-                      [
-                        -73.9851,
-                        40.7589
-                      ],
-                      [
-                        -73.9857,
-                        40.7484
-                      ]
-                    ],
-                    "$id": "supplier1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -33311,84 +33012,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "NYC Diner",
-                "location": [
-                  -74.006,
-                  40.7128
-                ],
-                "$id": "rest1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Fresh Foods Inc",
-                    "warehouseLocation": [
-                      -74.006,
-                      40.7128
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -74.1,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -74.006,
-                        40.7128
-                      ],
-                      [
-                        -73.9851,
-                        40.7589
-                      ],
-                      [
-                        -73.9857,
-                        40.7484
-                      ]
-                    ],
-                    "$id": "supplier1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -33413,160 +33037,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "LA Bistro",
-                "location": [
-                  -118.2437,
-                  34.0522
-                ],
-                "$id": "rest2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Ocean Seafood",
-                    "warehouseLocation": [
-                      -118.2437,
-                      34.0522
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -118.3,
-                          34.0
-                        ],
-                        [
-                          -118.1,
-                          34.0
-                        ],
-                        [
-                          -118.1,
-                          34.1
-                        ],
-                        [
-                          -118.3,
-                          34.1
-                        ],
-                        [
-                          -118.3,
-                          34.0
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -118.2437,
-                        34.0522
-                      ],
-                      [
-                        -118.2468,
-                        34.0407
-                      ],
-                      [
-                        -118.2456,
-                        34.0336
-                      ]
-                    ],
-                    "$id": "supplier2",
-                    "$sequence": "2",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            },
-            {
-              "$document": {
-                "name": "Denver Steakhouse",
-                "location": [
-                  -104.9903,
-                  39.7392
-                ],
-                "$id": "rest3",
-                "$sequence": "3",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Mountain Meats",
-                    "warehouseLocation": [
-                      -104.9903,
-                      39.7392
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -105.1,
-                          39.7
-                        ],
-                        [
-                          -104.8,
-                          39.7
-                        ],
-                        [
-                          -104.8,
-                          39.8
-                        ],
-                        [
-                          -105.1,
-                          39.8
-                        ],
-                        [
-                          -105.1,
-                          39.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -104.9903,
-                        39.7392
-                      ],
-                      [
-                        -104.9847,
-                        39.7294
-                      ],
-                      [
-                        -104.9708,
-                        39.7197
-                      ]
-                    ],
-                    "$id": "supplier3",
-                    "$sequence": "3",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -33591,160 +33062,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "LA Bistro",
-                "location": [
-                  -118.2437,
-                  34.0522
-                ],
-                "$id": "rest2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Ocean Seafood",
-                    "warehouseLocation": [
-                      -118.2437,
-                      34.0522
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -118.3,
-                          34.0
-                        ],
-                        [
-                          -118.1,
-                          34.0
-                        ],
-                        [
-                          -118.1,
-                          34.1
-                        ],
-                        [
-                          -118.3,
-                          34.1
-                        ],
-                        [
-                          -118.3,
-                          34.0
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -118.2437,
-                        34.0522
-                      ],
-                      [
-                        -118.2468,
-                        34.0407
-                      ],
-                      [
-                        -118.2456,
-                        34.0336
-                      ]
-                    ],
-                    "$id": "supplier2",
-                    "$sequence": "2",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            },
-            {
-              "$document": {
-                "name": "Denver Steakhouse",
-                "location": [
-                  -104.9903,
-                  39.7392
-                ],
-                "$id": "rest3",
-                "$sequence": "3",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Mountain Meats",
-                    "warehouseLocation": [
-                      -104.9903,
-                      39.7392
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -105.1,
-                          39.7
-                        ],
-                        [
-                          -104.8,
-                          39.7
-                        ],
-                        [
-                          -104.8,
-                          39.8
-                        ],
-                        [
-                          -105.1,
-                          39.8
-                        ],
-                        [
-                          -105.1,
-                          39.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -104.9903,
-                        39.7392
-                      ],
-                      [
-                        -104.9847,
-                        39.7294
-                      ],
-                      [
-                        -104.9708,
-                        39.7197
-                      ]
-                    ],
-                    "$id": "supplier3",
-                    "$sequence": "3",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -33765,84 +33083,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "NYC Diner",
-                "location": [
-                  -74.006,
-                  40.7128
-                ],
-                "$id": "rest1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Fresh Foods Inc",
-                    "warehouseLocation": [
-                      -74.006,
-                      40.7128
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -74.1,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -74.006,
-                        40.7128
-                      ],
-                      [
-                        -73.9851,
-                        40.7589
-                      ],
-                      [
-                        -73.9857,
-                        40.7484
-                      ]
-                    ],
-                    "$id": "supplier1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -33904,84 +33145,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "NYC Diner",
-                "location": [
-                  -74.006,
-                  40.7128
-                ],
-                "$id": "rest1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "supplier": {
-                  "$document": {
-                    "company": "Fresh Foods Inc",
-                    "warehouseLocation": [
-                      -74.006,
-                      40.7128
-                    ],
-                    "deliveryArea": [
-                      [
-                        [
-                          -74.1,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.7
-                        ],
-                        [
-                          -73.9,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.8
-                        ],
-                        [
-                          -74.1,
-                          40.7
-                        ]
-                      ]
-                    ],
-                    "deliveryRoute": [
-                      [
-                        -74.006,
-                        40.7128
-                      ],
-                      [
-                        -73.9851,
-                        40.7589
-                      ],
-                      [
-                        -73.9857,
-                        40.7484
-                      ]
-                    ],
-                    "$id": "supplier1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "suppliersSpatial"
-                  }
-                },
-                "$collection": "restaurantsSpatial"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -42417,10 +41581,25 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'u0000000000000000181': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "u0000000000000000181",
+              "name": "u0000000000000000181",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -42444,9 +41623,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Related collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "u0000000000000000181",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "children",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -42464,9 +41652,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "parent": []
             }
           }
         },
@@ -42484,9 +41680,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "parent": []
             }
           }
         },
@@ -42504,9 +41708,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "parent": []
             }
           }
         },
@@ -42526,9 +41738,55 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"children\""
+            "$document": {
+              "$id": "parent1",
+              "$collection": "u0000000000000000180",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "1",
+              "children": [
+                {
+                  "$document": {
+                    "$id": "child1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "u0000000000000000181"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "u0000000000000000181"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child3",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "u0000000000000000181"
+                  }
+                }
+              ]
             }
           }
         },
@@ -42552,7 +41810,7 @@
             "collection": "u0000000000000000180",
             "id": "parent1"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.set_max_query_values",
@@ -42578,12 +41836,50 @@
           "args": {
             "collection": "u0000000000000000181"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$document": {
+                "$id": "child1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "parent": [],
+                "$collection": "u0000000000000000181"
+              }
+            },
+            {
+              "$document": {
+                "$id": "child2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "parent": [],
+                "$collection": "u0000000000000000181"
+              }
+            },
+            {
+              "$document": {
+                "$id": "child3",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "parent": [],
+                "$collection": "u0000000000000000181"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.get_document",
@@ -42592,9 +41888,17 @@
             "id": "child1"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$sequence": "1",
+              "$id": "child1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "parent": []
             }
           }
         },
@@ -42605,9 +41909,17 @@
             "id": "child2"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$sequence": "2",
+              "$id": "child2",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "parent": []
             }
           }
         },
@@ -42618,9 +41930,17 @@
             "id": "child3"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$sequence": "3",
+              "$id": "child3",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000181",
+              "parent": []
             }
           }
         },
@@ -42636,12 +41956,7 @@
           "args": {
             "collection": "u0000000000000000181"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         }
       ]
     },
@@ -92659,9 +91974,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "ns_authors",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "author",
+              "twoWayKey": "comments",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -92732,7 +92056,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "1"
+              "$sequence": "1",
+              "comments": []
             }
           }
         },
@@ -92769,9 +92094,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1c1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p1c1",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "author": {
+                "$document": {
+                  "name": "Author p1c1",
+                  "$id": "a_p1c1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -92779,6 +92132,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -92816,7 +92173,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "2"
+              "$sequence": "2",
+              "comments": []
             }
           }
         },
@@ -92853,9 +92211,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1c2",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p1c2",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "author": {
+                "$document": {
+                  "name": "Author p1c2",
+                  "$id": "a_p1c2",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -92863,6 +92249,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -92900,7 +92290,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "3"
+              "$sequence": "3",
+              "comments": []
             }
           }
         },
@@ -92937,9 +92328,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1c3",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p1c3",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "author": {
+                "$document": {
+                  "name": "Author p1c3",
+                  "$id": "a_p1c3",
+                  "$sequence": "3",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -92947,6 +92366,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -92984,7 +92407,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "4"
+              "$sequence": "4",
+              "comments": []
             }
           }
         },
@@ -93021,9 +92445,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1c4",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p1c4",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4",
+              "author": {
+                "$document": {
+                  "name": "Author p1c4",
+                  "$id": "a_p1c4",
+                  "$sequence": "4",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93031,6 +92483,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93068,7 +92524,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "5"
+              "$sequence": "5",
+              "comments": []
             }
           }
         },
@@ -93105,9 +92562,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1c5",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p1c5",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5",
+              "author": {
+                "$document": {
+                  "name": "Author p1c5",
+                  "$id": "a_p1c5",
+                  "$sequence": "5",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93115,6 +92600,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93160,14 +92649,206 @@
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "1",
-              "comments": []
+              "comments": [
+                {
+                  "$document": {
+                    "text": "Comment p1c1",
+                    "$id": "p1c1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p1c1",
+                        "$id": "a_p1c1",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p1c2",
+                    "$id": "p1c2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p1c2",
+                        "$id": "a_p1c2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p1c3",
+                    "$id": "p1c3",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p1c3",
+                        "$id": "a_p1c3",
+                        "$sequence": "3",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p1c4",
+                    "$id": "p1c4",
+                    "$sequence": "4",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p1c4",
+                        "$id": "a_p1c4",
+                        "$sequence": "4",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p1c5",
+                    "$id": "p1c5",
+                    "$sequence": "5",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p1c5",
+                        "$id": "a_p1c5",
+                        "$sequence": "5",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                }
+              ]
             }
           }
         },
         {
           "op": "db.log",
           "args": {},
-          "expect": []
+          "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            }
+          ]
         },
         {
           "op": "database.create_document",
@@ -93200,7 +92881,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "6"
+              "$sequence": "6",
+              "comments": []
             }
           }
         },
@@ -93237,9 +92919,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2c1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p2c1",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6",
+              "author": {
+                "$document": {
+                  "name": "Author p2c1",
+                  "$id": "a_p2c1",
+                  "$sequence": "6",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93247,6 +92957,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93284,7 +92998,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "7"
+              "$sequence": "7",
+              "comments": []
             }
           }
         },
@@ -93321,9 +93036,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2c2",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p2c2",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "7",
+              "author": {
+                "$document": {
+                  "name": "Author p2c2",
+                  "$id": "a_p2c2",
+                  "$sequence": "7",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93331,6 +93074,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93368,7 +93115,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "8"
+              "$sequence": "8",
+              "comments": []
             }
           }
         },
@@ -93405,9 +93153,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2c3",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p2c3",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "8",
+              "author": {
+                "$document": {
+                  "name": "Author p2c3",
+                  "$id": "a_p2c3",
+                  "$sequence": "8",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93415,6 +93191,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93452,7 +93232,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "9"
+              "$sequence": "9",
+              "comments": []
             }
           }
         },
@@ -93489,9 +93270,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2c4",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p2c4",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "9",
+              "author": {
+                "$document": {
+                  "name": "Author p2c4",
+                  "$id": "a_p2c4",
+                  "$sequence": "9",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93499,6 +93308,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93536,7 +93349,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "10"
+              "$sequence": "10",
+              "comments": []
             }
           }
         },
@@ -93573,9 +93387,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2c5",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p2c5",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "10",
+              "author": {
+                "$document": {
+                  "name": "Author p2c5",
+                  "$id": "a_p2c5",
+                  "$sequence": "10",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93583,6 +93425,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93628,14 +93474,206 @@
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "2",
-              "comments": []
+              "comments": [
+                {
+                  "$document": {
+                    "text": "Comment p2c1",
+                    "$id": "p2c1",
+                    "$sequence": "6",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p2c1",
+                        "$id": "a_p2c1",
+                        "$sequence": "6",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p2c2",
+                    "$id": "p2c2",
+                    "$sequence": "7",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p2c2",
+                        "$id": "a_p2c2",
+                        "$sequence": "7",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p2c3",
+                    "$id": "p2c3",
+                    "$sequence": "8",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p2c3",
+                        "$id": "a_p2c3",
+                        "$sequence": "8",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p2c4",
+                    "$id": "p2c4",
+                    "$sequence": "9",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p2c4",
+                        "$id": "a_p2c4",
+                        "$sequence": "9",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p2c5",
+                    "$id": "p2c5",
+                    "$sequence": "10",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p2c5",
+                        "$id": "a_p2c5",
+                        "$sequence": "10",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                }
+              ]
             }
           }
         },
         {
           "op": "db.log",
           "args": {},
-          "expect": []
+          "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            }
+          ]
         },
         {
           "op": "database.create_document",
@@ -93668,7 +93706,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "11"
+              "$sequence": "11",
+              "comments": []
             }
           }
         },
@@ -93705,9 +93744,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p3c1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p3c1",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "11",
+              "author": {
+                "$document": {
+                  "name": "Author p3c1",
+                  "$id": "a_p3c1",
+                  "$sequence": "11",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93715,6 +93782,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93752,7 +93823,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "12"
+              "$sequence": "12",
+              "comments": []
             }
           }
         },
@@ -93789,9 +93861,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p3c2",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p3c2",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "12",
+              "author": {
+                "$document": {
+                  "name": "Author p3c2",
+                  "$id": "a_p3c2",
+                  "$sequence": "12",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93799,6 +93899,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93836,7 +93940,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "13"
+              "$sequence": "13",
+              "comments": []
             }
           }
         },
@@ -93873,9 +93978,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p3c3",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p3c3",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "13",
+              "author": {
+                "$document": {
+                  "name": "Author p3c3",
+                  "$id": "a_p3c3",
+                  "$sequence": "13",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93883,6 +94016,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -93920,7 +94057,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "14"
+              "$sequence": "14",
+              "comments": []
             }
           }
         },
@@ -93957,9 +94095,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p3c4",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p3c4",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "14",
+              "author": {
+                "$document": {
+                  "name": "Author p3c4",
+                  "$id": "a_p3c4",
+                  "$sequence": "14",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -93967,6 +94133,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -94004,7 +94174,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "15"
+              "$sequence": "15",
+              "comments": []
             }
           }
         },
@@ -94041,9 +94212,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p3c5",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "text": "Comment p3c5",
+              "$collection": "ns_comments",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "15",
+              "author": {
+                "$document": {
+                  "name": "Author p3c5",
+                  "$id": "a_p3c5",
+                  "$sequence": "15",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "ns_authors"
+                }
+              }
             }
           }
         },
@@ -94051,6 +94250,10 @@
           "op": "db.log",
           "args": {},
           "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
             {
               "filter": "nsSliceAuthorSpy",
               "call": "decode"
@@ -94096,14 +94299,206 @@
               "$updatedAt": "<now>",
               "$tenant": "999",
               "$sequence": "3",
-              "comments": []
+              "comments": [
+                {
+                  "$document": {
+                    "text": "Comment p3c1",
+                    "$id": "p3c1",
+                    "$sequence": "11",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p3c1",
+                        "$id": "a_p3c1",
+                        "$sequence": "11",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p3c2",
+                    "$id": "p3c2",
+                    "$sequence": "12",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p3c2",
+                        "$id": "a_p3c2",
+                        "$sequence": "12",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p3c3",
+                    "$id": "p3c3",
+                    "$sequence": "13",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p3c3",
+                        "$id": "a_p3c3",
+                        "$sequence": "13",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p3c4",
+                    "$id": "p3c4",
+                    "$sequence": "14",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p3c4",
+                        "$id": "a_p3c4",
+                        "$sequence": "14",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                },
+                {
+                  "$document": {
+                    "text": "Comment p3c5",
+                    "$id": "p3c5",
+                    "$sequence": "15",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "author": {
+                      "$document": {
+                        "name": "Author p3c5",
+                        "$id": "a_p3c5",
+                        "$sequence": "15",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "ns_authors"
+                      }
+                    },
+                    "$collection": "ns_comments"
+                  }
+                }
+              ]
             }
           }
         },
         {
           "op": "db.log",
           "args": {},
-          "expect": []
+          "expect": [
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            },
+            {
+              "filter": "nsSliceAuthorSpy",
+              "call": "decode"
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -94230,12 +94625,7 @@
           "args": {
             "collection": "ns_comments"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.collection_exists",

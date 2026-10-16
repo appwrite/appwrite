@@ -3268,9 +3268,36 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "student1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Student 1",
+              "$collection": "students",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
             }
           }
         },
@@ -3306,7 +3333,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3316,7 +3373,37 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3385,7 +3472,7 @@
               "$collection": "students",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "1",
+              "$sequence": "2",
               "classes": [
                 {
                   "$document": {
@@ -3454,7 +3541,7 @@
                   "$document": {
                     "name": "Student 3",
                     "$id": "student3",
-                    "$sequence": "2",
+                    "$sequence": "3",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3497,7 +3584,7 @@
               "$collection": "students",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "3",
+              "$sequence": "4",
               "classes": []
             }
           }
@@ -3541,7 +3628,7 @@
                   "$document": {
                     "name": "Student 4",
                     "$id": "student4",
-                    "$sequence": "3",
+                    "$sequence": "4",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3563,7 +3650,37 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3575,7 +3692,7 @@
           "expect": {
             "$document": {
               "name": "Student 2",
-              "$sequence": "1",
+              "$sequence": "2",
               "$id": "student2",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -3615,7 +3732,7 @@
           "expect": {
             "$document": {
               "name": "Student 3",
-              "$sequence": "2",
+              "$sequence": "3",
               "$id": "student3",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -3655,7 +3772,7 @@
           "expect": {
             "$document": {
               "name": "Student 4",
-              "$sequence": "3",
+              "$sequence": "4",
               "$id": "student4",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -3693,7 +3810,37 @@
             "id": "class1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Class 1",
+              "number": 1,
+              "$sequence": "1",
+              "$id": "class1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "classes",
+              "students": [
+                {
+                  "$document": {
+                    "name": "Student 1",
+                    "$id": "student1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "students"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3721,7 +3868,7 @@
                   "$document": {
                     "name": "Student 2",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3761,7 +3908,7 @@
                   "$document": {
                     "name": "Student 3",
                     "$id": "student3",
-                    "$sequence": "2",
+                    "$sequence": "3",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3801,7 +3948,7 @@
                   "$document": {
                     "name": "Student 4",
                     "$id": "student4",
-                    "$sequence": "3",
+                    "$sequence": "4",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3835,8 +3982,8 @@
           },
           "expect": {
             "$document": {
-              "name": "Student 2",
-              "$id": "student2",
+              "name": "Student 1",
+              "$id": "student1",
               "$sequence": "1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -3848,9 +3995,9 @@
               "classes": [
                 {
                   "$document": {
-                    "name": "Class 2",
-                    "$id": "class2",
-                    "$sequence": "2",
+                    "name": "Class 1",
+                    "$id": "class1",
+                    "$sequence": "1",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -3885,7 +4032,36 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3920,7 +4096,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3930,7 +4136,37 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3958,7 +4194,7 @@
                   "$document": {
                     "name": "Student 2",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4041,7 +4277,7 @@
                   "$document": {
                     "name": "Student 2",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4081,7 +4317,7 @@
                   "$document": {
                     "name": "Student 2",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4146,7 +4382,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4156,7 +4422,37 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4227,7 +4523,7 @@
                   "$document": {
                     "name": "Student 2 Updated",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4267,7 +4563,7 @@
                   "$document": {
                     "name": "Student 2 Updated",
                     "$id": "student2",
-                    "$sequence": "1",
+                    "$sequence": "2",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4310,7 +4606,7 @@
               "$collection": "students",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "4",
+              "$sequence": "5",
               "classes": []
             }
           }
@@ -4357,7 +4653,7 @@
           "expect": {
             "$document": {
               "name": "Student 5",
-              "$sequence": "4",
+              "$sequence": "5",
               "$id": "student5",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -4397,7 +4693,7 @@
           "expect": {
             "$document": {
               "name": "Student 5",
-              "$sequence": "4",
+              "$sequence": "5",
               "$id": "student5",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -4521,7 +4817,7 @@
                   "$document": {
                     "name": "Student 6",
                     "$id": "student6",
-                    "$sequence": "5",
+                    "$sequence": "6",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4561,7 +4857,7 @@
                   "$document": {
                     "name": "Student 6",
                     "$id": "student6",
-                    "$sequence": "5",
+                    "$sequence": "6",
                     "$createdAt": "<now>",
                     "$updatedAt": "<now>",
                     "$permissions": [
@@ -4607,7 +4903,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "classes": [
+                {
+                  "$document": {
+                    "name": "Class 2 Updated",
+                    "number": 2,
+                    "$id": "class2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4617,7 +4943,21 @@
             "id": "class1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Class 1 Updated",
+              "number": 1,
+              "$sequence": "1",
+              "$id": "class1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "classes",
+              "students": []
+            }
           }
         },
         {
@@ -4652,7 +4992,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Class 1 Updated",
+              "number": 1,
+              "$sequence": "1",
+              "$id": "class1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "classes",
+              "students": [
+                {
+                  "$document": {
+                    "name": "Student 1 Updated",
+                    "$id": "student1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "students"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4693,7 +5063,53 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "newClasses": [
+                {
+                  "$document": {
+                    "name": "Class 2 Updated",
+                    "number": 2,
+                    "$id": "class2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4703,7 +5119,37 @@
             "id": "class1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Class 1 Updated",
+              "number": 1,
+              "$sequence": "1",
+              "$id": "class1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "classes",
+              "newStudents": [
+                {
+                  "$document": {
+                    "name": "Student 1 Updated",
+                    "$id": "student1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "students"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4734,7 +5180,7 @@
               "$collection": "students",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "6",
+              "$sequence": "7",
               "newClasses": []
             }
           }
@@ -4763,7 +5209,12 @@
             "collection": "students",
             "id": "student1"
           },
-          "expect": false
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Restricted",
+              "message": "Cannot delete document because it has at least one related document."
+            }
+          }
         },
         {
           "op": "database.update_relationship",
@@ -4805,7 +5256,53 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "newClasses": [
+                {
+                  "$document": {
+                    "name": "Class 2 Updated",
+                    "number": 2,
+                    "$id": "class2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4839,7 +5336,37 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "newClasses": [
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -4848,7 +5375,7 @@
             "collection": "classes",
             "id": "class1"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.get_document",
@@ -4857,7 +5384,20 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "newClasses": []
+            }
           }
         },
         {
@@ -4928,7 +5468,7 @@
           "expect": {
             "$document": {
               "name": "Student 6",
-              "$sequence": "5",
+              "$sequence": "6",
               "$id": "student6",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -4967,7 +5507,19 @@
             "id": "student1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students"
+            }
           }
         },
         {

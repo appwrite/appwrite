@@ -93843,17 +93843,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "text": "hello",
-              "$id": "empty_str_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_empty_strings"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -93878,7 +93870,7 @@
           },
           "expect": {
             "$document": {
-              "text": "hello",
+              "text": "",
               "$id": "empty_str_doc",
               "$sequence": "1",
               "$createdAt": "<now>",

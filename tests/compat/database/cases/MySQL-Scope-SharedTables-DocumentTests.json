@@ -11908,9 +11908,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'nullable': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "nullable",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -11979,7 +11991,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "1"
+              "$sequence": "1",
+              "nullable": null
             }
           }
         },
@@ -12048,7 +12061,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "2"
+              "$sequence": "2",
+              "nullable": null
             }
           }
         },
@@ -12119,7 +12133,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "3"
+              "$sequence": "3",
+              "nullable": null
             }
           }
         },
@@ -12190,7 +12205,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "4"
+              "$sequence": "4",
+              "nullable": null
             }
           }
         },
@@ -12253,7 +12269,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "5"
+              "$sequence": "5",
+              "nullable": null
             }
           }
         },
@@ -12288,9 +12305,33 @@
           },
           "bind": "s10354",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"nullable\""
+            "$document": {
+              "$permissions": [
+                "read(\"user:x\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Work in Progress 2",
+              "director": "TBD",
+              "year": 2026,
+              "price": 0.0,
+              "active": false,
+              "genres": [],
+              "with-dash": "Works3",
+              "nullable": "Not null",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000053",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6"
             }
           }
         },
@@ -12351,6 +12392,7 @@
                   "comics"
                 ],
                 "with-dash": "Works2",
+                "nullable": null,
                 "$id": "<uniqid>",
                 "$sequence": "4",
                 "$tenant": "999",
@@ -44983,43 +45025,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "56000",
-              "$sequence": "56000",
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "string": "text📝",
-              "integer_signed": -2147483647,
-              "integer_unsigned": 2147483647,
-              "bigint_signed": -9223372036854775807,
-              "bigint_unsigned": 9223372036854775807,
-              "float_signed": -5.55,
-              "float_unsigned": 5.55,
-              "boolean": true,
-              "colors": [
-                "pink",
-                "green",
-                "blue"
-              ],
-              "empty": [],
-              "with-dash": "Works",
-              "$collection": "documents_u000000000052",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "id": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -81259,10 +81267,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'increase_decrease_u000000000055': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "increase_decrease_u000000000055",
+              "name": "increase_decrease_u000000000055",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -81289,9 +81309,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "increase",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -81319,9 +81351,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "decrease",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -81349,9 +81393,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "increase_text",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -81379,9 +81435,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "increase_float",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -81409,9 +81477,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "sizes",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -81441,9 +81521,28 @@
           },
           "bind": "s11358",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "increase": 100,
+              "decrease": 100,
+              "increase_float": 100.0,
+              "increase_text": "some text",
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "increase_decrease_u000000000055",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -81457,6 +81556,31 @@
             },
             "attribute": "increase",
             "max": 101
+          },
+          "expect": {
+            "$document": {
+              "increase": 101,
+              "decrease": 100,
+              "increase_text": "some text",
+              "increase_float": 100.0,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81469,6 +81593,31 @@
             },
             "attribute": "decrease",
             "min": 98
+          },
+          "expect": {
+            "$document": {
+              "increase": 101,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 100.0,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81482,6 +81631,31 @@
             "attribute": "increase_float",
             "value": 5.5,
             "max": 110
+          },
+          "expect": {
+            "$document": {
+              "increase": 101,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 105.5,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81495,6 +81669,31 @@
             "attribute": "increase_float",
             "value": 1.1,
             "min": 100
+          },
+          "expect": {
+            "$document": {
+              "increase": 101,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81508,6 +81707,12 @@
             "attribute": "increase",
             "value": 10.5,
             "max": 102.4
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds maximum limit: 102"
+            }
           }
         },
         {
@@ -81521,6 +81726,12 @@
             "attribute": "decrease",
             "value": 10,
             "min": 99
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds minimum limit: 99"
+            }
           }
         },
         {
@@ -81534,6 +81745,12 @@
             "attribute": "decrease",
             "value": 1000,
             "min": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Attribute value exceeds minimum limit: 0"
+            }
           }
         },
         {
@@ -81545,6 +81762,12 @@
               "path": "/$document/$id"
             },
             "attribute": "increase_text"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Attribute must be an integer or float and can not be an array."
+            }
           }
         },
         {
@@ -81556,12 +81779,21 @@
               "path": "/$document/$id"
             },
             "attribute": "sizes"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Attribute must be an integer or float and can not be an array."
+            }
           }
         },
         {
           "op": "database.set_preserve_dates",
           "args": {
             "preserve": true
+          },
+          "expect": {
+            "$database": true
           }
         },
         {
@@ -81571,6 +81803,31 @@
             "id": {
               "$ref": "s11358",
               "path": "/$document/$id"
+            }
+          },
+          "expect": {
+            "$document": {
+              "increase": 101,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
             }
           }
         },
@@ -81583,6 +81840,31 @@
               "path": "/$document/$id"
             },
             "attribute": "increase"
+          },
+          "expect": {
+            "$document": {
+              "increase": 102,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81592,6 +81874,31 @@
             "id": {
               "$ref": "s11358",
               "path": "/$document/$id"
+            }
+          },
+          "expect": {
+            "$document": {
+              "increase": 102,
+              "decrease": 99,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
             }
           }
         },
@@ -81604,6 +81911,31 @@
               "path": "/$document/$id"
             },
             "attribute": "decrease"
+          },
+          "expect": {
+            "$document": {
+              "increase": 102,
+              "decrease": 98,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
@@ -81614,12 +81946,40 @@
               "$ref": "s11358",
               "path": "/$document/$id"
             }
+          },
+          "expect": {
+            "$document": {
+              "increase": 102,
+              "decrease": 98,
+              "increase_text": "some text",
+              "increase_float": 104.4,
+              "sizes": [
+                10,
+                20,
+                30
+              ],
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "increase_decrease_u000000000055"
+            }
           }
         },
         {
           "op": "database.set_preserve_dates",
           "args": {
             "preserve": false
+          },
+          "expect": {
+            "$database": true
           }
         }
       ]
@@ -111503,38 +111863,9 @@
           },
           "bind": "s10350",
           "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen II",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2019,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works",
-              "$id": "<uniqid>",
-              "$collection": "movies_u000000000053",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "2",
-              "nullable": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -112247,41 +112578,6 @@
             },
             {
               "$document": {
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
-                "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "movies_u000000000053"
-              }
-            },
-            {
-              "$document": {
                 "name": "Captain Marvel",
                 "director": "Anna Boden & Ryan Fleck",
                 "year": 2019,
@@ -112636,23 +112932,21 @@
           "expect": [
             {
               "$document": {
-                "name": "Work in Progress",
+                "name": "Work in Progress 2",
                 "director": "TBD",
-                "year": 2025,
+                "year": 2026,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
-                "nullable": null,
+                "nullable": "Not null",
                 "$id": "<uniqid>",
-                "$sequence": "5",
+                "$sequence": "6",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
+                  "read(\"user:x\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -112668,19 +112962,16 @@
             },
             {
               "$document": {
-                "name": "Frozen II",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2019,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works",
+                "name": "Work in Progress",
+                "director": "TBD",
+                "year": 2025,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
                 "nullable": null,
                 "$id": "<uniqid>",
-                "$sequence": "2",
+                "$sequence": "5",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",

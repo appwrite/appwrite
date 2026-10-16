@@ -18043,9 +18043,71 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "lawn1",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:user1\")",
+                "update(\"user:user1\")",
+                "delete(\"user:user2\")"
+              ],
+              "name": "Lawn 1",
+              "$collection": "enforce_lawns",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "trees": [
+                {
+                  "$document": {
+                    "name": "Tree 1",
+                    "$id": "tree1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "read(\"user:user1\")",
+                      "update(\"user:user1\")",
+                      "delete(\"user:user2\")"
+                    ],
+                    "$collection": "enforce_trees",
+                    "birds": [
+                      {
+                        "$document": {
+                          "name": "Bird 1",
+                          "$id": "bird1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Bird 2",
+                          "$id": "bird2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           }
         },
@@ -18080,7 +18142,72 @@
             "id": "lawn1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Lawn 1",
+              "$sequence": "1",
+              "$id": "lawn1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:user1\")",
+                "update(\"user:user1\")",
+                "delete(\"user:user2\")"
+              ],
+              "$collection": "enforce_lawns",
+              "trees": [
+                {
+                  "$document": {
+                    "name": "Tree 1",
+                    "$id": "tree1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "read(\"user:user1\")",
+                      "update(\"user:user1\")",
+                      "delete(\"user:user2\")"
+                    ],
+                    "$collection": "enforce_trees",
+                    "birds": [
+                      {
+                        "$document": {
+                          "name": "Bird 1",
+                          "$id": "bird1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Bird 2",
+                          "$id": "bird2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -18090,7 +18217,72 @@
             "id": "lawn1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Lawn 1",
+              "$sequence": "1",
+              "$id": "lawn1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:user1\")",
+                "update(\"user:user1\")",
+                "delete(\"user:user2\")"
+              ],
+              "$collection": "enforce_lawns",
+              "trees": [
+                {
+                  "$document": {
+                    "name": "Tree 1",
+                    "$id": "tree1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "read(\"user:user1\")",
+                      "update(\"user:user1\")",
+                      "delete(\"user:user2\")"
+                    ],
+                    "$collection": "enforce_trees",
+                    "birds": [
+                      {
+                        "$document": {
+                          "name": "Bird 1",
+                          "$id": "bird1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Bird 2",
+                          "$id": "bird2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "enforce_birds"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -18186,7 +18378,10 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:user1\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:user1\"]\" was given."
+            }
           }
         },
         {
@@ -18195,7 +18390,12 @@
             "collection": "enforce_lawns",
             "id": "lawn1"
           },
-          "expect": false
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"delete\" permission for role \"user:user2\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:user2\"]\" was given."
+            }
+          }
         },
         {
           "op": "database.get_document",
@@ -18218,7 +18418,20 @@
               ],
               "$collection": "enforce_trees",
               "lawn": {
-                "$document": {}
+                "$document": {
+                  "name": "Lawn 1",
+                  "$id": "lawn1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "read(\"user:user1\")",
+                    "update(\"user:user1\")",
+                    "delete(\"user:user2\")"
+                  ],
+                  "$collection": "enforce_lawns"
+                }
               },
               "birds": [
                 {
@@ -18402,7 +18615,20 @@
                       "delete(\"user:user2\")"
                     ],
                     "lawn": {
-                      "$document": {}
+                      "$document": {
+                        "name": "Lawn 1",
+                        "$id": "lawn1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "read(\"user:user1\")",
+                          "update(\"user:user1\")",
+                          "delete(\"user:user2\")"
+                        ],
+                        "$collection": "enforce_lawns"
+                      }
                     },
                     "$collection": "enforce_trees"
                   }
@@ -18545,7 +18771,20 @@
                       "delete(\"user:user2\")"
                     ],
                     "lawn": {
-                      "$document": {}
+                      "$document": {
+                        "name": "Lawn 1",
+                        "$id": "lawn1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "read(\"user:user1\")",
+                          "update(\"user:user1\")",
+                          "delete(\"user:user2\")"
+                        ],
+                        "$collection": "enforce_lawns"
+                      }
                     },
                     "$collection": "enforce_trees"
                   }
