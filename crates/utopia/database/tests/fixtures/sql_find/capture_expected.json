@@ -229,19 +229,19 @@
     ],
     "aggregate/unfiltered_sum mariadb/plain": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
     ],
     "aggregate/unfiltered_sum mariadb/shared": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
     ],
     "aggregate/unfiltered_sum mysql/plain": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
     ],
     "aggregate/unfiltered_sum mysql/shared": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
     ],
     "aggregate/unfiltered_sum sqlite/plain": [
         "sql",
@@ -293,19 +293,19 @@
     ],
     "aggregate/filtered_sum_max mariadb/plain": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
     ],
     "aggregate/filtered_sum_max mariadb/shared": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
     ],
     "aggregate/filtered_sum_max mysql/plain": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
     ],
     "aggregate/filtered_sum_max mysql/shared": [
         "sql",
-        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+        "SELECT SUM(`price`) + 0 AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
     ],
     "aggregate/filtered_sum_max sqlite/plain": [
         "sql",
@@ -385,11 +385,11 @@
     ],
     "aggregate/sum_dotted mariadb/plain": [
         "sql",
-        "SELECT SUM(`metaprice`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
+        "SELECT SUM(`metaprice`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
     ],
     "aggregate/sum_dotted mysql/plain": [
         "sql",
-        "SELECT SUM(`metaprice`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
+        "SELECT SUM(`metaprice`) + 0 AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
     ],
     "aggregate/sum_dotted sqlite/plain": [
         "sql",
@@ -501,11 +501,11 @@
     ],
     "joins/aggregate_qualifies_by_declaring_join mariadb/plain": [
         "sql",
-        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`), AVG(`table_main`.`price`) AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
+        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`) + 0 AS `SUM(``meta``.``rank``)`, AVG(`table_main`.`price`) + 0 AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
     ],
     "joins/aggregate_qualifies_by_declaring_join mysql/plain": [
         "sql",
-        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`), AVG(`table_main`.`price`) AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
+        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`) + 0 AS `SUM(``meta``.``rank``)`, AVG(`table_main`.`price`) + 0 AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
     ],
     "joins/aggregate_qualifies_by_declaring_join sqlite/plain": [
         "sql",
@@ -605,11 +605,11 @@
     ],
     "joins/full_outer_join_aggregate_bitwise mariadb/plain": [
         "sql",
-        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, STDDEV_POP(`foj_rows`.`$foj_col_0`) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
+        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, SQRT(VAR_POP(`foj_rows`.`$foj_col_0`) + 0) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
     ],
     "joins/full_outer_join_aggregate_bitwise mysql/plain": [
         "sql",
-        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, STDDEV_POP(`foj_rows`.`$foj_col_0`) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
+        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, SQRT(VAR_POP(`foj_rows`.`$foj_col_0`) + 0) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
     ],
     "joins/full_outer_join_right_join_second_half postgres/plain": [
         "sql",
@@ -816,11 +816,11 @@
     ],
     "join_without_validation/joined_sum_of_internal_attribute mariadb/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/joined_sum_of_internal_attribute mysql/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/joined_sum_of_internal_attribute sqlite/plain": [
         "sql",
@@ -852,11 +852,11 @@
     ],
     "join_without_validation/sum_unknown_prefix_beside_join mariadb/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/sum_unknown_prefix_beside_join mysql/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/sum_unknown_prefix_beside_join sqlite/plain": [
         "sql",
@@ -868,11 +868,11 @@
     ],
     "join_without_validation/sum_quote_char_beside_join mariadb/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/sum_quote_char_beside_join mysql/plain": [
         "sql",
-        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+        "SELECT SUM(`sum_attr`) + 0 AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
     ],
     "join_without_validation/sum_quote_char_beside_join sqlite/plain": [
         "sql",
@@ -884,11 +884,11 @@
     ],
     "join_without_validation/sum_quote_char_without_join mariadb/plain": [
         "sql",
-        "SELECT SUM(`otherbody`) AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
+        "SELECT SUM(`otherbody`) + 0 AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
     ],
     "join_without_validation/sum_quote_char_without_join mysql/plain": [
         "sql",
-        "SELECT SUM(`otherbody`) AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
+        "SELECT SUM(`otherbody`) + 0 AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
     ],
     "join_without_validation/sum_quote_char_without_join sqlite/plain": [
         "sql",
