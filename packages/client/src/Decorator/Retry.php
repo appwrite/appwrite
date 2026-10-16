@@ -63,9 +63,18 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
         }
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return $this->adapter instanceof ResponseStreamingClientInterface && $this->adapter->supportsResponseStreaming();
+    }
+
     #[\Override]
     public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
+        if ($onResponse !== null && (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming())) {
+            throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+        }
+
         for ($attempt = 1; ; $attempt++) {
             $delivered = 0;
             $countingSink = static function (string $chunk) use ($sink, &$delivered): void {
@@ -77,10 +86,6 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
                 if ($onResponse === null) {
                     $response = $this->adapter->stream($request, $countingSink);
                 } else {
-                    if (!$this->adapter instanceof ResponseStreamingClientInterface) {
-                        throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
-                    }
-
                     $response = $this->adapter->stream($request, $countingSink, $onResponse);
                 }
 
