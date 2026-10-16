@@ -104,6 +104,12 @@ class Update extends Action
 
         $credentials = $provider->getAttribute('credentials');
 
+        // Earlier provider updates stored a changed bundle ID under `bundle`; promote it so this save repairs the row.
+        if (isset($credentials['bundle'])) {
+            $credentials['bundleId'] = $credentials['bundle'];
+            unset($credentials['bundle']);
+        }
+
         if (!empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
@@ -117,9 +123,7 @@ class Update extends Action
         }
 
         if (!empty($bundleId)) {
-            // Delivery and target routing read bundleId; drop the stale key earlier updates wrote instead.
             $credentials['bundleId'] = $bundleId;
-            unset($credentials['bundle']);
         }
 
         $provider->setAttribute('credentials', $credentials);

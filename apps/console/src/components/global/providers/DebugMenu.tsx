@@ -1781,6 +1781,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Function email domains',
+                'Show Email domains on the function Domains tab to add custom inbound email (SMTP) domains.',
+                'functionEmailDomains',
+                profileId,
+                features.functionEmailDomains,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -1882,21 +1890,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 },
                 undefined,
                 'Usage & analytics',
-              ),
-              createDebugFeatureFlagItem(
-                'Project environments',
-                'Show the mock environment switcher (Production, Staging, Development, Preview) in the project sidebar.',
-                'showProjectEnvironments',
-                overrides.showProjectEnvironments,
-                (checked) => {
-                  setOverrides((prev) => ({
-                    ...prev,
-                    showProjectEnvironments: checked,
-                  }))
-                  setDebugOverride('showProjectEnvironments', checked)
-                },
-                undefined,
-                'UI & tools',
               ),
               createDebugFeatureFlagItem(
                 'Show native app bar',
@@ -2134,6 +2127,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analyticsTrafficFilter,
     features.appwritePush,
     features.functionEmail,
+    features.functionEmailDomains,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,
