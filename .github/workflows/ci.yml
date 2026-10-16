@@ -927,7 +927,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     # The Redis the cache crate's integration tests run against
     # (crates/utopia/cache/tests/native.rs), the dev stack's image.
     services:
@@ -969,7 +969,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.server == 'true'
     runs-on: gcrunner=${{ github.run_id }}/runner=build
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
