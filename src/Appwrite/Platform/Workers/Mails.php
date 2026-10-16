@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\SMTP\Breaker;
 use Appwrite\Template\Template;
 use Exception;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
@@ -12,7 +14,6 @@ use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -142,6 +143,21 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
+        $breaker = null;
+        if ($type === 'smtp') {
+            Span::add('mail.smtp_host', $smtp['host']);
+
+            // A host that registers no shared cache sends without the breaker.
+            $breaker = $register->has('cache') ? new Breaker($register->get('cache'), $project->getId(), $smtp['host']) : null;
+
+            if ($breaker?->isOpen() === true) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.breaker', 'open');
+
+                return;
+            }
+        }
+
         // A pooled adapter belongs to this send alone; a project's own SMTP is
         // dialled for it and closed after.
         $adapter = empty($smtp) ? null : new SMTP(
@@ -237,24 +253,27 @@ class Mails extends Action
         }
 
         if (($result['deliveredTo'] ?? 0) === 0) {
-            Span::add('mail.status', 'failure');
-
             $failure = $result['results'][0] ?? [];
-            $error = 'Error sending mail: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error'));
 
-            // A project's own server that refused for good -- a 535 for its
-            // credentials, a 550 for its unverified domain, a 554 in place of
-            // the greeting -- answers every attempt the same way. Retrying only
-            // repeats the failed login from the shared egress IP, which a
-            // provider then throttles for every project behind it, and delivers
-            // a one-time code minutes after it stopped being useful. Appwrite's
-            // own provider refusing is an incident on our side, so that keeps
-            // its retries.
+            // A project's own server that refused for good answers every retry the same way; Appwrite's own keeps its retries.
             if ($type === 'smtp' && ($failure['permanent'] ?? false) === true) {
-                throw new PermanentFailure($error, 401);
+                $code = (int) ($failure['code'] ?? 0);
+                $tripped = $breaker?->record($code) === true;
+
+                Span::add('mail.status', 'refused');
+                Span::add('mail.refused', $code);
+                if ($tripped) {
+                    Span::add('mail.breaker', 'tripped');
+                }
+
+                Console::warning('Mail refused by project SMTP: project=' . $project->getId() . ' host=' . $smtp['host'] . ' code=' . $code . ($tripped ? ' breaker=tripped' : ''));
+
+                return;
             }
 
-            throw new Exception($error, $type === 'smtp' ? 401 : 500);
+            Span::add('mail.status', 'failure');
+
+            throw new Exception('Error sending mail: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error')), $type === 'smtp' ? 401 : 500);
         }
 
         Span::add('mail.status', 'success');

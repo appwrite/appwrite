@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Platform\Workers;
 
 use Appwrite\Platform\Workers\Mails;
+use Appwrite\SMTP\Breaker;
 use PHPUnit\Framework\TestCase;
+use Utopia\Cache\Adapter\Memory;
+use Utopia\Cache\Cache;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
@@ -23,6 +26,8 @@ final class SpyMailAdapter extends EmailAdapter
     public ?string $error = null;
     public bool $emptyResults = false;
     public bool $rejectAsInvalid = false;
+    public bool $permanent = false;
+    public int $code = 0;
     public int $sendCount = 0;
 
     public function getName(): string
@@ -65,6 +70,8 @@ final class SpyMailAdapter extends EmailAdapter
 
         if ($this->error !== null) {
             $result['error'] = $this->error;
+            $result['permanent'] = $this->permanent;
+            $result['code'] = $this->code;
         }
 
         $response['results'] = [$result];
@@ -75,6 +82,8 @@ final class SpyMailAdapter extends EmailAdapter
 
 final class MailsTest extends TestCase
 {
+    private ?Cache $cache = null;
+
     public function testGlobalSmtpAdapterIsTakenFromThePoolPerMessage(): void
     {
         $adapters = [];
@@ -219,6 +228,28 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
+    public function testAppwritesOwnProviderRefusingForGoodKeepsItsRetries(): void
+    {
+        $adapter = new SpyMailAdapter();
+        $adapter->deliveredTo = 0;
+        $adapter->error = '535 Authentication failed.';
+        $adapter->permanent = true;
+        $adapter->code = 535;
+
+        $thrown = 0;
+        for ($i = 0; $i <= Breaker::THRESHOLD; $i++) {
+            try {
+                $this->runMailWorker($adapter, recipient: 'legacy@example.test');
+            } catch (\Exception $error) {
+                $this->assertStringContainsString('535 Authentication failed.', $error->getMessage());
+                $thrown++;
+            }
+        }
+
+        $this->assertSame(Breaker::THRESHOLD + 1, $thrown);
+        $this->assertSame(Breaker::THRESHOLD + 1, $adapter->sendCount);
+    }
+
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $this->expectException(\Exception::class);
@@ -234,6 +265,7 @@ final class MailsTest extends TestCase
     {
         $registry = new Registry();
         $registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $adapter, 1.0));
+        $registry->set('cache', fn () => $this->cache ??= new Cache(new Memory()));
 
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
         \putenv('_APP_SMTP_HOST=spy.smtp.test');
