@@ -627,17 +627,8 @@ abstract class Response
             return;
         }
 
-        $headersSize = 0;
-        foreach ($this->headers as $name => $values) {
-            foreach ($values as $value) {
-                $headersSize += \strlen($name . ': ' . $value);
-            }
-            $headersSize += (\count($values) - 1) * 2; // linebreaks
-        }
-        $headersSize += (\count($this->headers) - 1) * 2; // linebreaks
-
         $bodyLength = \strlen($body);
-        $this->size += $headersSize + $bodyLength;
+        $this->size += $this->headersSize() + $bodyLength;
 
         if ($bodyLength <= self::CHUNK_SIZE) {
             $this->end($body);
@@ -694,10 +685,12 @@ abstract class Response
                 ->appendCookies()
                 ->appendHeaders();
 
+            $this->size += $this->headersSize();
             $this->headersSent = true;
         }
 
         if (!$this->disablePayload) {
+            $this->size += \strlen($body);
             $this->write($body);
             if ($end) {
                 $this->disablePayload();
@@ -706,6 +699,20 @@ abstract class Response
         } else {
             $this->end();
         }
+    }
+
+    private function headersSize(): int
+    {
+        $headersSize = 0;
+        foreach ($this->headers as $name => $values) {
+            foreach ($values as $value) {
+                $headersSize += \strlen($name . ': ' . $value);
+            }
+            $headersSize += (\count($values) - 1) * 2; // linebreaks
+        }
+        $headersSize += (\count($this->headers) - 1) * 2; // linebreaks
+
+        return $headersSize;
     }
 
     /**
