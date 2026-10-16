@@ -155,6 +155,8 @@ class Mails extends Action
                 Span::add('mail.status', 'skipped');
                 Span::add('mail.breaker', 'open');
 
+                Console::warning('Mail skipped, project SMTP breaker open: project=' . $project->getId() . ' host=' . $smtp['host']);
+
                 return;
             }
         }
