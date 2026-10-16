@@ -152,14 +152,17 @@ class Upsert extends Action
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
+        if ($transactionId !== null) {
+            // Use transaction-aware document retrieval to see changes from same transaction
+            $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
+        } elseif (\is_null($permissions)) {
+            $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+        } else {
+            $oldDocument = new Document();
+        }
+
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
-            if ($transactionId !== null) {
-                // Use transaction-aware document retrieval to see changes from same transaction
-                $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
-            } else {
-                $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
-            }
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
@@ -252,7 +255,7 @@ class Upsert extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
-                'documentUpdatedAt' => $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId))->getUpdatedAt(),
+                'documentUpdatedAt' => $oldDocument->getUpdatedAt(),
                 'action' => 'upsert',
                 'data' => $data,
             ]);

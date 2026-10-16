@@ -985,9 +985,6 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * Test concurrent transactions with conflicting operations
-     */
     public function testCommitConflictsWithWriteStampedBeforeStaging(): void
     {
         $headers = [
@@ -1046,6 +1043,12 @@ trait TransactionsBase
                 'data' => ['owner' => 'second'],
                 'transactionId' => $transactionId,
             ]),
+            'upsertPermissions' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
+                $this->getRecordIdParam() => $rowId,
+                'data' => ['owner' => 'second'],
+                'permissions' => [Permission::read(Role::any())],
+                'transactionId' => $transactionId,
+            ]),
             'delete' => fn (string $transactionId, string $rowId) => $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $collectionId, $rowId), $headers, [
                 'transactionId' => $transactionId,
             ]),
@@ -1084,6 +1087,9 @@ trait TransactionsBase
         }
     }
 
+    /**
+     * Test concurrent transactions with conflicting operations
+     */
     public function testConcurrentTransactionConflicts(): void
     {
         // Create database and collection
