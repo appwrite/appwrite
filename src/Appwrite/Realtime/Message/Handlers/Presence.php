@@ -107,8 +107,10 @@ class Presence extends Action
 
         $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
 
-        // connections == 1 means the row was just created: the user came online.
-        if ((int) $presence->getAttribute('connections', 0) === 1) {
+        // A worker's first hold that lands connections at 1 is the global create: the user came
+        // online. Guard on firstWorkerHold so a heartbeat on a single-connection user doesn't
+        // re-count usage.
+        if ($firstWorkerHold && (int) $presence->getAttribute('connections', 0) === 1) {
             $presenceState->triggerUsage($publisherForUsage, $project, 1);
         }
 
