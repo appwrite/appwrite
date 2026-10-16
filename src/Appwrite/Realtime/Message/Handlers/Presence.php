@@ -147,6 +147,10 @@ class Presence extends Action
                     $deleted->removeAttribute($attribute);
                 }
                 $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $user, 'presences.[presenceId].delete', $deleted);
+            } elseif ($created) {
+                // The row this message created survives under another worker's hold: still count
+                // the user coming online, since no one else will.
+                $presenceState->triggerUsage($publisherForUsage, $project, 1);
             }
 
             foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
