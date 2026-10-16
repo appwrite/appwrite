@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T22:43:00Z",
+  "updated": "2026-10-16T06:47:00Z",
   "tasks": [
     {
       "id": "db83",
@@ -16,6 +16,22 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "users-ci-parity",
+      "title": "Users parity on CI's stack",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-16T06:47:00Z",
+      "note": "Three causes: _APP_RULES_FORMAT was given to the Rust API only, so it looked rules up by md5 where PHP used the domain; main's utopia-php/http now coerces Boolean params, which the API's own param reads skipped; and shared-table sequence numbering in the diff normalizer. 0 of 2,135 different on shared and dedicated tables."
+    },
+    {
+      "id": "php-image",
+      "title": "Rebuild the local PHP image",
+      "area": "Environment",
+      "status": "done",
+      "note": "The local stack rebuilt the way CI builds it, with main's packages.",
+      "updated": "2026-10-16T06:47:00Z"
     },
     {
       "id": "db8-mirror",
@@ -48,14 +64,6 @@
       "status": "done",
       "updated": "2026-10-15T23:30:00Z",
       "note": "utopia-async (crates/utopia/async) ports utopia-php/async: Promise, Timer and Parallel over one engine Adapter (Tokio). Every other crate spawns, sleeps, connects and tests through it; bin/monorepo validate fails on a tokio dependency elsewhere. The websocket, mqtt and dns network adapters are Network now."
-    },
-    {
-      "id": "users-ci-parity",
-      "title": "Users parity: 44 differences in CI",
-      "area": "Services",
-      "status": "progress",
-      "updated": "2026-10-15T19:17:00Z",
-      "note": "30 from custom-domain rule origins (401 vs 403, one header fewer), 8 internal IDs in queued messages, 6 team searches. Clean in a local run, so reproducing in a CI-like stack first."
     },
     {
       "id": "migration-newer",
@@ -96,14 +104,6 @@
       "status": "todo",
       "updated": "2026-10-15T20:20:00Z",
       "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
-    },
-    {
-      "id": "php-image",
-      "title": "Rebuild the local PHP image",
-      "area": "Environment",
-      "status": "progress",
-      "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
-      "updated": "2026-10-15T19:17:00Z"
     },
     {
       "id": "db8-green",
