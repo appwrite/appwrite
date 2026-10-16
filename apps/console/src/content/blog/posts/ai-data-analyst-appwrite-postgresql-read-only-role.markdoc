@@ -1,0 +1,576 @@
+---
+layout: post
+title: "Build an AI data analyst on Appwrite PostgreSQL with a read-only role"
+description: Build an ask-your-data agent that writes SQL with GPT-6 Luna and runs it on an Appwrite PostgreSQL database as a read-only login role, so PostgreSQL blocks writes, reads of hidden columns, and long queries.
+date: 2026-10-05
+cover: /images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/cover.avif
+timeToRead: 15
+author: atharva
+category: tutorials
+faqs:
+  - question: "Why should an AI agent connect to PostgreSQL with its own role?"
+    answer: "The admin role of an Appwrite PostgreSQL database owns the tables, so it can change and delete every row. A system prompt that tells the model to write only SELECT statements does not stop a DELETE. A separate login role gets SELECT grants only, and PostgreSQL checks those grants on every statement. The role cannot change its own grants. Read-only transactions and a statement timeout add a second layer."
+  - question: "Why not filter the SQL for keywords such as DELETE?"
+    answer: "A keyword filter has to recognize every way that SQL can write data or lock rows, such as a DELETE inside a WITH clause or SELECT ... FOR UPDATE. It also has to recognize every way to hide a keyword. A role with SELECT grants only does not depend on the text of the statement: PostgreSQL rejects the write before the statement runs. The analyst function sends the SQL as it is and lets the grants decide."
+  - question: "How do column-level grants hide personal data from an AI agent?"
+    answer: "GRANT SELECT (column, ...) gives a role access to some columns of a table and not others. information_schema.columns lists only the columns that the current role has a privilege on, so the schema that the agent reads leaves out the hidden columns. A query that names a hidden column, such as customers.email, fails with the error permission denied for table customers. Table comments are readable by every role, so they must not name the hidden columns."
+  - question: "Can a session turn off default_transaction_read_only?"
+    answer: "Yes. default_transaction_read_only and statement_timeout are session defaults, and a role can change its own defaults, even with ALTER ROLE on itself. They are defense in depth, and the grants are the boundary. A role cannot change its own grants, so with read-only mode off, a DELETE as the analyst role still fails with permission denied for table orders. The analyst function also starts each transaction as read-only with a 5-second timeout."
+  - question: "What does the agent do when its SQL fails?"
+    answer: "For an error in the SQL, such as an unknown column (42703), a syntax error (42601), or a division by zero (22012), the function sends the error to the model once and runs the fixed query. For an error from the role, such as a missing grant (42501), a read-only transaction (25006), or a statement timeout (57014), the run ends, and the app shows the PostgreSQL error."
+---
+
+An AI agent that writes SQL can write any SQL. Many agents connect to the database as the owner of the tables. Then a line in the system prompt, such as "only write SELECT statements", is the only thing that keeps an `UPDATE` or a `DELETE` away from the data. The same applies to columns with personal data and to queries that run for minutes.
+
+This tutorial builds Sift, an ask-your-data workspace for Halcyon Coffee Roasters, a fictional online coffee roaster. A user asks a question in plain language. An Appwrite Function with GPT-6 Luna writes one `SELECT`, runs it on an Appwrite PostgreSQL database, and returns the rows, a chart, and a short summary. The function connects as `sift_analyst`, a PostgreSQL login role. The grants of this role are the boundary:
+
+- It can read 4 sales tables and 7 columns of the `customers` table. It can read no other table data.
+- It cannot read customer names, email addresses, phone numbers, or street addresses.
+- It owns no objects, and it cannot create tables, temporary tables, or functions.
+
+PostgreSQL applies the grants to every statement, whatever SQL the model writes, and the role cannot change them. Session defaults add a second layer: every transaction starts as read-only, and a statement stops after 5 seconds. A connection limit of 5 caps how many statements the agent runs at once.
+
+{% info title="Companion repository" %}
+The complete project lives at [appwrite-community/sift-analyst-agent](https://github.com/appwrite-community/sift-analyst-agent). It contains the `analyst` function and the Sift web app. It also contains the SQL files for the schema, the demo data, and the role. The Appwrite CLI config in the repository deploys the function and the site.
+{% /info %}
+
+# Sift architecture
+
+Sift has four parts.
+
+**PostgreSQL holds the business data.** The Appwrite PostgreSQL database has a `shop` schema with customers, products, orders, order items, and subscriptions. The `sift_analyst` role can read part of it.
+
+**The `analyst` function writes and runs the SQL.** It reads the schema that `sift_analyst` can see and sends it to GPT-6 Luna through OpenRouter with the question. The model returns one `SELECT` and a chart spec. The function runs the SQL as `sift_analyst` with the `pg` driver. When the SQL has a mistake, the function sends the error to the model once and runs the fixed query.
+
+**TablesDB holds the app data.** Each question and its answer is a row in the `questions` table, and each chart on the dashboard is a row in the `pins` table. Row permissions keep each row private to the user who created it.
+
+**The web app shows the answer.** It runs as an Appwrite Site. It starts the function with an asynchronous execution, and Realtime delivers the answer row when the function writes it.
+
+# System prompt rules compared with role grants
+
+Sift has a system prompt that asks for one `SELECT` statement, and GPT-6 Luna follows it. Sift also has an **Edit SQL** view, which sends SQL from the user straight to the same role. The table compares the two:
+
+| | Rule in the system prompt | Grants and session defaults of the role |
+| --- | --- | --- |
+| Who applies it | The model, when it follows the prompt | PostgreSQL, on every statement |
+| A `DELETE` from the model or the user | Runs, if it reaches the database | Fails with `permission denied for table orders`. The read-only session default stops it earlier with `cannot execute DELETE in a read-only transaction` |
+| A query for `customers.email` | Runs, if it reaches the database | Fails with `permission denied for table customers` |
+| A query that runs for minutes | Runs until it ends | Stops after 5 seconds with `canceling statement due to statement timeout` |
+| Where the rule is defined | Inside the function code | In the database, with `GRANT` and `ALTER ROLE` |
+
+No line of the `analyst` function checks the SQL. PostgreSQL applies the grants of `sift_analyst` to every statement, from the model and from **Edit SQL** alike.
+
+# Prepare the project
+
+1. In the [Appwrite Console](https://appwrite.io/console), create a project or open an existing one.
+2. Open **Apps** and select **Add app**. Select **Web**. Enter `localhost` as the **Hostname**. The web app uses this platform when it runs on your machine.
+3. Open **API Keys** and select **Create API key**. Enter `setup` as the name. Select these scopes: `databases.read`, `databases.write`, `tables.read`, `tables.write`, `columns.read`, `columns.write`, `indexes.read`, `indexes.write`, `users.read`, and `users.write`. Then copy the secret.
+
+Clone the companion repository and install the dependencies:
+
+```bash
+git clone https://github.com/appwrite-community/sift-analyst-agent.git
+cd sift-analyst-agent
+pnpm install
+```
+
+Copy `.env.example` to `.env`. Set `APPWRITE_ENDPOINT` to the API endpoint of your project's region and `APPWRITE_PROJECT_ID` to the project ID. Set `APPWRITE_API_KEY` to the secret of the `setup` key. Set `DEMO_PASSWORD` to a password of at least 8 characters. Then create the tables for the app data:
+
+```bash
+pnpm provision
+```
+
+`pnpm provision` creates `sift`, a TablesDB database for the app data. It has two tables:
+
+- **`questions`** holds each question, its SQL, its result as JSON, and its status.
+- **`pins`** holds the charts on the dashboard.
+
+Both tables have row security on. Their only table permission is `create` for users with the `analyst` label. A row that a user creates without explicit permissions gets read, update, and delete permissions for that user only. `scripts/schema.ts` in the companion repository defines every column.
+
+# Create the PostgreSQL database
+
+## Create the database in the Console
+
+![The Create database wizard in the Appwrite Console with PostgreSQL selected and halcyon as the name](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/console-create-database.avif)
+
+1. In the Console, go to **Databases** and select **Create database**.
+2. Select **PostgreSQL** and enter `halcyon` as the name.
+3. Select your preferred tier.
+4. Select **Create database**.
+
+Appwrite provisions the database with PostgreSQL 18 and an `admin` role. The `admin` role owns the database and can create other roles, but it is not a superuser.
+
+## Copy the connection details
+
+![The Credentials dialog of the halcyon database with the host, the pooler port 6432, the username, the database, and SSL required](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/console-credentials.avif)
+
+Open the database and select **Credentials**. The **Details** tab shows the values that a PostgreSQL client needs:
+
+- **Host**: `db-<hash>.<region>.appwrite.center`.
+- **Port**: `6432`, the port of the connection pooler. The pooler lets many short-lived clients, such as function executions, share a small number of server connections.
+- **Username**: `admin`, with its **Password**.
+- **Database**: the first label of the host, such as `db-abc123def456`. This value routes the connection. Inside PostgreSQL, the database is named `default`.
+- **SSL**: **Required**. Connections use TLS with a certificate from a public certificate authority.
+
+## Load the Halcyon data
+
+Copy the connection string from the **DSN** tab. In `.env`, set `ADMIN_DATABASE_URL` to this string. At the end of the string, change `sslmode=require` to `sslmode=verify-full`. Then load the data:
+
+```bash
+pnpm seed
+```
+
+`pnpm seed` connects as `admin` and runs `sql/01-schema.sql` and `sql/02-seed.sql`, which create the `shop` schema with 18 months of data. It also creates the demo user, Nora Patel, and gives her the `analyst` label. Only the setup scripts use the `admin` credentials. The `shop` schema has five tables:
+
+| Table | Rows | Columns |
+| --- | --- | --- |
+| `customers` | 2,400 | `id`, `first_name`, `last_name`, `email`, `phone`, `street`, `city`, `region`, `country`, `signed_up_at`, `channel`, `marketing_opt_in` |
+| `products` | 48 | `id`, `sku`, `name`, `category`, `origin`, `roast`, `price`, `unit_cost`, `launched_on`, `active` |
+| `orders` | about 14,000 | `id`, `customer_id`, `ordered_at`, `status`, `channel`, `country`, `coupon_code`, `subtotal`, `discount`, `shipping`, `total` |
+| `order_items` | about 23,000 | `id`, `order_id`, `product_id`, `quantity`, `unit_price` |
+| `subscriptions` | 900 | `id`, `customer_id`, `product_id`, `cadence`, `started_at`, `cancelled_at`, `status` |
+
+# Create the analyst role
+
+`sift_analyst` is a PostgreSQL login role with a password. The function connects only as this role.
+
+## Create the role in the Console
+
+![The Create role drawer in the Roles tab with sift_analyst as the role name, Can login turned on, and a password](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/console-create-role.avif)
+
+1. Open the **Roles** tab of the `halcyon` database and select **Create role**.
+2. Enter `sift_analyst` as the **Role name**.
+3. Turn on **Can login** and enter a strong password.
+4. In **Privileges**, keep **Superuser**, **Can create roles**, **Can create databases**, **Replication**, and **Bypass row level security** turned off. **Inherit privileges** stays on, and it has no effect, because the role is a member of no other role.
+5. In **Limits**, turn off **Unlimited connections** and set **Connection limit** to `5`.
+6. Select **Create**.
+
+The connection limit is an attribute of the role, so only `admin` can change it. PostgreSQL runs at most 5 connections of `sift_analyst` at the same time. Through the pooler, a client that connects when all 5 connections are busy waits for a free one for up to 15 seconds. After that, the pooler closes the connection, and Sift asks the user to try again.
+
+## Grant read access
+
+![The SQL editor of the halcyon database with the column-level GRANT statement for sift_analyst and a successful result](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/console-sql-grants.avif)
+
+Grants and session defaults need SQL statements. Run them before `sift_analyst` connects for the first time. PostgreSQL applies role defaults when a server connection opens, and the pooler keeps server connections open for hours.
+
+Open the **SQL editor** of the database. The editor runs one statement at a time, so run these statements one after another:
+
+```sql
+-- The boundary: what the role can read.
+GRANT USAGE ON SCHEMA shop TO sift_analyst;
+GRANT SELECT ON shop.products, shop.orders, shop.order_items, shop.subscriptions TO sift_analyst;
+GRANT SELECT (id, city, region, country, signed_up_at, channel, marketing_opt_in) ON shop.customers TO sift_analyst;
+
+-- Take away what every role gets through PUBLIC.
+REVOKE TEMPORARY ON DATABASE "default" FROM PUBLIC;
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA shop FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+```
+
+The SQL editor runs as `admin`. `admin` owns the database and the `shop` tables, and it created `sift_analyst`. The grants decide what `sift_analyst` can read, and the role cannot change them:
+
+- **`GRANT SELECT`** on four tables gives read access to those tables only. The role has no other grants and owns no table, so it cannot `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, or `DROP` anything.
+- **The column list in `GRANT SELECT (...)`** gives read access to 7 of the 12 columns of `customers`. A query that names `email`, or uses `SELECT *` on `customers`, fails with `permission denied for table customers`. A view that `admin` creates over `customers` is closed to the role until `admin` grants access to it. A granted view reads with the rights of its owner, so grant a view only when it reads no hidden columns.
+- **`REVOKE TEMPORARY ON DATABASE "default"`** takes away the right to create temporary tables, which PostgreSQL gives every role through `PUBLIC`. The statement applies to every role that relies on `PUBLIC`, and `admin` keeps the right as the owner. The statement uses `default`, the name of the database inside PostgreSQL. The role has no `CREATE` on any schema either, because PostgreSQL 15 and later do not grant `CREATE` on `public` to every role.
+- **`REVOKE EXECUTE` and `ALTER DEFAULT PRIVILEGES`** cover functions. PostgreSQL lets every role run a function by default, and a `SECURITY DEFINER` function runs with the rights of its owner. A `SECURITY DEFINER` function that `admin` creates to read `customers.email` would otherwise give the role a way around the column grant.
+
+## Set the session defaults
+
+The session defaults are a second layer. They stop most model mistakes early with a clear error. Run these statements in the SQL editor:
+
+```sql
+-- Defense in depth: session defaults for every connection of this role.
+ALTER ROLE sift_analyst SET default_transaction_read_only = on;
+ALTER ROLE sift_analyst SET statement_timeout = '5s';
+ALTER ROLE sift_analyst SET idle_in_transaction_session_timeout = '10s';
+ALTER ROLE sift_analyst SET search_path = shop;
+ALTER ROLE sift_analyst SET max_parallel_workers_per_gather = 0;
+```
+
+- **`default_transaction_read_only = on`** makes every transaction of the role read-only. PostgreSQL rejects `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `ALTER`, and `DROP`. It also rejects a `DELETE` inside a `WITH` clause and `SELECT ... FOR UPDATE`.
+- **`statement_timeout = '5s'`** cancels any statement that runs for longer than 5 seconds.
+- **`idle_in_transaction_session_timeout = '10s'`** closes a session that stays idle in an open transaction for 10 seconds.
+- **`search_path = shop`** lets the model write `orders` instead of `shop.orders`. It is not a limit.
+- **`max_parallel_workers_per_gather = 0`** keeps each statement to one process. PostgreSQL does not count parallel workers against the connection limit.
+
+A session of the role can change its own defaults, even with `ALTER ROLE sift_analyst SET`, so the defaults are not the boundary. When a session turns read-only mode off, the grants still apply, and a `DELETE` on `shop.orders` fails with `permission denied for table orders`. The function also starts each transaction as read-only with a 5-second timeout, so a changed role default has no effect on its queries.
+
+# Deploy the analyst function
+
+The file `appwrite.config.json` defines the `analyst` function:
+
+```json
+{
+  "$id": "analyst",
+  "name": "analyst",
+  "runtime": "node-22",
+  "execute": ["label:analyst"],
+  "enabled": true,
+  "logging": true,
+  "timeout": 150,
+  "entrypoint": "src/main.js",
+  "commands": "npm install",
+  "path": "functions/analyst",
+  "scopes": [],
+  "ignore": ["node_modules", ".npm"]
+}
+```
+
+`execute` allows only users with the `analyst` label to start the function. Each run calls the model and reads the sales data. A user who signs up for the project can do neither until a project member adds the `analyst` label to the user. `scopes` is empty, because the function reads and writes TablesDB rows as the user who started it. Set `projectId` and `endpoint` in `appwrite.config.json`. Then deploy the function with the [Appwrite CLI](/docs/tooling/command-line/installation):
+
+```bash
+appwrite login
+appwrite push functions
+```
+
+## Add the connection variables
+
+![The Variables tab of the analyst function with the PG variables and OPENROUTER_API_KEY, and the banner that asks for a redeploy](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/console-function-variables.avif)
+
+Open the `analyst` function and go to **Variables**. Add these variables:
+
+- `PGHOST`: the **Host** from the **Credentials** dialog.
+- `PGPORT`: `6432`.
+- `PGDATABASE`: the **Database** value, the first label of the host.
+- `PGUSER`: `sift_analyst`.
+- `PGPASSWORD`: the password of `sift_analyst`. Mark it as secret.
+- `PGSSLMODE`: `verify-full`.
+- `OPENROUTER_API_KEY`: your OpenRouter API key. Mark it as secret.
+
+These are the standard libpq variable names, and node-postgres reads them without extra code. An optional `OPENROUTER_MODEL` variable selects another model, and the default is `openai/gpt-6-luna`. Appwrite applies new variables on the next deployment, so select **Redeploy** in the banner at the top of the function.
+
+# Write the analyst function
+
+The function is JavaScript and lives in `functions/analyst/src`. `main.js` checks the input and records the question. `postgres.js` holds the connection and the query code, `agent.js` holds the model calls, and `prompt.js` holds the prompts.
+
+## Connect as the analyst role
+
+The `connectAsAnalyst` function in `postgres.js` opens one connection for each execution:
+
+```javascript
+/**
+ * Opens one connection as the analyst role. node-postgres reads PGHOST,
+ * PGPORT, PGDATABASE, PGUSER, PGPASSWORD and PGSSLMODE from the function's
+ * variables, so the connection has no other configuration.
+ */
+export async function connectAsAnalyst() {
+  const client = new pg.Client({
+    application_name: 'sift-analyst',
+    connectionTimeoutMillis: 10_000,
+    types,
+  });
+  // A dropped connection emits 'error'. Without a listener, it would crash the runtime.
+  client.on('error', (err) => console.error(`PostgreSQL connection error: ${err.message}`));
+  await client.connect();
+  return client;
+}
+```
+
+`PGSSLMODE=verify-full` makes node-postgres check the certificate of the server and its hostname. `types` changes how node-postgres parses `numeric` and `bigint` values. By default they arrive as strings, and the charts need numbers.
+
+## Show the model only the columns that the role can read
+
+The model needs the schema to write SQL. The `readVisibleSchema` function reads it as `sift_analyst`:
+
+```javascript
+/**
+ * The tables and columns that the analyst role can read. information_schema
+ * only lists columns that the current role has a privilege on, so columns
+ * without a grant never reach the model.
+ */
+export async function readVisibleSchema(client) {
+  const { rows } = await client.query(`
+    SELECT c.table_name, c.column_name, c.data_type,
+           obj_description(format('%I.%I', c.table_schema, c.table_name)::regclass) AS table_comment
+    FROM information_schema.columns c
+    WHERE c.table_schema = 'shop'
+    ORDER BY c.table_name, c.ordinal_position`);
+  // Groups the rows by table for the prompt.
+}
+```
+
+For `customers`, the result lists `id`, `city`, `region`, `country`, `signed_up_at`, `channel`, and `marketing_opt_in`. The query also reads the comment of each table, and every role can read comments. Keep the comments free of hidden column names, because the function sends them to the model with the schema. The system prompt needs no rule about personal data, because the hidden column names never reach the model. If the model guesses a hidden column, PostgreSQL rejects the query.
+
+## Run one statement in a read-only transaction
+
+The `runQuery` function runs the SQL from the model or the user:
+
+```javascript
+export async function runQuery(client, sql) {
+  const startedAt = performance.now();
+  await client.query('BEGIN TRANSACTION READ ONLY');
+  try {
+    await client.query(`SET LOCAL statement_timeout = '${STATEMENT_TIMEOUT}'`);
+    await client.query('SET LOCAL search_path = shop');
+    // One process per statement: parallel workers do not count against the
+    // connection limit of the role.
+    await client.query('SET LOCAL max_parallel_workers_per_gather = 0');
+    await client.query('SAVEPOINT statement');
+    let result;
+    try {
+      result = await streamRows(client, sql);
+    } catch (err) {
+      // An error aborts the transaction. Return to the savepoint so cleanup can run.
+      await client.query('ROLLBACK TO SAVEPOINT statement').catch(() => {});
+      throw err;
+    } finally {
+      // Best effort: a failure here must not hide the error of the statement.
+      await client.query('SELECT pg_advisory_unlock_all()').catch(() => {});
+      await client.query('DEALLOCATE ALL').catch(() => {});
+    }
+    const { rows, fields, rowCount } = result;
+    return {
+      columns: fields.map((field) => ({
+        name: field.name,
+        type: typeName(field.dataTypeID),
+      })),
+      rows,
+      truncated: rows.length < rowCount,
+      durationMs: Math.round(performance.now() - startedAt),
+    };
+  } finally {
+    await client.query('ROLLBACK');
+  }
+}
+```
+
+The function does not parse the SQL or look for keywords such as `DELETE`. Four properties of `runQuery` apply to every query:
+
+- **One statement.** `streamRows` sends the SQL with the extended query protocol, which accepts one statement. A string such as `SELECT 1; DELETE FROM orders` fails with `cannot insert multiple commands into a prepared statement`.
+- **A read-only transaction with a timeout.** `BEGIN TRANSACTION READ ONLY` and the `SET LOCAL` statements repeat the session defaults for this transaction. A statement such as `SELECT set_config('statement_timeout', '0', true), pg_sleep(60)` still stops after 5 seconds, because the timer starts before the statement runs.
+- **A size cap.** `streamRows` reads the rows one at a time and keeps the first 500, up to 2 million characters of JSON. node-postgres does not collect the other rows, so a query that matches millions of rows does not fill the memory of the function. The cap counts a row after node-postgres receives it, so a single value of up to 1 GB still reaches the memory of the function.
+- **Cleanup before the connection goes back to the pooler.** The pooler gives the same server connection to the next client of `sift_analyst`. `ROLLBACK` undoes settings that the statement changed. Advisory locks and prepared statements outlive a rollback, so the function releases the locks and removes the prepared statements first.
+
+## Write the SQL with GPT-6 Luna
+
+OpenRouter uses the same API as OpenAI Chat Completions, so the official `openai` package works with the OpenRouter base URL. The `draft` function uses structured outputs to get a JSON object from GPT-6 Luna:
+
+```javascript
+async function draft(openrouter, messages, { retries = 0 } = {}) {
+  const completion = await openrouter.chat.completions.create(
+    {
+      model: MODEL,
+      messages,
+      reasoning_effort: 'low',
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'draft', strict: true, schema: DRAFT_SCHEMA },
+      },
+    },
+    { maxRetries: retries },
+  );
+  const content = completion.choices?.[0]?.message?.content;
+  if (!content) throw new Error('The model returned no draft.');
+  return { draft: JSON.parse(content), content };
+}
+```
+
+`DRAFT_SCHEMA` in `prompt.js` describes the object. It has a `kind`, a `title`, the `sql`, and a `chart`. The chart has a `type` (`number`, `line`, `area`, `bar`, `pie`, or `table`), an `x` column, and a list of `y` columns. With `strict: true`, the model returns every field in that shape.
+
+The system prompt lists the visible tables and columns and gives rules for the SQL: one `SELECT`, no `SELECT *`, unique column aliases, and a definition of revenue. It also tells the model to answer with the kind `not_a_data_question` when a question asks to change data. That rule gives the user a clear answer to "delete all cancelled orders", but the grants of the role protect the data, not the rule.
+
+After a successful query, a second model request writes one or two sentences about the result. That request gets the question, the SQL that ran, and the rows. For a result with more than 60 rows, it gets the first 30 rows and the last 30 rows.
+
+## Repair a failed query once
+
+The `answer` function runs the draft. When PostgreSQL rejects it, the error code decides what happens next:
+
+```javascript
+try {
+  const result = await runQuery(db, first.sql);
+  return { kind: 'result', draft: first, result, repaired: false };
+} catch (err) {
+  if (!isRepairable(err)) throw new QueryError(err, first);
+
+  messages.push(
+    { role: 'assistant', content },
+    {
+      role: 'user',
+      content: `PostgreSQL returned an error for that SQL: ${err.message}. Fix the query and return the full draft again.`,
+    },
+  );
+  const { draft: second } = await draft(openrouter, messages);
+  // Runs the second draft once. A second failure ends the run.
+}
+```
+
+`isRepairable` accepts the error classes `42` (syntax errors and unknown names) and `22` (data errors, such as a division by zero). It does not accept `42501`, which also belongs to class `42`. That code means the role has no grant, and a second attempt cannot fix it. `GUARDRAIL_ERRORS` maps the error codes of the grants, the session defaults, and the connection limit to labels for the app. PostgreSQL reports `53300` only to a client that connects without the pooler:
+
+```javascript
+export const GUARDRAIL_ERRORS = {
+  25006: 'read_only', // read_only_sql_transaction
+  42501: 'permission_denied', // insufficient_privilege
+  57014: 'statement_timeout', // query_canceled
+  53300: 'connection_limit', // too_many_connections
+};
+```
+
+## Store the answer as the user
+
+When a signed-in user creates an execution, Appwrite sends a short-lived JWT for that user in the `x-appwrite-user-jwt` header. The `userTablesDB` function in `appwrite.js` builds a TablesDB client from it:
+
+```javascript
+export function userTablesDB(req) {
+  const jwt = req.headers['x-appwrite-user-jwt'];
+  if (!jwt) return null;
+
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setJWT(jwt);
+  return new TablesDB(client);
+}
+```
+
+The entry point creates the `questions` row before it calls the model. The ID of the row is the execution ID, which the web app also receives from `createExecution`:
+
+```javascript
+const rowId = req.headers['x-appwrite-execution-id'];
+await tablesDB.createRow({
+  ...table('questions'),
+  rowId,
+  data: {
+    question: question || 'Edited SQL',
+    source: sql ? 'editor' : 'agent',
+    status: 'running',
+    sql: sql || null,
+  },
+});
+```
+
+The call has no `permissions` argument, so only the user can read the row. At the end of the run, the function updates the row. The update stores the status (`done`, `blocked`, `failed`, or `message`), the SQL, the chart, the rows, and the summary. For a failed query, it also stores the PostgreSQL error code and message. The function shows only the messages of the database server and its pooler to the user. They name the table or the limit, and they can quote a value only from a column that the role can read.
+
+# Call the analyst from the web app
+
+The web app uses the Appwrite Web SDK. The `ask` function in `apps/web/src/lib/questions.ts` creates an asynchronous execution, so Appwrite returns at once:
+
+```typescript
+/**
+ * Asks Sift a question. The execution is asynchronous, so createExecution
+ * returns at once. The function writes the answer to a `questions` row whose
+ * ID is the execution ID, and Realtime delivers it.
+ */
+export async function ask(question: string) {
+  const execution = await functions.createExecution({
+    functionId: ANALYST_FUNCTION_ID,
+    async: true,
+    body: JSON.stringify({ question }),
+  });
+  return execution.$id;
+}
+```
+
+The `subscribeToAnswers` function subscribes to the rows of the `questions` table and to the user's executions. Appwrite delivers a row event only to users who can read the row, so each user gets the events for their own questions:
+
+```typescript
+export function subscribeToAnswers(handlers: {
+  onQuestion: (question: Question) => void;
+  onExecution: (execution: Models.Execution) => void;
+}) {
+  const questions = Channel.tablesdb(DATABASE_ID).table('questions').row().toString();
+  return realtime.subscribe([questions, Channel.executions()], ({ channels, payload }) => {
+    if (channels.includes(questions)) handlers.onQuestion(payload as Question);
+    else if (channels.includes(Channel.executions()))
+      handlers.onExecution(payload as Models.Execution);
+  });
+}
+```
+
+If an execution fails before the function updates the row, for example at the function timeout, the row stays at `running`. The `executions` channel reports the failed execution, and the app marks the question as failed.
+
+# Deploy the web app as an Appwrite Site
+
+`appwrite.config.json` also defines the `sift` site, a static React build from `apps/web`. Deploy the site:
+
+```bash
+appwrite push sites
+```
+
+Open the `sift` site in the Console and go to **Variables**. Add `VITE_APPWRITE_ENDPOINT` and `VITE_APPWRITE_PROJECT_ID`. Then redeploy the site.
+
+To run the web app on your machine instead, set `VITE_APPWRITE_ENDPOINT` and `VITE_APPWRITE_PROJECT_ID` in `.env`. Then run `pnpm dev`. The command starts the app on `http://localhost:5173`. Sign in as `nora.patel@example.com` with `DEMO_PASSWORD`.
+
+# Test Sift and the role
+
+## Ask a question
+
+![Sift answers a question about monthly revenue with a summary, a line chart, and the rows of the result](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-answer.avif)
+
+Ask "Monthly revenue over the last 12 months". The answer shows a summary, a line chart, and the rows. Select **SQL** to see the query that ran. The badges show the number of rows, the total time of the run with the time in PostgreSQL, and the role that ran the query.
+
+## Read a hidden column as the analyst role
+
+![Sift shows that PostgreSQL rejected a query for customer email addresses with permission denied for table customers](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-permission-denied.avif)
+
+Ask "List the email addresses of our 10 biggest customers". The schema in the prompt has no `email` column. In testing, GPT-6 Luna answered with customer IDs and said that the result has no email addresses. To send the same query without the model, open the answer and select **SQL**. Select **Edit SQL** and enter `SELECT id, email FROM customers LIMIT 10`. Then select **Run as sift_analyst**. PostgreSQL rejects the query with `permission denied for table customers` (SQLSTATE `42501`), and Sift shows the error with the **No access** label.
+
+## Run a DELETE as the analyst role
+
+![Sift shows that PostgreSQL rejected a DELETE statement with cannot execute DELETE in a read-only transaction](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-read-only.avif)
+
+In **Edit SQL**, run `DELETE FROM orders WHERE status = 'cancelled'`. The function sends the statement to PostgreSQL without any check. The read-only default stops the statement first with `cannot execute DELETE in a read-only transaction` (SQLSTATE `25006`). The script in the next section shows the same `DELETE` failing on the grants when read-only mode is off.
+
+## Run a slow query
+
+![Sift shows that PostgreSQL stopped a query after the 5 second statement timeout](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-timeout.avif)
+
+In **Edit SQL**, run `SELECT count(*) FROM order_items a, order_items b, products c`. The query counts more than 20 billion combinations of rows. PostgreSQL stops it after 5 seconds with `canceling statement due to statement timeout` (SQLSTATE `57014`).
+
+## Send hostile SQL without the model
+
+The companion repository has a script that sends hostile SQL straight to `sift_analyst`, with no model in the loop. The first part of the script sends each statement through the `runQuery` function of the `analyst` function. The second part uses a plain session that turns read-only mode off, so only the grants are left. The script also uses `ADMIN_DATABASE_URL` to create a test view and a `SECURITY DEFINER` function over `customers.email`, and it drops them at the end.
+
+The script changes the session defaults of `sift_analyst` while it runs and restores them at the end. A server connection that the pooler opens during the run keeps the changed defaults, so run the script on a database that has no other users.
+
+In `.env`, set `ANALYST_DATABASE_URL` to the DSN with `sift_analyst` and its password in place of `admin`. Then run the script:
+
+```bash
+pnpm guardrails
+```
+
+The script prints the PostgreSQL error for each statement. These are some of the results against the `halcyon` database:
+
+```text
+DELETE                                             25006  cannot execute DELETE in a read-only transaction
+Data-modifying CTE                                 25006  cannot execute SELECT in a read-only transaction
+Two statements                                     42601  cannot insert multiple commands into a prepared statement
+COPY ... TO PROGRAM                                42501  permission denied to COPY to or from an external program
+Personal data through a view                       42501  permission denied for view guardrail_probe_view
+Personal data through a SECURITY DEFINER function  42501  permission denied for function guardrail_probe_email
+raw: DELETE                                        42501  permission denied for table orders
+raw: CREATE TEMP TABLE                             42501  permission denied to create temporary tables in database "default"
+```
+
+For a data-modifying `WITH` clause, PostgreSQL names the outer statement, so the error says `SELECT` even though it rejects the `DELETE` inside the clause. The `raw:` lines come from the second part, where only the grants apply.
+
+## Pin answers to the dashboard
+
+![The Sift dashboard with pinned charts for monthly revenue, subscription cancellations, top products, and revenue by channel](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-dashboard.avif)
+
+Select **Pin to dashboard** on an answer to copy its chart to **Dashboard**. **Refresh** runs the stored SQL again as `sift_analyst`, with the same grants and session defaults as a new question.
+
+## See what the role can read
+
+![The Data access page of Sift with the session defaults of the role and the columns of each table, with five customers columns hidden by grants](/images/blog/ai-data-analyst-appwrite-postgresql-read-only-role/sift-data-access.avif)
+
+**Data access** shows the session defaults of `sift_analyst` and every column of the `shop` schema. The function reads the data for this page as `sift_analyst`: it reads the session defaults from `pg_roles`, and `has_column_privilege` checks each column. The 5 personal data columns of `customers` show **no grant**.
+
+# Limits of a shared role
+
+Every Sift user runs SQL as the same role, `sift_analyst`. The grants protect the data from all of them, but the role has these limits:
+
+- **The SQL of other sessions is visible.** A session can read the query text of other `sift_analyst` sessions in `pg_stat_activity`.
+- **Sessions can stop each other.** PostgreSQL lets a role cancel or end other sessions of the same role, so one user's SQL can stop another user's query.
+- **A statement can use shared resources.** For up to 5 seconds, a statement can fill the shared lock table with advisory locks or write large temporary files. These affect every client of the database, including your app.
+
+The `analyst` label limits who can run SQL, not whom the SQL affects. Give the label only to trusted users, or point Sift at a database that does not serve production traffic. To separate users inside PostgreSQL, create one login role for each user or each team.
+
+# Resources
+
+- [PostgreSQL connections](/docs/products/databases/postgresql/connections)
+- [PostgreSQL connection pooling](/docs/products/databases/postgresql/connection-pooling)
+- [PostgreSQL access control](/docs/products/databases/postgresql/concepts/access-control)
+- [PostgreSQL network security](/docs/products/databases/postgresql/network-security)
+- [Use a JWT in Appwrite Functions](/docs/products/functions/develop#using-jwt)
+- [Deploy sites from the CLI](/docs/tooling/command-line/sites)
+- [Join the Appwrite Discord](https://appwrite.io/discord)
