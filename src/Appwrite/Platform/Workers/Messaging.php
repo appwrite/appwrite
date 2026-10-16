@@ -252,6 +252,9 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
+        // Providers a batch actually ran through, for the message search; $providers is only a lookup cache.
+        $used = [];
+
         // Topics already published over Appwrite push, so a topic is sent once per message, not once per page.
         $appwriteTopics = [];
 
@@ -390,11 +393,13 @@ class Messaging extends Action
             $hasRecipients = true;
 
             /**
-             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool}> $results
+             * @var array<array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}> $results
              */
             $results = batch($tasks);
 
             foreach ($results as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
+
                 // Wake-up signals are billed, but they don't count toward the message's delivered/failed
                 // totals — a dead token here shouldn't fail a message that was already delivered over MQTT.
                 if ($result['wake']) {
@@ -429,6 +434,7 @@ class Messaging extends Action
         // not named in the send still gets woken. Topic sends already woke their devices per page above.
         if (\count($mqttUsers) > 0) {
             foreach (batch($this->buildWakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+                $used[$result['provider']->getId()] = $result['provider'];
                 $wakeSignals += $result['delivered'];
             }
         }
@@ -447,13 +453,13 @@ class Messaging extends Action
 
         $message->removeAttribute('to');
 
-        foreach ($providers as $provider) {
+        foreach ($used as $provider) {
             $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
         }
 
         Span::add('message.providers', \implode(',', \array_unique(\array_map(
             fn (Document $provider) => $provider->getAttribute('provider'),
-            \array_values($providers)
+            \array_values($used)
         ))));
 
         $message->setAttribute('deliveredTotal', $deliveredTotal);
@@ -1037,7 +1043,7 @@ class Messaging extends Action
      *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
-     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool}
+     * @return array{delivered: int, recipients: int, errors: array<string>, wake: bool, provider: Document}
      */
     private function sendBatch(
         array $batch,
@@ -1085,6 +1091,7 @@ class Messaging extends Action
             'recipients' => $recipients,
             'errors' => $errors,
             'wake' => $wake,
+            'provider' => $provider,
         ];
     }
 
