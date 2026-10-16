@@ -81,19 +81,28 @@ final class RowTest extends TestCase
         ], $filtered->getArrayCopy());
     }
 
-    public function testFilterRemovesTheEmptyStoredAttributesOfADistinctRecord(): void
+    public function testFilterAddsNoStoredAttributesToADistinctRecord(): void
     {
-        $filtered = (new RowModel())->filter((new Document([
+        $filtered = (new RowModel())->filter(new Aggregate([
             'genre' => 'drama',
-            '$sequence' => null,
             '$collection' => 'movies',
-            '$createdAt' => null,
-            '$updatedAt' => null,
             '$databaseId' => 'db',
             '$tableId' => 'movies',
-        ]))->setAttribute('$id', null));
+        ]));
 
         $this->assertSame(['genre' => 'drama'], $filtered->getArrayCopy());
+    }
+
+    public function testFilterKeepsTheIdADistinctRecordSelects(): void
+    {
+        $filtered = (new RowModel())->filter(new Aggregate([
+            '$id' => 'doc1',
+            'genre' => 'drama',
+            '$databaseId' => 'db',
+            '$tableId' => 'movies',
+        ]));
+
+        $this->assertSame(['$id' => 'doc1', 'genre' => 'drama'], $filtered->getArrayCopy());
     }
 
     public function testFilterRemovesTheStoredAttributesOfAnUnmatchedJoinRecord(): void
