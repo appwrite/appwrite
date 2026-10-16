@@ -26,6 +26,7 @@ use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ErrorCode;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
