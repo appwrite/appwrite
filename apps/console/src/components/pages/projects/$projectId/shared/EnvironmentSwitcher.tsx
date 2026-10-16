@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -69,6 +70,7 @@ export function EnvironmentSwitcher({
 }: EnvironmentSwitcherProps) {
   const t = useT()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const environmentsEnabled = features.projectEnvironments
   // `projectId` is whichever project the Console is showing, which may be an
@@ -80,7 +82,7 @@ export function EnvironmentSwitcher({
     : undefined
   const { project: parentProject } = useProject(parentProjectId)
   const region = project?.region
-  const { environments, error } = useProjectEnvironments(
+  const { environments, error, refetch } = useProjectEnvironments(
     parentProjectId,
     region,
     environmentsEnabled,
@@ -116,9 +118,7 @@ export function EnvironmentSwitcher({
     [parentProjectId, parentProject?.name, environments],
   )
 
-  // Self-hosted has no `/project/environments` routes, and a member without
-  // project read access cannot list them: show nothing rather than an error.
-  if (!environmentsEnabled || error || !project || !parentProjectId) return null
+  if (!environmentsEnabled || !project || !parentProjectId) return null
 
   const selected: ProjectEnvironmentOption = {
     id: project.$id,
@@ -135,9 +135,11 @@ export function EnvironmentSwitcher({
   const handleConfirmDelete = () => {
     closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
     deleteEnvironmentMutation.mutate(selected.id, {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success(t('Environment deleted'))
-        openProject(parentProjectId)
+        await openProject(parentProjectId)
+        // Only once its page is gone, or that page refetches a deleted project.
+        queryClient.removeQueries({ queryKey: ['project', selected.id] })
       },
       onError: (deleteError: Error) => {
         toast.error(
@@ -179,7 +181,12 @@ export function EnvironmentSwitcher({
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu
+        // A failed list leaves only the project row; opening the menu retries it.
+        onOpenChange={(open) => {
+          if (open && error) void refetch()
+        }}
+      >
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
