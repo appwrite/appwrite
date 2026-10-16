@@ -14,6 +14,7 @@ use Utopia\Database\Role;
 trait TransactionsBase
 {
     use SchemaPolling;
+    use StagedDependants;
 
     protected static string $sharedDatabaseId = '';
     protected static string $sharedCollectionId = '';
