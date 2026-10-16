@@ -113,7 +113,13 @@ class Integer extends Validator
 
     private function getMax(): int
     {
-        return $this->unsigned ? (1 << $this->bits) - 1 : \PHP_INT_MAX >> (64 - $this->bits);
+        $width = \PHP_INT_SIZE * 8;
+
+        if ($this->unsigned) {
+            return $this->bits >= $width - 1 ? \PHP_INT_MAX : (1 << $this->bits) - 1;
+        }
+
+        return $this->bits >= $width ? \PHP_INT_MAX : \PHP_INT_MAX >> ($width - $this->bits);
     }
 
     /**
