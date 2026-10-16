@@ -13,6 +13,7 @@ class Message
     protected int $attempts = 0;
     protected ?int $sequence = null;
     protected bool $terminal = false;
+    protected ?\Throwable $error = null;
     protected ?int $size = null;
 
     public function __construct(array $array = [])
@@ -183,6 +184,19 @@ class Message
     public function isTerminal(): bool
     {
         return $this->terminal;
+    }
+
+    /** The handler's failure on this delivery, for a broker that records why a message died. */
+    public function setError(?\Throwable $error): self
+    {
+        $this->error = $error;
+
+        return $this;
+    }
+
+    public function getError(): ?\Throwable
+    {
+        return $this->error;
     }
 
     public function asArray(): array
