@@ -127,4 +127,43 @@ final class ZoneTest extends TestCase
         $this->assertInstanceOf(Zone::class, $zone);
         $this->assertCount(2, $zone->records);
     }
+
+    public function testConstructorDropsDuplicateRecords(): void
+    {
+        $soa = new Record(
+            'example.com',
+            Record::TYPE_SOA,
+            ttl: 3600,
+            rdata: 'ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300',
+        );
+        $first = new Record('example.com', Record::TYPE_A, ttl: 3600, rdata: '192.0.2.1');
+        $duplicate = new Record('example.com', Record::TYPE_A, ttl: 300, rdata: '192.0.2.1');
+        $sibling = new Record('example.com', Record::TYPE_A, ttl: 3600, rdata: '192.0.2.2');
+        $txt = new Record('example.com', Record::TYPE_TXT, ttl: 3600, rdata: '192.0.2.1');
+        $www = new Record('www.example.com', Record::TYPE_A, ttl: 3600, rdata: '192.0.2.1');
+
+        $zone = new Zone('example.com', [$first, $duplicate, $sibling, $txt, $www], $soa);
+
+        $this->assertSame([$first, $sibling, $txt, $www], $zone->records);
+    }
+
+    public function testConstructorKeepsMxAndSrvRecordsDifferingOutsideRdata(): void
+    {
+        $soa = new Record(
+            'example.com',
+            Record::TYPE_SOA,
+            ttl: 3600,
+            rdata: 'ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300',
+        );
+        $records = [
+            new Record('example.com', Record::TYPE_MX, ttl: 3600, rdata: 'mail.example.com', priority: 10),
+            new Record('example.com', Record::TYPE_MX, ttl: 3600, rdata: 'mail.example.com', priority: 20),
+            new Record('_sip._tcp.example.com', Record::TYPE_SRV, ttl: 3600, rdata: 'sip.example.com', priority: 10, weight: 5, port: 5060),
+            new Record('_sip._tcp.example.com', Record::TYPE_SRV, ttl: 3600, rdata: 'sip.example.com', priority: 10, weight: 5, port: 5061),
+        ];
+
+        $zone = new Zone('example.com', $records, $soa);
+
+        $this->assertCount(4, $zone->records);
+    }
 }

@@ -11,6 +11,9 @@ final readonly class Zone
 {
     public string $name;
 
+    /** @var list<Record> */
+    public array $records;
+
     /**
      * @param string $name The zone domain name (usually apex)
      * @param list<Record> $records DNS records in this zone (excluding SOA)
@@ -18,7 +21,7 @@ final readonly class Zone
      */
     public function __construct(
         string $name,
-        public array $records,
+        array $records,
         public Record $soa,
     ) {
         if ($soa->type !== Record::TYPE_SOA) {
@@ -31,6 +34,7 @@ final readonly class Zone
         }
 
         $zoneSuffix = $this->name === '.' ? '.' : ".$this->name";
+        $unique = [];
 
         // Validate that all records belong to the zone
         foreach ($records as $record) {
@@ -42,7 +46,21 @@ final readonly class Zone
                     "Record name '$record->name' does not belong to zone '$this->name'",
                 );
             }
+
+            // An RRset holds each record once, whatever its TTL (RFC 2181 section 5)
+            $key = serialize([
+                $record->name,
+                $record->class,
+                $record->type,
+                $record->rdata,
+                $record->priority,
+                $record->weight,
+                $record->port,
+            ]);
+            $unique[$key] ??= $record;
         }
+
+        $this->records = array_values($unique);
     }
 
     /**
