@@ -80,7 +80,7 @@ trait StagedDependants
         $this->assertSame(($tables ? 'Row' : 'Document') . " with the requested ID '{$recordId}' could not be found.", $staged['body']['message']);
     }
 
-    public function testUpsertOperationCommitsUnderItsRecordId(): void
+    public function testCreateAndUpsertOperationsCommitUnderTheirRecordId(): void
     {
         $databaseId = $this->getSharedDatabase();
         $collectionId = $this->getSharedCollection();
@@ -96,6 +96,8 @@ trait StagedDependants
         $newId = Id::unique();
         $targetId = Id::unique();
         $strayId = Id::unique();
+        $createdId = Id::unique();
+        $createdStrayId = Id::unique();
         $transactionId = $this->createStagedDependantsTransaction();
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
             'operations' => [
@@ -113,6 +115,13 @@ trait StagedDependants
                     'action' => 'upsert',
                     $this->getRecordIdParam() => $targetId,
                     'data' => ['$id' => $strayId, 'name' => 'target'],
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'create',
+                    $this->getRecordIdParam() => $createdId,
+                    'data' => ['$id' => $createdStrayId, 'name' => 'created'],
                 ],
             ],
         ]);
@@ -135,6 +144,13 @@ trait StagedDependants
 
         $stray = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $strayId), $headers);
         $this->assertSame(404, $stray['headers']['status-code']);
+
+        $created = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $createdId), $headers);
+        $this->assertSame(200, $created['headers']['status-code'], 'A create commits under the record ID of the operation, not an $id in its data');
+        $this->assertSame('created', $created['body']['name']);
+
+        $createdStray = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $createdStrayId), $headers);
+        $this->assertSame(404, $createdStray['headers']['status-code']);
     }
 
     /**
