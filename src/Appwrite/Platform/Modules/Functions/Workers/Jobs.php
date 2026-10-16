@@ -866,8 +866,10 @@ class Jobs extends Action
                 $dbForPlatform,
                 $platform,
             );
-        } catch (\Throwable) {
-            // Best-effort — never fails the build.
+        } catch (\Throwable $error) {
+            // Best-effort — never fails the build, but the provider report is
+            // what a reviewer sees, so a refused one is worth a line.
+            Console::warning("Failed to report deployment '{$deployment->getId()}' as {$status}: " . $error->getMessage());
         }
     }
 
