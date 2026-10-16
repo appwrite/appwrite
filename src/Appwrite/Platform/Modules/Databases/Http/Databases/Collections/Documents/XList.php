@@ -155,18 +155,22 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
+            $readsRecords = !$parsed->isAggregation() && !$parsed->distinct;
+            $hydrate = static fn (array $row): Document => $readsRecords ? new Document($row) : new Aggregate($row);
+            $read = $parsed->selections !== []
+                ? fn (): array => $dbForDatabases->find($collectionTableId, $queries)
+                : fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries));
             $find = match (true) {
-                $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Aggregate => new Aggregate($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
-                ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+                $parsed->isAggregation() => fn (): array => \array_map($hydrate, $dbForDatabases->aggregate($collectionTableId, $queries)),
+                $parsed->distinct => fn (): array => \array_map(static fn (Document $row): Aggregate => new Aggregate($row->getArrayCopy()), $read()),
+                default => $read,
             };
 
             if ($transactionId !== null) {
                 $documents = \array_map(
-                    fn (Document $document): Document => $this->stampTransactionRead($document, $databaseId, $collectionId),
+                    fn (Document $document): Document => $readsRecords
+                        ? $this->stampTransactionRead($document, $databaseId, $collectionId)
+                        : new Aggregate($document->getArrayCopy()),
                     $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries),
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
@@ -185,7 +189,7 @@ class XList extends Action
                 }
 
                 if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => $parsed->isAggregation() ? new Aggregate($document) : new Document($document), $cachedDocuments);
+                    $documents = \array_map($hydrate, $cachedDocuments);
                     $documentsCacheHit = true;
 
                     try {
