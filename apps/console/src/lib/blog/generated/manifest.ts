@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-passkeys",
+    "href": "/blog/post/announcing-passkeys",
+    "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
+    "description": "Appwrite Auth now supports passkeys. Users sign up and sign in with Face ID, Touch ID, a fingerprint, or the device PIN, and one passkey works on your website and in your Android and iOS apps.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-passkeys/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-helm-chart",
     "href": "/blog/post/announcing-appwrite-helm-chart",
     "title": "Announcing the official Appwrite Helm chart for Kubernetes",
