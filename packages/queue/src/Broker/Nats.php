@@ -98,6 +98,18 @@ class Nats implements Synchronous, Consumer, Bounded
     private const int MAX_STREAM_NAME = 255;
     private const string METADATA_IDENTITY = 'utopia_queue_identity';
 
+    /**
+     * Work streams this process has seen owned by the queue publishing to them, as
+     * account => stream => identity. Static, not per instance: a pool builds a broker
+     * per connection and a recycled worker rebuilds the pool, and the point is one
+     * identity read per queue per process rather than per connection. Keyed by
+     * account (see account()), because a stream name means a different stream on
+     * another cluster or account, and a confirmation there says nothing here.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private static array $ownedStreams = [];
+
     // Consumer-metadata key marking a work consumer provisioned with one delivery past
     // maxDeliver, so a broker adopting it can tell that spare from a larger budget.
     private const string METADATA_SPARE_DELIVERY = 'utopia_queue_spare_delivery';
@@ -500,13 +512,12 @@ class Nats implements Synchronous, Consumer, Bounded
             // own message id, so deduplication works exactly as it does on the single
             // publish, and a payload the server rejects still throws.
             // Republished whole, for the reason republishing() gives: every payload
-            // keeps its id, so the ones that did land collapse. Provisioned inside the
-            // republish, for the reason publishEnvelope() gives.
-            $acks = $this->republishing(function () use ($queue, $messages): array {
-                $this->ensure($queue);
-
-                return $this->js()->publishMany($messages);
-            });
+            // keeps its id, so the ones that did land collapse. Provisioned only when the
+            // stream is missing, for the reasons publishEnvelope() gives.
+            $acks = $this->republishing(fn (): array => $this->provisioningIfAbsent(
+                $queue,
+                fn (): array => $this->js()->publishMany($messages),
+            ));
 
             foreach ($acks as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
@@ -531,11 +542,11 @@ class Nats implements Synchronous, Consumer, Bounded
      * gave up on the ack — can only be retried by creating a second copy that
      * nothing downstream can tell from a genuine second message.
      *
-     * The queue is provisioned inside the republish, not before it. A reconnect
-     * forgets what was provisioned, so in a rolling restart the first publish after
-     * one server went away re-provisions -- and that request is what meets the next
-     * server going away. Outside the republish it threw to the caller: a lost
-     * execution log, a failed API call, a dead-lettered function run.
+     * The queue is provisioned only when the stream is missing (see
+     * provisioningIfAbsent()), and inside the republish rather than before it: a
+     * provisioning request in a rolling restart meets the next server going away,
+     * and outside the republish that threw to the caller -- a lost execution log, a
+     * failed API call, a dead-lettered function run.
      *
      * @param array<string, mixed> $envelope
      */
@@ -545,11 +556,10 @@ class Nats implements Synchronous, Consumer, Bounded
         $id = $envelope['pid'];
         $data = $this->codec->encode($envelope);
 
-        $ack = $this->republishing(function () use ($queue, $subject, $data, $id): PubAck {
-            $this->ensure($queue);
-
-            return $this->publishOnce($subject, $data, $id);
-        });
+        $ack = $this->republishing(fn (): PubAck => $this->provisioningIfAbsent(
+            $queue,
+            fn (): PubAck => $this->publishOnce($subject, $data, $id),
+        ));
 
         // Not discarded: a duplicate ack means the stream already held this id,
         // so the retry collapsed instead of double-delivering. That is the
@@ -559,6 +569,127 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($ack->duplicate) {
             ++$this->duplicates;
         }
+    }
+
+    /**
+     * Publish without provisioning first, and provision only if no stream took it.
+     *
+     * A publisher needs the stream to exist and nothing else: the durable consumer,
+     * the spare delivery and the dead-letter advisory are the consumer's, and the
+     * consumer provisions them itself on its first receive. Provisioning on every
+     * publisher's first publish cost four JetStream API requests per queue per
+     * connection (the identity read, both stream writes, the consumer write), all
+     * answered by the meta leader. A pool holds a broker per connection, and an HTTP
+     * worker that recycles rebuilds its whole pool, so in production that was most
+     * of the meta leader's API load for queues that had existed for weeks.
+     *
+     * A 503 No Responders says nothing listens on the work subject, which is either
+     * a missing stream or an existing one electing a leader. Only the first may be
+     * provisioned: provisioning during an election writes this publisher's settings
+     * over the stream and its consumer, which is what skipping provisioning set out
+     * to stop, and adds writes to RAFT groups that are mid-election. So the 503 is
+     * followed by one read of the stream (streamIsAbsent()), and only a 404 provisions
+     * and publishes again. Anything else is an election, or cannot tell, and the 503
+     * is left to republishing() to wait out.
+     *
+     * A publisher no longer writes its settings over a stream that exists; the
+     * consumer's own provisioning still does. The stream-name collision guard still
+     * runs before the first publish, as one read per queue per process (guardOnce()).
+     *
+     * @template T
+     * @param \Closure(): T $publish
+     * @return T
+     */
+    private function provisioningIfAbsent(Queue $queue, \Closure $publish): mixed
+    {
+        $this->guardOnce($queue);
+
+        try {
+            return $publish();
+        } catch (NoRespondersException $error) {
+            if (isset($this->provisioned[$this->identity($queue)]) || !$this->streamIsAbsent($queue)) {
+                throw $error;
+            }
+        }
+
+        $this->ensure($queue);
+
+        return $publish();
+    }
+
+    /**
+     * Whether the work stream is known not to exist, as opposed to existing without a
+     * leader. Only JetStream's 404 says absent. A stream electing a leader still has
+     * its assignment, so it is not a 404. A read that times out, as it does while the
+     * meta leader is being elected, is not a 404 either, and it is not rethrown:
+     * republishing() would take its timeout for a lost connection and reconnect.
+     */
+    private function streamIsAbsent(Queue $queue): bool
+    {
+        try {
+            $this->js()->getStreamInfo($this->workStream($queue));
+
+            return false;
+        } catch (JetStreamException $e) {
+            return $e->apiError?->code === 404;
+        } catch (TimeoutException) {
+            return false;
+        }
+    }
+
+    /**
+     * Refuse to publish into a stream another queue owns, at the cost of one read.
+     *
+     * Publishing straight to the work subject would otherwise skip guardStreamName():
+     * a queue whose name collides with an existing queue's stream would land its
+     * messages there, and that queue's consumer would run them. So the guard still
+     * runs before the first publish -- once per process, as a read with no write --
+     * and only a stream confirmed to be this queue's is remembered. An absent stream
+     * is not: the publish then gets No Responders, and ensure() guards and creates it.
+     */
+    private function guardOnce(Queue $queue): void
+    {
+        $account = $this->account();
+        $stream = $this->workStream($queue);
+        $identity = $this->identity($queue);
+        if ((self::$ownedStreams[$account][$stream] ?? null) === $identity) {
+            return;
+        }
+
+        if ($this->guardStreamName($queue, $identity) === $identity) {
+            self::$ownedStreams[$account][$stream] = $identity;
+        }
+    }
+
+    /**
+     * Which JetStream a stream name refers to, as far as the connection can say: the
+     * servers it was opened against and the credentials it authenticates with. The
+     * server does not name the account a connection lands in, and asking JetStream
+     * costs the very request the ownership cache exists to save. Over-splitting is
+     * cheap (two spellings of one cluster read the owner twice); merging two accounts
+     * is the bug, so every option that can select the user is in the key: the user
+     * and its password, a token, an nkey and its seed, a credentials file, and the
+     * TLS client certificate and key, which a server can map to a user. A token or
+     * JWT provider, being a closure, is told apart by object. Hashed so no
+     * credential sits in the map as a key; the serialized form is never kept.
+     */
+    private function account(): string
+    {
+        $options = $this->connection()->getOptions();
+
+        return hash('xxh128', serialize([
+            $options->servers,
+            $options->user,
+            $options->pass,
+            $options->token,
+            $options->nkey,
+            $options->nkeySeed,
+            $options->credentialsFile,
+            $options->tlsCertFile,
+            $options->tlsKeyFile,
+            $options->tokenProvider instanceof \Closure ? spl_object_id($options->tokenProvider) : null,
+            $options->jwtProvider instanceof \Closure ? spl_object_id($options->jwtProvider) : null,
+        ]));
     }
 
     /**
@@ -1654,8 +1785,10 @@ class Nats implements Synchronous, Consumer, Bounded
      * backstop for the run-one-namespace-per-account contract, not a concurrency lock:
      * two colliding names provisioned at the very same instant can still both create
      * the (identical) stream before either sees the other.
+     *
+     * @return string|null The identity that owns the stream, or null when it is absent
      */
-    private function guardStreamName(Queue $queue, string $identity): void
+    private function guardStreamName(Queue $queue, string $identity): ?string
     {
         // The dead stream (work name + suffix) is the longest, so if it fits, both do.
         // Fixed-width names never overflow, but a long queue name can -- fail clearly
@@ -1677,6 +1810,8 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($owner !== null && $owner !== $identity) {
             throw new \RuntimeException("NATS stream \"{$stream}\" already belongs to queue \"{$owner}\", not \"{$identity}\"; rename one queue.");
         }
+
+        return $owner;
     }
 
     /** Move messages that exhausted maxDeliver (per the advisory) onto the dead stream. */

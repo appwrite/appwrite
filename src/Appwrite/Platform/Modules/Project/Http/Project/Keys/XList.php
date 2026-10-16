@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
-use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Keys;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -65,7 +65,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
-            ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -79,7 +79,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
-        ?Key $apiKey,
+        Request $request,
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -128,7 +128,7 @@ class XList extends Base
         }
 
         // Secrets are only for callers that could replace the keys anyway
-        if ($apiKey !== null && !\in_array('keys.write', $apiKey->getScopes())) {
+        if (!\in_array('keys.write', $request->getScopes(), true)) {
             foreach ($keys as $key) {
                 $key->setAttribute('secret', '');
             }

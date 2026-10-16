@@ -886,6 +886,17 @@ trait KeysBase
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame($key['body']['secret'], $get['body']['secret']);
 
+        // The suite's own caller (a console session or a server key) holds keys.write
+        $get = $this->getKey($keyId);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
+
+        $list = $this->listKeys(null, null);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertNotContains('', \array_column($list['body']['keys'], 'secret'));
+
         /**
          * Test for FAILURE
          */

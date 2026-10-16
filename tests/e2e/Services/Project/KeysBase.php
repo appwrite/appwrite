@@ -49,11 +49,13 @@ trait KeysBase
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('Legacy Key', $get['body']['name']);
         $this->assertSame('Used by the nightly backup job.', $get['body']['description']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
 
         $list = $this->client->call(Client::METHOD_GET, '/project/keys', $projectHeaders);
 
         $this->assertSame(200, $list['headers']['status-code']);
         $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
+        $this->assertNotContains('', \array_column($list['body']['keys'], 'secret'));
 
         // A key that can only read keys does not see their secrets
         $reader = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
