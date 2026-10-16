@@ -5908,6 +5908,42 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * Routing follows a bundle ID changed through the APNs provider update endpoint, which used to store
+     * it under the wrong credentials key, leaving delivery and routing on the old one.
+     */
+    public function testCreatePushTargetRoutesApnsByUpdatedBundleId(): void
+    {
+        $session = $this->createDeviceSession();
+        $before = 'io.appwrite.e2e.' . Id::unique();
+        $after = 'io.appwrite.e2e.' . Id::unique();
+        $providerId = $this->createApnsProvider($before, sandbox: false);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/apns/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bundleId' => $after,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($providerId, $target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $before, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId'], 'the replaced bundle ID still routes to the provider');
+    }
+
+    /**
      * An install that registered before routing holds a providerless target. Its next registration,
      * now routed, adopts that target instead of leaving it live on the default provider beside a new one.
      */
