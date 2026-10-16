@@ -36,6 +36,7 @@ class Method
      * @param bool $public Whether this method should be rendered on the website/documentation
      * @param array<string> $locationAuth Security scheme keys for location-type methods: first is the required project binding; additional keys supplement the base auth as an optional alternative
      * @param array<string, array{summary?: string, value: array<string, mixed>}> $requestExamples Named OpenAPI request-body examples
+     * @param bool $chunked Whether the upload may be split into Content-Range chunks
      */
     public function __construct(
         protected string $namespace,
@@ -55,7 +56,8 @@ class Method
         protected string $summary = '',
         protected bool $public = true,
         protected array $locationAuth = [],
-        protected array $requestExamples = []
+        protected array $requestExamples = [],
+        protected bool $chunked = false
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -236,6 +238,11 @@ class Method
     public function isPackaging(): bool
     {
         return $this->packaging;
+    }
+
+    public function isChunked(): bool
+    {
+        return $this->chunked;
     }
 
     public function getRequestType(): ContentType
