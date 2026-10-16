@@ -198,19 +198,17 @@ export function StartPromoBanner() {
             aria-label={`${headline}. ${subline} ${ctaLabel}`}
             className="group relative z-0 flex min-h-28 w-full cursor-pointer items-center justify-center px-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-7 sm:px-9 sm:pe-12"
           >
-            {promoContent.imageSrc ? (
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 start-0 hidden w-[min(42%,360px)] overflow-hidden sm:block"
-              >
-                <img
-                  src={promoContent.imageSrc}
-                  alt=""
-                  className="absolute start-[-40px] top-[-92px] h-[360px] w-auto max-w-none opacity-90"
-                  style={START_PROMO_IMAGE_MASK_STYLE}
-                />
-              </div>
-            ) : null}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 start-0 hidden w-[min(42%,360px)] overflow-hidden sm:block"
+            >
+              <img
+                src={promoContent.imageSrc}
+                alt=""
+                className="absolute start-[-40px] top-[-92px] h-[360px] w-auto max-w-none opacity-90"
+                style={START_PROMO_IMAGE_MASK_STYLE}
+              />
+            </div>
 
             <div className="relative z-10 flex min-w-0 flex-col items-center gap-1 text-center sm:items-start sm:text-start">
               <p className="truncate text-[18px] font-medium leading-tight tracking-[-0.02em] text-[#fafafa] sm:text-[22px] md:text-[26px]">

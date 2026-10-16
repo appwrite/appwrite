@@ -14,8 +14,8 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Dismiss banner': 'バナーを閉じる',
   'Namaste India': 'Namaste India',
   'Namaste Nepal': 'Namaste Nepal',
-  'Welcome Nigeria': 'Welcome Nigeria',
-  'Welcome Pakistan': 'Welcome Pakistan',
+  'How far, Nigeria': 'How far, Nigeria',
+  'Salaam Pakistan': 'Salaam Pakistan',
   'Appwrite Start, a plan built for Nepali developers.':
     'Appwrite Start。ネパールの開発者向けに設計されたプラン。',
   'Appwrite Start, a plan built for Nigerian developers.':

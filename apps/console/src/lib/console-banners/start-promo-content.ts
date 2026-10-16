@@ -4,8 +4,8 @@ import { isStartPlanEligibleCountry, normalizeCountryCode } from '@/lib/pricing/
 export type StartPromoBannerContent = {
   headline: string
   subline: string
-  /** India only; other Start regions use text-only banners. */
-  imageSrc?: string
+  /** Landmark line art in the Taj style, shown at the start of the banner. */
+  imageSrc: string
 }
 
 const START_PROMO_CONTENT: Record<StartPlanEligibleCountry, StartPromoBannerContent> =
@@ -18,14 +18,17 @@ const START_PROMO_CONTENT: Record<StartPlanEligibleCountry, StartPromoBannerCont
     NP: {
       headline: 'Namaste Nepal',
       subline: 'Appwrite Start, a plan built for Nepali developers.',
+      imageSrc: '/images/console/banners/start-promo-boudha.svg',
     },
     NG: {
-      headline: 'Welcome Nigeria',
+      headline: 'How far, Nigeria',
       subline: 'Appwrite Start, a plan built for Nigerian developers.',
+      imageSrc: '/images/console/banners/start-promo-lekki.svg',
     },
     PK: {
-      headline: 'Welcome Pakistan',
+      headline: 'Salaam Pakistan',
       subline: 'Appwrite Start, a plan built for Pakistani developers.',
+      imageSrc: '/images/console/banners/start-promo-faisal.svg',
     },
   }
 
