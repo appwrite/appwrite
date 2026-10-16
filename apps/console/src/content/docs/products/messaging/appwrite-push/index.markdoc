@@ -519,7 +519,7 @@ For punctual wake-ups, declare these permissions in your manifest. On Android 13
 
 Background delivery is on for every subscription with `background` set, with nothing else to configure. `Push.backgroundStatus()` reports how punctual it can be. Its `bestEffort` flag is read-only and is `true` when messages can arrive late, or only once the app is opened:
 
-- Exact alarms aren't allowed, and no foreground service is running.
+- Exact alarms aren't allowed, and no foreground service is running. A foreground service doesn't count while background usage is restricted.
 - The user restricted the app's background usage, and the app isn't exempt from battery optimization.
 
 To improve it, explain why to the user, then ask from a button press:
@@ -536,7 +536,7 @@ if (status.bestEffort) {
 }
 ```
 
-Both helpers return `false` when there is nothing to ask, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`.
+Both helpers return `false` when there is nothing to ask, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`, without the `context` argument. They're async, `backgroundStatus()` returns `null` outside Android, and both requests resolve to `false` outside Android.
 
 For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove the push service (`io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, `io.appwrite.reactnative.services.PushService` on React Native) and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
 
