@@ -1,0 +1,27 @@
+[package]
+name = "utopia-websocket"
+description = "WebSocket client and server for Utopia (Rust port of utopia-php/websocket)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["websocket", "server", "client", "utopia"]
+categories = ["web-programming", "network-programming"]
+
+[dependencies]
+base64 = { workspace = true }
+parking_lot = { workspace = true }
+rand = { workspace = true }
+sha1 = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+[[bench]]
+name = "websocket"
+harness = false
+
+[lints]
+workspace = true

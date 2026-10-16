@@ -1,0 +1,63 @@
+[package]
+name = "utopia-proxy"
+description = "TCP/HTTP/SMTP proxy for Utopia (Rust port of utopia-php/proxy)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["proxy", "tcp", "http", "smtp", "utopia"]
+categories = ["network-programming", "web-programming"]
+
+[dependencies]
+async-trait = { workspace = true }
+bytes = { workspace = true }
+dashmap = { workspace = true }
+futures-util = { workspace = true }
+hickory-resolver = { workspace = true, features = ["tokio-runtime"] }
+http-body-util = { workspace = true }
+hyper = { workspace = true, features = ["client", "http1", "http2", "server"] }
+hyper-util = { workspace = true }
+ipnet = { workspace = true }
+moka = { workspace = true }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+rustls-pki-types = { workspace = true }
+serde_json = { workspace = true }
+socket2 = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-rustls = { workspace = true }
+tracing = { workspace = true }
+utopia-console = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[[bench]]
+name = "proxy"
+harness = false
+
+[[example]]
+name = "tcp"
+path = "examples/tcp.rs"
+
+[[example]]
+name = "http"
+path = "examples/http.rs"
+
+[[example]]
+name = "http_proxy"
+path = "examples/http_proxy.rs"
+
+[[example]]
+name = "smtp"
+path = "examples/smtp.rs"
+
+[lints]
+workspace = true

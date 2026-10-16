@@ -1,0 +1,39 @@
+[package]
+name = "utopia-feed"
+description = "CloudEvents feed producer, consumer, and stores for Utopia (Rust port of utopia-php/feed)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["feed", "cloudevents", "event-sourcing", "utopia"]
+categories = ["web-programming"]
+
+[features]
+default = []
+redis = ["dep:redis"]
+
+[dependencies]
+bytes = { workspace = true }
+http = { workspace = true }
+parking_lot = { workspace = true }
+redis = { workspace = true, optional = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-client = { workspace = true }
+utopia-cloudevents = { workspace = true }
+utopia-pools = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+
+[[bench]]
+name = "feed"
+harness = false
+
+[lints]
+workspace = true

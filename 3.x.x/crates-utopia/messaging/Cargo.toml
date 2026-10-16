@@ -1,0 +1,48 @@
+[package]
+name = "utopia-messaging"
+description = "Multi-adapter messaging for Utopia (Rust port of utopia-php/messaging)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["messaging", "sms", "email", "push", "utopia"]
+categories = ["web-programming", "email"]
+
+[dependencies]
+base64 = { workspace = true }
+hex = { workspace = true }
+hmac = { workspace = true }
+jsonwebtoken = { workspace = true }
+parking_lot = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+rand = { workspace = true }
+rsa = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+url = { workspace = true }
+utopia-client = { workspace = true }
+utopia-pools = { workspace = true }
+utopia-telemetry = { workspace = true }
+lettre = { workspace = true }
+# Pin pulled in by lettre → chumsky → stacker; see root Cargo.toml.
+psm = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "messaging"
+harness = false
+
+[lints]
+workspace = true

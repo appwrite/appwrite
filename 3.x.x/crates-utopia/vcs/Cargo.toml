@@ -1,0 +1,43 @@
+[package]
+name = "utopia-vcs"
+description = "VCS adapters for Utopia (Rust port of utopia-php/vcs)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["vcs", "github", "gitlab", "bitbucket", "gitea"]
+categories = ["development-tools"]
+
+[dependencies]
+base64 = { workspace = true }
+hex = { workspace = true }
+hmac = { workspace = true }
+jsonwebtoken = { workspace = true }
+rand = { workspace = true }
+regex = { workspace = true }
+bytes = { workspace = true }
+http = { workspace = true }
+rsa = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha1 = { workspace = true }
+sha2 = { workspace = true }
+subtle = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-client = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+utopia-test-wiremock = { workspace = true }
+
+[[bench]]
+name = "vcs"
+harness = false
+
+[lints]
+workspace = true

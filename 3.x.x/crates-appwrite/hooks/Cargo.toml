@@ -1,0 +1,22 @@
+[package]
+name = "appwrite-hooks"
+description = "Appwrite lifecycle hooks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["appwrite", "hooks"]
+categories = ["rust-patterns"]
+
+[dependencies]
+serde_json = { workspace = true }
+
+[[bench]]
+name = "smoke"
+harness = false
+
+[lints]
+workspace = true

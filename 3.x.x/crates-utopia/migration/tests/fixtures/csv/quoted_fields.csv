@@ -1,0 +1,11 @@
+name,description,tags
+"Alice","Software Engineer, Team Lead","php,js"
+"Bob","Data Analyst; Expert","sql,excel"
+"Carol","CTO, Strategic Leader","go,devops,cloud"
+"David","Back-end Developer, API specialist","python,flask,django"
+"Emma","Fullstack Developer, React/Vue","js,react,vue"
+"Frank","DevOps; Site Reliability","docker,k8s,terraform"
+"Grace","Product Manager, B2B; B2C","planning,roadmap"
+"Hannah","Support Lead, ""Customer Success""","support,crm"
+"Ian","QA Engineer, Manual & Automated testing","selenium,pytest"
+"Jane","UI/UX Designer, accessibility","figma,sketch"

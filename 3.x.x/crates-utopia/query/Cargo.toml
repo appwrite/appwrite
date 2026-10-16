@@ -1,0 +1,26 @@
+[package]
+name = "utopia-query"
+description = "SQL/Mongo query builder, AST, schema, and classifiers for Utopia (Rust port of utopia-php/query)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["sql", "query", "builder", "mongodb", "utopia"]
+categories = ["database", "parser-implementations"]
+
+[dependencies]
+md5 = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+
+[[bench]]
+name = "query"
+harness = false
+
+[lints]
+workspace = true

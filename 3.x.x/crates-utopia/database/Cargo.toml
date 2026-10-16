@@ -1,0 +1,53 @@
+[package]
+name = "utopia-database"
+description = "Application persistence adapters for Utopia (Rust port of utopia-php/database)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["database", "document", "utopia"]
+categories = ["database", "web-programming"]
+
+[features]
+default = ["sqlite"]
+postgres = ["dep:postgres", "dep:bytes", "dep:tokio"]
+mysql = ["dep:mysql", "dep:tokio"]
+sqlite = ["dep:rusqlite"]
+mongo = ["dep:mongodb"]
+redis = ["dep:redis"]
+
+[dependencies]
+bytes = { workspace = true, optional = true }
+chrono = { workspace = true }
+hex = { workspace = true }
+indexmap = { workspace = true }
+md-5 = { workspace = true }
+mongodb = { workspace = true, optional = true }
+mysql = { workspace = true, optional = true }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
+postgres = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true, features = ["rt"] }
+rand = { workspace = true }
+redis = { workspace = true, optional = true }
+regex = { workspace = true }
+rusqlite = { workspace = true, optional = true }
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror = { workspace = true }
+utopia-cache = { workspace = true }
+utopia-console = { workspace = true }
+utopia-pools = { workspace = true }
+utopia-validators = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bench]]
+name = "database"
+harness = false
+
+[lints]
+workspace = true
