@@ -181,6 +181,35 @@ final class MessagingTest extends TestCase
         $this->assertCount(2, $connection['roles']);
     }
 
+    public function testSubscribeRetainsPresenceHold(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(Id::custom('123'))->toString()],
+            ['documents'],
+        );
+
+        // A presence write stashes the hold on the connection entry.
+        $hold = ['projectId' => '1', 'userId' => '123', 'presenceId' => 'presence-1'];
+        $realtime->connections[1]['presence'] = $hold;
+
+        // A later subscribe rebuilds the entry and must not drop the stash, or onClose
+        // could never release the worker's count.
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-b',
+            [Role::users()->toString()],
+            ['files'],
+        );
+
+        $this->assertSame($hold, $realtime->connections[1]['presence']);
+    }
+
     public function testUnsubscribeSubscriptionRemovesOnlyOneSubscription(): void
     {
         $realtime = new Realtime();
