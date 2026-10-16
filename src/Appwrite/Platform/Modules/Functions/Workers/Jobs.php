@@ -167,31 +167,31 @@ class Jobs extends Action
 
         $failure = null;
         $key = $event->id !== '' ? 'jobs-event-' . $event->id : null;
-        $claimed = false;
+        // Each delivery claims with its own token, so it can tell its claim from a successor's.
+        $claim = self::CLAIMED . ':' . \bin2hex(\random_bytes(8));
 
         try {
-            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, &$claimed, &$failure): void {
+            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, $claim, &$failure): void {
                 // A copy of an event is claimed while it is applied and marked applied once it
                 // has been. A repeat of an applied event is skipped. A repeat that finds a live
                 // claim is failed, so the broker brings it back once the claim has settled: it
                 // is then skipped if the claimer finished, or applied if the claimer died.
-                $settle = function () use ($cache, $key, &$claimed): void {
+                $settle = function () use ($cache, $key): void {
                     if ($key !== null) {
                         $cache->save($key, self::APPLIED);
-                        $claimed = false;
                     }
                 };
 
                 if ($key !== null) {
                     $state = $cache->load($key, self::DEDUPE_TTL);
-                    if ($state !== false && $state !== self::CLAIMED) {
+                    $claimed = \is_string($state) && \str_starts_with($state, self::CLAIMED);
+                    if ($state !== false && !$claimed) {
                         return; // already applied
                     }
-                    if ($state === self::CLAIMED && $cache->load($key, self::CLAIM_TTL) !== false) {
+                    if ($claimed && $cache->load($key, self::CLAIM_TTL) !== false) {
                         throw new \RuntimeException("Callback {$event->id} is being applied by another delivery");
                     }
-                    $cache->save($key, self::CLAIMED);
-                    $claimed = true;
+                    $cache->save($key, $claim);
                 }
 
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -260,9 +260,11 @@ class Jobs extends Action
             }, self::LOCK_TIMEOUT);
         } catch (\Throwable $error) {
             // A callback that failed part-way gives up its claim, so its redelivery is applied
-            // straight away rather than once the claim lapses. Only this delivery's own claim:
-            // a copy that timed out on the lock, or found another copy's claim, holds none.
-            if ($claimed) {
+            // straight away rather than once the claim lapses. Only while the key still holds this
+            // delivery's claim: a copy that timed out on the lock, or found another copy's claim,
+            // holds none, and a claim that lapsed may have been taken over. The cache has no
+            // compare-and-delete, so a takeover between the load and the purge is still lost.
+            if ($key !== null && $cache->load($key, self::DEDUPE_TTL) === $claim) {
                 $cache->purge($key);
             }
             throw $error;
