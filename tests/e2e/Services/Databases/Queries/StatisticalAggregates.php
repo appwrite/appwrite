@@ -212,6 +212,37 @@ trait StatisticalAggregates
         $this->assertSame(1, $result['body'][$this->getRecordResource()][0]['xorFlags']);
     }
 
+    public function testBitwiseAggregatesAreSigned64BitIntegers(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collectionId = $this->createRejectedValuesCollection($databaseId, 'bitwiseSign');
+        $this->addRejectedValuesAttribute($databaseId, $collectionId, 'integer', ['key' => 'n', 'required' => true]);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['n' => 10]);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['n' => -5]);
+
+        $result = $this->listRejectedValues($databaseId, $collectionId, [
+            Query::bitAnd('n', 'allBits')->toString(),
+            Query::bitOr('n', 'anyBits')->toString(),
+            Query::bitXor('n', 'oddBits')->toString(),
+        ]);
+
+        if (!$this->getSupportForAggregations()) {
+            $this->assertQueryRejected($result, 'Bitwise aggregates where aggregations are unsupported');
+
+            return;
+        }
+
+        $this->assertSame(200, $result['headers']['status-code'], \json_encode($result['body']) ?: '');
+        $this->assertSame(
+            ['allBits' => 10, 'anyBits' => -5, 'oddBits' => -15],
+            \array_intersect_key($result['body'][$this->getRecordResource()][0], \array_flip(['allBits', 'anyBits', 'oddBits'])),
+        );
+    }
+
     public function testStatisticalAggregatesComputeOverReadableRowsOnly(): void
     {
         if (!$this->getSupportForAggregations()) {

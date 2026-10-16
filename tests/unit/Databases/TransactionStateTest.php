@@ -126,6 +126,18 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(3, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
     }
 
+    public function testStagedCreateInADistinctReadCarriesOnlyTheSelectedAttributes(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::distinct(), Query::select(['name'])]);
+
+        $staged = \array_values(\array_filter($rows, static fn (Document $row): bool => $row->getAttribute('name') === 'Cy'));
+        $this->assertCount(1, $staged);
+        $this->assertSame(['name' => 'Cy'], $staged[0]->getArrayCopy());
+    }
+
     /**
      * @return list<Query>
      */
