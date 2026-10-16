@@ -18,9 +18,9 @@
                 }
               }
             },
-            "as": "o16070"
+            "as": "o5286"
           },
-          "bind": "s37959",
+          "bind": "s9004",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -31,13 +31,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16070"
+                "$obj": "o5286"
               },
               "cache": "none"
             },
-            "as": "o16071"
+            "as": "o5287"
           },
-          "bind": "s37960",
+          "bind": "s9005",
           "expect": {
             "$database": true
           }
@@ -46,7 +46,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "setDatabase",
             "args": {
@@ -61,11 +61,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_minors_u000000000067"
+              "namespace": "aggregate_minors_u000000000134"
             }
           },
           "expect": {
@@ -77,9 +77,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16072"
+            "as": "o5288"
           },
-          "bind": "s37963",
+          "bind": "s9008",
           "expect": {
             "$authorization": true
           }
@@ -88,12 +88,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16072"
+                "$obj": "o5288"
               }
             }
           },
@@ -106,9 +106,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16073"
+            "as": "o5289"
           },
-          "bind": "s37965",
+          "bind": "s9010",
           "expect": {
             "$hook": "Permissions"
           }
@@ -117,12 +117,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16073"
+                "$obj": "o5289"
               }
             }
           },
@@ -134,7 +134,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "create",
             "args": {}
@@ -147,9 +147,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16074"
+            "as": "o5290"
           },
-          "bind": "s37968",
+          "bind": "s9013",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -162,7 +162,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16074"
+                "$obj": "o5290"
               }
             }
           },
@@ -174,9 +174,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16075"
+            "as": "o5291"
           },
-          "bind": "s37970",
+          "bind": "s9015",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -189,7 +189,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16075"
+                "$obj": "o5291"
               }
             }
           },
@@ -204,9 +204,9 @@
               "key": "item",
               "size": 16
             },
-            "as": "o16076"
+            "as": "o5292"
           },
-          "bind": "s37972",
+          "bind": "s9017",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -234,9 +234,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16077"
+            "as": "o5293"
           },
-          "bind": "s37973",
+          "bind": "s9018",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -265,9 +265,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16078"
+            "as": "o5294"
           },
-          "bind": "s37974",
+          "bind": "s9019",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -296,13 +296,13 @@
               "id": "orders",
               "attributes": [
                 {
-                  "$obj": "o16076"
+                  "$obj": "o5292"
                 },
                 {
-                  "$obj": "o16077"
+                  "$obj": "o5293"
                 },
                 {
-                  "$obj": "o16078"
+                  "$obj": "o5294"
                 }
               ],
               "permissions": [
@@ -310,9 +310,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16079"
+            "as": "o5295"
           },
-          "bind": "s37975",
+          "bind": "s9020",
           "expect": {
             "$document": {
               "$id": "orders",
@@ -378,15 +378,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16079"
+                "$obj": "o5295"
               }
             },
-            "as": "o16080"
+            "as": "o5296"
           },
           "expect": {
             "$document": {
@@ -462,9 +462,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16081"
+            "as": "o5297"
           },
-          "bind": "s37977",
+          "bind": "s9022",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -492,9 +492,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16082"
+            "as": "o5298"
           },
-          "bind": "s37978",
+          "bind": "s9023",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -522,9 +522,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16083"
+            "as": "o5299"
           },
-          "bind": "s37979",
+          "bind": "s9024",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -553,9 +553,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16084"
+            "as": "o5300"
           },
-          "bind": "s37980",
+          "bind": "s9025",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -584,16 +584,16 @@
               "id": "items",
               "attributes": [
                 {
-                  "$obj": "o16081"
+                  "$obj": "o5297"
                 },
                 {
-                  "$obj": "o16082"
+                  "$obj": "o5298"
                 },
                 {
-                  "$obj": "o16083"
+                  "$obj": "o5299"
                 },
                 {
-                  "$obj": "o16084"
+                  "$obj": "o5300"
                 }
               ],
               "permissions": [
@@ -601,9 +601,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16085"
+            "as": "o5301"
           },
-          "bind": "s37981",
+          "bind": "s9026",
           "expect": {
             "$document": {
               "$id": "items",
@@ -684,15 +684,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16085"
+                "$obj": "o5301"
               }
             },
-            "as": "o16086"
+            "as": "o5302"
           },
           "expect": {
             "$document": {
@@ -783,9 +783,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16087"
+            "as": "o5303"
           },
-          "bind": "s37983",
+          "bind": "s9028",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -813,9 +813,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16088"
+            "as": "o5304"
           },
-          "bind": "s37984",
+          "bind": "s9029",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -844,10 +844,10 @@
               "id": "extras",
               "attributes": [
                 {
-                  "$obj": "o16087"
+                  "$obj": "o5303"
                 },
                 {
-                  "$obj": "o16088"
+                  "$obj": "o5304"
                 }
               ],
               "permissions": [
@@ -855,9 +855,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16089"
+            "as": "o5305"
           },
-          "bind": "s37985",
+          "bind": "s9030",
           "expect": {
             "$document": {
               "$id": "extras",
@@ -908,15 +908,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16089"
+                "$obj": "o5305"
               }
             },
-            "as": "o16090"
+            "as": "o5306"
           },
           "expect": {
             "$document": {
@@ -981,9 +981,9 @@
                 "name": "x"
               }
             },
-            "as": "o16091"
+            "as": "o5307"
           },
-          "bind": "s37987",
+          "bind": "s9032",
           "expect": {
             "$document": {
               "$id": "o1",
@@ -998,13 +998,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16091"
+                "$obj": "o5307"
               }
             }
           },
@@ -1035,9 +1035,9 @@
                 "name": "y"
               }
             },
-            "as": "o16092"
+            "as": "o5308"
           },
-          "bind": "s37989",
+          "bind": "s9034",
           "expect": {
             "$document": {
               "$id": "o2",
@@ -1052,13 +1052,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16092"
+                "$obj": "o5308"
               }
             }
           },
@@ -1089,9 +1089,9 @@
                 "name": "x"
               }
             },
-            "as": "o16093"
+            "as": "o5309"
           },
-          "bind": "s37991",
+          "bind": "s9036",
           "expect": {
             "$document": {
               "$id": "o3",
@@ -1106,13 +1106,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16093"
+                "$obj": "o5309"
               }
             }
           },
@@ -1144,9 +1144,9 @@
                 "name": "apple"
               }
             },
-            "as": "o16094"
+            "as": "o5310"
           },
-          "bind": "s37993",
+          "bind": "s9038",
           "expect": {
             "$document": {
               "$id": "a",
@@ -1162,13 +1162,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16094"
+                "$obj": "o5310"
               }
             }
           },
@@ -1201,9 +1201,9 @@
                 "name": "banana"
               }
             },
-            "as": "o16095"
+            "as": "o5311"
           },
-          "bind": "s37995",
+          "bind": "s9040",
           "expect": {
             "$document": {
               "$id": "b",
@@ -1219,13 +1219,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16095"
+                "$obj": "o5311"
               }
             }
           },
@@ -1256,9 +1256,9 @@
                 "price": 100
               }
             },
-            "as": "o16096"
+            "as": "o5312"
           },
-          "bind": "s37997",
+          "bind": "s9042",
           "expect": {
             "$document": {
               "$id": "a",
@@ -1272,13 +1272,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "createDocument",
             "args": {
               "collection": "extras",
               "document": {
-                "$obj": "o16096"
+                "$obj": "o5312"
               }
             }
           },
@@ -1304,9 +1304,9 @@
               "left": "item",
               "right": "code"
             },
-            "as": "o16097"
+            "as": "o5313"
           },
-          "bind": "s37999",
+          "bind": "s9044",
           "expect": {
             "$query": {
               "method": "on",
@@ -1329,13 +1329,13 @@
               "alias": "it",
               "on": [
                 {
-                  "$obj": "o16097"
+                  "$obj": "o5313"
                 }
               ]
             },
-            "as": "o16098"
+            "as": "o5314"
           },
-          "bind": "s38000",
+          "bind": "s9045",
           "expect": {
             "$query": {
               "method": "join",
@@ -1361,7 +1361,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "sum",
             "args": {
@@ -1369,7 +1369,7 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 }
               ]
             }
@@ -1385,9 +1385,9 @@
               "attribute": "price",
               "alias": "total"
             },
-            "as": "o16099"
+            "as": "o5315"
           },
-          "bind": "s38002",
+          "bind": "s9047",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1401,17 +1401,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "aggregate",
             "args": {
               "collection": "orders",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 },
                 {
-                  "$obj": "o16099"
+                  "$obj": "o5315"
                 }
               ]
             }
@@ -1426,7 +1426,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "sum",
             "args": {
@@ -1434,7 +1434,7 @@
               "attribute": "it.price",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 }
               ]
             }
@@ -1452,9 +1452,9 @@
                 "a"
               ]
             },
-            "as": "o16100"
+            "as": "o5316"
           },
-          "bind": "s38005",
+          "bind": "s9050",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1469,7 +1469,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "sum",
             "args": {
@@ -1477,10 +1477,10 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 },
                 {
-                  "$obj": "o16100"
+                  "$obj": "o5316"
                 }
               ]
             }
@@ -1491,7 +1491,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "sum",
             "args": {
@@ -1499,7 +1499,7 @@
               "attribute": "quantity",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 }
               ]
             }
@@ -1517,9 +1517,9 @@
                 "z"
               ]
             },
-            "as": "o16101"
+            "as": "o5317"
           },
-          "bind": "s38008",
+          "bind": "s9053",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1534,7 +1534,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16071"
+              "$obj": "o5287"
             },
             "method": "sum",
             "args": {
@@ -1542,10 +1542,10 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16098"
+                  "$obj": "o5314"
                 },
                 {
-                  "$obj": "o16101"
+                  "$obj": "o5317"
                 }
               ]
             }
@@ -1569,9 +1569,9 @@
                 }
               }
             },
-            "as": "o16102"
+            "as": "o5318"
           },
-          "bind": "s38010",
+          "bind": "s9055",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -1582,13 +1582,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16102"
+                "$obj": "o5318"
               },
               "cache": "none"
             },
-            "as": "o16103"
+            "as": "o5319"
           },
-          "bind": "s38011",
+          "bind": "s9056",
           "expect": {
             "$database": true
           }
@@ -1597,7 +1597,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setDatabase",
             "args": {
@@ -1612,11 +1612,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_minors_u000000000068"
+              "namespace": "aggregate_minors_u000000000135"
             }
           },
           "expect": {
@@ -1628,9 +1628,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16104"
+            "as": "o5320"
           },
-          "bind": "s38014",
+          "bind": "s9059",
           "expect": {
             "$authorization": true
           }
@@ -1639,12 +1639,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16104"
+                "$obj": "o5320"
               }
             }
           },
@@ -1657,9 +1657,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16105"
+            "as": "o5321"
           },
-          "bind": "s38016",
+          "bind": "s9061",
           "expect": {
             "$hook": "Permissions"
           }
@@ -1668,12 +1668,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16105"
+                "$obj": "o5321"
               }
             }
           },
@@ -1685,7 +1685,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "create",
             "args": {}
@@ -1698,9 +1698,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16106"
+            "as": "o5322"
           },
-          "bind": "s38019",
+          "bind": "s9064",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1713,7 +1713,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16106"
+                "$obj": "o5322"
               }
             }
           },
@@ -1725,9 +1725,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16107"
+            "as": "o5323"
           },
-          "bind": "s38021",
+          "bind": "s9066",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1740,7 +1740,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16107"
+                "$obj": "o5323"
               }
             }
           },
@@ -1755,9 +1755,9 @@
               "key": "item",
               "size": 16
             },
-            "as": "o16108"
+            "as": "o5324"
           },
-          "bind": "s38023",
+          "bind": "s9068",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1785,9 +1785,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16109"
+            "as": "o5325"
           },
-          "bind": "s38024",
+          "bind": "s9069",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1816,9 +1816,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16110"
+            "as": "o5326"
           },
-          "bind": "s38025",
+          "bind": "s9070",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1847,13 +1847,13 @@
               "id": "orders",
               "attributes": [
                 {
-                  "$obj": "o16108"
+                  "$obj": "o5324"
                 },
                 {
-                  "$obj": "o16109"
+                  "$obj": "o5325"
                 },
                 {
-                  "$obj": "o16110"
+                  "$obj": "o5326"
                 }
               ],
               "permissions": [
@@ -1861,9 +1861,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16111"
+            "as": "o5327"
           },
-          "bind": "s38026",
+          "bind": "s9071",
           "expect": {
             "$document": {
               "$id": "orders",
@@ -1929,15 +1929,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16111"
+                "$obj": "o5327"
               }
             },
-            "as": "o16112"
+            "as": "o5328"
           },
           "expect": {
             "$document": {
@@ -2013,9 +2013,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16113"
+            "as": "o5329"
           },
-          "bind": "s38028",
+          "bind": "s9073",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2043,9 +2043,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16114"
+            "as": "o5330"
           },
-          "bind": "s38029",
+          "bind": "s9074",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2073,9 +2073,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16115"
+            "as": "o5331"
           },
-          "bind": "s38030",
+          "bind": "s9075",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2104,9 +2104,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16116"
+            "as": "o5332"
           },
-          "bind": "s38031",
+          "bind": "s9076",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2135,16 +2135,16 @@
               "id": "items",
               "attributes": [
                 {
-                  "$obj": "o16113"
+                  "$obj": "o5329"
                 },
                 {
-                  "$obj": "o16114"
+                  "$obj": "o5330"
                 },
                 {
-                  "$obj": "o16115"
+                  "$obj": "o5331"
                 },
                 {
-                  "$obj": "o16116"
+                  "$obj": "o5332"
                 }
               ],
               "permissions": [
@@ -2152,9 +2152,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16117"
+            "as": "o5333"
           },
-          "bind": "s38032",
+          "bind": "s9077",
           "expect": {
             "$document": {
               "$id": "items",
@@ -2235,15 +2235,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16117"
+                "$obj": "o5333"
               }
             },
-            "as": "o16118"
+            "as": "o5334"
           },
           "expect": {
             "$document": {
@@ -2334,9 +2334,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16119"
+            "as": "o5335"
           },
-          "bind": "s38034",
+          "bind": "s9079",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2364,9 +2364,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16120"
+            "as": "o5336"
           },
-          "bind": "s38035",
+          "bind": "s9080",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2395,10 +2395,10 @@
               "id": "extras",
               "attributes": [
                 {
-                  "$obj": "o16119"
+                  "$obj": "o5335"
                 },
                 {
-                  "$obj": "o16120"
+                  "$obj": "o5336"
                 }
               ],
               "permissions": [
@@ -2406,9 +2406,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16121"
+            "as": "o5337"
           },
-          "bind": "s38036",
+          "bind": "s9081",
           "expect": {
             "$document": {
               "$id": "extras",
@@ -2459,15 +2459,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16121"
+                "$obj": "o5337"
               }
             },
-            "as": "o16122"
+            "as": "o5338"
           },
           "expect": {
             "$document": {
@@ -2532,9 +2532,9 @@
                 "name": "x"
               }
             },
-            "as": "o16123"
+            "as": "o5339"
           },
-          "bind": "s38038",
+          "bind": "s9083",
           "expect": {
             "$document": {
               "$id": "o1",
@@ -2549,13 +2549,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16123"
+                "$obj": "o5339"
               }
             }
           },
@@ -2586,9 +2586,9 @@
                 "name": "y"
               }
             },
-            "as": "o16124"
+            "as": "o5340"
           },
-          "bind": "s38040",
+          "bind": "s9085",
           "expect": {
             "$document": {
               "$id": "o2",
@@ -2603,13 +2603,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16124"
+                "$obj": "o5340"
               }
             }
           },
@@ -2640,9 +2640,9 @@
                 "name": "x"
               }
             },
-            "as": "o16125"
+            "as": "o5341"
           },
-          "bind": "s38042",
+          "bind": "s9087",
           "expect": {
             "$document": {
               "$id": "o3",
@@ -2657,13 +2657,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16125"
+                "$obj": "o5341"
               }
             }
           },
@@ -2695,9 +2695,9 @@
                 "name": "apple"
               }
             },
-            "as": "o16126"
+            "as": "o5342"
           },
-          "bind": "s38044",
+          "bind": "s9089",
           "expect": {
             "$document": {
               "$id": "a",
@@ -2713,13 +2713,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16126"
+                "$obj": "o5342"
               }
             }
           },
@@ -2752,9 +2752,9 @@
                 "name": "banana"
               }
             },
-            "as": "o16127"
+            "as": "o5343"
           },
-          "bind": "s38046",
+          "bind": "s9091",
           "expect": {
             "$document": {
               "$id": "b",
@@ -2770,13 +2770,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16127"
+                "$obj": "o5343"
               }
             }
           },
@@ -2807,9 +2807,9 @@
                 "price": 100
               }
             },
-            "as": "o16128"
+            "as": "o5344"
           },
-          "bind": "s38048",
+          "bind": "s9093",
           "expect": {
             "$document": {
               "$id": "a",
@@ -2823,13 +2823,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "createDocument",
             "args": {
               "collection": "extras",
               "document": {
-                "$obj": "o16128"
+                "$obj": "o5344"
               }
             }
           },
@@ -2850,7 +2850,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setProfiling",
             "args": {
@@ -2865,7 +2865,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setValidation",
             "args": {
@@ -2880,13 +2880,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "getProfiler",
             "args": {},
-            "as": "o16129"
+            "as": "o5345"
           },
-          "bind": "s38052",
+          "bind": "s9097",
           "expect": {
             "$profiler": true
           }
@@ -2895,7 +2895,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16129"
+              "$obj": "o5345"
             },
             "method": "reset",
             "args": {}
@@ -2911,9 +2911,9 @@
               "left": "item",
               "right": "code"
             },
-            "as": "o16130"
+            "as": "o5346"
           },
-          "bind": "s38054",
+          "bind": "s9099",
           "expect": {
             "$query": {
               "method": "on",
@@ -2936,13 +2936,13 @@
               "alias": "it",
               "on": [
                 {
-                  "$obj": "o16130"
+                  "$obj": "o5346"
                 }
               ]
             },
-            "as": "o16131"
+            "as": "o5347"
           },
-          "bind": "s38055",
+          "bind": "s9100",
           "expect": {
             "$query": {
               "method": "join",
@@ -2968,7 +2968,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "sum",
             "args": {
@@ -2976,7 +2976,7 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16131"
+                  "$obj": "o5347"
                 }
               ]
             }
@@ -2987,7 +2987,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "getProfiler",
             "args": {}
@@ -3000,16 +3000,25 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16129"
+              "$obj": "o5345"
             },
             "method": "getLogs",
             "args": {}
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
           },
           "expect": [
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "query": "SELECT * FROM `aggregate_minors_u000000000135__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "orders"
                 },
@@ -3022,7 +3031,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "query": "SELECT * FROM `aggregate_minors_u000000000135__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "items"
                 },
@@ -3035,7 +3044,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
+                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000135_orders` AS `table_main` JOIN `aggregate_minors_u000000000135_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
                 "bindings": [],
                 "durationMs": "<masked>",
                 "collection": "orders",
@@ -3043,22 +3052,13 @@
                 "backtrace": "<masked>"
               }
             }
-          ],
-          "mask": {
-            "paths": [
-              "/*/fields/durationMs",
-              "/*/fields/backtrace",
-              "/calls/*/*/steps/*/*/fields/durationMs",
-              "/calls/*/*/steps/*/*/fields/backtrace"
-            ],
-            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
-          }
+          ]
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "setValidation",
             "args": {
@@ -3073,7 +3073,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "getProfiler",
             "args": {}
@@ -3086,7 +3086,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16129"
+              "$obj": "o5345"
             },
             "method": "reset",
             "args": {}
@@ -3102,9 +3102,9 @@
               "left": "item",
               "right": "code"
             },
-            "as": "o16132"
+            "as": "o5348"
           },
-          "bind": "s38062",
+          "bind": "s9107",
           "expect": {
             "$query": {
               "method": "on",
@@ -3127,13 +3127,13 @@
               "alias": "it",
               "on": [
                 {
-                  "$obj": "o16132"
+                  "$obj": "o5348"
                 }
               ]
             },
-            "as": "o16133"
+            "as": "o5349"
           },
-          "bind": "s38063",
+          "bind": "s9108",
           "expect": {
             "$query": {
               "method": "join",
@@ -3159,7 +3159,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "sum",
             "args": {
@@ -3167,7 +3167,7 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16133"
+                  "$obj": "o5349"
                 }
               ]
             }
@@ -3178,7 +3178,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16103"
+              "$obj": "o5319"
             },
             "method": "getProfiler",
             "args": {}
@@ -3191,16 +3191,25 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16129"
+              "$obj": "o5345"
             },
             "method": "getLogs",
             "args": {}
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
           },
           "expect": [
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "query": "SELECT * FROM `aggregate_minors_u000000000135__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "orders"
                 },
@@ -3213,7 +3222,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "query": "SELECT * FROM `aggregate_minors_u000000000135__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "items"
                 },
@@ -3226,7 +3235,7 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
-                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
+                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000135_orders` AS `table_main` JOIN `aggregate_minors_u000000000135_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
                 "bindings": [],
                 "durationMs": "<masked>",
                 "collection": "orders",
@@ -3234,16 +3243,7 @@
                 "backtrace": "<masked>"
               }
             }
-          ],
-          "mask": {
-            "paths": [
-              "/*/fields/durationMs",
-              "/*/fields/backtrace",
-              "/calls/*/*/steps/*/*/fields/durationMs",
-              "/calls/*/*/steps/*/*/fields/backtrace"
-            ],
-            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
-          }
+          ]
         }
       ]
     },
@@ -3262,9 +3262,9 @@
                 }
               }
             },
-            "as": "o16134"
+            "as": "o5350"
           },
-          "bind": "s38067",
+          "bind": "s9112",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -3275,13 +3275,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16134"
+                "$obj": "o5350"
               },
               "cache": "none"
             },
-            "as": "o16135"
+            "as": "o5351"
           },
-          "bind": "s38068",
+          "bind": "s9113",
           "expect": {
             "$database": true
           }
@@ -3290,7 +3290,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "setDatabase",
             "args": {
@@ -3305,11 +3305,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_minors_u000000000069"
+              "namespace": "aggregate_minors_u000000000136"
             }
           },
           "expect": {
@@ -3321,9 +3321,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16136"
+            "as": "o5352"
           },
-          "bind": "s38071",
+          "bind": "s9116",
           "expect": {
             "$authorization": true
           }
@@ -3332,12 +3332,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16136"
+                "$obj": "o5352"
               }
             }
           },
@@ -3350,9 +3350,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16137"
+            "as": "o5353"
           },
-          "bind": "s38073",
+          "bind": "s9118",
           "expect": {
             "$hook": "Permissions"
           }
@@ -3361,12 +3361,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16137"
+                "$obj": "o5353"
               }
             }
           },
@@ -3378,7 +3378,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "create",
             "args": {}
@@ -3391,9 +3391,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16138"
+            "as": "o5354"
           },
-          "bind": "s38076",
+          "bind": "s9121",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3406,7 +3406,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16138"
+                "$obj": "o5354"
               }
             }
           },
@@ -3418,9 +3418,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16139"
+            "as": "o5355"
           },
-          "bind": "s38078",
+          "bind": "s9123",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3433,7 +3433,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16139"
+                "$obj": "o5355"
               }
             }
           },
@@ -3448,9 +3448,9 @@
               "key": "item",
               "size": 16
             },
-            "as": "o16140"
+            "as": "o5356"
           },
-          "bind": "s38080",
+          "bind": "s9125",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3478,9 +3478,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16141"
+            "as": "o5357"
           },
-          "bind": "s38081",
+          "bind": "s9126",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3509,9 +3509,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16142"
+            "as": "o5358"
           },
-          "bind": "s38082",
+          "bind": "s9127",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3540,13 +3540,13 @@
               "id": "orders",
               "attributes": [
                 {
-                  "$obj": "o16140"
+                  "$obj": "o5356"
                 },
                 {
-                  "$obj": "o16141"
+                  "$obj": "o5357"
                 },
                 {
-                  "$obj": "o16142"
+                  "$obj": "o5358"
                 }
               ],
               "permissions": [
@@ -3554,9 +3554,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16143"
+            "as": "o5359"
           },
-          "bind": "s38083",
+          "bind": "s9128",
           "expect": {
             "$document": {
               "$id": "orders",
@@ -3622,15 +3622,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16143"
+                "$obj": "o5359"
               }
             },
-            "as": "o16144"
+            "as": "o5360"
           },
           "expect": {
             "$document": {
@@ -3706,9 +3706,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16145"
+            "as": "o5361"
           },
-          "bind": "s38085",
+          "bind": "s9130",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3736,9 +3736,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16146"
+            "as": "o5362"
           },
-          "bind": "s38086",
+          "bind": "s9131",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3766,9 +3766,9 @@
             "args": {
               "key": "quantity"
             },
-            "as": "o16147"
+            "as": "o5363"
           },
-          "bind": "s38087",
+          "bind": "s9132",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3797,9 +3797,9 @@
               "key": "name",
               "size": 16
             },
-            "as": "o16148"
+            "as": "o5364"
           },
-          "bind": "s38088",
+          "bind": "s9133",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3828,16 +3828,16 @@
               "id": "items",
               "attributes": [
                 {
-                  "$obj": "o16145"
+                  "$obj": "o5361"
                 },
                 {
-                  "$obj": "o16146"
+                  "$obj": "o5362"
                 },
                 {
-                  "$obj": "o16147"
+                  "$obj": "o5363"
                 },
                 {
-                  "$obj": "o16148"
+                  "$obj": "o5364"
                 }
               ],
               "permissions": [
@@ -3845,9 +3845,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16149"
+            "as": "o5365"
           },
-          "bind": "s38089",
+          "bind": "s9134",
           "expect": {
             "$document": {
               "$id": "items",
@@ -3928,15 +3928,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16149"
+                "$obj": "o5365"
               }
             },
-            "as": "o16150"
+            "as": "o5366"
           },
           "expect": {
             "$document": {
@@ -4027,9 +4027,9 @@
               "key": "code",
               "size": 16
             },
-            "as": "o16151"
+            "as": "o5367"
           },
-          "bind": "s38091",
+          "bind": "s9136",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4057,9 +4057,9 @@
             "args": {
               "key": "price"
             },
-            "as": "o16152"
+            "as": "o5368"
           },
-          "bind": "s38092",
+          "bind": "s9137",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4088,10 +4088,10 @@
               "id": "extras",
               "attributes": [
                 {
-                  "$obj": "o16151"
+                  "$obj": "o5367"
                 },
                 {
-                  "$obj": "o16152"
+                  "$obj": "o5368"
                 }
               ],
               "permissions": [
@@ -4099,9 +4099,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16153"
+            "as": "o5369"
           },
-          "bind": "s38093",
+          "bind": "s9138",
           "expect": {
             "$document": {
               "$id": "extras",
@@ -4152,15 +4152,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16153"
+                "$obj": "o5369"
               }
             },
-            "as": "o16154"
+            "as": "o5370"
           },
           "expect": {
             "$document": {
@@ -4225,9 +4225,9 @@
                 "name": "x"
               }
             },
-            "as": "o16155"
+            "as": "o5371"
           },
-          "bind": "s38095",
+          "bind": "s9140",
           "expect": {
             "$document": {
               "$id": "o1",
@@ -4242,13 +4242,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16155"
+                "$obj": "o5371"
               }
             }
           },
@@ -4279,9 +4279,9 @@
                 "name": "y"
               }
             },
-            "as": "o16156"
+            "as": "o5372"
           },
-          "bind": "s38097",
+          "bind": "s9142",
           "expect": {
             "$document": {
               "$id": "o2",
@@ -4296,13 +4296,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16156"
+                "$obj": "o5372"
               }
             }
           },
@@ -4333,9 +4333,9 @@
                 "name": "x"
               }
             },
-            "as": "o16157"
+            "as": "o5373"
           },
-          "bind": "s38099",
+          "bind": "s9144",
           "expect": {
             "$document": {
               "$id": "o3",
@@ -4350,13 +4350,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "orders",
               "document": {
-                "$obj": "o16157"
+                "$obj": "o5373"
               }
             }
           },
@@ -4388,9 +4388,9 @@
                 "name": "apple"
               }
             },
-            "as": "o16158"
+            "as": "o5374"
           },
-          "bind": "s38101",
+          "bind": "s9146",
           "expect": {
             "$document": {
               "$id": "a",
@@ -4406,13 +4406,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16158"
+                "$obj": "o5374"
               }
             }
           },
@@ -4445,9 +4445,9 @@
                 "name": "banana"
               }
             },
-            "as": "o16159"
+            "as": "o5375"
           },
-          "bind": "s38103",
+          "bind": "s9148",
           "expect": {
             "$document": {
               "$id": "b",
@@ -4463,13 +4463,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "items",
               "document": {
-                "$obj": "o16159"
+                "$obj": "o5375"
               }
             }
           },
@@ -4500,9 +4500,9 @@
                 "price": 100
               }
             },
-            "as": "o16160"
+            "as": "o5376"
           },
-          "bind": "s38105",
+          "bind": "s9150",
           "expect": {
             "$document": {
               "$id": "a",
@@ -4516,13 +4516,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "createDocument",
             "args": {
               "collection": "extras",
               "document": {
-                "$obj": "o16160"
+                "$obj": "o5376"
               }
             }
           },
@@ -4548,9 +4548,9 @@
               "left": "item",
               "right": "code"
             },
-            "as": "o16161"
+            "as": "o5377"
           },
-          "bind": "s38107",
+          "bind": "s9152",
           "expect": {
             "$query": {
               "method": "on",
@@ -4573,13 +4573,13 @@
               "alias": "it",
               "on": [
                 {
-                  "$obj": "o16161"
+                  "$obj": "o5377"
                 }
               ]
             },
-            "as": "o16162"
+            "as": "o5378"
           },
-          "bind": "s38108",
+          "bind": "s9153",
           "expect": {
             "$query": {
               "method": "join",
@@ -4610,9 +4610,9 @@
               "left": "item",
               "right": "code"
             },
-            "as": "o16163"
+            "as": "o5379"
           },
-          "bind": "s38109",
+          "bind": "s9154",
           "expect": {
             "$query": {
               "method": "on",
@@ -4635,13 +4635,13 @@
               "alias": "ex",
               "on": [
                 {
-                  "$obj": "o16163"
+                  "$obj": "o5379"
                 }
               ]
             },
-            "as": "o16164"
+            "as": "o5380"
           },
-          "bind": "s38110",
+          "bind": "s9155",
           "expect": {
             "$query": {
               "method": "join",
@@ -4667,7 +4667,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "sum",
             "args": {
@@ -4675,10 +4675,10 @@
               "attribute": "price",
               "queries": [
                 {
-                  "$obj": "o16162"
+                  "$obj": "o5378"
                 },
                 {
-                  "$obj": "o16164"
+                  "$obj": "o5380"
                 }
               ]
             }
@@ -4694,7 +4694,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "sum",
             "args": {
@@ -4713,7 +4713,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "sum",
             "args": {
@@ -4721,7 +4721,7 @@
               "attribute": "weight",
               "queries": [
                 {
-                  "$obj": "o16162"
+                  "$obj": "o5378"
                 }
               ]
             }
@@ -4737,7 +4737,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16135"
+              "$obj": "o5351"
             },
             "method": "sum",
             "args": {
@@ -4745,10 +4745,10 @@
               "attribute": "ex.price",
               "queries": [
                 {
-                  "$obj": "o16162"
+                  "$obj": "o5378"
                 },
                 {
-                  "$obj": "o16164"
+                  "$obj": "o5380"
                 }
               ]
             }

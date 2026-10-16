@@ -28,12 +28,15 @@ use crate::builder::SqlBuilder;
 use crate::collection::Collection;
 use crate::database;
 use crate::error::{Error, Result};
-use crate::event::Event;
 use crate::permission::PermissionType;
 use crate::query::{DEFAULT_ALIAS, Query};
 use crate::storage;
 use crate::validator::query::join::Join as JoinValidator;
 use crate::value::{Array, Value};
+
+/// An aggregation over an emulated full outer join, the columns its halves
+/// project, and its joined groups qualified by alias.
+pub(crate) type FullOuterJoinAggregation = (SqlBuilder, Vec<(String, String)>, Vec<(String, String)>);
 
 /// `ON`'s queries of a join, as boxed base queries.
 fn on_queries(query: &utopia_query::Query) -> Vec<utopia_query::Query> {
@@ -174,11 +177,13 @@ impl Sql {
         Ok((first_half, second_half))
     }
 
-    /// `findFullOuterJoinAggregate()`: an aggregation over an emulated full
-    /// outer join, run once over the rows of both halves. Its aggregates
-    /// and groups are qualified in `queries` itself.
+    /// `fullOuterJoinAggregation()`: an aggregation over an emulated full
+    /// outer join, to run once over the rows of both halves, with the
+    /// columns the halves project and the joined groups qualified by alias
+    /// (see [`Sql::full_outer_join_result_names`]). Its aggregates and
+    /// groups are qualified in `queries` itself.
     #[allow(clippy::too_many_arguments)]
-    pub(crate) async fn find_full_outer_join_aggregate(
+    pub(crate) async fn full_outer_join_aggregation(
         &self,
         collection: &Collection,
         queries: &mut [Query],
@@ -196,7 +201,7 @@ impl Sql {
         cursor: &Array,
         cursor_direction: CursorDirection,
         authorize: bool,
-    ) -> Result<Vec<Array>> {
+    ) -> Result<FullOuterJoinAggregation> {
         let mut aggregation_positions = Vec::new();
         let mut row_queries = Vec::new();
         let mut aggregate_aliases: Vec<String> = Vec::new();
@@ -320,8 +325,7 @@ impl Sql {
             }
         }
 
-        let rows = self.execute_select(&mut aggregation, Event::DocumentFind, name).await?;
-        Ok(self.full_outer_join_result_names(rows, &columns, &qualified_groups))
+        Ok((aggregation, columns, qualified_groups))
     }
 
     /// `fullOuterJoinColumns()`: the columns an aggregation over an
@@ -408,7 +412,7 @@ impl Sql {
 
     /// `fullOuterJoinResultNames()`: each result column named as the single
     /// statement names it.
-    fn full_outer_join_result_names(
+    pub(crate) fn full_outer_join_result_names(
         &self,
         rows: Vec<Array>,
         columns: &[(String, String)],

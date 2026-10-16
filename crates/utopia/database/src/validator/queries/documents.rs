@@ -24,6 +24,7 @@ use crate::validator::query::join::Join;
 use crate::validator::query::limit::Limit;
 use crate::validator::query::offset::Offset;
 use crate::validator::query::order::Order;
+use crate::validator::query::relationship::Relationship;
 use crate::validator::query::select::Select;
 use crate::value::Value;
 
@@ -55,8 +56,8 @@ pub(crate) fn filter_options(profile: &Profile, max_values_count: i64) -> Filter
     }
 }
 
-/// The queries of a document listing: filters, orders, selections and
-/// pages, plus joins ([`Capability::Joins`]) and aggregations
+/// The queries of a document listing: filters, orders, selections, pages
+/// and relationship queries, plus joins ([`Capability::Joins`]) and aggregations
 /// ([`Capability::Aggregations`]: aggregates, `groupBy`, `having`,
 /// `distinct`) when the adapter supports them, checked against the
 /// collection's attributes (and the internal ones) and indexes. The limits
@@ -93,6 +94,7 @@ impl Documents {
             Arc::new(Filter::with_options(&all, limits.id_type.as_str(), filter_options(profile, max_values_count))),
             Arc::new(Order::new(&all, support_for_attributes, profile.supports(Capability::OrderRandom))),
             Arc::new(Select::new(&all, support_for_attributes, profile.shared_tables)),
+            Arc::new(Relationship::new(&all, limits.uid_length, support_for_attributes)),
         ];
         if profile.supports(Capability::Joins) {
             validators.push(Arc::new(Join::new(Some(&all), support_for_attributes)));

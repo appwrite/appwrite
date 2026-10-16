@@ -19,9 +19,9 @@
                 "array": false
               }
             },
-            "as": "o2136"
+            "as": "o14567"
           },
-          "bind": "s3248",
+          "bind": "s25002",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -39,9 +39,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2137"
+            "as": "o14568"
           },
-          "bind": "s3249",
+          "bind": "s25003",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -66,15 +66,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2137"
+                "$obj": "o14568"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2138"
+            "as": "o14569"
           },
-          "bind": "s3250",
+          "bind": "s25004",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -114,13 +114,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2138"
+              "$obj": "o14569"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2139"
+            "as": "o14570"
           },
-          "bind": "s3251",
+          "bind": "s25005",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -152,16 +152,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2136"
+                  "$obj": "o14567"
                 },
                 {
-                  "$obj": "o2139"
+                  "$obj": "o14570"
                 }
               ]
             },
-            "as": "o2140"
+            "as": "o14571"
           },
-          "bind": "s3252",
+          "bind": "s25006",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -178,9 +178,9 @@
                 "attr"
               ]
             },
-            "as": "o2141"
+            "as": "o14572"
           },
-          "bind": "s3253",
+          "bind": "s25007",
           "expect": {
             "$query": {
               "method": "select",
@@ -196,12 +196,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2140"
+              "$obj": "o14571"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2141"
+                "$obj": "o14572"
               }
             }
           },
@@ -217,9 +217,9 @@
                 "artist.name"
               ]
             },
-            "as": "o2142"
+            "as": "o14573"
           },
-          "bind": "s3255",
+          "bind": "s25009",
           "expect": {
             "$query": {
               "method": "select",
@@ -234,12 +234,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2140"
+              "$obj": "o14571"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2142"
+                "$obj": "o14573"
               }
             }
           },
@@ -263,9 +263,9 @@
                 "array": false
               }
             },
-            "as": "o2143"
+            "as": "o14574"
           },
-          "bind": "s3257",
+          "bind": "s25011",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -283,9 +283,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2144"
+            "as": "o14575"
           },
-          "bind": "s3258",
+          "bind": "s25012",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -310,15 +310,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2144"
+                "$obj": "o14575"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2145"
+            "as": "o14576"
           },
-          "bind": "s3259",
+          "bind": "s25013",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -358,13 +358,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2145"
+              "$obj": "o14576"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2146"
+            "as": "o14577"
           },
-          "bind": "s3260",
+          "bind": "s25014",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -396,16 +396,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2143"
+                  "$obj": "o14574"
                 },
                 {
-                  "$obj": "o2146"
+                  "$obj": "o14577"
                 }
               ]
             },
-            "as": "o2147"
+            "as": "o14578"
           },
-          "bind": "s3261",
+          "bind": "s25015",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -419,9 +419,9 @@
             "args": {
               "value": 1
             },
-            "as": "o2148"
+            "as": "o14579"
           },
-          "bind": "s3262",
+          "bind": "s25016",
           "expect": {
             "$query": {
               "method": "limit",
@@ -436,12 +436,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2147"
+              "$obj": "o14578"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2148"
+                "$obj": "o14579"
               }
             }
           },
@@ -451,7 +451,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2147"
+              "$obj": "o14578"
             },
             "method": "getDescription",
             "args": {}
@@ -468,9 +468,9 @@
                 "name.artist"
               ]
             },
-            "as": "o2149"
+            "as": "o14580"
           },
-          "bind": "s3265",
+          "bind": "s25019",
           "expect": {
             "$query": {
               "method": "select",
@@ -485,16 +485,488 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2147"
+              "$obj": "o14578"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2149"
+                "$obj": "o14580"
               }
             }
           },
           "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANestedPathOnAPlainAttributeIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14581"
+          },
+          "bind": "s25021",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14582"
+          },
+          "bind": "s25022",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14582"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14583"
+          },
+          "bind": "s25023",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14583"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14584"
+          },
+          "bind": "s25024",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14581"
+                },
+                {
+                  "$obj": "o14584"
+                }
+              ]
+            },
+            "as": "o14585"
+          },
+          "bind": "s25025",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "attr.x"
+              ]
+            },
+            "as": "o14586"
+          },
+          "bind": "s25026",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "attr.x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14585"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14586"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14585"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot select nested attribute on: attr"
+        }
+      ]
+    },
+    {
+      "name": "SelectTest::testANestedPathOnAnObjectAttributeIsAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "attr",
+                "key": "attr",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o14587"
+          },
+          "bind": "s25029",
+          "expect": {
+            "$document": {
+              "$id": "attr",
+              "key": "attr",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "artists"
+            },
+            "as": "o14588"
+          },
+          "bind": "s25030",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "artists",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": null,
+              "twoWayKey": null,
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "artist",
+              "relationship": {
+                "$obj": "o14588"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o14589"
+          },
+          "bind": "s25031",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "artist",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "artists",
+                  "type": {
+                    "$enum": "RelationshipType::ManyToOne"
+                  },
+                  "twoWay": false,
+                  "key": "artist",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14589"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14590"
+          },
+          "bind": "s25032",
+          "expect": {
+            "$document": {
+              "$id": "artist",
+              "key": "artist",
+              "type": "relationship",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [],
+              "options": {
+                "relatedCollection": "artists",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": null,
+                "onDelete": "restrict",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14587"
+                },
+                {
+                  "$obj": "o14590"
+                }
+              ]
+            },
+            "as": "o14591"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "meta",
+                "key": "meta",
+                "type": "object",
+                "array": false
+              }
+            },
+            "as": "o14592"
+          },
+          "bind": "s25034",
+          "expect": {
+            "$document": {
+              "$id": "meta",
+              "key": "meta",
+              "type": "object",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o14592"
+                }
+              ]
+            },
+            "as": "o14593"
+          },
+          "bind": "s25035",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "meta.key"
+              ]
+            },
+            "as": "o14594"
+          },
+          "bind": "s25036",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "meta.key"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14593"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o14594"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14593"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
         }
       ]
     },
@@ -514,9 +986,9 @@
                 "array": false
               }
             },
-            "as": "o2150"
+            "as": "o14595"
           },
-          "bind": "s3267",
+          "bind": "s25039",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -534,9 +1006,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2151"
+            "as": "o14596"
           },
-          "bind": "s3268",
+          "bind": "s25040",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -561,15 +1033,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2151"
+                "$obj": "o14596"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2152"
+            "as": "o14597"
           },
-          "bind": "s3269",
+          "bind": "s25041",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -609,13 +1081,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2152"
+              "$obj": "o14597"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2153"
+            "as": "o14598"
           },
-          "bind": "s3270",
+          "bind": "s25042",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -647,16 +1119,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2150"
+                  "$obj": "o14595"
                 },
                 {
-                  "$obj": "o2153"
+                  "$obj": "o14598"
                 }
               ]
             },
-            "as": "o2154"
+            "as": "o14599"
           },
-          "bind": "s3271",
+          "bind": "s25043",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -676,9 +1148,9 @@
                 ]
               ]
             },
-            "as": "o2155"
+            "as": "o14600"
           },
-          "bind": "s3272",
+          "bind": "s25044",
           "expect": {
             "$query": {
               "method": "select",
@@ -695,12 +1167,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2154"
+              "$obj": "o14599"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2155"
+                "$obj": "o14600"
               }
             }
           },
@@ -710,7 +1182,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2154"
+              "$obj": "o14599"
             },
             "method": "getDescription",
             "args": {}
@@ -735,9 +1207,9 @@
                 "array": false
               }
             },
-            "as": "o2156"
+            "as": "o14601"
           },
-          "bind": "s3275",
+          "bind": "s25047",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -755,9 +1227,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2157"
+            "as": "o14602"
           },
-          "bind": "s3276",
+          "bind": "s25048",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -782,15 +1254,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2157"
+                "$obj": "o14602"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2158"
+            "as": "o14603"
           },
-          "bind": "s3277",
+          "bind": "s25049",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -830,13 +1302,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2158"
+              "$obj": "o14603"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2159"
+            "as": "o14604"
           },
-          "bind": "s3278",
+          "bind": "s25050",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -868,16 +1340,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2156"
+                  "$obj": "o14601"
                 },
                 {
-                  "$obj": "o2159"
+                  "$obj": "o14604"
                 }
               ]
             },
-            "as": "o2160"
+            "as": "o14605"
           },
-          "bind": "s3279",
+          "bind": "s25051",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -897,9 +1369,9 @@
                 ]
               ]
             },
-            "as": "o2161"
+            "as": "o14606"
           },
-          "bind": "s3280",
+          "bind": "s25052",
           "expect": {
             "$query": {
               "method": "select",
@@ -916,12 +1388,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2160"
+              "$obj": "o14605"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2161"
+                "$obj": "o14606"
               }
             }
           },
@@ -931,7 +1403,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2160"
+              "$obj": "o14605"
             },
             "method": "getDescription",
             "args": {}
@@ -956,9 +1428,9 @@
                 "array": false
               }
             },
-            "as": "o2162"
+            "as": "o14607"
           },
-          "bind": "s3283",
+          "bind": "s25055",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -976,9 +1448,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2163"
+            "as": "o14608"
           },
-          "bind": "s3284",
+          "bind": "s25056",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -1003,15 +1475,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2163"
+                "$obj": "o14608"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2164"
+            "as": "o14609"
           },
-          "bind": "s3285",
+          "bind": "s25057",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1051,13 +1523,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2164"
+              "$obj": "o14609"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2165"
+            "as": "o14610"
           },
-          "bind": "s3286",
+          "bind": "s25058",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -1089,16 +1561,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2162"
+                  "$obj": "o14607"
                 },
                 {
-                  "$obj": "o2165"
+                  "$obj": "o14610"
                 }
               ]
             },
-            "as": "o2166"
+            "as": "o14611"
           },
-          "bind": "s3287",
+          "bind": "s25059",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -1119,9 +1591,9 @@
                 ]
               ]
             },
-            "as": "o2167"
+            "as": "o14612"
           },
-          "bind": "s3288",
+          "bind": "s25060",
           "expect": {
             "$query": {
               "method": "select",
@@ -1139,12 +1611,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2166"
+              "$obj": "o14611"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2167"
+                "$obj": "o14612"
               }
             }
           },
@@ -1154,7 +1626,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2166"
+              "$obj": "o14611"
             },
             "method": "getDescription",
             "args": {}
@@ -1179,9 +1651,9 @@
                 "array": false
               }
             },
-            "as": "o2168"
+            "as": "o14613"
           },
-          "bind": "s3291",
+          "bind": "s25063",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -1199,9 +1671,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2169"
+            "as": "o14614"
           },
-          "bind": "s3292",
+          "bind": "s25064",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -1226,15 +1698,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2169"
+                "$obj": "o14614"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2170"
+            "as": "o14615"
           },
-          "bind": "s3293",
+          "bind": "s25065",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1274,13 +1746,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2170"
+              "$obj": "o14615"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2171"
+            "as": "o14616"
           },
-          "bind": "s3294",
+          "bind": "s25066",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -1312,16 +1784,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2168"
+                  "$obj": "o14613"
                 },
                 {
-                  "$obj": "o2171"
+                  "$obj": "o14616"
                 }
               ]
             },
-            "as": "o2172"
+            "as": "o14617"
           },
-          "bind": "s3295",
+          "bind": "s25067",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -1341,9 +1813,9 @@
                 }
               ]
             },
-            "as": "o2173"
+            "as": "o14618"
           },
-          "bind": "s3296",
+          "bind": "s25068",
           "expect": {
             "$query": {
               "method": "select",
@@ -1360,12 +1832,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2172"
+              "$obj": "o14617"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2173"
+                "$obj": "o14618"
               }
             }
           },
@@ -1375,7 +1847,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2172"
+              "$obj": "o14617"
             },
             "method": "getDescription",
             "args": {}
@@ -1400,9 +1872,9 @@
                 "array": false
               }
             },
-            "as": "o2174"
+            "as": "o14619"
           },
-          "bind": "s3299",
+          "bind": "s25071",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -1420,9 +1892,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2175"
+            "as": "o14620"
           },
-          "bind": "s3300",
+          "bind": "s25072",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -1447,15 +1919,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2175"
+                "$obj": "o14620"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2176"
+            "as": "o14621"
           },
-          "bind": "s3301",
+          "bind": "s25073",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1495,13 +1967,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2176"
+              "$obj": "o14621"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2177"
+            "as": "o14622"
           },
-          "bind": "s3302",
+          "bind": "s25074",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -1533,16 +2005,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2174"
+                  "$obj": "o14619"
                 },
                 {
-                  "$obj": "o2177"
+                  "$obj": "o14622"
                 }
               ]
             },
-            "as": "o2178"
+            "as": "o14623"
           },
-          "bind": "s3303",
+          "bind": "s25075",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -1560,9 +2032,9 @@
                 1
               ]
             },
-            "as": "o2179"
+            "as": "o14624"
           },
-          "bind": "s3304",
+          "bind": "s25076",
           "expect": {
             "$query": {
               "method": "select",
@@ -1577,12 +2049,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2178"
+              "$obj": "o14623"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2179"
+                "$obj": "o14624"
               }
             }
           },
@@ -1592,7 +2064,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2178"
+              "$obj": "o14623"
             },
             "method": "getDescription",
             "args": {}
@@ -1617,9 +2089,9 @@
                 "array": false
               }
             },
-            "as": "o2180"
+            "as": "o14625"
           },
-          "bind": "s3307",
+          "bind": "s25079",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -1637,9 +2109,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2181"
+            "as": "o14626"
           },
-          "bind": "s3308",
+          "bind": "s25080",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -1664,15 +2136,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2181"
+                "$obj": "o14626"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2182"
+            "as": "o14627"
           },
-          "bind": "s3309",
+          "bind": "s25081",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1712,13 +2184,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2182"
+              "$obj": "o14627"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2183"
+            "as": "o14628"
           },
-          "bind": "s3310",
+          "bind": "s25082",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -1750,16 +2222,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2180"
+                  "$obj": "o14625"
                 },
                 {
-                  "$obj": "o2183"
+                  "$obj": "o14628"
                 }
               ]
             },
-            "as": "o2184"
+            "as": "o14629"
           },
-          "bind": "s3311",
+          "bind": "s25083",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -1777,9 +2249,9 @@
                 null
               ]
             },
-            "as": "o2185"
+            "as": "o14630"
           },
-          "bind": "s3312",
+          "bind": "s25084",
           "expect": {
             "$query": {
               "method": "select",
@@ -1794,12 +2266,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2184"
+              "$obj": "o14629"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2185"
+                "$obj": "o14630"
               }
             }
           },
@@ -1809,7 +2281,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2184"
+              "$obj": "o14629"
             },
             "method": "getDescription",
             "args": {}
@@ -1834,9 +2306,9 @@
                 "array": false
               }
             },
-            "as": "o2186"
+            "as": "o14631"
           },
-          "bind": "s3315",
+          "bind": "s25087",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -1854,9 +2326,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2187"
+            "as": "o14632"
           },
-          "bind": "s3316",
+          "bind": "s25088",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -1881,15 +2353,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2187"
+                "$obj": "o14632"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2188"
+            "as": "o14633"
           },
-          "bind": "s3317",
+          "bind": "s25089",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1929,13 +2401,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2188"
+              "$obj": "o14633"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2189"
+            "as": "o14634"
           },
-          "bind": "s3318",
+          "bind": "s25090",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -1967,16 +2439,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2186"
+                  "$obj": "o14631"
                 },
                 {
-                  "$obj": "o2189"
+                  "$obj": "o14634"
                 }
               ]
             },
-            "as": "o2190"
+            "as": "o14635"
           },
-          "bind": "s3319",
+          "bind": "s25091",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -1990,9 +2462,9 @@
             "args": {
               "query": "{\"method\":\"select\",\"values\":[[\"a\"],[\"b\"]]}"
             },
-            "as": "o2191"
+            "as": "o14636"
           },
-          "bind": "s3320",
+          "bind": "s25092",
           "expect": {
             "$query": {
               "method": "select",
@@ -2012,12 +2484,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2190"
+              "$obj": "o14635"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2191"
+                "$obj": "o14636"
               }
             }
           },
@@ -2027,7 +2499,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2190"
+              "$obj": "o14635"
             },
             "method": "getDescription",
             "args": {}
@@ -2052,9 +2524,9 @@
                 "array": false
               }
             },
-            "as": "o2192"
+            "as": "o14637"
           },
-          "bind": "s3323",
+          "bind": "s25095",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -2072,9 +2544,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2193"
+            "as": "o14638"
           },
-          "bind": "s3324",
+          "bind": "s25096",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -2099,15 +2571,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2193"
+                "$obj": "o14638"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2194"
+            "as": "o14639"
           },
-          "bind": "s3325",
+          "bind": "s25097",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2147,13 +2619,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2194"
+              "$obj": "o14639"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2195"
+            "as": "o14640"
           },
-          "bind": "s3326",
+          "bind": "s25098",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -2185,16 +2657,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2192"
+                  "$obj": "o14637"
                 },
                 {
-                  "$obj": "o2195"
+                  "$obj": "o14640"
                 }
               ]
             },
-            "as": "o2196"
+            "as": "o14641"
           },
-          "bind": "s3327",
+          "bind": "s25099",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -2210,9 +2682,9 @@
                 "attr"
               ]
             },
-            "as": "o2197"
+            "as": "o14642"
           },
-          "bind": "s3328",
+          "bind": "s25100",
           "expect": {
             "$query": {
               "method": "select",
@@ -2227,12 +2699,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2196"
+              "$obj": "o14641"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2197"
+                "$obj": "o14642"
               }
             }
           },
@@ -2248,9 +2720,9 @@
                 "*"
               ]
             },
-            "as": "o2198"
+            "as": "o14643"
           },
-          "bind": "s3330",
+          "bind": "s25102",
           "expect": {
             "$query": {
               "method": "select",
@@ -2265,12 +2737,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2196"
+              "$obj": "o14641"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2198"
+                "$obj": "o14643"
               }
             }
           },
@@ -2287,9 +2759,9 @@
                 "$createdAt"
               ]
             },
-            "as": "o2199"
+            "as": "o14644"
           },
-          "bind": "s3332",
+          "bind": "s25104",
           "expect": {
             "$query": {
               "method": "select",
@@ -2305,12 +2777,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2196"
+              "$obj": "o14641"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2199"
+                "$obj": "o14644"
               }
             }
           },
@@ -2326,9 +2798,9 @@
                 "artist.name"
               ]
             },
-            "as": "o2200"
+            "as": "o14645"
           },
-          "bind": "s3334",
+          "bind": "s25106",
           "expect": {
             "$query": {
               "method": "select",
@@ -2343,12 +2815,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2196"
+              "$obj": "o14641"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2200"
+                "$obj": "o14645"
               }
             }
           },
@@ -2372,9 +2844,9 @@
                 "array": false
               }
             },
-            "as": "o2201"
+            "as": "o14646"
           },
-          "bind": "s3336",
+          "bind": "s25108",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -2392,9 +2864,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2202"
+            "as": "o14647"
           },
-          "bind": "s3337",
+          "bind": "s25109",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -2419,15 +2891,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2202"
+                "$obj": "o14647"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2203"
+            "as": "o14648"
           },
-          "bind": "s3338",
+          "bind": "s25110",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2467,13 +2939,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2203"
+              "$obj": "o14648"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2204"
+            "as": "o14649"
           },
-          "bind": "s3339",
+          "bind": "s25111",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -2505,16 +2977,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2201"
+                  "$obj": "o14646"
                 },
                 {
-                  "$obj": "o2204"
+                  "$obj": "o14649"
                 }
               ]
             },
-            "as": "o2205"
+            "as": "o14650"
           },
-          "bind": "s3340",
+          "bind": "s25112",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -2524,7 +2996,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2205"
+              "$obj": "o14650"
             },
             "method": "allowJoinAliases",
             "args": {
@@ -2545,9 +3017,9 @@
                 "ord.amount"
               ]
             },
-            "as": "o2206"
+            "as": "o14651"
           },
-          "bind": "s3342",
+          "bind": "s25114",
           "expect": {
             "$query": {
               "method": "select",
@@ -2562,12 +3034,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2205"
+              "$obj": "o14650"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2206"
+                "$obj": "o14651"
               }
             }
           },
@@ -2583,9 +3055,9 @@
                 "ord.$id"
               ]
             },
-            "as": "o2207"
+            "as": "o14652"
           },
-          "bind": "s3344",
+          "bind": "s25116",
           "expect": {
             "$query": {
               "method": "select",
@@ -2600,12 +3072,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2205"
+              "$obj": "o14650"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2207"
+                "$obj": "o14652"
               }
             }
           },
@@ -2629,9 +3101,9 @@
                 "array": false
               }
             },
-            "as": "o2208"
+            "as": "o14653"
           },
-          "bind": "s3346",
+          "bind": "s25118",
           "expect": {
             "$document": {
               "$id": "attr",
@@ -2649,9 +3121,9 @@
             "args": {
               "relatedCollection": "artists"
             },
-            "as": "o2209"
+            "as": "o14654"
           },
-          "bind": "s3347",
+          "bind": "s25119",
           "expect": {
             "$value": "Relationship",
             "fields": {
@@ -2676,15 +3148,15 @@
             "args": {
               "key": "artist",
               "relationship": {
-                "$obj": "o2209"
+                "$obj": "o14654"
               },
               "side": {
                 "$enum": "RelationshipSide::Parent"
               }
             },
-            "as": "o2210"
+            "as": "o14655"
           },
-          "bind": "s3348",
+          "bind": "s25120",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2724,13 +3196,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2210"
+              "$obj": "o14655"
             },
             "method": "toDocument",
             "args": {},
-            "as": "o2211"
+            "as": "o14656"
           },
-          "bind": "s3349",
+          "bind": "s25121",
           "expect": {
             "$document": {
               "$id": "artist",
@@ -2762,16 +3234,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o2208"
+                  "$obj": "o14653"
                 },
                 {
-                  "$obj": "o2211"
+                  "$obj": "o14656"
                 }
               ]
             },
-            "as": "o2212"
+            "as": "o14657"
           },
-          "bind": "s3350",
+          "bind": "s25122",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -2781,7 +3253,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2212"
+              "$obj": "o14657"
             },
             "method": "allowJoinAliases",
             "args": {
@@ -2802,9 +3274,9 @@
                 "amount"
               ]
             },
-            "as": "o2213"
+            "as": "o14658"
           },
-          "bind": "s3352",
+          "bind": "s25124",
           "expect": {
             "$query": {
               "method": "select",
@@ -2819,12 +3291,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2212"
+              "$obj": "o14657"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o2213"
+                "$obj": "o14658"
               }
             }
           },
@@ -2834,7 +3306,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2212"
+              "$obj": "o14657"
             },
             "method": "getDescription",
             "args": {}

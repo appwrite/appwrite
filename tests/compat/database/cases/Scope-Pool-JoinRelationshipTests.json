@@ -4234,11 +4234,11 @@
           },
           "expect": [
             {
-              "total": "30",
+              "total": 30,
               "name": "Ada"
             },
             {
-              "total": "70",
+              "total": 70,
               "name": "Bob"
             }
           ]
@@ -4280,7 +4280,7 @@
           },
           "expect": [
             {
-              "rows": "4"
+              "rows": 4
             }
           ]
         },

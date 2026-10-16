@@ -28805,59 +28805,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -29526,25 +29480,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -30296,25 +30238,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -30528,25 +30458,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -30760,25 +30678,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -30914,59 +30820,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -31638,25 +31498,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -32420,25 +32268,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -32655,25 +32491,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -32890,25 +32714,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -33064,59 +32876,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -33785,25 +33551,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -34017,25 +33771,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -34249,25 +33991,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -34481,25 +34211,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -35173,59 +34891,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -35897,25 +35569,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -36132,25 +35792,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -36367,25 +36015,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -36602,25 +36238,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -50085,76 +49709,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -51233,25 +50794,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -52003,25 +51552,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -52235,25 +51772,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -52467,25 +51992,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -52823,76 +52336,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -53977,25 +53427,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -54759,25 +54197,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -54994,25 +54420,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -55229,25 +54643,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -55608,76 +55010,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$updatedAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -56536,25 +55875,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -56768,25 +56095,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -57000,25 +56315,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -57232,25 +56535,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -57559,25 +56850,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -58355,76 +57634,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$updatedAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -59286,25 +58502,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -59521,25 +58725,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -59756,25 +58948,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -59991,25 +59171,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -60324,25 +59492,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -73153,74 +72309,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -73997,25 +73092,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -74921,23 +74004,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -75151,23 +74224,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -75321,23 +74384,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -75551,23 +74604,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -75703,74 +74746,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -76550,25 +75532,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -77489,23 +76459,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -77722,23 +76682,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -77895,23 +76845,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -78128,23 +77068,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -78300,74 +77230,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -79144,23 +78013,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -79314,23 +78173,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -79544,23 +78393,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -79774,23 +78613,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -80004,23 +78833,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -80848,74 +79667,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -81695,23 +80453,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -81868,23 +80616,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -82101,23 +80839,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -82334,23 +81062,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -82567,23 +81285,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -98047,91 +96755,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -99318,25 +97948,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -100242,23 +98860,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -100412,23 +99020,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -100642,23 +99240,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -100872,23 +99460,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -101226,91 +99804,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -102503,25 +101003,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -103442,23 +101930,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -103615,23 +102093,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -103848,23 +102316,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -104081,23 +102539,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -104458,91 +102906,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$updatedAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -105509,23 +103879,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -105679,23 +104039,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -105909,23 +104259,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -106139,23 +104479,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -106369,23 +104699,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -106694,25 +105014,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -107644,91 +105952,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.authorId": "a2",
-                "book.$id": "b3",
-                "book.$updatedAt": "<now>",
-                "$id": "a2",
-                "$sequence": "5",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b2",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "book.authorId": null,
-                "book.$id": null,
-                "book.$updatedAt": null,
-                "$id": "a3",
-                "$sequence": "6",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -108698,23 +106928,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -108871,23 +107091,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -109104,23 +107314,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -109337,23 +107537,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -109570,23 +107760,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.authorId": "zz",
-                "book.$id": "b4",
-                "book.$updatedAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",
@@ -109901,25 +108081,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.authorId": "a1",
-                "book.$id": "b1",
-                "book.$updatedAt": "<now>",
-                "$id": "a1",
-                "$sequence": "4",
-                "$tenant": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "object.call",

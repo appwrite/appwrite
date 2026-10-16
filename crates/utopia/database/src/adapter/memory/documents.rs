@@ -804,14 +804,16 @@ impl Store {
     }
 
     /// `deleteDocuments($collection, $sequences, $permissionIds)`: the rows
-    /// of the current tenant with those sequences, and the permissions of
-    /// the deleted documents and of `permission_ids`.
+    /// of the current tenant with those sequences that match every one of
+    /// `filters` (`deletionFilters()`), and the permissions of the deleted
+    /// documents and of `permission_ids` but a kept row's.
     pub(crate) fn delete_documents(
         &mut self,
         ctx: &Ctx,
         collection: &Collection,
         sequences: &[Value],
         permission_ids: &[String],
+        filters: &[Query],
     ) -> Result<i64> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
@@ -833,6 +835,7 @@ impl Store {
         };
         let mut count = 0;
         let mut deleted = Array::new();
+        let mut kept = Array::new();
         for (doc_key, row) in rows {
             if ctx.shared && !row.get_str(storage::TENANT).cloned().unwrap_or(Value::Null).strict_eq(&ctx.tenant) {
                 continue;
@@ -847,6 +850,10 @@ impl Store {
                 }
                 _ => doc_key.clone(),
             };
+            if !super::query::matches_all(&row, filters)? {
+                kept.set(key_of(&uid), Value::Bool(true));
+                continue;
+            }
             deleted.set(key_of(&uid), Value::Bool(true));
             let old_signatures = self.row_unique_signatures(ctx, &key, &row);
             let path = [key.clone(), k("documents"), key_of(&doc_key)];
@@ -865,7 +872,7 @@ impl Store {
                 self.remove_permissions_for_document(ctx, &key, &id, &tenant, ctx.shared);
             }
             for id in permissions.keys().map(|k| k.to_owned()).collect::<Vec<_>>() {
-                if deleted.contains_key(&id) {
+                if deleted.contains_key(&id) || kept.contains_key(&id) {
                     continue;
                 }
                 self.remove_permissions_for_document(ctx, &key, &key_text(id.as_ref()), &tenant, ctx.shared);

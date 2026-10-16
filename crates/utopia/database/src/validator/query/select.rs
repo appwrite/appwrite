@@ -5,6 +5,7 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+use utopia_query::schema::ColumnType;
 use utopia_query::{Method, Value as QValue};
 
 use crate::attribute::Attribute;
@@ -45,6 +46,8 @@ struct State {
 pub struct Select {
     schema: HashSet<String>,
     relationships: HashSet<String>,
+    /// The object attributes, which a path can go into.
+    objects: HashSet<String>,
     support_for_attributes: bool,
     shared_tables: bool,
     state: Mutex<State>,
@@ -64,6 +67,7 @@ impl Select {
         Select {
             schema: attributes.iter().map(|a| a.key.clone()).collect(),
             relationships: attributes.iter().filter(|a| a.relationship.is_some()).map(|a| a.key.clone()).collect(),
+            objects: attributes.iter().filter(|a| a.kind == ColumnType::Object).map(|a| a.key.clone()).collect(),
             support_for_attributes,
             shared_tables,
             state: Mutex::new(State::default()),
@@ -146,6 +150,14 @@ impl Select {
                 }
                 if aggregation && state.joins.has_alias(alias) {
                     return self.reject_ungrouped(attribute);
+                }
+                if !aggregation
+                    && self.support_for_attributes
+                    && self.schema.contains(alias)
+                    && !self.relationships.contains(alias)
+                    && !self.objects.contains(alias)
+                {
+                    return self.fail(format!("Cannot select nested attribute on: {alias}"));
                 }
                 attribute = alias;
             }

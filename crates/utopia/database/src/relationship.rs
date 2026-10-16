@@ -2,7 +2,10 @@
 //! another, and its enumerations.
 //!
 //! PHP: `Utopia\Database\Relationship`, `Relationship\Update`,
-//! `RelationshipType`, `RelationshipSide`, `RelationshipDeleteAction`.
+//! `RelationshipType`, `RelationshipSide`, `RelationshipDeleteAction`,
+//! `Relationship\Page` ([`page`]).
+
+pub mod page;
 
 use utopia_query::schema::ForeignKeyAction;
 

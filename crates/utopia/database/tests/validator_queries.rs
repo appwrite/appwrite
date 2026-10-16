@@ -670,7 +670,9 @@ mod document_queries {
     fn valid_queries() {
         let v = DocumentQueries::new(&title_price(), &profile(&JOINS), 5000);
         assert!(v.check(&[Query::select(["title"])]));
-        assert!(v.check(&[Query::select(["title"]), Query::select(["price.relation"])]));
+        // 8.3.0: price is a plain attribute, so a path under it names a column that does not exist
+        // (DocumentQueriesTest: `$this->assertFalse($validator->isValid($queries), ...)`).
+        assert!(!v.check(&[Query::select(["title"]), Query::select(["price.relation"])]));
     }
 
     #[test]

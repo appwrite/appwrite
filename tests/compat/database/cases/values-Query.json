@@ -187,7 +187,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -262,7 +263,8 @@
               },
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -339,7 +341,8 @@
               },
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -389,7 +392,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         }
@@ -555,7 +559,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         }
@@ -1132,7 +1137,8 @@
                 {
                   "$enum": "Query\\OrderDirection::Desc"
                 }
-              ]
+              ],
+              "relationships": []
             }
           }
         },
@@ -8282,7 +8288,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 331"
+              "message": "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 336"
             }
           }
         },

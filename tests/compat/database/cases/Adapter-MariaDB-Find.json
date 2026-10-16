@@ -1893,7 +1893,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4017"
+              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4171"
             }
           }
         },
@@ -2727,31 +2727,31 @@
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`rating`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`rating`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM (SELECT `year` FROM `${ns}`.`ns_f` AS `table_main` LIMIT ?) AS `table_count`"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM (SELECT `year` FROM `${ns}`.`ns_f` AS `table_main` LIMIT ?) AS `table_count`"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main` WHERE `year` IN (?)"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main` WHERE `year` IN (?)"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`title`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`title`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`missing`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`missing`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`rating`) AS `sum` FROM (SELECT `rating` FROM `${ns}`.`ns_f` AS `table_main` WHERE `rating` > ? LIMIT ?) AS `table_count`"
+              "query": "SELECT SUM(`rating`) + 0 AS `sum` FROM (SELECT `rating` FROM `${ns}`.`ns_f` AS `table_main` WHERE `rating` > ? LIMIT ?) AS `table_count`"
             },
             {
               "transform": "document_count",
@@ -8247,8 +8247,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8284,8 +8284,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8321,8 +8321,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8358,8 +8358,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8812,6 +8812,22 @@
             {
               "transform": "document_find",
               "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE NOT ST_Touches(`area`, ST_GeomFromText(?, 4326)) LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) < ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) > ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) = ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) != ? LIMIT ?"
             },
             {
               "transform": "document_find",
@@ -10260,7 +10276,7 @@
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             }
           ]
         },
@@ -11604,7 +11620,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5469"
+              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5737"
             }
           }
         },
@@ -11778,7 +11794,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5469"
+              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5737"
             }
           }
         },
@@ -13258,7 +13274,7 @@
             },
             {
               "transform": "document_sum",
-              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
+              "query": "SELECT SUM(`year`) + 0 AS `sum` FROM `${ns}`.`ns_f` AS `table_main`"
             },
             {
               "transform": "document_find",

@@ -7337,8 +7337,8 @@
           },
           "expect": [
             {
-              "total": "323",
-              "cnt": "2",
+              "total": 323,
+              "cnt": 2,
               "name": "Main"
             }
           ]

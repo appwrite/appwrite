@@ -410,6 +410,16 @@ impl Adapter for Spy {
         self.inner.delete_documents(collection, sequences, permission_ids).await
     }
 
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        self.inner.delete_documents_matching(collection, sequences, permission_ids, queries).await
+    }
+
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         self.tally(collection, &self.finds);
         let watch = self.watches.lock().unwrap().find.clone();

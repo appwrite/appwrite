@@ -663,6 +663,22 @@ impl Adapter for Spy {
         )
     }
 
+    /// Seen as `deleteDocuments`, which PHP's `deleteDocumentsMatching()`
+    /// calls.
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        call!(
+            self,
+            Seen::of("deleteDocuments").on(collection),
+            self.inner.delete_documents_matching(collection, sequences, permission_ids, queries)
+        )
+    }
+
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         call!(
             self,

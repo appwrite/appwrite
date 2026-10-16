@@ -33824,7 +33824,7 @@
           "expect": [
             {
               "rows": 1,
-              "body": "needle"
+              "note.body": "needle"
             }
           ]
         }

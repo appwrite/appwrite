@@ -78737,9 +78737,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'FETCH': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "FETCH",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -78761,9 +78773,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"FETCH\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "FETCH": "Reserved:FETCH",
+              "$collection": "rkFETCH",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -78774,7 +78796,20 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "FETCH": "Reserved:FETCH",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkFETCH"
+            }
           }
         },
         {
@@ -78782,7 +78817,24 @@
           "args": {
             "collection": "rkFETCH"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "FETCH": "Reserved:FETCH",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkFETCH"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -78800,12 +78852,24 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: FETCH"
+          "expect": [
+            {
+              "$document": {
+                "FETCH": "Reserved:FETCH",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkFETCH"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -78821,12 +78885,24 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: FETCH"
+          "expect": [
+            {
+              "$document": {
+                "FETCH": "Reserved:FETCH",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkFETCH"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",
@@ -127817,9 +127893,46 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "cascadeMultiDelete1",
+              "$permissions": [
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "cascadeMultiDelete1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "cascadeMultiDelete2": [
+                {
+                  "$document": {
+                    "$id": "cascadeMultiDelete2",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "cascadeMultiDelete2",
+                    "cascadeMultiDelete3": [
+                      {
+                        "$document": {
+                          "$id": "cascadeMultiDelete3",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "delete(\"any\")"
+                          ],
+                          "$collection": "cascadeMultiDelete3"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           }
         },
@@ -127829,7 +127942,7 @@
             "collection": "cascadeMultiDelete1",
             "id": "cascadeMultiDelete1"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.get_document",
@@ -127838,21 +127951,7 @@
             "id": "cascadeMultiDelete2"
           },
           "expect": {
-            "$document": {
-              "$sequence": "1",
-              "$id": "cascadeMultiDelete2",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$collection": "cascadeMultiDelete2",
-              "cascadeMultiDelete1": {
-                "$document": {}
-              },
-              "cascadeMultiDelete3": []
-            }
+            "$document": {}
           }
         },
         {
@@ -130128,7 +130227,7 @@
                     "hook": {
                       "$hook": "Log",
                       "name": "test",
-                      "as": "o473"
+                      "as": "o483"
                     }
                   }
                 },
@@ -130270,7 +130369,7 @@
                     "hook": {
                       "$hook": "Log",
                       "name": "should-not-execute",
-                      "as": "o474"
+                      "as": "o484"
                     }
                   }
                 },
@@ -131796,7 +131895,7 @@
                     "hook": {
                       "$hook": "Log",
                       "name": "audits",
-                      "as": "o477"
+                      "as": "o487"
                     }
                   }
                 },
@@ -131806,7 +131905,7 @@
                     "hook": {
                       "$hook": "Log",
                       "name": "usage",
-                      "as": "o478"
+                      "as": "o488"
                     }
                   }
                 },
@@ -131860,7 +131959,7 @@
                     "hook": {
                       "$hook": "Log",
                       "name": "audits",
-                      "as": "o479"
+                      "as": "o489"
                     }
                   }
                 },
@@ -132806,7 +132905,7 @@
               "table": "compat_docs",
               "event": "document_read",
               "append": " AND 1 = 0",
-              "as": "o486"
+              "as": "o496"
             }
           },
           "expect": {
@@ -133510,7 +133609,7 @@
             "cache": "none",
             "hooks": []
           },
-          "bind": "s9848",
+          "bind": "s10129",
           "expect": {
             "$handle": "*"
           }
@@ -133519,7 +133618,7 @@
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s9848"
+              "$ref": "s10129"
             },
             "authorization": {
               "$ref": "db"
@@ -133540,7 +133639,7 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s9848"
+              "$ref": "s10129"
             },
             "collection": {
               "$document": {
@@ -133610,7 +133709,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s9848"
+              "$ref": "s10129"
             },
             "collection": "concurrentCreate",
             "document": {
@@ -133680,7 +133779,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s9848"
+              "$ref": "s10129"
             },
             "collection": "concurrentCreate",
             "id": "written"
@@ -133703,7 +133802,7 @@
           "op": "database.find_collection",
           "args": {
             "db": {
-              "$ref": "s9848"
+              "$ref": "s10129"
             },
             "collection": "concurrentCreate"
           },

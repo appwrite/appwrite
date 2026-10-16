@@ -20,9 +20,9 @@
                 "Iron Man"
               ]
             },
-            "as": "o1704"
+            "as": "o12188"
           },
-          "bind": "s5885",
+          "bind": "s21017",
           "expect": {
             "$query": {
               "method": "equal",
@@ -37,7 +37,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1704"
+              "$obj": "o12188"
             },
             "method": "getMethod",
             "args": {}
@@ -50,7 +50,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1704"
+              "$obj": "o12188"
             },
             "method": "getAttribute",
             "args": {}
@@ -61,7 +61,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1704"
+              "$obj": "o12188"
             },
             "method": "getValues",
             "args": {}
@@ -80,9 +80,9 @@
               },
               "attribute": "score"
             },
-            "as": "o1705"
+            "as": "o12189"
           },
-          "bind": "s5889",
+          "bind": "s21021",
           "expect": {
             "$query": {
               "method": "orderDesc",
@@ -95,7 +95,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1705"
+              "$obj": "o12189"
             },
             "method": "getMethod",
             "args": {}
@@ -108,7 +108,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1705"
+              "$obj": "o12189"
             },
             "method": "getAttribute",
             "args": {}
@@ -119,7 +119,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1705"
+              "$obj": "o12189"
             },
             "method": "getValues",
             "args": {}
@@ -138,9 +138,9 @@
                 10
               ]
             },
-            "as": "o1706"
+            "as": "o12190"
           },
-          "bind": "s5893",
+          "bind": "s21025",
           "expect": {
             "$query": {
               "method": "limit",
@@ -155,7 +155,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1706"
+              "$obj": "o12190"
             },
             "method": "getMethod",
             "args": {}
@@ -168,7 +168,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1706"
+              "$obj": "o12190"
             },
             "method": "getAttribute",
             "args": {}
@@ -179,7 +179,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1706"
+              "$obj": "o12190"
             },
             "method": "getValues",
             "args": {}
@@ -199,9 +199,9 @@
                 "Iron Man"
               ]
             },
-            "as": "o1707"
+            "as": "o12191"
           },
-          "bind": "s5897",
+          "bind": "s21029",
           "expect": {
             "$query": {
               "method": "equal",
@@ -216,7 +216,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1707"
+              "$obj": "o12191"
             },
             "method": "getMethod",
             "args": {}
@@ -229,7 +229,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1707"
+              "$obj": "o12191"
             },
             "method": "getAttribute",
             "args": {}
@@ -240,7 +240,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1707"
+              "$obj": "o12191"
             },
             "method": "getValues",
             "args": {}
@@ -258,9 +258,9 @@
               "attribute": "score",
               "value": 10
             },
-            "as": "o1708"
+            "as": "o12192"
           },
-          "bind": "s5901",
+          "bind": "s21033",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -275,7 +275,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1708"
+              "$obj": "o12192"
             },
             "method": "getMethod",
             "args": {}
@@ -288,7 +288,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1708"
+              "$obj": "o12192"
             },
             "method": "getAttribute",
             "args": {}
@@ -299,7 +299,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1708"
+              "$obj": "o12192"
             },
             "method": "getValues",
             "args": {}
@@ -321,9 +321,9 @@
                 0.3
               ]
             },
-            "as": "o1709"
+            "as": "o12193"
           },
-          "bind": "s5905",
+          "bind": "s21037",
           "expect": {
             "$query": {
               "method": "vectorDot",
@@ -342,7 +342,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1709"
+              "$obj": "o12193"
             },
             "method": "getMethod",
             "args": {}
@@ -355,7 +355,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1709"
+              "$obj": "o12193"
             },
             "method": "getAttribute",
             "args": {}
@@ -366,7 +366,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1709"
+              "$obj": "o12193"
             },
             "method": "getValues",
             "args": {}
@@ -392,9 +392,9 @@
                 0.3
               ]
             },
-            "as": "o1710"
+            "as": "o12194"
           },
-          "bind": "s5909",
+          "bind": "s21041",
           "expect": {
             "$query": {
               "method": "vectorCosine",
@@ -413,7 +413,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1710"
+              "$obj": "o12194"
             },
             "method": "getMethod",
             "args": {}
@@ -426,7 +426,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1710"
+              "$obj": "o12194"
             },
             "method": "getAttribute",
             "args": {}
@@ -437,7 +437,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1710"
+              "$obj": "o12194"
             },
             "method": "getValues",
             "args": {}
@@ -463,9 +463,9 @@
                 0.3
               ]
             },
-            "as": "o1711"
+            "as": "o12195"
           },
-          "bind": "s5913",
+          "bind": "s21045",
           "expect": {
             "$query": {
               "method": "vectorEuclidean",
@@ -484,7 +484,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1711"
+              "$obj": "o12195"
             },
             "method": "getMethod",
             "args": {}
@@ -497,7 +497,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1711"
+              "$obj": "o12195"
             },
             "method": "getAttribute",
             "args": {}
@@ -508,7 +508,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1711"
+              "$obj": "o12195"
             },
             "method": "getValues",
             "args": {}
@@ -530,9 +530,9 @@
               "attribute": "search",
               "value": "John Doe"
             },
-            "as": "o1712"
+            "as": "o12196"
           },
-          "bind": "s5917",
+          "bind": "s21049",
           "expect": {
             "$query": {
               "method": "search",
@@ -547,7 +547,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1712"
+              "$obj": "o12196"
             },
             "method": "getMethod",
             "args": {}
@@ -560,7 +560,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1712"
+              "$obj": "o12196"
             },
             "method": "getAttribute",
             "args": {}
@@ -571,7 +571,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1712"
+              "$obj": "o12196"
             },
             "method": "getValues",
             "args": {}
@@ -588,9 +588,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o1713"
+            "as": "o12197"
           },
-          "bind": "s5921",
+          "bind": "s21053",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -603,7 +603,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1713"
+              "$obj": "o12197"
             },
             "method": "getMethod",
             "args": {}
@@ -616,7 +616,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1713"
+              "$obj": "o12197"
             },
             "method": "getAttribute",
             "args": {}
@@ -627,7 +627,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1713"
+              "$obj": "o12197"
             },
             "method": "getValues",
             "args": {}
@@ -642,9 +642,9 @@
             "args": {
               "value": 10
             },
-            "as": "o1714"
+            "as": "o12198"
           },
-          "bind": "s5925",
+          "bind": "s21057",
           "expect": {
             "$query": {
               "method": "limit",
@@ -659,7 +659,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1714"
+              "$obj": "o12198"
             },
             "method": "getMethod",
             "args": {}
@@ -672,7 +672,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1714"
+              "$obj": "o12198"
             },
             "method": "getAttribute",
             "args": {}
@@ -683,7 +683,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1714"
+              "$obj": "o12198"
             },
             "method": "getValues",
             "args": {}
@@ -697,9 +697,9 @@
           "args": {
             "class": "Document",
             "args": {},
-            "as": "o1715"
+            "as": "o12199"
           },
-          "bind": "s5929",
+          "bind": "s21061",
           "expect": {
             "$document": {}
           }
@@ -711,12 +711,12 @@
             "method": "cursorAfter",
             "args": {
               "value": {
-                "$obj": "o1715"
+                "$obj": "o12199"
               }
             },
-            "as": "o1716"
+            "as": "o12200"
           },
-          "bind": "s5930",
+          "bind": "s21062",
           "expect": {
             "$query": {
               "method": "cursorAfter",
@@ -733,7 +733,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1716"
+              "$obj": "o12200"
             },
             "method": "getMethod",
             "args": {}
@@ -746,7 +746,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1716"
+              "$obj": "o12200"
             },
             "method": "getAttribute",
             "args": {}
@@ -757,7 +757,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1716"
+              "$obj": "o12200"
             },
             "method": "getValues",
             "args": {}
@@ -776,9 +776,9 @@
             "args": {
               "attribute": "title"
             },
-            "as": "o1717"
+            "as": "o12201"
           },
-          "bind": "s5934",
+          "bind": "s21066",
           "expect": {
             "$query": {
               "method": "isNull",
@@ -791,7 +791,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1717"
+              "$obj": "o12201"
             },
             "method": "getMethod",
             "args": {}
@@ -804,7 +804,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1717"
+              "$obj": "o12201"
             },
             "method": "getAttribute",
             "args": {}
@@ -815,7 +815,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1717"
+              "$obj": "o12201"
             },
             "method": "getValues",
             "args": {}
@@ -830,9 +830,9 @@
             "args": {
               "attribute": "title"
             },
-            "as": "o1718"
+            "as": "o12202"
           },
-          "bind": "s5938",
+          "bind": "s21070",
           "expect": {
             "$query": {
               "method": "isNotNull",
@@ -845,7 +845,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1718"
+              "$obj": "o12202"
             },
             "method": "getMethod",
             "args": {}
@@ -858,7 +858,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1718"
+              "$obj": "o12202"
             },
             "method": "getAttribute",
             "args": {}
@@ -869,7 +869,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1718"
+              "$obj": "o12202"
             },
             "method": "getValues",
             "args": {}
@@ -888,9 +888,9 @@
                 "example"
               ]
             },
-            "as": "o1719"
+            "as": "o12203"
           },
-          "bind": "s5942",
+          "bind": "s21074",
           "expect": {
             "$query": {
               "method": "notContains",
@@ -906,7 +906,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1719"
+              "$obj": "o12203"
             },
             "method": "getMethod",
             "args": {}
@@ -919,7 +919,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1719"
+              "$obj": "o12203"
             },
             "method": "getAttribute",
             "args": {}
@@ -930,7 +930,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1719"
+              "$obj": "o12203"
             },
             "method": "getValues",
             "args": {}
@@ -949,9 +949,9 @@
               "attribute": "content",
               "value": "keyword"
             },
-            "as": "o1720"
+            "as": "o12204"
           },
-          "bind": "s5946",
+          "bind": "s21078",
           "expect": {
             "$query": {
               "method": "notSearch",
@@ -966,7 +966,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1720"
+              "$obj": "o12204"
             },
             "method": "getMethod",
             "args": {}
@@ -979,7 +979,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1720"
+              "$obj": "o12204"
             },
             "method": "getAttribute",
             "args": {}
@@ -990,7 +990,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1720"
+              "$obj": "o12204"
             },
             "method": "getValues",
             "args": {}
@@ -1008,9 +1008,9 @@
               "attribute": "title",
               "value": "prefix"
             },
-            "as": "o1721"
+            "as": "o12205"
           },
-          "bind": "s5950",
+          "bind": "s21082",
           "expect": {
             "$query": {
               "method": "notStartsWith",
@@ -1025,7 +1025,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1721"
+              "$obj": "o12205"
             },
             "method": "getMethod",
             "args": {}
@@ -1038,7 +1038,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1721"
+              "$obj": "o12205"
             },
             "method": "getAttribute",
             "args": {}
@@ -1049,7 +1049,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1721"
+              "$obj": "o12205"
             },
             "method": "getValues",
             "args": {}
@@ -1067,9 +1067,9 @@
               "attribute": "url",
               "value": ".html"
             },
-            "as": "o1722"
+            "as": "o12206"
           },
-          "bind": "s5954",
+          "bind": "s21086",
           "expect": {
             "$query": {
               "method": "notEndsWith",
@@ -1084,7 +1084,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1722"
+              "$obj": "o12206"
             },
             "method": "getMethod",
             "args": {}
@@ -1097,7 +1097,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1722"
+              "$obj": "o12206"
             },
             "method": "getAttribute",
             "args": {}
@@ -1108,7 +1108,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1722"
+              "$obj": "o12206"
             },
             "method": "getValues",
             "args": {}
@@ -1127,9 +1127,9 @@
               "start": 10,
               "end": 20
             },
-            "as": "o1723"
+            "as": "o12207"
           },
-          "bind": "s5958",
+          "bind": "s21090",
           "expect": {
             "$query": {
               "method": "notBetween",
@@ -1145,7 +1145,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1723"
+              "$obj": "o12207"
             },
             "method": "getMethod",
             "args": {}
@@ -1158,7 +1158,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1723"
+              "$obj": "o12207"
             },
             "method": "getAttribute",
             "args": {}
@@ -1169,7 +1169,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1723"
+              "$obj": "o12207"
             },
             "method": "getValues",
             "args": {}
@@ -1187,9 +1187,9 @@
             "args": {
               "value": "2023-01-01T00:00:00.000Z"
             },
-            "as": "o1724"
+            "as": "o12208"
           },
-          "bind": "s5962",
+          "bind": "s21094",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -1204,7 +1204,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1724"
+              "$obj": "o12208"
             },
             "method": "getMethod",
             "args": {}
@@ -1217,7 +1217,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1724"
+              "$obj": "o12208"
             },
             "method": "getAttribute",
             "args": {}
@@ -1228,7 +1228,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1724"
+              "$obj": "o12208"
             },
             "method": "getValues",
             "args": {}
@@ -1245,9 +1245,9 @@
             "args": {
               "value": "2023-01-01T00:00:00.000Z"
             },
-            "as": "o1725"
+            "as": "o12209"
           },
-          "bind": "s5966",
+          "bind": "s21098",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -1262,7 +1262,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1725"
+              "$obj": "o12209"
             },
             "method": "getMethod",
             "args": {}
@@ -1275,7 +1275,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1725"
+              "$obj": "o12209"
             },
             "method": "getAttribute",
             "args": {}
@@ -1286,7 +1286,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1725"
+              "$obj": "o12209"
             },
             "method": "getValues",
             "args": {}
@@ -1303,9 +1303,9 @@
             "args": {
               "value": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1726"
+            "as": "o12210"
           },
-          "bind": "s5970",
+          "bind": "s21102",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -1320,7 +1320,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1726"
+              "$obj": "o12210"
             },
             "method": "getMethod",
             "args": {}
@@ -1333,7 +1333,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1726"
+              "$obj": "o12210"
             },
             "method": "getAttribute",
             "args": {}
@@ -1344,7 +1344,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1726"
+              "$obj": "o12210"
             },
             "method": "getValues",
             "args": {}
@@ -1361,9 +1361,9 @@
             "args": {
               "value": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1727"
+            "as": "o12211"
           },
-          "bind": "s5974",
+          "bind": "s21106",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -1378,7 +1378,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1727"
+              "$obj": "o12211"
             },
             "method": "getMethod",
             "args": {}
@@ -1391,7 +1391,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1727"
+              "$obj": "o12211"
             },
             "method": "getAttribute",
             "args": {}
@@ -1402,7 +1402,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1727"
+              "$obj": "o12211"
             },
             "method": "getValues",
             "args": {}
@@ -1420,9 +1420,9 @@
               "start": "2023-01-01T00:00:00.000Z",
               "end": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1728"
+            "as": "o12212"
           },
-          "bind": "s5978",
+          "bind": "s21110",
           "expect": {
             "$query": {
               "method": "between",
@@ -1438,7 +1438,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1728"
+              "$obj": "o12212"
             },
             "method": "getMethod",
             "args": {}
@@ -1451,7 +1451,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1728"
+              "$obj": "o12212"
             },
             "method": "getAttribute",
             "args": {}
@@ -1462,7 +1462,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1728"
+              "$obj": "o12212"
             },
             "method": "getValues",
             "args": {}
@@ -1481,9 +1481,9 @@
               "start": "2023-01-01T00:00:00.000Z",
               "end": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1729"
+            "as": "o12213"
           },
-          "bind": "s5982",
+          "bind": "s21114",
           "expect": {
             "$query": {
               "method": "between",
@@ -1499,7 +1499,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1729"
+              "$obj": "o12213"
             },
             "method": "getMethod",
             "args": {}
@@ -1512,7 +1512,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1729"
+              "$obj": "o12213"
             },
             "method": "getAttribute",
             "args": {}
@@ -1523,7 +1523,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1729"
+              "$obj": "o12213"
             },
             "method": "getValues",
             "args": {}
@@ -1539,9 +1539,9 @@
             "class": "Query",
             "method": "orderRandom",
             "args": {},
-            "as": "o1730"
+            "as": "o12214"
           },
-          "bind": "s5986",
+          "bind": "s21118",
           "mask": {
             "paths": [
               ""
@@ -1554,52 +1554,52 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1730"
+              "$obj": "o12214"
             },
             "method": "getMethod",
             "args": {}
           },
-          "expect": "<masked>",
           "mask": {
             "paths": [
               ""
             ],
             "reason": "Query::orderRandom() returns the documents in a random order"
-          }
+          },
+          "expect": "<masked>"
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1730"
+              "$obj": "o12214"
             },
             "method": "getAttribute",
             "args": {}
           },
-          "expect": "<masked>",
           "mask": {
             "paths": [
               ""
             ],
             "reason": "Query::orderRandom() returns the documents in a random order"
-          }
+          },
+          "expect": "<masked>"
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1730"
+              "$obj": "o12214"
             },
             "method": "getValues",
             "args": {}
           },
-          "expect": "<masked>",
           "mask": {
             "paths": [
               ""
             ],
             "reason": "Query::orderRandom() returns the documents in a random order"
-          }
+          },
+          "expect": "<masked>"
         }
       ]
     },
@@ -1618,9 +1618,9 @@
                 "Iron Man"
               ]
             },
-            "as": "o1731"
+            "as": "o12215"
           },
-          "bind": "s5990",
+          "bind": "s21122",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1635,7 +1635,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1731"
+              "$obj": "o12215"
             },
             "method": "toString",
             "args": {}
@@ -1650,9 +1650,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"title\",\"values\":[\"Iron Man\"]}"
             },
-            "as": "o1732"
+            "as": "o12216"
           },
-          "bind": "s5992",
+          "bind": "s21124",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1667,7 +1667,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1732"
+              "$obj": "o12216"
             },
             "method": "getMethod",
             "args": {}
@@ -1680,7 +1680,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1732"
+              "$obj": "o12216"
             },
             "method": "getAttribute",
             "args": {}
@@ -1691,7 +1691,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1732"
+              "$obj": "o12216"
             },
             "method": "getValues",
             "args": {}
@@ -1709,9 +1709,9 @@
               "attribute": "year",
               "value": 2001
             },
-            "as": "o1733"
+            "as": "o12217"
           },
-          "bind": "s5996",
+          "bind": "s21128",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -1726,7 +1726,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1733"
+              "$obj": "o12217"
             },
             "method": "toString",
             "args": {}
@@ -1741,9 +1741,9 @@
             "args": {
               "query": "{\"method\":\"lessThan\",\"attribute\":\"year\",\"values\":[2001]}"
             },
-            "as": "o1734"
+            "as": "o12218"
           },
-          "bind": "s5998",
+          "bind": "s21130",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -1758,7 +1758,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1734"
+              "$obj": "o12218"
             },
             "method": "getMethod",
             "args": {}
@@ -1771,7 +1771,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1734"
+              "$obj": "o12218"
             },
             "method": "getAttribute",
             "args": {}
@@ -1782,7 +1782,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1734"
+              "$obj": "o12218"
             },
             "method": "getValues",
             "args": {}
@@ -1802,9 +1802,9 @@
                 true
               ]
             },
-            "as": "o1735"
+            "as": "o12219"
           },
-          "bind": "s6002",
+          "bind": "s21134",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1819,7 +1819,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1735"
+              "$obj": "o12219"
             },
             "method": "toString",
             "args": {}
@@ -1834,9 +1834,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"published\",\"values\":[true]}"
             },
-            "as": "o1736"
+            "as": "o12220"
           },
-          "bind": "s6004",
+          "bind": "s21136",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1851,7 +1851,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1736"
+              "$obj": "o12220"
             },
             "method": "getMethod",
             "args": {}
@@ -1864,7 +1864,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1736"
+              "$obj": "o12220"
             },
             "method": "getAttribute",
             "args": {}
@@ -1875,7 +1875,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1736"
+              "$obj": "o12220"
             },
             "method": "getValues",
             "args": {}
@@ -1895,9 +1895,9 @@
                 false
               ]
             },
-            "as": "o1737"
+            "as": "o12221"
           },
-          "bind": "s6008",
+          "bind": "s21140",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1912,7 +1912,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1737"
+              "$obj": "o12221"
             },
             "method": "toString",
             "args": {}
@@ -1927,9 +1927,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"published\",\"values\":[false]}"
             },
-            "as": "o1738"
+            "as": "o12222"
           },
-          "bind": "s6010",
+          "bind": "s21142",
           "expect": {
             "$query": {
               "method": "equal",
@@ -1944,7 +1944,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1738"
+              "$obj": "o12222"
             },
             "method": "getMethod",
             "args": {}
@@ -1957,7 +1957,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1738"
+              "$obj": "o12222"
             },
             "method": "getAttribute",
             "args": {}
@@ -1968,7 +1968,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1738"
+              "$obj": "o12222"
             },
             "method": "getValues",
             "args": {}
@@ -1990,9 +1990,9 @@
                 "Al Pacino "
               ]
             },
-            "as": "o1739"
+            "as": "o12223"
           },
-          "bind": "s6014",
+          "bind": "s21146",
           "expect": {
             "$query": {
               "method": "equal",
@@ -2009,7 +2009,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1739"
+              "$obj": "o12223"
             },
             "method": "toString",
             "args": {}
@@ -2024,9 +2024,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"actors\",\"values\":[\" Johnny Depp \",\" Brad Pitt\",\"Al Pacino \"]}"
             },
-            "as": "o1740"
+            "as": "o12224"
           },
-          "bind": "s6016",
+          "bind": "s21148",
           "expect": {
             "$query": {
               "method": "equal",
@@ -2043,7 +2043,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1740"
+              "$obj": "o12224"
             },
             "method": "getMethod",
             "args": {}
@@ -2056,7 +2056,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1740"
+              "$obj": "o12224"
             },
             "method": "getAttribute",
             "args": {}
@@ -2067,7 +2067,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1740"
+              "$obj": "o12224"
             },
             "method": "getValues",
             "args": {}
@@ -2082,7 +2082,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1740"
+              "$obj": "o12224"
             },
             "method": "getValues",
             "args": {}
@@ -2097,7 +2097,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1740"
+              "$obj": "o12224"
             },
             "method": "getValues",
             "args": {}
@@ -2120,9 +2120,9 @@
                 "Johnny Depp"
               ]
             },
-            "as": "o1741"
+            "as": "o12225"
           },
-          "bind": "s6022",
+          "bind": "s21154",
           "expect": {
             "$query": {
               "method": "equal",
@@ -2138,7 +2138,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1741"
+              "$obj": "o12225"
             },
             "method": "toString",
             "args": {}
@@ -2153,9 +2153,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"actors\",\"values\":[\"Brad Pitt\",\"Johnny Depp\"]}"
             },
-            "as": "o1742"
+            "as": "o12226"
           },
-          "bind": "s6024",
+          "bind": "s21156",
           "expect": {
             "$query": {
               "method": "equal",
@@ -2171,7 +2171,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1742"
+              "$obj": "o12226"
             },
             "method": "getMethod",
             "args": {}
@@ -2184,7 +2184,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1742"
+              "$obj": "o12226"
             },
             "method": "getAttribute",
             "args": {}
@@ -2195,7 +2195,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1742"
+              "$obj": "o12226"
             },
             "method": "getValues",
             "args": {}
@@ -2209,7 +2209,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1742"
+              "$obj": "o12226"
             },
             "method": "getValues",
             "args": {}
@@ -2230,9 +2230,9 @@
                 "Tim O'Reilly"
               ]
             },
-            "as": "o1743"
+            "as": "o12227"
           },
-          "bind": "s6029",
+          "bind": "s21161",
           "expect": {
             "$query": {
               "method": "contains",
@@ -2247,7 +2247,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1743"
+              "$obj": "o12227"
             },
             "method": "toString",
             "args": {}
@@ -2262,9 +2262,9 @@
             "args": {
               "query": "{\"method\":\"contains\",\"attribute\":\"writers\",\"values\":[\"Tim O'Reilly\"]}"
             },
-            "as": "o1744"
+            "as": "o12228"
           },
-          "bind": "s6031",
+          "bind": "s21163",
           "expect": {
             "$query": {
               "method": "contains",
@@ -2279,7 +2279,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1744"
+              "$obj": "o12228"
             },
             "method": "getMethod",
             "args": {}
@@ -2292,7 +2292,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1744"
+              "$obj": "o12228"
             },
             "method": "getAttribute",
             "args": {}
@@ -2303,7 +2303,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1744"
+              "$obj": "o12228"
             },
             "method": "getValues",
             "args": {}
@@ -2321,9 +2321,9 @@
               "attribute": "score",
               "value": 8.5
             },
-            "as": "o1745"
+            "as": "o12229"
           },
-          "bind": "s6035",
+          "bind": "s21167",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -2338,7 +2338,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1745"
+              "$obj": "o12229"
             },
             "method": "toString",
             "args": {}
@@ -2353,9 +2353,9 @@
             "args": {
               "query": "{\"method\":\"greaterThan\",\"attribute\":\"score\",\"values\":[8.5]}"
             },
-            "as": "o1746"
+            "as": "o12230"
           },
-          "bind": "s6037",
+          "bind": "s21169",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -2370,7 +2370,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1746"
+              "$obj": "o12230"
             },
             "method": "getMethod",
             "args": {}
@@ -2383,7 +2383,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1746"
+              "$obj": "o12230"
             },
             "method": "getAttribute",
             "args": {}
@@ -2394,7 +2394,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1746"
+              "$obj": "o12230"
             },
             "method": "getValues",
             "args": {}
@@ -2415,9 +2415,9 @@
                 "spam"
               ]
             },
-            "as": "o1747"
+            "as": "o12231"
           },
-          "bind": "s6041",
+          "bind": "s21173",
           "expect": {
             "$query": {
               "method": "notContains",
@@ -2433,7 +2433,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1747"
+              "$obj": "o12231"
             },
             "method": "toString",
             "args": {}
@@ -2448,9 +2448,9 @@
             "args": {
               "query": "{\"method\":\"notContains\",\"attribute\":\"tags\",\"values\":[\"unwanted\",\"spam\"]}"
             },
-            "as": "o1748"
+            "as": "o12232"
           },
-          "bind": "s6043",
+          "bind": "s21175",
           "expect": {
             "$query": {
               "method": "notContains",
@@ -2466,7 +2466,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1748"
+              "$obj": "o12232"
             },
             "method": "getMethod",
             "args": {}
@@ -2479,7 +2479,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1748"
+              "$obj": "o12232"
             },
             "method": "getAttribute",
             "args": {}
@@ -2490,7 +2490,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1748"
+              "$obj": "o12232"
             },
             "method": "getValues",
             "args": {}
@@ -2509,9 +2509,9 @@
               "attribute": "content",
               "value": "unwanted content"
             },
-            "as": "o1749"
+            "as": "o12233"
           },
-          "bind": "s6047",
+          "bind": "s21179",
           "expect": {
             "$query": {
               "method": "notSearch",
@@ -2526,7 +2526,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1749"
+              "$obj": "o12233"
             },
             "method": "toString",
             "args": {}
@@ -2541,9 +2541,9 @@
             "args": {
               "query": "{\"method\":\"notSearch\",\"attribute\":\"content\",\"values\":[\"unwanted content\"]}"
             },
-            "as": "o1750"
+            "as": "o12234"
           },
-          "bind": "s6049",
+          "bind": "s21181",
           "expect": {
             "$query": {
               "method": "notSearch",
@@ -2558,7 +2558,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1750"
+              "$obj": "o12234"
             },
             "method": "getMethod",
             "args": {}
@@ -2571,7 +2571,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1750"
+              "$obj": "o12234"
             },
             "method": "getAttribute",
             "args": {}
@@ -2582,7 +2582,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1750"
+              "$obj": "o12234"
             },
             "method": "getValues",
             "args": {}
@@ -2600,9 +2600,9 @@
               "attribute": "title",
               "value": "temp"
             },
-            "as": "o1751"
+            "as": "o12235"
           },
-          "bind": "s6053",
+          "bind": "s21185",
           "expect": {
             "$query": {
               "method": "notStartsWith",
@@ -2617,7 +2617,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1751"
+              "$obj": "o12235"
             },
             "method": "toString",
             "args": {}
@@ -2632,9 +2632,9 @@
             "args": {
               "query": "{\"method\":\"notStartsWith\",\"attribute\":\"title\",\"values\":[\"temp\"]}"
             },
-            "as": "o1752"
+            "as": "o12236"
           },
-          "bind": "s6055",
+          "bind": "s21187",
           "expect": {
             "$query": {
               "method": "notStartsWith",
@@ -2649,7 +2649,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1752"
+              "$obj": "o12236"
             },
             "method": "getMethod",
             "args": {}
@@ -2662,7 +2662,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1752"
+              "$obj": "o12236"
             },
             "method": "getAttribute",
             "args": {}
@@ -2673,7 +2673,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1752"
+              "$obj": "o12236"
             },
             "method": "getValues",
             "args": {}
@@ -2691,9 +2691,9 @@
               "attribute": "filename",
               "value": ".tmp"
             },
-            "as": "o1753"
+            "as": "o12237"
           },
-          "bind": "s6059",
+          "bind": "s21191",
           "expect": {
             "$query": {
               "method": "notEndsWith",
@@ -2708,7 +2708,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1753"
+              "$obj": "o12237"
             },
             "method": "toString",
             "args": {}
@@ -2723,9 +2723,9 @@
             "args": {
               "query": "{\"method\":\"notEndsWith\",\"attribute\":\"filename\",\"values\":[\".tmp\"]}"
             },
-            "as": "o1754"
+            "as": "o12238"
           },
-          "bind": "s6061",
+          "bind": "s21193",
           "expect": {
             "$query": {
               "method": "notEndsWith",
@@ -2740,7 +2740,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1754"
+              "$obj": "o12238"
             },
             "method": "getMethod",
             "args": {}
@@ -2753,7 +2753,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1754"
+              "$obj": "o12238"
             },
             "method": "getAttribute",
             "args": {}
@@ -2764,7 +2764,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1754"
+              "$obj": "o12238"
             },
             "method": "getValues",
             "args": {}
@@ -2783,9 +2783,9 @@
               "start": 0,
               "end": 50
             },
-            "as": "o1755"
+            "as": "o12239"
           },
-          "bind": "s6065",
+          "bind": "s21197",
           "expect": {
             "$query": {
               "method": "notBetween",
@@ -2801,7 +2801,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1755"
+              "$obj": "o12239"
             },
             "method": "toString",
             "args": {}
@@ -2816,9 +2816,9 @@
             "args": {
               "query": "{\"method\":\"notBetween\",\"attribute\":\"score\",\"values\":[0,50]}"
             },
-            "as": "o1756"
+            "as": "o12240"
           },
-          "bind": "s6067",
+          "bind": "s21199",
           "expect": {
             "$query": {
               "method": "notBetween",
@@ -2834,7 +2834,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1756"
+              "$obj": "o12240"
             },
             "method": "getMethod",
             "args": {}
@@ -2847,7 +2847,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1756"
+              "$obj": "o12240"
             },
             "method": "getAttribute",
             "args": {}
@@ -2858,7 +2858,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1756"
+              "$obj": "o12240"
             },
             "method": "getValues",
             "args": {}
@@ -2877,9 +2877,9 @@
               "attribute": "director",
               "value": "null"
             },
-            "as": "o1757"
+            "as": "o12241"
           },
-          "bind": "s6071",
+          "bind": "s21203",
           "expect": {
             "$query": {
               "method": "notEqual",
@@ -2894,7 +2894,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1757"
+              "$obj": "o12241"
             },
             "method": "toString",
             "args": {}
@@ -2909,9 +2909,9 @@
             "args": {
               "query": "{\"method\":\"notEqual\",\"attribute\":\"director\",\"values\":[\"null\"]}"
             },
-            "as": "o1758"
+            "as": "o12242"
           },
-          "bind": "s6073",
+          "bind": "s21205",
           "expect": {
             "$query": {
               "method": "notEqual",
@@ -2926,7 +2926,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1758"
+              "$obj": "o12242"
             },
             "method": "getMethod",
             "args": {}
@@ -2939,7 +2939,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1758"
+              "$obj": "o12242"
             },
             "method": "getAttribute",
             "args": {}
@@ -2950,7 +2950,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1758"
+              "$obj": "o12242"
             },
             "method": "getValues",
             "args": {}
@@ -2967,9 +2967,9 @@
             "args": {
               "attribute": "director"
             },
-            "as": "o1759"
+            "as": "o12243"
           },
-          "bind": "s6077",
+          "bind": "s21209",
           "expect": {
             "$query": {
               "method": "isNull",
@@ -2982,7 +2982,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1759"
+              "$obj": "o12243"
             },
             "method": "toString",
             "args": {}
@@ -2997,9 +2997,9 @@
             "args": {
               "query": "{\"method\":\"isNull\",\"attribute\":\"director\",\"values\":[]}"
             },
-            "as": "o1760"
+            "as": "o12244"
           },
-          "bind": "s6079",
+          "bind": "s21211",
           "expect": {
             "$query": {
               "method": "isNull",
@@ -3012,7 +3012,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1760"
+              "$obj": "o12244"
             },
             "method": "getMethod",
             "args": {}
@@ -3025,7 +3025,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1760"
+              "$obj": "o12244"
             },
             "method": "getAttribute",
             "args": {}
@@ -3036,7 +3036,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1760"
+              "$obj": "o12244"
             },
             "method": "getValues",
             "args": {}
@@ -3051,9 +3051,9 @@
             "args": {
               "attribute": "director"
             },
-            "as": "o1761"
+            "as": "o12245"
           },
-          "bind": "s6083",
+          "bind": "s21215",
           "expect": {
             "$query": {
               "method": "isNotNull",
@@ -3066,7 +3066,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1761"
+              "$obj": "o12245"
             },
             "method": "toString",
             "args": {}
@@ -3081,9 +3081,9 @@
             "args": {
               "query": "{\"method\":\"isNotNull\",\"attribute\":\"director\",\"values\":[]}"
             },
-            "as": "o1762"
+            "as": "o12246"
           },
-          "bind": "s6085",
+          "bind": "s21217",
           "expect": {
             "$query": {
               "method": "isNotNull",
@@ -3096,7 +3096,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1762"
+              "$obj": "o12246"
             },
             "method": "getMethod",
             "args": {}
@@ -3109,7 +3109,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1762"
+              "$obj": "o12246"
             },
             "method": "getAttribute",
             "args": {}
@@ -3120,7 +3120,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1762"
+              "$obj": "o12246"
             },
             "method": "getValues",
             "args": {}
@@ -3136,9 +3136,9 @@
               "attribute": "director",
               "value": "Quentin"
             },
-            "as": "o1763"
+            "as": "o12247"
           },
-          "bind": "s6089",
+          "bind": "s21221",
           "expect": {
             "$query": {
               "method": "startsWith",
@@ -3153,7 +3153,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1763"
+              "$obj": "o12247"
             },
             "method": "toString",
             "args": {}
@@ -3168,9 +3168,9 @@
             "args": {
               "query": "{\"method\":\"startsWith\",\"attribute\":\"director\",\"values\":[\"Quentin\"]}"
             },
-            "as": "o1764"
+            "as": "o12248"
           },
-          "bind": "s6091",
+          "bind": "s21223",
           "expect": {
             "$query": {
               "method": "startsWith",
@@ -3185,7 +3185,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1764"
+              "$obj": "o12248"
             },
             "method": "getMethod",
             "args": {}
@@ -3198,7 +3198,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1764"
+              "$obj": "o12248"
             },
             "method": "getAttribute",
             "args": {}
@@ -3209,7 +3209,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1764"
+              "$obj": "o12248"
             },
             "method": "getValues",
             "args": {}
@@ -3227,9 +3227,9 @@
               "attribute": "director",
               "value": "Tarantino"
             },
-            "as": "o1765"
+            "as": "o12249"
           },
-          "bind": "s6095",
+          "bind": "s21227",
           "expect": {
             "$query": {
               "method": "endsWith",
@@ -3244,7 +3244,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1765"
+              "$obj": "o12249"
             },
             "method": "toString",
             "args": {}
@@ -3259,9 +3259,9 @@
             "args": {
               "query": "{\"method\":\"endsWith\",\"attribute\":\"director\",\"values\":[\"Tarantino\"]}"
             },
-            "as": "o1766"
+            "as": "o12250"
           },
-          "bind": "s6097",
+          "bind": "s21229",
           "expect": {
             "$query": {
               "method": "endsWith",
@@ -3276,7 +3276,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1766"
+              "$obj": "o12250"
             },
             "method": "getMethod",
             "args": {}
@@ -3289,7 +3289,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1766"
+              "$obj": "o12250"
             },
             "method": "getAttribute",
             "args": {}
@@ -3300,7 +3300,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1766"
+              "$obj": "o12250"
             },
             "method": "getValues",
             "args": {}
@@ -3320,9 +3320,9 @@
                 "director"
               ]
             },
-            "as": "o1767"
+            "as": "o12251"
           },
-          "bind": "s6101",
+          "bind": "s21233",
           "expect": {
             "$query": {
               "method": "select",
@@ -3338,7 +3338,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1767"
+              "$obj": "o12251"
             },
             "method": "toString",
             "args": {}
@@ -3353,9 +3353,9 @@
             "args": {
               "query": "{\"method\":\"select\",\"values\":[\"title\",\"director\"]}"
             },
-            "as": "o1768"
+            "as": "o12252"
           },
-          "bind": "s6103",
+          "bind": "s21235",
           "expect": {
             "$query": {
               "method": "select",
@@ -3371,7 +3371,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1768"
+              "$obj": "o12252"
             },
             "method": "getMethod",
             "args": {}
@@ -3384,7 +3384,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1768"
+              "$obj": "o12252"
             },
             "method": "getAttribute",
             "args": {}
@@ -3395,7 +3395,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1768"
+              "$obj": "o12252"
             },
             "method": "getValues",
             "args": {}
@@ -3413,9 +3413,9 @@
             "args": {
               "value": "2023-01-01T00:00:00.000Z"
             },
-            "as": "o1769"
+            "as": "o12253"
           },
-          "bind": "s6107",
+          "bind": "s21239",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -3430,7 +3430,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1769"
+              "$obj": "o12253"
             },
             "method": "toString",
             "args": {}
@@ -3445,9 +3445,9 @@
             "args": {
               "query": "{\"method\":\"lessThan\",\"attribute\":\"$createdAt\",\"values\":[\"2023-01-01T00:00:00.000Z\"]}"
             },
-            "as": "o1770"
+            "as": "o12254"
           },
-          "bind": "s6109",
+          "bind": "s21241",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -3462,7 +3462,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1770"
+              "$obj": "o12254"
             },
             "method": "getMethod",
             "args": {}
@@ -3475,7 +3475,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1770"
+              "$obj": "o12254"
             },
             "method": "getAttribute",
             "args": {}
@@ -3486,7 +3486,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1770"
+              "$obj": "o12254"
             },
             "method": "getValues",
             "args": {}
@@ -3503,9 +3503,9 @@
             "args": {
               "value": "2023-01-01T00:00:00.000Z"
             },
-            "as": "o1771"
+            "as": "o12255"
           },
-          "bind": "s6113",
+          "bind": "s21245",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -3520,7 +3520,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1771"
+              "$obj": "o12255"
             },
             "method": "toString",
             "args": {}
@@ -3535,9 +3535,9 @@
             "args": {
               "query": "{\"method\":\"greaterThan\",\"attribute\":\"$createdAt\",\"values\":[\"2023-01-01T00:00:00.000Z\"]}"
             },
-            "as": "o1772"
+            "as": "o12256"
           },
-          "bind": "s6115",
+          "bind": "s21247",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -3552,7 +3552,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1772"
+              "$obj": "o12256"
             },
             "method": "getMethod",
             "args": {}
@@ -3565,7 +3565,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1772"
+              "$obj": "o12256"
             },
             "method": "getAttribute",
             "args": {}
@@ -3576,7 +3576,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1772"
+              "$obj": "o12256"
             },
             "method": "getValues",
             "args": {}
@@ -3593,9 +3593,9 @@
             "args": {
               "value": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1773"
+            "as": "o12257"
           },
-          "bind": "s6119",
+          "bind": "s21251",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -3610,7 +3610,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1773"
+              "$obj": "o12257"
             },
             "method": "toString",
             "args": {}
@@ -3625,9 +3625,9 @@
             "args": {
               "query": "{\"method\":\"lessThan\",\"attribute\":\"$updatedAt\",\"values\":[\"2023-12-31T23:59:59.999Z\"]}"
             },
-            "as": "o1774"
+            "as": "o12258"
           },
-          "bind": "s6121",
+          "bind": "s21253",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -3642,7 +3642,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1774"
+              "$obj": "o12258"
             },
             "method": "getMethod",
             "args": {}
@@ -3655,7 +3655,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1774"
+              "$obj": "o12258"
             },
             "method": "getAttribute",
             "args": {}
@@ -3666,7 +3666,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1774"
+              "$obj": "o12258"
             },
             "method": "getValues",
             "args": {}
@@ -3683,9 +3683,9 @@
             "args": {
               "value": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1775"
+            "as": "o12259"
           },
-          "bind": "s6125",
+          "bind": "s21257",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -3700,7 +3700,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1775"
+              "$obj": "o12259"
             },
             "method": "toString",
             "args": {}
@@ -3715,9 +3715,9 @@
             "args": {
               "query": "{\"method\":\"greaterThan\",\"attribute\":\"$updatedAt\",\"values\":[\"2023-12-31T23:59:59.999Z\"]}"
             },
-            "as": "o1776"
+            "as": "o12260"
           },
-          "bind": "s6127",
+          "bind": "s21259",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -3732,7 +3732,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1776"
+              "$obj": "o12260"
             },
             "method": "getMethod",
             "args": {}
@@ -3745,7 +3745,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1776"
+              "$obj": "o12260"
             },
             "method": "getAttribute",
             "args": {}
@@ -3756,7 +3756,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1776"
+              "$obj": "o12260"
             },
             "method": "getValues",
             "args": {}
@@ -3774,9 +3774,9 @@
               "start": "2023-01-01T00:00:00.000Z",
               "end": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1777"
+            "as": "o12261"
           },
-          "bind": "s6131",
+          "bind": "s21263",
           "expect": {
             "$query": {
               "method": "between",
@@ -3792,7 +3792,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1777"
+              "$obj": "o12261"
             },
             "method": "toString",
             "args": {}
@@ -3807,9 +3807,9 @@
             "args": {
               "query": "{\"method\":\"between\",\"attribute\":\"$createdAt\",\"values\":[\"2023-01-01T00:00:00.000Z\",\"2023-12-31T23:59:59.999Z\"]}"
             },
-            "as": "o1778"
+            "as": "o12262"
           },
-          "bind": "s6133",
+          "bind": "s21265",
           "expect": {
             "$query": {
               "method": "between",
@@ -3825,7 +3825,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1778"
+              "$obj": "o12262"
             },
             "method": "getMethod",
             "args": {}
@@ -3838,7 +3838,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1778"
+              "$obj": "o12262"
             },
             "method": "getAttribute",
             "args": {}
@@ -3849,7 +3849,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1778"
+              "$obj": "o12262"
             },
             "method": "getValues",
             "args": {}
@@ -3868,9 +3868,9 @@
               "start": "2023-01-01T00:00:00.000Z",
               "end": "2023-12-31T23:59:59.999Z"
             },
-            "as": "o1779"
+            "as": "o12263"
           },
-          "bind": "s6137",
+          "bind": "s21269",
           "expect": {
             "$query": {
               "method": "between",
@@ -3886,7 +3886,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1779"
+              "$obj": "o12263"
             },
             "method": "toString",
             "args": {}
@@ -3901,9 +3901,9 @@
             "args": {
               "query": "{\"method\":\"between\",\"attribute\":\"$updatedAt\",\"values\":[\"2023-01-01T00:00:00.000Z\",\"2023-12-31T23:59:59.999Z\"]}"
             },
-            "as": "o1780"
+            "as": "o12264"
           },
-          "bind": "s6139",
+          "bind": "s21271",
           "expect": {
             "$query": {
               "method": "between",
@@ -3919,7 +3919,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1780"
+              "$obj": "o12264"
             },
             "method": "getMethod",
             "args": {}
@@ -3932,7 +3932,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1780"
+              "$obj": "o12264"
             },
             "method": "getAttribute",
             "args": {}
@@ -3943,7 +3943,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1780"
+              "$obj": "o12264"
             },
             "method": "getValues",
             "args": {}
@@ -3963,9 +3963,9 @@
               "start": 15,
               "end": 18
             },
-            "as": "o1781"
+            "as": "o12265"
           },
-          "bind": "s6143",
+          "bind": "s21275",
           "expect": {
             "$query": {
               "method": "between",
@@ -3981,7 +3981,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1781"
+              "$obj": "o12265"
             },
             "method": "toString",
             "args": {}
@@ -3996,9 +3996,9 @@
             "args": {
               "query": "{\"method\":\"between\",\"attribute\":\"age\",\"values\":[15,18]}"
             },
-            "as": "o1782"
+            "as": "o12266"
           },
-          "bind": "s6145",
+          "bind": "s21277",
           "expect": {
             "$query": {
               "method": "between",
@@ -4014,7 +4014,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1782"
+              "$obj": "o12266"
             },
             "method": "getMethod",
             "args": {}
@@ -4027,7 +4027,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1782"
+              "$obj": "o12266"
             },
             "method": "getAttribute",
             "args": {}
@@ -4038,7 +4038,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1782"
+              "$obj": "o12266"
             },
             "method": "getValues",
             "args": {}
@@ -4058,9 +4058,9 @@
               "start": "DATE1",
               "end": "DATE2"
             },
-            "as": "o1783"
+            "as": "o12267"
           },
-          "bind": "s6149",
+          "bind": "s21281",
           "expect": {
             "$query": {
               "method": "between",
@@ -4076,7 +4076,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1783"
+              "$obj": "o12267"
             },
             "method": "toString",
             "args": {}
@@ -4091,9 +4091,9 @@
             "args": {
               "query": "{\"method\":\"between\",\"attribute\":\"lastUpdate\",\"values\":[\"DATE1\",\"DATE2\"]}"
             },
-            "as": "o1784"
+            "as": "o12268"
           },
-          "bind": "s6151",
+          "bind": "s21283",
           "expect": {
             "$query": {
               "method": "between",
@@ -4109,7 +4109,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1784"
+              "$obj": "o12268"
             },
             "method": "getMethod",
             "args": {}
@@ -4122,7 +4122,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1784"
+              "$obj": "o12268"
             },
             "method": "getAttribute",
             "args": {}
@@ -4133,7 +4133,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1784"
+              "$obj": "o12268"
             },
             "method": "getValues",
             "args": {}
@@ -4154,9 +4154,9 @@
                 1
               ]
             },
-            "as": "o1785"
+            "as": "o12269"
           },
-          "bind": "s6155",
+          "bind": "s21287",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4171,7 +4171,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1785"
+              "$obj": "o12269"
             },
             "method": "toString",
             "args": {}
@@ -4186,9 +4186,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"attr\",\"values\":[1]}"
             },
-            "as": "o1786"
+            "as": "o12270"
           },
-          "bind": "s6157",
+          "bind": "s21289",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4203,7 +4203,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1786"
+              "$obj": "o12270"
             },
             "method": "getValues",
             "args": {}
@@ -4216,7 +4216,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1786"
+              "$obj": "o12270"
             },
             "method": "getAttribute",
             "args": {}
@@ -4227,7 +4227,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1786"
+              "$obj": "o12270"
             },
             "method": "getValues",
             "args": {}
@@ -4247,9 +4247,9 @@
                 0
               ]
             },
-            "as": "o1787"
+            "as": "o12271"
           },
-          "bind": "s6161",
+          "bind": "s21293",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4264,7 +4264,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1787"
+              "$obj": "o12271"
             },
             "method": "toString",
             "args": {}
@@ -4279,9 +4279,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"attr\",\"values\":[0]}"
             },
-            "as": "o1788"
+            "as": "o12272"
           },
-          "bind": "s6163",
+          "bind": "s21295",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4296,7 +4296,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1788"
+              "$obj": "o12272"
             },
             "method": "getValues",
             "args": {}
@@ -4309,7 +4309,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1788"
+              "$obj": "o12272"
             },
             "method": "getAttribute",
             "args": {}
@@ -4320,7 +4320,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1788"
+              "$obj": "o12272"
             },
             "method": "getValues",
             "args": {}
@@ -4340,9 +4340,9 @@
                 "[Hello] World"
               ]
             },
-            "as": "o1789"
+            "as": "o12273"
           },
-          "bind": "s6167",
+          "bind": "s21299",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4357,7 +4357,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1789"
+              "$obj": "o12273"
             },
             "method": "toString",
             "args": {}
@@ -4372,9 +4372,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"1\",\"values\":[\"[Hello] World\"]}"
             },
-            "as": "o1790"
+            "as": "o12274"
           },
-          "bind": "s6169",
+          "bind": "s21301",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4389,7 +4389,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1790"
+              "$obj": "o12274"
             },
             "method": "getValues",
             "args": {}
@@ -4402,7 +4402,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1790"
+              "$obj": "o12274"
             },
             "method": "getAttribute",
             "args": {}
@@ -4413,7 +4413,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1790"
+              "$obj": "o12274"
             },
             "method": "getValues",
             "args": {}
@@ -4433,9 +4433,9 @@
                 "Hello /\\ World"
               ]
             },
-            "as": "o1791"
+            "as": "o12275"
           },
-          "bind": "s6173",
+          "bind": "s21305",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4450,7 +4450,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1791"
+              "$obj": "o12275"
             },
             "method": "toString",
             "args": {}
@@ -4465,9 +4465,9 @@
             "args": {
               "query": "{\"method\":\"equal\",\"attribute\":\"1\",\"values\":[\"Hello \\/\\\\ World\"]}"
             },
-            "as": "o1792"
+            "as": "o12276"
           },
-          "bind": "s6175",
+          "bind": "s21307",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4482,7 +4482,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1792"
+              "$obj": "o12276"
             },
             "method": "getValues",
             "args": {}
@@ -4495,7 +4495,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1792"
+              "$obj": "o12276"
             },
             "method": "getAttribute",
             "args": {}
@@ -4506,7 +4506,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1792"
+              "$obj": "o12276"
             },
             "method": "getValues",
             "args": {}
@@ -4526,9 +4526,9 @@
                 "Brad Pitt"
               ]
             },
-            "as": "o1793"
+            "as": "o12277"
           },
-          "bind": "s6179",
+          "bind": "s21311",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4550,9 +4550,9 @@
                 "Johnny Depp"
               ]
             },
-            "as": "o1794"
+            "as": "o12278"
           },
-          "bind": "s6180",
+          "bind": "s21312",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4571,16 +4571,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1793"
+                  "$obj": "o12277"
                 },
                 {
-                  "$obj": "o1794"
+                  "$obj": "o12278"
                 }
               ]
             },
-            "as": "o1795"
+            "as": "o12279"
           },
-          "bind": "s6181",
+          "bind": "s21313",
           "expect": {
             "$query": {
               "method": "or",
@@ -4612,7 +4612,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1795"
+              "$obj": "o12279"
             },
             "method": "toString",
             "args": {}
@@ -4627,9 +4627,9 @@
             "args": {
               "query": "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"actors\",\"values\":[\"Brad Pitt\"]},{\"method\":\"equal\",\"attribute\":\"actors\",\"values\":[\"Johnny Depp\"]}]}"
             },
-            "as": "o1796"
+            "as": "o12280"
           },
-          "bind": "s6183",
+          "bind": "s21315",
           "expect": {
             "$query": {
               "method": "or",
@@ -4661,7 +4661,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1796"
+              "$obj": "o12280"
             },
             "method": "getValues",
             "args": {}
@@ -4691,7 +4691,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1796"
+              "$obj": "o12280"
             },
             "method": "getValues",
             "args": {}
@@ -4721,7 +4721,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1796"
+              "$obj": "o12280"
             },
             "method": "getMethod",
             "args": {}
@@ -4836,9 +4836,9 @@
             "class": "Query",
             "method": "orderRandom",
             "args": {},
-            "as": "o1797"
+            "as": "o12281"
           },
-          "bind": "s6193",
+          "bind": "s21325",
           "mask": {
             "paths": [
               ""
@@ -4851,18 +4851,18 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1797"
+              "$obj": "o12281"
             },
             "method": "toString",
             "args": {}
           },
-          "expect": "<masked>",
           "mask": {
             "paths": [
               ""
             ],
             "reason": "Query::orderRandom() returns the documents in a random order"
-          }
+          },
+          "expect": "<masked>"
         },
         {
           "op": "object.call",
@@ -4872,9 +4872,9 @@
             "args": {
               "query": "{\"method\":\"orderRandom\",\"values\":[]}"
             },
-            "as": "o1798"
+            "as": "o12282"
           },
-          "bind": "s6195",
+          "bind": "s21327",
           "expect": {
             "$query": {
               "method": "orderRandom",
@@ -4887,7 +4887,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1798"
+              "$obj": "o12282"
             },
             "method": "getMethod",
             "args": {}
@@ -4900,7 +4900,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1798"
+              "$obj": "o12282"
             },
             "method": "getAttribute",
             "args": {}
@@ -4911,7 +4911,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1798"
+              "$obj": "o12282"
             },
             "method": "getValues",
             "args": {}
@@ -4927,9 +4927,9 @@
               "attribute": "total",
               "value": 1
             },
-            "as": "o1799"
+            "as": "o12283"
           },
-          "bind": "s6199",
+          "bind": "s21331",
           "expect": {
             "$query": {
               "method": "greaterThanEqual",
@@ -4948,13 +4948,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1799"
+                  "$obj": "o12283"
                 }
               ]
             },
-            "as": "o1800"
+            "as": "o12284"
           },
-          "bind": "s6200",
+          "bind": "s21332",
           "expect": {
             "$query": {
               "method": "having",
@@ -4977,7 +4977,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1800"
+              "$obj": "o12284"
             },
             "method": "toString",
             "args": {}
@@ -4992,9 +4992,9 @@
             "args": {
               "query": "{\"method\":\"having\",\"values\":[{\"method\":\"greaterThanEqual\",\"attribute\":\"total\",\"values\":[1]}]}"
             },
-            "as": "o1801"
+            "as": "o12285"
           },
-          "bind": "s6202",
+          "bind": "s21334",
           "expect": {
             "$query": {
               "method": "having",
@@ -5017,7 +5017,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1801"
+              "$obj": "o12285"
             },
             "method": "getMethod",
             "args": {}
@@ -5030,7 +5030,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1801"
+              "$obj": "o12285"
             },
             "method": "getValues",
             "args": {}
@@ -5051,7 +5051,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1801"
+              "$obj": "o12285"
             },
             "method": "getValues",
             "args": {}
@@ -5072,7 +5072,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1801"
+              "$obj": "o12285"
             },
             "method": "getValues",
             "args": {}
@@ -5112,7 +5112,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1801"
+              "$obj": "o12285"
             },
             "method": "getValues",
             "args": {}
@@ -5163,9 +5163,9 @@
                 "Brad Pitt"
               ]
             },
-            "as": "o1802"
+            "as": "o12286"
           },
-          "bind": "s6210",
+          "bind": "s21342",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5180,7 +5180,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1802"
+              "$obj": "o12286"
             },
             "method": "toString",
             "args": {}
@@ -5198,9 +5198,9 @@
                 "Johnny Depp"
               ]
             },
-            "as": "o1803"
+            "as": "o12287"
           },
-          "bind": "s6212",
+          "bind": "s21344",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5215,7 +5215,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1803"
+              "$obj": "o12287"
             },
             "method": "toString",
             "args": {}
@@ -5230,9 +5230,9 @@
             "args": {
               "query": "{\"method\":\"or\",\"values\":[\"{\\\"method\\\":\\\"equal\\\",\\\"attribute\\\":\\\"actors\\\",\\\"values\\\":[\\\"Brad Pitt\\\"]}\",\"{\\\"method\\\":\\\"equal\\\",\\\"attribute\\\":\\\"actors\\\",\\\"values\\\":[\\\"Johnny Depp\\\"]}\"]}"
             },
-            "as": "o1804"
+            "as": "o12288"
           },
-          "bind": "s6214",
+          "bind": "s21346",
           "expect": {
             "$query": {
               "method": "or",
@@ -5264,7 +5264,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1804"
+              "$obj": "o12288"
             },
             "method": "getValues",
             "args": {}
@@ -5294,7 +5294,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1804"
+              "$obj": "o12288"
             },
             "method": "getMethod",
             "args": {}
@@ -6489,9 +6489,9 @@
                 "Alice"
               ]
             },
-            "as": "o1805"
+            "as": "o12289"
           },
-          "bind": "s6287",
+          "bind": "s21419",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6511,9 +6511,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1806"
+            "as": "o12290"
           },
-          "bind": "s6288",
+          "bind": "s21420",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -6532,10 +6532,10 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1805"
+                  "$obj": "o12289"
                 },
                 {
-                  "$obj": "o1806"
+                  "$obj": "o12290"
                 }
               ]
             }
@@ -6570,9 +6570,9 @@
                 "Alice"
               ]
             },
-            "as": "o1807"
+            "as": "o12291"
           },
-          "bind": "s6291",
+          "bind": "s21423",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6591,13 +6591,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1807"
+                  "$obj": "o12291"
                 }
               ]
             },
-            "as": "o1808"
+            "as": "o12292"
           },
-          "bind": "s6292",
+          "bind": "s21424",
           "expect": {
             "$query": {
               "method": "and",
@@ -6627,9 +6627,9 @@
                 "a@b.c"
               ]
             },
-            "as": "o1809"
+            "as": "o12293"
           },
-          "bind": "s6293",
+          "bind": "s21425",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6648,13 +6648,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1809"
+                  "$obj": "o12293"
                 }
               ]
             },
-            "as": "o1810"
+            "as": "o12294"
           },
-          "bind": "s6294",
+          "bind": "s21426",
           "expect": {
             "$query": {
               "method": "and",
@@ -6681,7 +6681,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1808"
+                  "$obj": "o12292"
                 }
               ]
             }
@@ -6696,7 +6696,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1810"
+                  "$obj": "o12294"
                 }
               ]
             }
@@ -6714,9 +6714,9 @@
                 "Bob"
               ]
             },
-            "as": "o1811"
+            "as": "o12295"
           },
-          "bind": "s6297",
+          "bind": "s21429",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6735,13 +6735,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1811"
+                  "$obj": "o12295"
                 }
               ]
             },
-            "as": "o1812"
+            "as": "o12296"
           },
-          "bind": "s6298",
+          "bind": "s21430",
           "expect": {
             "$query": {
               "method": "and",
@@ -6768,7 +6768,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1808"
+                  "$obj": "o12292"
                 }
               ]
             }
@@ -6783,7 +6783,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1812"
+                  "$obj": "o12296"
                 }
               ]
             }
@@ -6801,9 +6801,9 @@
                 "Alice"
               ]
             },
-            "as": "o1813"
+            "as": "o12297"
           },
-          "bind": "s6301",
+          "bind": "s21433",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6823,9 +6823,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1814"
+            "as": "o12298"
           },
-          "bind": "s6302",
+          "bind": "s21434",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -6844,16 +6844,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1813"
+                  "$obj": "o12297"
                 },
                 {
-                  "$obj": "o1814"
+                  "$obj": "o12298"
                 }
               ]
             },
-            "as": "o1815"
+            "as": "o12299"
           },
-          "bind": "s6303",
+          "bind": "s21435",
           "expect": {
             "$query": {
               "method": "and",
@@ -6890,9 +6890,9 @@
               "attribute": "age",
               "value": 42
             },
-            "as": "o1816"
+            "as": "o12300"
           },
-          "bind": "s6304",
+          "bind": "s21436",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -6914,9 +6914,9 @@
                 "Bob"
               ]
             },
-            "as": "o1817"
+            "as": "o12301"
           },
-          "bind": "s6305",
+          "bind": "s21437",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6935,16 +6935,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1816"
+                  "$obj": "o12300"
                 },
                 {
-                  "$obj": "o1817"
+                  "$obj": "o12301"
                 }
               ]
             },
-            "as": "o1818"
+            "as": "o12302"
           },
-          "bind": "s6306",
+          "bind": "s21438",
           "expect": {
             "$query": {
               "method": "and",
@@ -6980,7 +6980,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1815"
+                  "$obj": "o12299"
                 }
               ]
             }
@@ -6995,7 +6995,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1818"
+                  "$obj": "o12302"
                 }
               ]
             }
@@ -7013,9 +7013,9 @@
                 "Alice"
               ]
             },
-            "as": "o1819"
+            "as": "o12303"
           },
-          "bind": "s6309",
+          "bind": "s21441",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7035,9 +7035,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1820"
+            "as": "o12304"
           },
-          "bind": "s6310",
+          "bind": "s21442",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -7056,16 +7056,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1819"
+                  "$obj": "o12303"
                 },
                 {
-                  "$obj": "o1820"
+                  "$obj": "o12304"
                 }
               ]
             },
-            "as": "o1821"
+            "as": "o12305"
           },
-          "bind": "s6311",
+          "bind": "s21443",
           "expect": {
             "$query": {
               "method": "or",
@@ -7101,7 +7101,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1815"
+                  "$obj": "o12299"
                 }
               ]
             }
@@ -7116,7 +7116,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1821"
+                  "$obj": "o12305"
                 }
               ]
             }
@@ -7134,9 +7134,9 @@
                 "Alice"
               ]
             },
-            "as": "o1822"
+            "as": "o12306"
           },
-          "bind": "s6314",
+          "bind": "s21446",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7155,13 +7155,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1822"
+                  "$obj": "o12306"
                 }
               ]
             },
-            "as": "o1823"
+            "as": "o12307"
           },
-          "bind": "s6315",
+          "bind": "s21447",
           "expect": {
             "$query": {
               "method": "and",
@@ -7191,9 +7191,9 @@
                 "Alice"
               ]
             },
-            "as": "o1824"
+            "as": "o12308"
           },
-          "bind": "s6316",
+          "bind": "s21448",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7213,9 +7213,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1825"
+            "as": "o12309"
           },
-          "bind": "s6317",
+          "bind": "s21449",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -7234,16 +7234,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1824"
+                  "$obj": "o12308"
                 },
                 {
-                  "$obj": "o1825"
+                  "$obj": "o12309"
                 }
               ]
             },
-            "as": "o1826"
+            "as": "o12310"
           },
-          "bind": "s6318",
+          "bind": "s21450",
           "expect": {
             "$query": {
               "method": "and",
@@ -7279,7 +7279,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1823"
+                  "$obj": "o12307"
                 }
               ]
             }
@@ -7294,7 +7294,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1826"
+                  "$obj": "o12310"
                 }
               ]
             }
@@ -7312,9 +7312,9 @@
                 "php"
               ]
             },
-            "as": "o1827"
+            "as": "o12311"
           },
-          "bind": "s6321",
+          "bind": "s21453",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7334,13 +7334,13 @@
               "attribute": "tags",
               "queries": [
                 {
-                  "$obj": "o1827"
+                  "$obj": "o12311"
                 }
               ]
             },
-            "as": "o1828"
+            "as": "o12312"
           },
-          "bind": "s6322",
+          "bind": "s21454",
           "expect": {
             "$query": {
               "method": "elemMatch",
@@ -7370,9 +7370,9 @@
                 "php"
               ]
             },
-            "as": "o1829"
+            "as": "o12313"
           },
-          "bind": "s6323",
+          "bind": "s21455",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7392,13 +7392,13 @@
               "attribute": "categories",
               "queries": [
                 {
-                  "$obj": "o1829"
+                  "$obj": "o12313"
                 }
               ]
             },
-            "as": "o1830"
+            "as": "o12314"
           },
-          "bind": "s6324",
+          "bind": "s21456",
           "expect": {
             "$query": {
               "method": "elemMatch",
@@ -7425,7 +7425,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1828"
+                  "$obj": "o12312"
                 }
               ]
             }
@@ -7440,7 +7440,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1830"
+                  "$obj": "o12314"
                 }
               ]
             }
@@ -7458,9 +7458,9 @@
                 "js"
               ]
             },
-            "as": "o1831"
+            "as": "o12315"
           },
-          "bind": "s6327",
+          "bind": "s21459",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7480,13 +7480,13 @@
               "attribute": "tags",
               "queries": [
                 {
-                  "$obj": "o1831"
+                  "$obj": "o12315"
                 }
               ]
             },
-            "as": "o1832"
+            "as": "o12316"
           },
-          "bind": "s6328",
+          "bind": "s21460",
           "expect": {
             "$query": {
               "method": "elemMatch",
@@ -7513,7 +7513,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1828"
+                  "$obj": "o12312"
                 }
               ]
             }
@@ -7528,7 +7528,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1832"
+                  "$obj": "o12316"
                 }
               ]
             }
@@ -7576,9 +7576,9 @@
                 "Alice"
               ]
             },
-            "as": "o1833"
+            "as": "o12317"
           },
-          "bind": "s6332",
+          "bind": "s21464",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7593,7 +7593,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1833"
+              "$obj": "o12317"
             },
             "method": "shape",
             "args": {}
@@ -7609,9 +7609,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1834"
+            "as": "o12318"
           },
-          "bind": "s6334",
+          "bind": "s21466",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -7626,7 +7626,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1834"
+              "$obj": "o12318"
             },
             "method": "shape",
             "args": {}
@@ -7644,9 +7644,9 @@
                 "Alice"
               ]
             },
-            "as": "o1835"
+            "as": "o12319"
           },
-          "bind": "s6336",
+          "bind": "s21468",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7666,9 +7666,9 @@
               "attribute": "age",
               "value": 18
             },
-            "as": "o1836"
+            "as": "o12320"
           },
-          "bind": "s6337",
+          "bind": "s21469",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -7687,16 +7687,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1835"
+                  "$obj": "o12319"
                 },
                 {
-                  "$obj": "o1836"
+                  "$obj": "o12320"
                 }
               ]
             },
-            "as": "o1837"
+            "as": "o12321"
           },
-          "bind": "s6338",
+          "bind": "s21470",
           "expect": {
             "$query": {
               "method": "and",
@@ -7728,7 +7728,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1837"
+              "$obj": "o12321"
             },
             "method": "shape",
             "args": {}
@@ -7746,9 +7746,9 @@
                 "php"
               ]
             },
-            "as": "o1838"
+            "as": "o12322"
           },
-          "bind": "s6340",
+          "bind": "s21472",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7768,13 +7768,13 @@
               "attribute": "tags",
               "queries": [
                 {
-                  "$obj": "o1838"
+                  "$obj": "o12322"
                 }
               ]
             },
-            "as": "o1839"
+            "as": "o12323"
           },
-          "bind": "s6341",
+          "bind": "s21473",
           "expect": {
             "$query": {
               "method": "elemMatch",
@@ -7797,7 +7797,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1839"
+              "$obj": "o12323"
             },
             "method": "shape",
             "args": {}
@@ -7815,9 +7815,9 @@
                 "x"
               ]
             },
-            "as": "o1840"
+            "as": "o12324"
           },
-          "bind": "s6343",
+          "bind": "s21475",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7839,9 +7839,9 @@
                 "y"
               ]
             },
-            "as": "o1841"
+            "as": "o12325"
           },
-          "bind": "s6344",
+          "bind": "s21476",
           "expect": {
             "$query": {
               "method": "equal",
@@ -7861,9 +7861,9 @@
               "attribute": "c",
               "value": 5
             },
-            "as": "o1842"
+            "as": "o12326"
           },
-          "bind": "s6345",
+          "bind": "s21477",
           "expect": {
             "$query": {
               "method": "lessThan",
@@ -7882,16 +7882,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1841"
+                  "$obj": "o12325"
                 },
                 {
-                  "$obj": "o1842"
+                  "$obj": "o12326"
                 }
               ]
             },
-            "as": "o1843"
+            "as": "o12327"
           },
-          "bind": "s6346",
+          "bind": "s21478",
           "expect": {
             "$query": {
               "method": "and",
@@ -7927,16 +7927,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1840"
+                  "$obj": "o12324"
                 },
                 {
-                  "$obj": "o1843"
+                  "$obj": "o12327"
                 }
               ]
             },
-            "as": "o1844"
+            "as": "o12328"
           },
-          "bind": "s6347",
+          "bind": "s21479",
           "expect": {
             "$query": {
               "method": "or",
@@ -7990,9 +7990,9 @@
               "attribute": "d",
               "value": 10
             },
-            "as": "o1845"
+            "as": "o12329"
           },
-          "bind": "s6348",
+          "bind": "s21480",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -8011,16 +8011,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1844"
+                  "$obj": "o12328"
                 },
                 {
-                  "$obj": "o1845"
+                  "$obj": "o12329"
                 }
               ]
             },
-            "as": "o1846"
+            "as": "o12330"
           },
-          "bind": "s6349",
+          "bind": "s21481",
           "expect": {
             "$query": {
               "method": "and",
@@ -8086,12 +8086,1130 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1846"
+              "$obj": "o12330"
             },
             "method": "shape",
             "args": {}
           },
           "expect": "and:(greaterThan:d|or:(and:(equal:b|lessThan:c)|equal:a))"
+        }
+      ]
+    },
+    {
+      "name": "QueryTest::testRelationshipShapeIncludesItsQueries",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            },
+            "as": "o12331"
+          },
+          "bind": "s21483",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12332"
+          },
+          "bind": "s21484",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o12331"
+                },
+                {
+                  "$obj": "o12332"
+                }
+              ]
+            },
+            "as": "o12333"
+          },
+          "bind": "s21485",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "approved",
+                    "values": [
+                      true
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12333"
+            },
+            "method": "shape",
+            "args": {}
+          },
+          "expect": "relationship:comments(equal:approved|limit:)"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fingerprint",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12333"
+                }
+              ]
+            }
+          },
+          "expect": "fdbae8deb4e3e93ecc506259ce74cb91"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12334"
+          },
+          "bind": "s21488",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o12334"
+                }
+              ]
+            },
+            "as": "o12335"
+          },
+          "bind": "s21489",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fingerprint",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12335"
+                }
+              ]
+            }
+          },
+          "expect": "32563f79c7118320cfb220d0f942fb4e"
+        }
+      ]
+    },
+    {
+      "name": "QueryTest::testRelationshipRoundTrip",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            },
+            "as": "o12336"
+          },
+          "bind": "s21491",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "approved",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "$createdAt"
+            },
+            "as": "o12337"
+          },
+          "bind": "s21492",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$createdAt",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12338"
+          },
+          "bind": "s21493",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 1
+            },
+            "as": "o12339"
+          },
+          "bind": "s21494",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c1"
+              }
+            },
+            "as": "o12340"
+          },
+          "bind": "s21495",
+          "expect": {
+            "$document": {
+              "$id": "c1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o12340"
+              }
+            },
+            "as": "o12341"
+          },
+          "bind": "s21496",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "c1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o12336"
+                },
+                {
+                  "$obj": "o12337"
+                },
+                {
+                  "$obj": "o12338"
+                },
+                {
+                  "$obj": "o12339"
+                },
+                {
+                  "$obj": "o12341"
+                }
+              ]
+            },
+            "as": "o12342"
+          },
+          "bind": "s21497",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "approved",
+                    "values": [
+                      true
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "orderDesc",
+                    "attribute": "$createdAt",
+                    "values": []
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "offset",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "cursorAfter",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$document": {
+                          "$id": "c1"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12342"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Relationship"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12342"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "comments"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12342"
+            },
+            "method": "isNested",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12342"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[{\"method\":\"equal\",\"attribute\":\"approved\",\"values\":[true]},{\"method\":\"orderDesc\",\"attribute\":\"$createdAt\",\"values\":[]},{\"method\":\"limit\",\"values\":[2]},{\"method\":\"offset\",\"values\":[1]},{\"method\":\"cursorAfter\",\"values\":[\"c1\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[{\"method\":\"equal\",\"attribute\":\"approved\",\"values\":[true]},{\"method\":\"orderDesc\",\"attribute\":\"$createdAt\",\"values\":[]},{\"method\":\"limit\",\"values\":[2]},{\"method\":\"offset\",\"values\":[1]},{\"method\":\"cursorAfter\",\"values\":[\"c1\"]}]}"
+            },
+            "as": "o12343"
+          },
+          "bind": "s21502",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "approved",
+                    "values": [
+                      true
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "orderDesc",
+                    "attribute": "$createdAt",
+                    "values": []
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "offset",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "cursorAfter",
+                    "attribute": "",
+                    "values": [
+                      "c1"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12343"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Relationship"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12343"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "comments"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12343"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "approved",
+                "values": [
+                  true
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "$createdAt",
+                "values": []
+              }
+            },
+            {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  2
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  "c1"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "approved",
+                "values": [
+                  true
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "approved",
+                "values": [
+                  true
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "approved"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "approved",
+                "values": [
+                  true
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            true
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "$createdAt",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::OrderDesc"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "$createdAt",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "$createdAt"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  2
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            2
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            1
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  "c1"
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::CursorAfter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  "c1"
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "c1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "QueryTest::testRelationshipParsesStringChildren",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 3
+            },
+            "as": "o12344"
+          },
+          "bind": "s21515",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                3
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12344"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"limit\",\"values\":[3]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[\"{\\\"method\\\":\\\"limit\\\",\\\"values\\\":[3]}\"]}"
+            },
+            "as": "o12345"
+          },
+          "bind": "s21517",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12345"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  3
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  3
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Limit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryTest::testGroupByTypeKeepsRelationshipQueriesApartFromFilters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 2
+            },
+            "as": "o12346"
+          },
+          "bind": "s21520",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o12346"
+                }
+              ]
+            },
+            "as": "o12347"
+          },
+          "bind": "s21521",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o12348"
+          },
+          "bind": "s21522",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 5
+            },
+            "as": "o12349"
+          },
+          "bind": "s21523",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupByType",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o12348"
+                },
+                {
+                  "$obj": "o12347"
+                },
+                {
+                  "$obj": "o12349"
+                }
+              ]
+            },
+            "as": "o12350"
+          },
+          "expect": {
+            "$value": "ParsedQuery",
+            "fields": {
+              "filters": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "title",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              ],
+              "selections": [],
+              "aggregations": [],
+              "groupBy": [],
+              "having": [],
+              "distinct": false,
+              "joins": [],
+              "unions": [],
+              "limit": 5,
+              "offset": null,
+              "cursor": null,
+              "cursorDirection": null,
+              "timeBuckets": [],
+              "orderAttributes": [],
+              "orderTypes": [],
+              "relationships": [
+                {
+                  "$query": {
+                    "method": "relationship",
+                    "attribute": "comments",
+                    "values": [
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            2
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "title",
+                "values": [
+                  "a"
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "relationship",
+                "attribute": "comments",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "limit",
+                      "attribute": "",
+                      "values": [
+                        2
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Relationship"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "relationship",
+                "attribute": "comments",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "limit",
+                      "attribute": "",
+                      "values": [
+                        2
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "comments"
         }
       ]
     },
@@ -8110,9 +9228,9 @@
                 "x"
               ]
             },
-            "as": "o1847"
+            "as": "o12351"
           },
-          "bind": "s6351",
+          "bind": "s21528",
           "expect": {
             "$query": {
               "method": "equal",
@@ -8132,9 +9250,9 @@
               "attribute": "b",
               "value": 1
             },
-            "as": "o1848"
+            "as": "o12352"
           },
-          "bind": "s6352",
+          "bind": "s21529",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -8153,16 +9271,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1847"
+                  "$obj": "o12351"
                 },
                 {
-                  "$obj": "o1848"
+                  "$obj": "o12352"
                 }
               ]
             },
-            "as": "o1849"
+            "as": "o12353"
           },
-          "bind": "s6353",
+          "bind": "s21530",
           "expect": {
             "$query": {
               "method": "or",
@@ -8198,16 +9316,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1847"
+                  "$obj": "o12351"
                 },
                 {
-                  "$obj": "o1849"
+                  "$obj": "o12353"
                 }
               ]
             },
-            "as": "o1850"
+            "as": "o12354"
           },
-          "bind": "s6354",
+          "bind": "s21531",
           "expect": {
             "$query": {
               "method": "and",
@@ -8256,7 +9374,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1850"
+              "$obj": "o12354"
             },
             "method": "shape",
             "args": {}
@@ -8278,9 +9396,9 @@
                 "$id": "first"
               }
             },
-            "as": "o1892"
+            "as": "o12396"
           },
-          "bind": "s6398",
+          "bind": "s21575",
           "expect": {
             "$document": {
               "$id": "first"
@@ -8295,9 +9413,9 @@
             "args": {
               "attribute": "views"
             },
-            "as": "o1893"
+            "as": "o12397"
           },
-          "bind": "s6399",
+          "bind": "s21576",
           "expect": {
             "$query": {
               "method": "orderDesc",
@@ -8317,9 +9435,9 @@
                 "first"
               ]
             },
-            "as": "o1894"
+            "as": "o12398"
           },
-          "bind": "s6400",
+          "bind": "s21577",
           "expect": {
             "$query": {
               "method": "equal",
@@ -8338,9 +9456,9 @@
             "args": {
               "attribute": "title"
             },
-            "as": "o1895"
+            "as": "o12399"
           },
-          "bind": "s6401",
+          "bind": "s21578",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -8357,9 +9475,9 @@
             "args": {
               "value": 5
             },
-            "as": "o1896"
+            "as": "o12400"
           },
-          "bind": "s6402",
+          "bind": "s21579",
           "expect": {
             "$query": {
               "method": "limit",
@@ -8377,12 +9495,12 @@
             "method": "cursorAfter",
             "args": {
               "value": {
-                "$obj": "o1892"
+                "$obj": "o12396"
               }
             },
-            "as": "o1897"
+            "as": "o12401"
           },
-          "bind": "s6403",
+          "bind": "s21580",
           "expect": {
             "$query": {
               "method": "cursorAfter",
@@ -8405,23 +9523,23 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1893"
+                  "$obj": "o12397"
                 },
                 {
-                  "$obj": "o1894"
+                  "$obj": "o12398"
                 },
                 {
-                  "$obj": "o1895"
+                  "$obj": "o12399"
                 },
                 {
-                  "$obj": "o1896"
+                  "$obj": "o12400"
                 },
                 {
-                  "$obj": "o1897"
+                  "$obj": "o12401"
                 }
               ]
             },
-            "as": "o1898"
+            "as": "o12402"
           },
           "expect": {
             "$value": "ParsedQuery",
@@ -8466,7 +9584,8 @@
                 {
                   "$enum": "Query\\OrderDirection::Asc"
                 }
-              ]
+              ],
+              "relationships": []
             }
           }
         }
@@ -8486,9 +9605,9 @@
                 "$id": "first"
               }
             },
-            "as": "o1899"
+            "as": "o12403"
           },
-          "bind": "s6405",
+          "bind": "s21582",
           "expect": {
             "$query": {
               "method": "cursorAfter",
@@ -8509,7 +9628,7 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1899"
+                  "$obj": "o12403"
                 }
               ]
             }
@@ -8538,9 +9657,9 @@
                 "news"
               ]
             },
-            "as": "o1900"
+            "as": "o12404"
           },
-          "bind": "s6407",
+          "bind": "s21584",
           "expect": {
             "$query": {
               "method": "equal",
@@ -8559,9 +9678,9 @@
             "args": {
               "attribute": "views"
             },
-            "as": "o1901"
+            "as": "o12405"
           },
-          "bind": "s6408",
+          "bind": "s21585",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -8578,9 +9697,9 @@
             "args": {
               "value": 2
             },
-            "as": "o1902"
+            "as": "o12406"
           },
-          "bind": "s6409",
+          "bind": "s21586",
           "expect": {
             "$query": {
               "method": "limit",
@@ -8599,19 +9718,19 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1900"
+                  "$obj": "o12404"
                 },
                 {
-                  "$obj": "o1901"
+                  "$obj": "o12405"
                 },
                 {
-                  "$obj": "o1902"
+                  "$obj": "o12406"
                 }
               ]
             },
-            "as": "o1903"
+            "as": "o12407"
           },
-          "bind": "s6410",
+          "bind": "s21587",
           "expect": {
             "$value": "ParsedQuery",
             "fields": {
@@ -8645,7 +9764,8 @@
                 {
                   "$enum": "Query\\OrderDirection::Asc"
                 }
-              ]
+              ],
+              "relationships": []
             }
           }
         },
@@ -8653,7 +9773,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1903"
+              "$obj": "o12407"
             },
             "method": "isAggregation",
             "args": {}
@@ -8668,9 +9788,9 @@
             "args": {
               "queries": []
             },
-            "as": "o1904"
+            "as": "o12408"
           },
-          "bind": "s6412",
+          "bind": "s21589",
           "expect": {
             "$value": "ParsedQuery",
             "fields": {
@@ -8688,7 +9808,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -8696,7 +9817,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1904"
+              "$obj": "o12408"
             },
             "method": "isAggregation",
             "args": {}
@@ -8709,9 +9830,9 @@
             "class": "Query",
             "method": "count",
             "args": {},
-            "as": "o1905"
+            "as": "o12409"
           },
-          "bind": "s6414",
+          "bind": "s21591",
           "expect": {
             "$query": {
               "method": "count",
@@ -8728,13 +9849,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1905"
+                  "$obj": "o12409"
                 }
               ]
             },
-            "as": "o1906"
+            "as": "o12410"
           },
-          "bind": "s6415",
+          "bind": "s21592",
           "expect": {
             "$value": "ParsedQuery",
             "fields": {
@@ -8760,7 +9881,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -8768,7 +9890,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1906"
+              "$obj": "o12410"
             },
             "method": "isAggregation",
             "args": {}
@@ -8785,9 +9907,9 @@
                 "category"
               ]
             },
-            "as": "o1907"
+            "as": "o12411"
           },
-          "bind": "s6417",
+          "bind": "s21594",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -8806,13 +9928,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1907"
+                  "$obj": "o12411"
                 }
               ]
             },
-            "as": "o1908"
+            "as": "o12412"
           },
-          "bind": "s6418",
+          "bind": "s21595",
           "expect": {
             "$value": "ParsedQuery",
             "fields": {
@@ -8832,7 +9954,8 @@
               "cursorDirection": null,
               "timeBuckets": [],
               "orderAttributes": [],
-              "orderTypes": []
+              "orderTypes": [],
+              "relationships": []
             }
           }
         },
@@ -8840,7 +9963,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1908"
+              "$obj": "o12412"
             },
             "method": "isAggregation",
             "args": {}

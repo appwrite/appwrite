@@ -426,6 +426,17 @@ impl Adapter for Probe {
         self.inner.delete_documents(collection, sequences, ids).await
     }
 
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        self.log("deleteDocuments");
+        self.inner.delete_documents_matching(collection, sequences, ids, queries).await
+    }
+
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         self.log("find");
         self.inner.find(collection, queries, options).await

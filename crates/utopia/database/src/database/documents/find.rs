@@ -20,6 +20,7 @@ use super::joins::{
     with_join_authorization,
 };
 use crate::adapter::Find;
+use crate::aggregation::Aggregation;
 use crate::capability::Capability;
 use crate::collection::{Collection, DOCUMENT_SECURITY};
 use crate::document::{self, Document};
@@ -27,13 +28,43 @@ use crate::error::{Error, Kind, Result};
 use crate::event::{Domain, Event};
 use crate::permission::PermissionType;
 use crate::query::{ParsedQuery, Query};
-use crate::validator::query::aggregate::{Aggregate, MAX_ALIAS_LENGTH};
+use crate::validator::query::aggregate::Aggregate;
 use crate::validator::query::joined::collection::Collection as JoinedCollection;
 use crate::validator::uid::Uid;
 use crate::value::{Array, ArrayKey, Str, Value, to_text};
 
 /// The most validators kept per database (`DOCUMENTS_VALIDATOR_CACHE_LIMIT`).
 const VALIDATOR_CACHE_LIMIT: usize = 256;
+
+/// The aggregates that answer a double, which can overflow
+/// (`FLOATING_AGGREGATES`).
+const FLOATING_AGGREGATES: [Method; 8] = [
+    Method::Sum,
+    Method::Avg,
+    Method::Stddev,
+    Method::StddevPop,
+    Method::StddevSamp,
+    Method::Variance,
+    Method::VarPop,
+    Method::VarSamp,
+];
+
+/// What a read hands back: its documents (or rows), the queries the
+/// adapter's `find()` was handed (`None` when they can match no document
+/// and the adapter was not read), and the collection each join reads, by
+/// alias (`fetch()`'s `$adapterQueries` and `$joinedByAlias`).
+pub(crate) struct Fetched {
+    /// The documents, or the rows of an aggregation.
+    pub(crate) documents: Vec<Document>,
+    /// The queries as the adapter's `find()` was handed them.
+    pub(crate) adapter_queries: Option<Vec<Query>>,
+    /// The collection each join reads, by alias.
+    pub(crate) joined_by_alias: Joined,
+}
+
+/// The adapter's collection, its queries and whether authorization is
+/// skipped for the read, or `None` when no document can match.
+type Prepared = Option<(Collection, Vec<Query>, bool)>;
 
 impl Database {
     /// The documents matching `queries` the caller may read (or act on
@@ -69,6 +100,20 @@ impl Database {
         for_permission: PermissionType,
         aggregate: bool,
     ) -> BoxFuture<'a, Result<Vec<Document>>> {
+        Box::pin(
+            async move { Ok(self.fetch_documents(collection, queries, for_permission, aggregate).await?.documents) },
+        )
+    }
+
+    /// [`Database::fetch`] with what the read handed the adapter
+    /// (`fetch()`'s `$adapterQueries` and `$joinedByAlias`).
+    pub(crate) fn fetch_read<'a>(
+        &'a self,
+        collection: &'a Collection,
+        queries: Vec<Query>,
+        for_permission: PermissionType,
+        aggregate: bool,
+    ) -> BoxFuture<'a, Result<Fetched>> {
         Box::pin(self.fetch_documents(collection, queries, for_permission, aggregate))
     }
 
@@ -79,14 +124,16 @@ impl Database {
         queries: Vec<Query>,
         for_permission: PermissionType,
         aggregate: bool,
-    ) -> Result<Vec<Document>> {
+    ) -> Result<Fetched> {
         let query_cache_queries = queries.clone();
         let queries = Database::resolve_one_to_many_joins(collection, queries)?;
+        let mut adapter_queries: Option<Vec<Query>> = None;
 
         let mut joined_by_id: Option<Joined> = None;
         if self.is_validating() {
             let resolved = self.resolve_joined_collections(&queries).await?;
             self.validate_documents_queries(collection, &queries, Some(&resolved)).await?;
+            self.validate_relationship_selects(collection, &queries).await?;
             joined_by_id = Some(resolved);
         }
 
@@ -101,6 +148,7 @@ impl Database {
 
         let parsed = Query::group_by_type(&queries)?;
         let is_aggregation = parsed.is_aggregation();
+        let supported = self.assert_supported(&parsed);
         let ParsedQuery {
             filters,
             selections: selects,
@@ -115,6 +163,7 @@ impl Database {
             mut order_types,
             cursor,
             cursor_direction,
+            relationships: relationship_queries,
             ..
         } = parsed;
         // Skipping authorization would also skip the joined collections'
@@ -130,17 +179,8 @@ impl Database {
                 "find() does not run aggregate or groupBy queries: use aggregate()"
             }));
         }
+        supported?;
         let adapter = &self.inner.adapter;
-        if is_aggregation && !adapter.supports(Capability::Aggregations) {
-            return Err(Error::query("Aggregation queries are not supported by this adapter"));
-        }
-        if distinct && !adapter.supports(Capability::Aggregations) {
-            return Err(Error::query("Distinct queries are not supported by this adapter"));
-        }
-        if !joins.is_empty() && !adapter.supports(Capability::Joins) {
-            return Err(Error::query("Join queries are not supported by this adapter"));
-        }
-        assert_join_count(joins.len())?;
 
         let joined_by_id = match joined_by_id {
             Some(j) => j,
@@ -222,27 +262,32 @@ impl Database {
         let outer_ids =
             if distinct { Vec::new() } else { outer_join_id_selections(&selects, &joins, &joined_collections) };
 
-        let mut queries: Vec<Query> = selects.clone();
-        if !outer_ids.is_empty() {
-            queries.push(Query::select(outer_ids.clone()));
-        }
-        let mut converted: Vec<Query> = filters;
-        converted.extend(aggregations);
-        converted.extend(having);
-        converted.extend(joins.iter().cloned());
-        queries.extend(self.convert_queries(collection, converted, &by_alias)?);
-        if !group_by.is_empty() {
-            queries.push(Query::new(Method::GroupBy, "", utopia_query::list(group_by), ""));
-        }
-        if distinct {
-            queries.push(Query::distinct());
-        }
+        let mut queries = self.read_queries(
+            collection,
+            &selects,
+            filters,
+            aggregations,
+            having,
+            &joins,
+            group_by,
+            distinct,
+            &by_alias,
+            &outer_ids,
+        )?;
 
         let selections = self.validate_selections(collection, &selects)?;
 
         let hook = self.relationship_hook();
         let nested = match &hook {
-            Some(h) if !is_aggregation => h.process_queries(&relationships, &mut queries)?,
+            Some(h) if !is_aggregation => {
+                // The relationship queries go after the others, and come
+                // back out once their related documents' queries are read.
+                let count = queries.len();
+                queries.extend(relationship_queries);
+                let nested = h.process_queries(&relationships, &mut queries)?;
+                queries.truncate(count);
+                nested
+            }
             _ => Vec::new(),
         };
 
@@ -256,6 +301,7 @@ impl Database {
         let results = match converted {
             None => Vec::new(),
             Some(queries) => {
+                adapter_queries = Some(queries.clone());
                 let query_cache = self.query_cache();
                 let mut results: Option<Vec<Document>> = None;
                 let mut entry = None;
@@ -329,15 +375,8 @@ impl Database {
                 match results {
                     Some(results) => results,
                     None => {
-                        let adapter_collection = self.with_join_indexed(
-                            Database::with_join_attributes(
-                                with_join_authorization(collection.clone(), &security, collection_granted)?,
-                                &joins,
-                                &joined_by_id,
-                            )?,
-                            &joins,
-                            &joined_by_id,
-                        )?;
+                        let adapter_collection =
+                            self.read_collection(collection, &joins, &joined_by_id, &security, collection_granted)?;
                         let options = Find {
                             limit: Some(limit.unwrap_or(25)),
                             offset: Some(offset.unwrap_or(0)),
@@ -368,7 +407,7 @@ impl Database {
         };
 
         if is_aggregation {
-            return Ok(results);
+            return Ok(Fetched { documents: results, adapter_queries, joined_by_alias: by_alias });
         }
 
         let mut results = results;
@@ -379,7 +418,15 @@ impl Database {
             && (selects.is_empty() || !nested.is_empty())
             && !results.is_empty()
         {
-            results = self.silent(hook.populate_documents(results, collection, hook.fetch_depth(), nested)).await?;
+            results = self
+                .silent(hook.populate_selected(
+                    results,
+                    collection,
+                    hook.fetch_depth(),
+                    nested,
+                    Some(!selects.is_empty()),
+                ))
+                .await?;
         }
 
         let collection_id = collection.id();
@@ -416,7 +463,80 @@ impl Database {
         })
         .await?;
 
-        Ok(results)
+        Ok(Fetched { documents: results, adapter_queries, joined_by_alias: by_alias })
+    }
+
+    /// The adapter reads the aggregates, `distinct` and joins the queries
+    /// hold (`assertReadable()`).
+    ///
+    /// Fails ([`crate::Kind::Query`]) when it cannot, or for too many joins.
+    pub(crate) fn assert_supported(&self, parsed: &ParsedQuery) -> Result<()> {
+        let adapter = &self.inner.adapter;
+        if parsed.is_aggregation() && !adapter.supports(Capability::Aggregations) {
+            return Err(Error::query("Aggregation queries are not supported by this adapter"));
+        }
+        if parsed.distinct && !adapter.supports(Capability::Aggregations) {
+            return Err(Error::query("Distinct queries are not supported by this adapter"));
+        }
+        if !parsed.joins.is_empty() && !adapter.supports(Capability::Joins) {
+            return Err(Error::query("Join queries are not supported by this adapter"));
+        }
+        assert_join_count(parsed.joins.len())
+    }
+
+    /// The queries the adapter reads for `aggregate()` and `find()`, and for
+    /// `count()` and `sum()` over the same rows (`readQueries()`).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn read_queries(
+        &self,
+        collection: &Collection,
+        selects: &[Query],
+        filters: Vec<Query>,
+        aggregations: Vec<Query>,
+        having: Vec<Query>,
+        joins: &[Query],
+        group_by: Vec<QValue>,
+        distinct: bool,
+        joined_by_alias: &Joined,
+        outer_join_ids: &[String],
+    ) -> Result<Vec<Query>> {
+        let mut queries: Vec<Query> = selects.to_vec();
+        if !outer_join_ids.is_empty() {
+            queries.push(Query::select(outer_join_ids.to_vec()));
+        }
+        let mut converted: Vec<Query> = filters;
+        converted.extend(aggregations);
+        converted.extend(having);
+        converted.extend(joins.iter().cloned());
+        queries.extend(self.convert_queries(collection, converted, joined_by_alias)?);
+        if !group_by.is_empty() {
+            queries.push(Query::new(Method::GroupBy, "", utopia_query::list(group_by), ""));
+        }
+        if distinct {
+            queries.push(Query::distinct());
+        }
+        Ok(queries)
+    }
+
+    /// The collection handed to the adapter for a read, carrying what it
+    /// needs to authorize and qualify each join (`readCollection()`).
+    pub(crate) fn read_collection(
+        &self,
+        collection: &Collection,
+        joins: &[Query],
+        joined_by_id: &Joined,
+        security: &[(String, bool)],
+        collection_granted: bool,
+    ) -> Result<Collection> {
+        self.with_join_indexed(
+            Database::with_join_attributes(
+                with_join_authorization(collection.clone(), security, collection_granted)?,
+                joins,
+                joined_by_id,
+            )?,
+            joins,
+            joined_by_id,
+        )
     }
 
     /// The first document matching `queries`, or an empty document
@@ -457,17 +577,15 @@ impl Database {
         }
 
         let collection_granted = self.assert_readable(&collection)?;
-        let relationships = Database::relationship_attributes(&collection)?;
 
-        let Some((collection, queries, skip_auth)) = self
-            .prepare_filter_join_queries(&collection, &queries, &relationships, collection_granted, joined.as_ref())
-            .await?
-        else {
-            return Ok(0);
+        let prepared = self.prepare_read(&collection, queries, collection_granted, joined).await?;
+        let count = match prepared {
+            None => 0,
+            Some((adapter_collection, queries, skip_auth)) => {
+                let count = self.inner.adapter.count(&adapter_collection, queries, max);
+                if skip_auth { self.authorization().skip(count).await? } else { count.await? }
+            }
         };
-
-        let count = self.inner.adapter.count(&collection, queries, max);
-        let count = if skip_auth { self.authorization().skip(count).await? } else { count.await? };
 
         self.trigger(Event::DocumentCount, || Domain::DocumentCounted {
             collection: collection.id().to_owned(),
@@ -476,6 +594,84 @@ impl Database {
         .await?;
 
         Ok(count)
+    }
+
+    /// What `count()` and `sum()` hand the adapter: the documents the
+    /// queries match (`countDocuments()`, `sumDocuments()`), or with
+    /// aggregates, `groupBy` or `distinct`, the rows `aggregate()` or
+    /// `find()` reads for them, built and authorized as they build and
+    /// authorize them (`readRows()`).
+    async fn prepare_read(
+        &self,
+        collection: &Collection,
+        queries: Vec<Query>,
+        collection_granted: bool,
+        joined: Option<Joined>,
+    ) -> Result<Prepared> {
+        let parsed = Query::group_by_type(&queries)?;
+        if !shapes_rows(&parsed) {
+            let relationships = Database::relationship_attributes(collection)?;
+            return self
+                .prepare_filter_join_queries(collection, &queries, &relationships, collection_granted, joined.as_ref())
+                .await;
+        }
+
+        if self.is_validating() {
+            self.validate_relationship_selects(collection, &queries).await?;
+        }
+        self.prepare_rows(collection, Query::group_by_type(&alias_aggregates(queries)?)?, collection_granted, joined)
+            .await
+    }
+
+    /// The statement `aggregate()` or `find()` reads for the queries,
+    /// without its order and page, as the adapter's collection and queries
+    /// (`readRows()`).
+    async fn prepare_rows(
+        &self,
+        collection: &Collection,
+        parsed: ParsedQuery,
+        collection_granted: bool,
+        joined: Option<Joined>,
+    ) -> Result<Prepared> {
+        self.assert_supported(&parsed)?;
+
+        let is_aggregation = parsed.is_aggregation();
+        let joins = parsed.joins;
+        let joined_by_id = match joined {
+            Some(joined) => joined,
+            None => self.resolve_joined_collections(&joins).await?,
+        };
+        let security = if joins.is_empty() {
+            Vec::new()
+        } else {
+            self.authorize_joins(&joins, PermissionType::Read, &joined_by_id)?
+        };
+
+        let by_alias = joined_by_alias(&joins, &joined_by_id);
+        let mut queries = self.read_queries(
+            collection,
+            &parsed.selections,
+            parsed.filters,
+            parsed.aggregations,
+            parsed.having,
+            &joins,
+            parsed.group_by,
+            parsed.distinct,
+            &by_alias,
+            &[],
+        )?;
+
+        if !is_aggregation && let Some(hook) = self.relationship_hook() {
+            let relationships = Database::relationship_attributes(collection)?;
+            match hook.convert_queries(&relationships, queries, Some(collection)).await? {
+                Some(converted) => queries = converted,
+                None => return Ok(None),
+            }
+        }
+
+        let adapter_collection =
+            self.read_collection(collection, &joins, &joined_by_id, &security, collection_granted)?;
+        Ok(Some((adapter_collection, queries, collection_granted && joins.is_empty())))
     }
 
     /// The sum of `attribute` over the documents matching `queries`, over at
@@ -516,17 +712,17 @@ impl Database {
         }
 
         let collection_granted = self.assert_readable(&collection)?;
-        let relationships = Database::relationship_attributes(&collection)?;
 
-        let Some((collection, queries, skip_auth)) = self
-            .prepare_filter_join_queries(&collection, &queries, &relationships, collection_granted, joined.as_ref())
-            .await?
-        else {
-            return Ok(Value::Int(0));
+        let prepared = self.prepare_read(&collection, queries, collection_granted, joined).await?;
+        let sum = match prepared {
+            None => Value::Int(0),
+            Some((adapter_collection, queries, skip_auth)) => {
+                let sum = self.inner.adapter.sum(&adapter_collection, &attribute, queries, max);
+                if skip_auth { self.authorization().skip(sum).await? } else { sum.await? }
+            }
         };
 
-        let sum = self.inner.adapter.sum(&collection, &attribute, queries, max);
-        let sum = if skip_auth { self.authorization().skip(sum).await? } else { sum.await? };
+        assert_finite(Some(&sum))?;
 
         self.trigger(Event::DocumentSum, || Domain::DocumentSummed {
             collection: collection.id().to_owned(),
@@ -702,12 +898,22 @@ impl Database {
         let definition = self.silent(self.get_collection(collection)).await?;
         let queries = alias_aggregates(self.rewrite_queries(Event::DocumentAggregate, &definition, queries).await?)?;
 
-        let rows: Vec<Array> = self
-            .fetch(&definition, queries, PermissionType::Read, true)
-            .await?
-            .into_iter()
-            .map(|row| row.array_copy())
+        let floating: Vec<String> = queries
+            .iter()
+            .filter(|q| FLOATING_AGGREGATES.contains(&q.method()))
+            .map(|q| q.alias().to_owned())
             .collect();
+        let fetched = self.fetch_read(&definition, queries.clone(), PermissionType::Read, true).await?;
+        let aggregation = Aggregation::from(self, &definition, &fetched.joined_by_alias, &queries);
+
+        let mut rows: Vec<Array> = Vec::with_capacity(fetched.documents.len());
+        for row in fetched.documents {
+            let row = row.array_copy();
+            for alias in &floating {
+                assert_finite(row.get_str(alias))?;
+            }
+            rows.push(aggregation.decode(row).await?);
+        }
 
         self.trigger(Event::DocumentAggregate, || Domain::DocumentAggregated {
             collection: collection.to_owned(),
@@ -832,6 +1038,41 @@ impl Database {
         }
         Ok((order_attributes, cursor))
     }
+}
+
+/// Whether the queries read rows other than one per matching document:
+/// groups, aggregates or distinct values (`shapesRows()`).
+fn shapes_rows(parsed: &ParsedQuery) -> bool {
+    parsed.is_aggregation() || parsed.distinct
+}
+
+/// SQLite, MongoDB and the adapters that sum in PHP answer a double that
+/// overflowed with infinity, which no caller can tell from a value, so it
+/// is refused as MariaDB, MySQL and PostgreSQL refuse it (`assertFinite()`):
+/// a float that is not finite, or a string naming one (`INF`, `-inf`,
+/// `Infinity`, `NaN`, ...).
+///
+/// Fails ([`crate::Kind::Limit`]) with `Value out of range`.
+fn assert_finite(value: Option<&Value>) -> Result<()> {
+    let finite = match value {
+        Some(Value::Float(f)) => f.is_finite(),
+        Some(Value::Str(s)) => {
+            // PCRE's `$` without `/D` also matches before a final newline.
+            let text = s.as_bytes();
+            let text = text
+                .strip_suffix(
+                    b"
+",
+                )
+                .unwrap_or(text);
+            let unsigned = text.strip_prefix(b"+").or_else(|| text.strip_prefix(b"-")).unwrap_or(text);
+            !(unsigned.eq_ignore_ascii_case(b"inf")
+                || unsigned.eq_ignore_ascii_case(b"infinity")
+                || unsigned.eq_ignore_ascii_case(b"nan"))
+        }
+        _ => true,
+    };
+    if finite { Ok(()) } else { Err(Error::limit("Value out of range")) }
 }
 
 /// The state of a [`Database::cursor`] stream (`pages()`).
@@ -984,19 +1225,7 @@ pub(crate) fn alias_aggregates(mut queries: Vec<Query>) -> Result<Vec<Query>> {
         if !method.is_aggregate() || !query.alias().is_empty() {
             continue;
         }
-        let attribute = query.attribute().to_owned();
-        let alias = if attribute == "*" || attribute.is_empty() {
-            method.as_str().to_owned()
-        } else {
-            format!("{}_{attribute}", method.as_str())
-        };
-        // preg_replace('/[^A-Za-z0-9_]/', '_') works on bytes.
-        let bytes: Vec<u8> = alias
-            .bytes()
-            .map(|b| if b.is_ascii_alphanumeric() || b == b'_' { b } else { b'_' })
-            .take(MAX_ALIAS_LENGTH)
-            .collect();
-        let alias = String::from_utf8(bytes).unwrap_or_default();
+        let alias = Aggregation::alias(query);
 
         if taken.contains(&alias) {
             return Err(Error::query(format!(
@@ -1005,7 +1234,7 @@ pub(crate) fn alias_aggregates(mut queries: Vec<Query>) -> Result<Vec<Query>> {
         }
         taken.push(alias.clone());
 
-        *query = Query::new(method, attribute, query.values().clone(), alias);
+        *query = Query::new(method, query.attribute().to_owned(), query.values().clone(), alias);
     }
     Ok(queries)
 }

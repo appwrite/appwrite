@@ -5,7 +5,7 @@
 //! The crate reads and writes the same tables, rows and metadata as
 //! `utopia-php/database`, so PHP and Rust services share one dataset.
 //!
-//! PHP: `utopia-php/database` 8.1.3, built on `utopia-php/query`
+//! PHP: `utopia-php/database` 8.3.0, built on `utopia-php/query`
 //! ([`utopia_query`]): a database [`Query`] is a query of that library, and
 //! the SQL adapters compile statements with its builders.
 //!
@@ -29,7 +29,7 @@
 //! | `Utopia\Database\Attribute`, `Attribute\Update` | [`Attribute`], [`attribute::Update`] |
 //! | `Utopia\Database\Format`, `NumericBounds`, `IntegerWidth`, `Unchanged` | [`attribute::Format`], [`attribute::NumericBounds`], [`attribute::IntegerWidth`], [`attribute::Patch`] |
 //! | `Utopia\Database\Index` | [`Index`] |
-//! | `Utopia\Database\Relationship`, `Relationship\Update` | [`Relationship`], [`relationship::Update`] |
+//! | `Utopia\Database\Relationship`, `Relationship\Update`, `Relationship\Page` | [`Relationship`], [`relationship::Update`], [`relationship::page::Page`] |
 //! | `RelationshipType`, `RelationshipSide`, `RelationshipDeleteAction` | [`relationship::RelationshipType`], [`relationship::RelationshipSide`], [`relationship::RelationshipDeleteAction`] |
 //! | `Utopia\Database\Id` | [`id`] |
 //! | `Utopia\Database\Role` | [`Role`] |
@@ -40,6 +40,7 @@
 //! | `Utopia\Database\Connection` | [`connection`] |
 //! | `Utopia\Database\DateTime` | [`datetime`] |
 //! | `Utopia\Database\Query`, `ParsedQuery` | [`Query`], [`query::ParsedQuery`] |
+//! | `Utopia\Database\Aggregation` | [`aggregation::Aggregation`] |
 //! | `Utopia\Database\Operator`, `OperatorType` | [`Operator`], [`operator::OperatorType`] |
 //! | `Utopia\Database\Rounding` (internal) | [`rounding::Rounding`] |
 //! | `Utopia\Database\Filter`, `Filter\{Codec, Signed, Callback, Registry}` | [`filter::Filter`], [`filter::Codec`] (`Signed` is [`filter::Codec::signature`]), [`filter::Callback`], [`filter::Registry`] |
@@ -71,6 +72,7 @@
 mod macros;
 
 pub mod adapter;
+pub mod aggregation;
 pub mod attribute;
 pub mod builder;
 pub mod cache;

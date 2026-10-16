@@ -1,7 +1,7 @@
 //! The SQL adapters' reads: `find()`, `count()` and `sum()`.
 //!
 //! `fixtures/sql_find/spec.json` lists the collections, the documents and
-//! the reads; `fixtures/sql_find/oracle.php` ran them through PHP 8.1.3's
+//! the reads; `fixtures/sql_find/oracle.php` ran them through PHP 8.3.0's
 //! adapters on every engine, with and without shared tables, and recorded
 //! in `fixtures/sql_find/expected.json` the statements each one set up its
 //! tables with, then for each read: every statement it ran (event and SQL,

@@ -48,6 +48,8 @@ namespace Tests\Compat\Database {
             'operator_double_decode' => 'operatorDoubleDecode',
             // JoinTests::testJoinedValuesDecodeLikeADirectRead
             'joinedSeal' => 'joinedSeal',
+            // RelationshipTests: the decode spy of the nested slice fixture (createNestedSliceFixture())
+            'nsSliceAuthorSpy' => 'nsSliceAuthorSpy',
         ];
 
         /** The fixtures every `db.open` registers, under their own names. */
@@ -179,6 +181,20 @@ namespace Tests\Compat\Database {
             }
 
             return base64_decode($payload['data'], true);
+        }
+
+        public static function nsSliceAuthorSpyEncode(mixed $value): mixed
+        {
+            self::log('nsSliceAuthorSpy', 'encode');
+
+            return $value;
+        }
+
+        public static function nsSliceAuthorSpyDecode(mixed $value): mixed
+        {
+            self::log('nsSliceAuthorSpy', 'decode');
+
+            return $value;
         }
     }
 

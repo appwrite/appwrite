@@ -1,9 +1,10 @@
 //! Counts and sums.
 //!
-//! PHP: `SQL::count()`, `sum()`, `configureCountBuilder()`,
-//! `qualifySumSelect()`, `fetchAggregate()`, `executeWrappedCount()`,
-//! `executeWrappedSum()`, `countOf()`, `sumOf()`, `mainRowQueries()`,
-//! `compileRowFilters()`, `onlyNarrowsRows()`, `fetchAggregateRow()`.
+//! PHP: `SQL::count()`, `sum()`, `rowsColumn()`, `rangeChecked()`,
+//! `configureCountBuilder()`, `qualifySumSelect()`, `fetchAggregate()`,
+//! `executeWrappedCount()`, `executeWrappedSum()`, `countOf()`, `sumOf()`,
+//! `mainRowQueries()`, `compileRowFilters()`, `onlyNarrowsRows()`,
+//! `fetchAggregateRow()`.
 
 use utopia_query::Method;
 use utopia_query::builder::{Condition, Statement};
@@ -16,7 +17,7 @@ use crate::adapter::Adapter;
 use crate::builder::SqlBuilder;
 use crate::collection::Collection;
 use crate::database;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::event::Event;
 use crate::permission::PermissionType;
 use crate::query::{DEFAULT_ALIAS, Query};
@@ -32,16 +33,31 @@ fn count_of(row: &Array) -> i64 {
     if is_numeric(&count) { crate::value::to_long(&count) } else { 0 }
 }
 
-/// `sumOf()`: a sum row's `sum`, a float when it prints with a point.
+/// `sumOf()`: a sum row's `sum` as the number it is (`$sum + 0`: an
+/// integer, or a float for one with a point or an exponent), with SQLite's
+/// `INF`, `-INF` and `NAN` read as the doubles they name for
+/// `Database::sum()` to refuse.
 fn sum_of(row: &Array) -> Value {
     let sum = row.get_str("sum").cloned().unwrap_or(Value::Int(0));
-    if !is_numeric(&sum) {
-        return Value::Int(0);
+    if is_numeric(&sum) {
+        return match &sum {
+            Value::Str(s) => match php_std::value::numeric_bytes_ex(s.as_bytes()) {
+                Some((php_std::value::Number::Int(i), _)) => Value::Int(i),
+                Some((php_std::value::Number::Float(d), _)) => Value::Float(d),
+                None => Value::Int(0),
+            },
+            other => other.clone(),
+        };
     }
-    if crate::value::to_text(&sum).contains('.') {
-        Value::Float(sum.to_double())
-    } else {
-        Value::Int(crate::value::to_long(&sum))
+    let named = match &sum {
+        Value::Str(s) => s.as_bytes().to_ascii_uppercase(),
+        _ => Vec::new(),
+    };
+    match named.as_slice() {
+        b"INF" => Value::Float(f64::INFINITY),
+        b"-INF" => Value::Float(f64::NEG_INFINITY),
+        b"NAN" => Value::Float(f64::NAN),
+        _ => Value::Int(0),
     }
 }
 
@@ -62,14 +78,21 @@ impl Sql {
         let roles = authorization.role_names();
         let alias = DEFAULT_ALIAS;
 
+        if super::find::shapes_rows(&queries) {
+            let plan = self.plan(collection, queries)?;
+            let rows = self.rows_builder(collection, plan, &name, alias, &roles, max).await?;
+            return self.execute_wrapped_count(rows, &name).await;
+        }
+
         let queries: Vec<Query> = queries.into_iter().filter(|q| !q.method().is_vector()).collect();
         if super::find::queries_have_joins(&queries) {
             let inner = self.configure_count_builder(collection, queries, &name, alias, &roles, max, None).await?;
             return self.execute_wrapped_count(inner, &name).await;
         }
 
+        let count = || Query::count("1", "sum");
         if queries.is_empty() {
-            let row = self.fetch_aggregate(collection, &name, &roles, "COUNT(1)", "1", max, Event::DocumentCount, None);
+            let row = self.fetch_aggregate(collection, &name, &roles, count(), "1", max, Event::DocumentCount, None);
             return Ok(count_of(&row.await?));
         }
 
@@ -78,7 +101,7 @@ impl Sql {
 
         if let Some(filters) = self.compile_row_filters(&mut builder, &queries)? {
             let row = self
-                .fetch_aggregate(collection, &name, &roles, "COUNT(1)", "1", max, Event::DocumentCount, Some(filters))
+                .fetch_aggregate(collection, &name, &roles, count(), "1", max, Event::DocumentCount, Some(filters))
                 .await?;
             return Ok(count_of(&row));
         }
@@ -116,6 +139,18 @@ impl Sql {
         let roles = authorization.role_names();
         let alias = DEFAULT_ALIAS;
 
+        if super::find::shapes_rows(&queries) {
+            let column = self.rows_column(attribute, &queries)?;
+            let plan = self.plan(collection, queries)?;
+            let rows = self.rows_builder(collection, plan, &name, alias, &roles, max).await?;
+
+            let mut outer = self.dialect_builder();
+            super::find::from_sub(&mut outer, rows, "table_count");
+            let sum = self.range_checked(&format!("SUM({})", self.quote(&column)));
+            outer.select_raw(&format!("{sum} AS {}", self.quote("sum")), Vec::new());
+            return Ok(sum_of(&self.fetch_aggregate_row(&mut outer, Event::DocumentSum, &name).await?));
+        }
+
         let queries: Vec<Query> = queries.into_iter().filter(|q| !q.method().is_vector()).collect();
         if super::find::queries_have_joins(&queries) {
             let inner =
@@ -125,11 +160,11 @@ impl Sql {
 
         let attribute = self.filter(attribute);
         let column = self.quote(&attribute);
-        let aggregate = format!("SUM({column})");
+        let aggregate = || Query::sum(attribute.as_str(), "sum");
 
         if queries.is_empty() {
             let row = self
-                .fetch_aggregate(collection, &name, &roles, &aggregate, &column, max, Event::DocumentSum, None)
+                .fetch_aggregate(collection, &name, &roles, aggregate(), &column, max, Event::DocumentSum, None)
                 .await?;
             return Ok(sum_of(&row));
         }
@@ -139,7 +174,16 @@ impl Sql {
 
         if let Some(filters) = self.compile_row_filters(&mut builder, &queries)? {
             let row = self
-                .fetch_aggregate(collection, &name, &roles, &aggregate, &column, max, Event::DocumentSum, Some(filters))
+                .fetch_aggregate(
+                    collection,
+                    &name,
+                    &roles,
+                    aggregate(),
+                    &column,
+                    max,
+                    Event::DocumentSum,
+                    Some(filters),
+                )
                 .await?;
             return Ok(sum_of(&row));
         }
@@ -161,6 +205,55 @@ impl Sql {
             builder.limit(max);
         }
         self.execute_wrapped_sum(builder, &attribute, &name).await
+    }
+
+    /// The column grouped rows hold a `groupBy` attribute in, or distinct
+    /// rows hold a selected attribute in (`rowsColumn()`).
+    ///
+    /// Fails ([`crate::Kind::Query`]) when the attribute is not one of the
+    /// groups or selections.
+    fn rows_column(&self, attribute: &str, queries: &[Query]) -> Result<String> {
+        let grouped = queries.iter().any(|q| q.method().is_aggregate() || q.method() == Method::GroupBy);
+        let wanted = if grouped { Method::GroupBy } else { Method::Select };
+        for query in queries {
+            if query.method() != wanted {
+                continue;
+            }
+            let values: Vec<String> =
+                query.values().values().map(|v| crate::value::to_text(&crate::value::from_query(v))).collect();
+            let Some(index) = values.iter().position(|v| v == attribute) else { continue };
+
+            let (prefix, key) = match attribute.split_once('.') {
+                Some((prefix, key)) => (Some(prefix), key),
+                None => (None, attribute),
+            };
+            let column = self.filter(storage::column(key));
+
+            if grouped {
+                return Ok(self
+                    .qualified_group_names(&values)
+                    .into_iter()
+                    .find(|(i, _)| *i == index)
+                    .map_or(column, |(_, name)| name));
+            }
+            return Ok(match prefix {
+                Some(prefix) => format!("{prefix}.{column}"),
+                None => column,
+            });
+        }
+        Err(Error::query(format!(
+            "Invalid query: sum() over {} rows adds up one of their {} attributes, and {attribute} is not one of them",
+            if grouped { "grouped" } else { "distinct" },
+            if grouped { "groupBy" } else { "selected" },
+        )))
+    }
+
+    /// A floating expression the engine raises an error for when it
+    /// overflows a double, rather than answer a wrong number: MariaDB and
+    /// MySQL check it once zero is added (`rangeChecked()`). The dialect
+    /// builder checks the aggregates it compiles the same way.
+    fn range_checked(&self, expression: &str) -> String {
+        if self.engine.is_mariadb_family() { format!("{expression} + 0") } else { expression.to_owned() }
     }
 
     /// `configureCountBuilder()`: the rows a joined count or sum reads, one
@@ -296,7 +389,7 @@ impl Sql {
         collection: &Collection,
         name: &str,
         roles: &[String],
-        aggregate: &str,
+        aggregate: Query,
         column: &str,
         max: Option<i64>,
         event: Event,
@@ -337,13 +430,13 @@ impl Sql {
             rows.push_str(&conditions.join(" AND "));
         }
 
-        let sum = self.quote("sum");
+        let selection = self.dialect_builder().compile_aggregate(&aggregate).map_err(crate::query::query_error)?;
         let sql = match max {
-            None => format!("SELECT {aggregate} AS {sum} FROM {rows}"),
+            None => format!("SELECT {selection} FROM {rows}"),
             Some(max) => {
                 bindings.push(utopia_query::Value::Int(max));
                 format!(
-                    "SELECT {aggregate} AS {sum} FROM (SELECT {column} FROM {rows} LIMIT ?) AS {}",
+                    "SELECT {selection} FROM (SELECT {column} FROM {rows} LIMIT ?) AS {}",
                     self.quote("table_count")
                 )
             }
@@ -371,7 +464,7 @@ impl Sql {
 
     /// `mainRowQueries()`: copies of the queries naming each dotted
     /// attribute by its column.
-    fn main_row_queries(&self, mut queries: Vec<Query>, collection: &Collection) -> Result<Vec<Query>> {
+    pub(crate) fn main_row_queries(&self, mut queries: Vec<Query>, collection: &Collection) -> Result<Vec<Query>> {
         self.remap_dotted_query_attributes(&mut queries, &[], collection)?;
         Ok(queries)
     }
@@ -407,4 +500,38 @@ impl Sql {
 /// `$left->unionAll($right)`.
 fn union_all(left: &mut SqlBuilder, right: &mut SqlBuilder) -> Result<()> {
     super::find::union(left, right, true)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sum_of;
+    use crate::value::{Array, Str, Value};
+
+    fn sent(sum: Option<&str>) -> Value {
+        let mut row = Array::new();
+        row.set(crate::value::ArrayKey::from("sum"), sum.map_or(Value::Null, |s| Value::Str(Str::from(s))));
+        sum_of(&row)
+    }
+
+    // PHP: tests/unit/Adapter/SumResultTest.php, sums(): `yield 'double with an exponent' => ['1e308', 1e308]`
+    // and the rest of the sums MariaDB, MySQL and SQLite send.
+    #[test]
+    fn a_sum_is_read_as_the_number_the_engine_sent() {
+        assert_eq!(sent(Some("2785")), Value::Int(2785));
+        assert_eq!(sent(Some("10.50")), Value::Float(10.5));
+        assert_eq!(sent(Some("1e308")), Value::Float(1e308));
+        assert_eq!(sent(Some("-1.5e300")), Value::Float(-1.5e300));
+        assert_eq!(sent(Some("18446744073709551614")), Value::Float(18446744073709551614.0));
+        assert_eq!(sent(None), Value::Int(0));
+        assert_eq!(sent(Some("INF")), Value::Float(f64::INFINITY));
+        assert_eq!(sent(Some("-INF")), Value::Float(f64::NEG_INFINITY));
+        assert_eq!(sent(Some("Inf")), Value::Float(f64::INFINITY));
+        assert_eq!(sent(Some("overflow")), Value::Int(0));
+    }
+
+    // PHP: SumResultTest::testANotANumberSumIsReadAsNan, `$this->assertNan($this->sumOf('NAN'))`.
+    #[test]
+    fn a_not_a_number_sum_is_read_as_nan() {
+        assert!(matches!(sent(Some("NAN")), Value::Float(f) if f.is_nan()));
+    }
 }

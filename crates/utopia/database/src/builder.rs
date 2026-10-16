@@ -14,7 +14,7 @@
 //! | `Builder\SQLite` (`SQLite::COLLATION`) | [`sqlite()`] ([`SQLITE_COLLATION`]) |
 //! | `Builder\Scope` | [`Scope`] |
 //! | `Builder\Scoping`, `Builder\ScopesCollections`, `Builder\Filtering`, `Builder\CompilesFilters`, `Builder\RefusesJoinedWrites` | the builder's own `scope()`, `is_scoped()`, `from_table()`, `compile_filters()` and its refusals |
-//! | `Builder\PreparesSearchTerms`, `Builder\MatchesContainsAllPatterns` | [`Flavor`] |
+//! | `Builder\PreparesSearchTerms`, `Builder\MatchesContainsAllPatterns`, `Builder\RaisesFloatOverflow` | [`Flavor`] |
 //!
 //! ```
 //! use utopia_database::builder;
@@ -64,17 +64,23 @@ fn sql_flavor() -> Flavor {
     Flavor { search_terms: true, contains_all_patterns: true, ..Flavor::default() }
 }
 
+/// The flavor of the MySQL and MariaDB builders, which also raise a
+/// floating aggregate that overflowed (`RaisesFloatOverflow`).
+fn mysql_flavor() -> Flavor {
+    Flavor { float_overflow: true, ..sql_flavor() }
+}
+
 /// A MySQL builder (`new Utopia\Database\Builder\MySQL()`).
 pub fn mysql() -> MySql {
     let mut builder = MySql::new();
-    builder.set_flavor(sql_flavor());
+    builder.set_flavor(mysql_flavor());
     builder
 }
 
 /// A MariaDB builder (`new Utopia\Database\Builder\MariaDB()`).
 pub fn mariadb() -> MariaDb {
     let mut builder = MariaDb::new();
-    builder.set_flavor(sql_flavor());
+    builder.set_flavor(mysql_flavor());
     builder
 }
 
@@ -251,6 +257,13 @@ impl SqlBuilder {
     /// `isScoped()`.
     pub fn is_scoped(&self) -> bool {
         each_builder!(self, b => b.is_scoped())
+    }
+
+    /// `compileAggregate($query)`: the aggregate as its `SELECT` column, with
+    /// its alias.
+    pub fn compile_aggregate(&mut self, query: &Query) -> utopia_query::Result<String> {
+        use utopia_query::Compiler as _;
+        each_builder!(&mut *self, b => b.compile_aggregate(query))
     }
 
     /// `compileFilters($filters)` (`Builder\Filtering`).

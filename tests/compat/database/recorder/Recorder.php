@@ -134,7 +134,8 @@ final class Recorder
         'AttributeTests.php:1560' => 'subQueryProbe',
         'OperatorTests.php:566' => 'operator_double_decode',
         'OperatorTests.php:709' => 'encrypt_operator',
-        'JoinTests.php:5854' => 'joinedSeal',
+        'JoinTests.php:5853' => 'joinedSeal',
+        'RelationshipTests.php:6168' => 'nsSliceAuthorSpy',
     ];
 
     private const READS = ['get', 'find', 'count', 'sum', 'exists', 'list', 'is', 'has', 'ping', 'encode', 'decode', 'casting', 'convert', 'check', 'cursor', 'aggregate', 'in', 'profile', 'resolve', 'collection', 'internal', 'snapshot', 'from', 'schema', 'query', 'authorize', 'capabilities', 'supports', 'limits'];

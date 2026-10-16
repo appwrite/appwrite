@@ -404,6 +404,23 @@ impl Query {
         Query::from(utopia_query::Query::elem_match(attribute, queries.into_iter().map(Query::into_inner)))
     }
 
+    /// `relationship`: queries, written against the related collection, that
+    /// shape the documents populated for the relationship attribute (filter,
+    /// order, select and page them); they match no row of the collection
+    /// read.
+    ///
+    /// ```
+    /// use utopia_database::Query;
+    ///
+    /// let query = Query::relationship("comments", [Query::equal("approved", [true]), Query::limit(2)]);
+    /// assert_eq!(query.shape().unwrap(), "relationship:comments(equal:approved|limit:)");
+    /// ```
+    ///
+    /// PHP: `Query::relationship()`.
+    pub fn relationship(attribute: impl Into<String>, queries: impl IntoIterator<Item = Query>) -> Self {
+        Query::from(utopia_query::Query::relationship(attribute, queries.into_iter().map(Query::into_inner)))
+    }
+
     /// `having`.
     pub fn having(queries: impl IntoIterator<Item = Query>) -> Self {
         Query::from(utopia_query::Query::having(queries.into_iter().map(Query::into_inner)))
@@ -586,8 +603,8 @@ impl Query {
     }
 
     /// The shape of the query, without values: `method:attribute`, and for
-    /// `and`, `or` and `elemMatch` `method:attribute(child|child)` with the
-    /// children's shapes sorted.
+    /// `and`, `or`, `elemMatch` and `relationship`
+    /// `method:attribute(child|child)` with the children's shapes sorted.
     ///
     /// Fails ([`Kind::Query`]) for a tree of more than [`SHAPE_MAX_NODES`]
     /// nodes.
@@ -620,7 +637,8 @@ impl Query {
     }
 
     /// Groups the queries by kind, with their orders in the order the
-    /// queries give them.
+    /// queries give them and the relationship queries kept apart from the
+    /// filters.
     ///
     /// Fails ([`Kind::Query`]) when the cursor is not a document.
     ///
@@ -675,7 +693,7 @@ fn shape_of(root: &utopia_query::Query) -> Result<String> {
                 "Query is too deeply nested to fingerprint: exceeded {SHAPE_MAX_NODES} nodes, which means a cycle or a child shared across too many parents"
             )));
         }
-        if !LOGICAL_TYPES.contains(&node.method()) {
+        if !shapes_children(node.method()) {
             continue;
         }
         for child in node.values().values() {
@@ -689,7 +707,7 @@ fn shape_of(root: &utopia_query::Query) -> Result<String> {
         |q: &utopia_query::Query, nodes: &[&utopia_query::Query]| nodes.iter().position(|n| std::ptr::eq(*n, q));
     for i in (0..nodes.len()).rev() {
         let node = nodes[i];
-        if !LOGICAL_TYPES.contains(&node.method()) {
+        if !shapes_children(node.method()) {
             shapes[i] = Some(format!("{}:{}", node.method().as_str(), node.attribute()));
             continue;
         }
@@ -705,6 +723,12 @@ fn shape_of(root: &utopia_query::Query) -> Result<String> {
         shapes[i] = Some(format!("{}:{}({})", node.method().as_str(), node.attribute(), children.join("|")));
     }
     Ok(shapes[0].take().unwrap_or_default())
+}
+
+/// Whether a query's shape holds its children's: the logical queries' and a
+/// relationship query's (`shapesChildren()`).
+fn shapes_children(method: Method) -> bool {
+    method == Method::Relationship || LOGICAL_TYPES.contains(&method)
 }
 
 /// [`Query::to_array`] of a base query.
@@ -838,6 +862,9 @@ pub struct ParsedQuery {
     pub order_attributes: Vec<String>,
     /// The directions of the orders, in order.
     pub order_types: Vec<OrderDirection>,
+    /// `relationship` queries, which shape the documents populated for a
+    /// relationship rather than filter the documents read.
+    pub relationships: Vec<Query>,
 }
 
 impl ParsedQuery {
@@ -901,6 +928,7 @@ impl ParsedQuery {
                 Method::Distinct => parsed.distinct = true,
                 m if m.is_join() => parsed.joins.push(query.clone()),
                 Method::Union | Method::UnionAll => parsed.unions.push(query.clone()),
+                Method::Relationship => parsed.relationships.push(query.clone()),
                 _ => parsed.filters.push(query.clone()),
             }
         }

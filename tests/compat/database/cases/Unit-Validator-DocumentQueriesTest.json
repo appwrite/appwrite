@@ -8,13 +8,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Document",
@@ -30,9 +23,9 @@
                 "filters": []
               }
             },
-            "as": "o471"
+            "as": "o13570"
           },
-          "bind": "s899",
+          "bind": "s23714",
           "expect": {
             "$document": {
               "$id": "title",
@@ -62,9 +55,9 @@
                 "filters": []
               }
             },
-            "as": "o472"
+            "as": "o13571"
           },
-          "bind": "s900",
+          "bind": "s23715",
           "expect": {
             "$document": {
               "$id": "price",
@@ -106,9 +99,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o473"
+            "as": "o13572"
           },
-          "bind": "s901",
+          "bind": "s23716",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -143,7 +136,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o473"
+                "$obj": "o13572"
               },
               "capabilities": [
                 {
@@ -160,9 +153,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o474"
+            "as": "o13573"
           },
-          "bind": "s902",
+          "bind": "s23717",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -217,19 +210,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o471"
+                  "$obj": "o13570"
                 },
                 {
-                  "$obj": "o472"
+                  "$obj": "o13571"
                 }
               ],
               "profile": {
-                "$obj": "o474"
+                "$obj": "o13573"
               }
             },
-            "as": "o475"
+            "as": "o13574"
           },
-          "bind": "s903",
+          "bind": "s23718",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -245,9 +238,9 @@
                 "title"
               ]
             },
-            "as": "o476"
+            "as": "o13575"
           },
-          "bind": "s904",
+          "bind": "s23719",
           "expect": {
             "$query": {
               "method": "select",
@@ -262,13 +255,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o475"
+              "$obj": "o13574"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o476"
+                  "$obj": "o13575"
                 }
               ]
             }
@@ -285,9 +278,9 @@
                 "price.relation"
               ]
             },
-            "as": "o477"
+            "as": "o13576"
           },
-          "bind": "s906",
+          "bind": "s23721",
           "expect": {
             "$query": {
               "method": "select",
@@ -302,21 +295,21 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o475"
+              "$obj": "o13574"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o476"
+                  "$obj": "o13575"
                 },
                 {
-                  "$obj": "o477"
+                  "$obj": "o13576"
                 }
               ]
             }
           },
-          "expect": true
+          "expect": false
         }
       ]
     },
@@ -324,13 +317,6 @@
       "name": "DocumentQueriesTest::test_invalid_queries",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -347,9 +333,9 @@
                 "filters": []
               }
             },
-            "as": "o478"
+            "as": "o13577"
           },
-          "bind": "s908",
+          "bind": "s23723",
           "expect": {
             "$document": {
               "$id": "title",
@@ -379,9 +365,9 @@
                 "filters": []
               }
             },
-            "as": "o479"
+            "as": "o13578"
           },
-          "bind": "s909",
+          "bind": "s23724",
           "expect": {
             "$document": {
               "$id": "price",
@@ -423,9 +409,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o480"
+            "as": "o13579"
           },
-          "bind": "s910",
+          "bind": "s23725",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -460,7 +446,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o480"
+                "$obj": "o13579"
               },
               "capabilities": [
                 {
@@ -477,9 +463,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o481"
+            "as": "o13580"
           },
-          "bind": "s911",
+          "bind": "s23726",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -534,19 +520,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o478"
+                  "$obj": "o13577"
                 },
                 {
-                  "$obj": "o479"
+                  "$obj": "o13578"
                 }
               ],
               "profile": {
-                "$obj": "o481"
+                "$obj": "o13580"
               }
             },
-            "as": "o482"
+            "as": "o13581"
           },
-          "bind": "s912",
+          "bind": "s23727",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -560,9 +546,9 @@
             "args": {
               "value": 1
             },
-            "as": "o483"
+            "as": "o13582"
           },
-          "bind": "s913",
+          "bind": "s23728",
           "expect": {
             "$query": {
               "method": "limit",
@@ -577,13 +563,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o482"
+              "$obj": "o13581"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o483"
+                  "$obj": "o13582"
                 }
               ]
             }
@@ -596,13 +582,6 @@
       "name": "DocumentQueriesTest::testJoinIsValid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -619,7 +598,7 @@
                 "filters": []
               }
             },
-            "as": "o484"
+            "as": "o13583"
           },
           "expect": {
             "$document": {
@@ -650,7 +629,7 @@
                 "filters": []
               }
             },
-            "as": "o485"
+            "as": "o13584"
           },
           "expect": {
             "$document": {
@@ -675,9 +654,9 @@
                 "type": "string"
               }
             },
-            "as": "o486"
+            "as": "o13585"
           },
-          "bind": "s917",
+          "bind": "s23732",
           "expect": {
             "$document": {
               "key": "name",
@@ -695,9 +674,9 @@
                 "type": "integer"
               }
             },
-            "as": "o487"
+            "as": "o13586"
           },
-          "bind": "s918",
+          "bind": "s23733",
           "expect": {
             "$document": {
               "key": "amount",
@@ -733,9 +712,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o488"
+            "as": "o13587"
           },
-          "bind": "s919",
+          "bind": "s23734",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -770,7 +749,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o488"
+                "$obj": "o13587"
               },
               "capabilities": [
                 {
@@ -787,9 +766,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o489"
+            "as": "o13588"
           },
-          "bind": "s920",
+          "bind": "s23735",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -844,19 +823,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o486"
+                  "$obj": "o13585"
                 },
                 {
-                  "$obj": "o487"
+                  "$obj": "o13586"
                 }
               ],
               "profile": {
-                "$obj": "o489"
+                "$obj": "o13588"
               }
             },
-            "as": "o490"
+            "as": "o13589"
           },
-          "bind": "s921",
+          "bind": "s23736",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -871,9 +850,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o491"
+            "as": "o13590"
           },
-          "bind": "s922",
+          "bind": "s23737",
           "expect": {
             "$query": {
               "method": "on",
@@ -896,13 +875,13 @@
               "alias": "j0",
               "on": [
                 {
-                  "$obj": "o491"
+                  "$obj": "o13590"
                 }
               ]
             },
-            "as": "o492"
+            "as": "o13591"
           },
-          "bind": "s923",
+          "bind": "s23738",
           "expect": {
             "$query": {
               "method": "join",
@@ -928,13 +907,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o490"
+              "$obj": "o13589"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o492"
+                  "$obj": "o13591"
                 }
               ]
             }
@@ -945,7 +924,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o490"
+              "$obj": "o13589"
             },
             "method": "getDescription",
             "args": {}
@@ -958,13 +937,6 @@
       "name": "DocumentQueriesTest::testSelectWithJoinAliasIsValid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -981,7 +953,7 @@
                 "filters": []
               }
             },
-            "as": "o493"
+            "as": "o13592"
           },
           "expect": {
             "$document": {
@@ -1012,7 +984,7 @@
                 "filters": []
               }
             },
-            "as": "o494"
+            "as": "o13593"
           },
           "expect": {
             "$document": {
@@ -1037,9 +1009,9 @@
                 "type": "string"
               }
             },
-            "as": "o495"
+            "as": "o13594"
           },
-          "bind": "s928",
+          "bind": "s23743",
           "expect": {
             "$document": {
               "key": "name",
@@ -1057,9 +1029,9 @@
                 "type": "integer"
               }
             },
-            "as": "o496"
+            "as": "o13595"
           },
-          "bind": "s929",
+          "bind": "s23744",
           "expect": {
             "$document": {
               "key": "amount",
@@ -1095,9 +1067,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o497"
+            "as": "o13596"
           },
-          "bind": "s930",
+          "bind": "s23745",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -1132,7 +1104,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o497"
+                "$obj": "o13596"
               },
               "capabilities": [
                 {
@@ -1149,9 +1121,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o498"
+            "as": "o13597"
           },
-          "bind": "s931",
+          "bind": "s23746",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -1206,19 +1178,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o495"
+                  "$obj": "o13594"
                 },
                 {
-                  "$obj": "o496"
+                  "$obj": "o13595"
                 }
               ],
               "profile": {
-                "$obj": "o498"
+                "$obj": "o13597"
               }
             },
-            "as": "o499"
+            "as": "o13598"
           },
-          "bind": "s932",
+          "bind": "s23747",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -1234,9 +1206,9 @@
                 "ord.amount"
               ]
             },
-            "as": "o500"
+            "as": "o13599"
           },
-          "bind": "s933",
+          "bind": "s23748",
           "expect": {
             "$query": {
               "method": "select",
@@ -1256,9 +1228,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o501"
+            "as": "o13600"
           },
-          "bind": "s934",
+          "bind": "s23749",
           "expect": {
             "$query": {
               "method": "on",
@@ -1281,13 +1253,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o501"
+                  "$obj": "o13600"
                 }
               ]
             },
-            "as": "o502"
+            "as": "o13601"
           },
-          "bind": "s935",
+          "bind": "s23750",
           "expect": {
             "$query": {
               "method": "join",
@@ -1313,16 +1285,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o499"
+              "$obj": "o13598"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o500"
+                  "$obj": "o13599"
                 },
                 {
-                  "$obj": "o502"
+                  "$obj": "o13601"
                 }
               ]
             }
@@ -1333,7 +1305,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o499"
+              "$obj": "o13598"
             },
             "method": "getDescription",
             "args": {}
@@ -1346,13 +1318,6 @@
       "name": "DocumentQueriesTest::testSelectUnprefixedJoinAttributeIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -1369,7 +1334,7 @@
                 "filters": []
               }
             },
-            "as": "o503"
+            "as": "o13602"
           },
           "expect": {
             "$document": {
@@ -1400,7 +1365,7 @@
                 "filters": []
               }
             },
-            "as": "o504"
+            "as": "o13603"
           },
           "expect": {
             "$document": {
@@ -1425,9 +1390,9 @@
                 "type": "string"
               }
             },
-            "as": "o505"
+            "as": "o13604"
           },
-          "bind": "s940",
+          "bind": "s23755",
           "expect": {
             "$document": {
               "key": "name",
@@ -1445,9 +1410,9 @@
                 "type": "integer"
               }
             },
-            "as": "o506"
+            "as": "o13605"
           },
-          "bind": "s941",
+          "bind": "s23756",
           "expect": {
             "$document": {
               "key": "amount",
@@ -1483,9 +1448,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o507"
+            "as": "o13606"
           },
-          "bind": "s942",
+          "bind": "s23757",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -1520,7 +1485,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o507"
+                "$obj": "o13606"
               },
               "capabilities": [
                 {
@@ -1537,9 +1502,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o508"
+            "as": "o13607"
           },
-          "bind": "s943",
+          "bind": "s23758",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -1594,19 +1559,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o505"
+                  "$obj": "o13604"
                 },
                 {
-                  "$obj": "o506"
+                  "$obj": "o13605"
                 }
               ],
               "profile": {
-                "$obj": "o508"
+                "$obj": "o13607"
               }
             },
-            "as": "o509"
+            "as": "o13608"
           },
-          "bind": "s944",
+          "bind": "s23759",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -1622,9 +1587,9 @@
                 "score"
               ]
             },
-            "as": "o510"
+            "as": "o13609"
           },
-          "bind": "s945",
+          "bind": "s23760",
           "expect": {
             "$query": {
               "method": "select",
@@ -1644,9 +1609,9 @@
               "left": "$id",
               "right": "prod_uid"
             },
-            "as": "o511"
+            "as": "o13610"
           },
-          "bind": "s946",
+          "bind": "s23761",
           "expect": {
             "$query": {
               "method": "on",
@@ -1669,13 +1634,13 @@
               "alias": "j0",
               "on": [
                 {
-                  "$obj": "o511"
+                  "$obj": "o13610"
                 }
               ]
             },
-            "as": "o512"
+            "as": "o13611"
           },
-          "bind": "s947",
+          "bind": "s23762",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -1701,16 +1666,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o509"
+              "$obj": "o13608"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o510"
+                  "$obj": "o13609"
                 },
                 {
-                  "$obj": "o512"
+                  "$obj": "o13611"
                 }
               ]
             }
@@ -1721,7 +1686,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o509"
+              "$obj": "o13608"
             },
             "method": "getDescription",
             "args": {}
@@ -1734,13 +1699,6 @@
       "name": "DocumentQueriesTest::testSelectWithLeftJoinAliasIsValid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -1757,7 +1715,7 @@
                 "filters": []
               }
             },
-            "as": "o513"
+            "as": "o13612"
           },
           "expect": {
             "$document": {
@@ -1788,7 +1746,7 @@
                 "filters": []
               }
             },
-            "as": "o514"
+            "as": "o13613"
           },
           "expect": {
             "$document": {
@@ -1813,9 +1771,9 @@
                 "type": "string"
               }
             },
-            "as": "o515"
+            "as": "o13614"
           },
-          "bind": "s952",
+          "bind": "s23767",
           "expect": {
             "$document": {
               "key": "name",
@@ -1833,9 +1791,9 @@
                 "type": "integer"
               }
             },
-            "as": "o516"
+            "as": "o13615"
           },
-          "bind": "s953",
+          "bind": "s23768",
           "expect": {
             "$document": {
               "key": "amount",
@@ -1871,9 +1829,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o517"
+            "as": "o13616"
           },
-          "bind": "s954",
+          "bind": "s23769",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -1908,7 +1866,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o517"
+                "$obj": "o13616"
               },
               "capabilities": [
                 {
@@ -1925,9 +1883,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o518"
+            "as": "o13617"
           },
-          "bind": "s955",
+          "bind": "s23770",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -1982,19 +1940,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o515"
+                  "$obj": "o13614"
                 },
                 {
-                  "$obj": "o516"
+                  "$obj": "o13615"
                 }
               ],
               "profile": {
-                "$obj": "o518"
+                "$obj": "o13617"
               }
             },
-            "as": "o519"
+            "as": "o13618"
           },
-          "bind": "s956",
+          "bind": "s23771",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -2010,9 +1968,9 @@
                 "rev.score"
               ]
             },
-            "as": "o520"
+            "as": "o13619"
           },
-          "bind": "s957",
+          "bind": "s23772",
           "expect": {
             "$query": {
               "method": "select",
@@ -2032,9 +1990,9 @@
               "left": "$id",
               "right": "prod_uid"
             },
-            "as": "o521"
+            "as": "o13620"
           },
-          "bind": "s958",
+          "bind": "s23773",
           "expect": {
             "$query": {
               "method": "on",
@@ -2057,13 +2015,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o521"
+                  "$obj": "o13620"
                 }
               ]
             },
-            "as": "o522"
+            "as": "o13621"
           },
-          "bind": "s959",
+          "bind": "s23774",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2089,16 +2047,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o519"
+              "$obj": "o13618"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o520"
+                  "$obj": "o13619"
                 },
                 {
-                  "$obj": "o522"
+                  "$obj": "o13621"
                 }
               ]
             }
@@ -2109,7 +2067,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o519"
+              "$obj": "o13618"
             },
             "method": "getDescription",
             "args": {}
@@ -2122,13 +2080,6 @@
       "name": "DocumentQueriesTest::testCountIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -2145,7 +2096,7 @@
                 "filters": []
               }
             },
-            "as": "o523"
+            "as": "o13622"
           },
           "expect": {
             "$document": {
@@ -2176,7 +2127,7 @@
                 "filters": []
               }
             },
-            "as": "o524"
+            "as": "o13623"
           },
           "expect": {
             "$document": {
@@ -2201,9 +2152,9 @@
                 "type": "string"
               }
             },
-            "as": "o525"
+            "as": "o13624"
           },
-          "bind": "s964",
+          "bind": "s23779",
           "expect": {
             "$document": {
               "key": "name",
@@ -2221,9 +2172,9 @@
                 "type": "integer"
               }
             },
-            "as": "o526"
+            "as": "o13625"
           },
-          "bind": "s965",
+          "bind": "s23780",
           "expect": {
             "$document": {
               "key": "amount",
@@ -2259,9 +2210,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o527"
+            "as": "o13626"
           },
-          "bind": "s966",
+          "bind": "s23781",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -2296,7 +2247,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o527"
+                "$obj": "o13626"
               },
               "capabilities": [
                 {
@@ -2313,9 +2264,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o528"
+            "as": "o13627"
           },
-          "bind": "s967",
+          "bind": "s23782",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -2370,19 +2321,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o525"
+                  "$obj": "o13624"
                 },
                 {
-                  "$obj": "o526"
+                  "$obj": "o13625"
                 }
               ],
               "profile": {
-                "$obj": "o528"
+                "$obj": "o13627"
               }
             },
-            "as": "o529"
+            "as": "o13628"
           },
-          "bind": "s968",
+          "bind": "s23783",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -2397,9 +2348,9 @@
               "attribute": "*",
               "alias": "cnt"
             },
-            "as": "o530"
+            "as": "o13629"
           },
-          "bind": "s969",
+          "bind": "s23784",
           "expect": {
             "$query": {
               "method": "count",
@@ -2413,13 +2364,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o529"
+              "$obj": "o13628"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o530"
+                  "$obj": "o13629"
                 }
               ]
             }
@@ -2430,7 +2381,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o529"
+              "$obj": "o13628"
             },
             "method": "getDescription",
             "args": {}
@@ -2443,13 +2394,6 @@
       "name": "DocumentQueriesTest::testGroupByIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -2466,7 +2410,7 @@
                 "filters": []
               }
             },
-            "as": "o531"
+            "as": "o13630"
           },
           "expect": {
             "$document": {
@@ -2497,7 +2441,7 @@
                 "filters": []
               }
             },
-            "as": "o532"
+            "as": "o13631"
           },
           "expect": {
             "$document": {
@@ -2522,9 +2466,9 @@
                 "type": "string"
               }
             },
-            "as": "o533"
+            "as": "o13632"
           },
-          "bind": "s974",
+          "bind": "s23789",
           "expect": {
             "$document": {
               "key": "name",
@@ -2542,9 +2486,9 @@
                 "type": "integer"
               }
             },
-            "as": "o534"
+            "as": "o13633"
           },
-          "bind": "s975",
+          "bind": "s23790",
           "expect": {
             "$document": {
               "key": "amount",
@@ -2580,9 +2524,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o535"
+            "as": "o13634"
           },
-          "bind": "s976",
+          "bind": "s23791",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -2617,7 +2561,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o535"
+                "$obj": "o13634"
               },
               "capabilities": [
                 {
@@ -2634,9 +2578,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o536"
+            "as": "o13635"
           },
-          "bind": "s977",
+          "bind": "s23792",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -2691,19 +2635,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o533"
+                  "$obj": "o13632"
                 },
                 {
-                  "$obj": "o534"
+                  "$obj": "o13633"
                 }
               ],
               "profile": {
-                "$obj": "o536"
+                "$obj": "o13635"
               }
             },
-            "as": "o537"
+            "as": "o13636"
           },
-          "bind": "s978",
+          "bind": "s23793",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -2719,9 +2663,9 @@
                 "name"
               ]
             },
-            "as": "o538"
+            "as": "o13637"
           },
-          "bind": "s979",
+          "bind": "s23794",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -2736,13 +2680,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o537"
+              "$obj": "o13636"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o538"
+                  "$obj": "o13637"
                 }
               ]
             }
@@ -2753,7 +2697,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o537"
+              "$obj": "o13636"
             },
             "method": "getDescription",
             "args": {}
@@ -2766,13 +2710,6 @@
       "name": "DocumentQueriesTest::testHavingIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -2789,7 +2726,7 @@
                 "filters": []
               }
             },
-            "as": "o539"
+            "as": "o13638"
           },
           "expect": {
             "$document": {
@@ -2820,7 +2757,7 @@
                 "filters": []
               }
             },
-            "as": "o540"
+            "as": "o13639"
           },
           "expect": {
             "$document": {
@@ -2845,9 +2782,9 @@
                 "type": "string"
               }
             },
-            "as": "o541"
+            "as": "o13640"
           },
-          "bind": "s984",
+          "bind": "s23799",
           "expect": {
             "$document": {
               "key": "name",
@@ -2865,9 +2802,9 @@
                 "type": "integer"
               }
             },
-            "as": "o542"
+            "as": "o13641"
           },
-          "bind": "s985",
+          "bind": "s23800",
           "expect": {
             "$document": {
               "key": "amount",
@@ -2903,9 +2840,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o543"
+            "as": "o13642"
           },
-          "bind": "s986",
+          "bind": "s23801",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -2940,7 +2877,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o543"
+                "$obj": "o13642"
               },
               "capabilities": [
                 {
@@ -2957,9 +2894,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o544"
+            "as": "o13643"
           },
-          "bind": "s987",
+          "bind": "s23802",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -3014,19 +2951,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o541"
+                  "$obj": "o13640"
                 },
                 {
-                  "$obj": "o542"
+                  "$obj": "o13641"
                 }
               ],
               "profile": {
-                "$obj": "o544"
+                "$obj": "o13643"
               }
             },
-            "as": "o545"
+            "as": "o13644"
           },
-          "bind": "s988",
+          "bind": "s23803",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -3041,9 +2978,9 @@
               "attribute": "amount",
               "value": 1
             },
-            "as": "o546"
+            "as": "o13645"
           },
-          "bind": "s989",
+          "bind": "s23804",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -3062,13 +2999,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o546"
+                  "$obj": "o13645"
                 }
               ]
             },
-            "as": "o547"
+            "as": "o13646"
           },
-          "bind": "s990",
+          "bind": "s23805",
           "expect": {
             "$query": {
               "method": "having",
@@ -3091,13 +3028,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o545"
+              "$obj": "o13644"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o547"
+                  "$obj": "o13646"
                 }
               ]
             }
@@ -3108,7 +3045,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o545"
+              "$obj": "o13644"
             },
             "method": "getDescription",
             "args": {}
@@ -3122,13 +3059,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Document",
@@ -3144,7 +3074,7 @@
                 "filters": []
               }
             },
-            "as": "o548"
+            "as": "o13647"
           },
           "expect": {
             "$document": {
@@ -3175,7 +3105,7 @@
                 "filters": []
               }
             },
-            "as": "o549"
+            "as": "o13648"
           },
           "expect": {
             "$document": {
@@ -3200,9 +3130,9 @@
                 "type": "string"
               }
             },
-            "as": "o550"
+            "as": "o13649"
           },
-          "bind": "s995",
+          "bind": "s23810",
           "expect": {
             "$document": {
               "key": "name",
@@ -3220,9 +3150,9 @@
                 "type": "integer"
               }
             },
-            "as": "o551"
+            "as": "o13650"
           },
-          "bind": "s996",
+          "bind": "s23811",
           "expect": {
             "$document": {
               "key": "amount",
@@ -3258,9 +3188,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o552"
+            "as": "o13651"
           },
-          "bind": "s997",
+          "bind": "s23812",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -3295,7 +3225,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o552"
+                "$obj": "o13651"
               },
               "capabilities": [
                 {
@@ -3312,9 +3242,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o553"
+            "as": "o13652"
           },
-          "bind": "s998",
+          "bind": "s23813",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -3369,19 +3299,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o550"
+                  "$obj": "o13649"
                 },
                 {
-                  "$obj": "o551"
+                  "$obj": "o13650"
                 }
               ],
               "profile": {
-                "$obj": "o553"
+                "$obj": "o13652"
               }
             },
-            "as": "o554"
+            "as": "o13653"
           },
-          "bind": "s999",
+          "bind": "s23814",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -3393,9 +3323,9 @@
             "class": "Query",
             "method": "distinct",
             "args": {},
-            "as": "o555"
+            "as": "o13654"
           },
-          "bind": "s1000",
+          "bind": "s23815",
           "expect": {
             "$query": {
               "method": "distinct",
@@ -3408,13 +3338,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o554"
+              "$obj": "o13653"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o555"
+                  "$obj": "o13654"
                 }
               ]
             }
@@ -3425,7 +3355,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o554"
+              "$obj": "o13653"
             },
             "method": "getDescription",
             "args": {}
@@ -3439,13 +3369,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Document",
@@ -3461,7 +3384,7 @@
                 "filters": []
               }
             },
-            "as": "o556"
+            "as": "o13655"
           },
           "expect": {
             "$document": {
@@ -3492,7 +3415,7 @@
                 "filters": []
               }
             },
-            "as": "o557"
+            "as": "o13656"
           },
           "expect": {
             "$document": {
@@ -3517,9 +3440,9 @@
                 "type": "string"
               }
             },
-            "as": "o558"
+            "as": "o13657"
           },
-          "bind": "s1005",
+          "bind": "s23820",
           "expect": {
             "$document": {
               "key": "name",
@@ -3537,9 +3460,9 @@
                 "type": "integer"
               }
             },
-            "as": "o559"
+            "as": "o13658"
           },
-          "bind": "s1006",
+          "bind": "s23821",
           "expect": {
             "$document": {
               "key": "amount",
@@ -3575,9 +3498,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o560"
+            "as": "o13659"
           },
-          "bind": "s1007",
+          "bind": "s23822",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -3612,7 +3535,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o560"
+                "$obj": "o13659"
               },
               "capabilities": [
                 {
@@ -3629,9 +3552,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o561"
+            "as": "o13660"
           },
-          "bind": "s1008",
+          "bind": "s23823",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -3686,19 +3609,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o558"
+                  "$obj": "o13657"
                 },
                 {
-                  "$obj": "o559"
+                  "$obj": "o13658"
                 }
               ],
               "profile": {
-                "$obj": "o561"
+                "$obj": "o13660"
               }
             },
-            "as": "o562"
+            "as": "o13661"
           },
-          "bind": "s1009",
+          "bind": "s23824",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -3715,9 +3638,9 @@
                 "x"
               ]
             },
-            "as": "o563"
+            "as": "o13662"
           },
-          "bind": "s1010",
+          "bind": "s23825",
           "expect": {
             "$query": {
               "method": "equal",
@@ -3736,13 +3659,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o563"
+                  "$obj": "o13662"
                 }
               ]
             },
-            "as": "o564"
+            "as": "o13663"
           },
-          "bind": "s1011",
+          "bind": "s23826",
           "expect": {
             "$query": {
               "method": "union",
@@ -3765,13 +3688,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o562"
+              "$obj": "o13661"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o564"
+                  "$obj": "o13663"
                 }
               ]
             }
@@ -3782,7 +3705,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o562"
+              "$obj": "o13661"
             },
             "method": "getDescription",
             "args": {}
@@ -3795,13 +3718,6 @@
       "name": "DocumentQueriesTest::testUnionAllIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -3818,7 +3734,7 @@
                 "filters": []
               }
             },
-            "as": "o565"
+            "as": "o13664"
           },
           "expect": {
             "$document": {
@@ -3849,7 +3765,7 @@
                 "filters": []
               }
             },
-            "as": "o566"
+            "as": "o13665"
           },
           "expect": {
             "$document": {
@@ -3874,9 +3790,9 @@
                 "type": "string"
               }
             },
-            "as": "o567"
+            "as": "o13666"
           },
-          "bind": "s1016",
+          "bind": "s23831",
           "expect": {
             "$document": {
               "key": "name",
@@ -3894,9 +3810,9 @@
                 "type": "integer"
               }
             },
-            "as": "o568"
+            "as": "o13667"
           },
-          "bind": "s1017",
+          "bind": "s23832",
           "expect": {
             "$document": {
               "key": "amount",
@@ -3932,9 +3848,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o569"
+            "as": "o13668"
           },
-          "bind": "s1018",
+          "bind": "s23833",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -3969,7 +3885,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o569"
+                "$obj": "o13668"
               },
               "capabilities": [
                 {
@@ -3986,9 +3902,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o570"
+            "as": "o13669"
           },
-          "bind": "s1019",
+          "bind": "s23834",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -4043,19 +3959,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o567"
+                  "$obj": "o13666"
                 },
                 {
-                  "$obj": "o568"
+                  "$obj": "o13667"
                 }
               ],
               "profile": {
-                "$obj": "o570"
+                "$obj": "o13669"
               }
             },
-            "as": "o571"
+            "as": "o13670"
           },
-          "bind": "s1020",
+          "bind": "s23835",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -4072,9 +3988,9 @@
                 "x"
               ]
             },
-            "as": "o572"
+            "as": "o13671"
           },
-          "bind": "s1021",
+          "bind": "s23836",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4093,13 +4009,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o572"
+                  "$obj": "o13671"
                 }
               ]
             },
-            "as": "o573"
+            "as": "o13672"
           },
-          "bind": "s1022",
+          "bind": "s23837",
           "expect": {
             "$query": {
               "method": "unionAll",
@@ -4122,13 +4038,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o571"
+              "$obj": "o13670"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o573"
+                  "$obj": "o13672"
                 }
               ]
             }
@@ -4139,7 +4055,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o571"
+              "$obj": "o13670"
             },
             "method": "getDescription",
             "args": {}
@@ -4152,13 +4068,6 @@
       "name": "DocumentQueriesTest::testNaturalJoinIsInvalid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -4175,7 +4084,7 @@
                 "filters": []
               }
             },
-            "as": "o574"
+            "as": "o13673"
           },
           "expect": {
             "$document": {
@@ -4206,7 +4115,7 @@
                 "filters": []
               }
             },
-            "as": "o575"
+            "as": "o13674"
           },
           "expect": {
             "$document": {
@@ -4231,9 +4140,9 @@
                 "type": "string"
               }
             },
-            "as": "o576"
+            "as": "o13675"
           },
-          "bind": "s1027",
+          "bind": "s23842",
           "expect": {
             "$document": {
               "key": "name",
@@ -4251,9 +4160,9 @@
                 "type": "integer"
               }
             },
-            "as": "o577"
+            "as": "o13676"
           },
-          "bind": "s1028",
+          "bind": "s23843",
           "expect": {
             "$document": {
               "key": "amount",
@@ -4289,9 +4198,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o578"
+            "as": "o13677"
           },
-          "bind": "s1029",
+          "bind": "s23844",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -4326,7 +4235,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o578"
+                "$obj": "o13677"
               },
               "capabilities": [
                 {
@@ -4343,9 +4252,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o579"
+            "as": "o13678"
           },
-          "bind": "s1030",
+          "bind": "s23845",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -4400,19 +4309,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o576"
+                  "$obj": "o13675"
                 },
                 {
-                  "$obj": "o577"
+                  "$obj": "o13676"
                 }
               ],
               "profile": {
-                "$obj": "o579"
+                "$obj": "o13678"
               }
             },
-            "as": "o580"
+            "as": "o13679"
           },
-          "bind": "s1031",
+          "bind": "s23846",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -4427,9 +4336,9 @@
               "collection": "orders",
               "alias": "j0"
             },
-            "as": "o581"
+            "as": "o13680"
           },
-          "bind": "s1032",
+          "bind": "s23847",
           "expect": {
             "$query": {
               "method": "naturalJoin",
@@ -4443,13 +4352,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o580"
+              "$obj": "o13679"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o581"
+                  "$obj": "o13680"
                 }
               ]
             }
@@ -4460,7 +4369,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o580"
+              "$obj": "o13679"
             },
             "method": "getDescription",
             "args": {}
@@ -4473,13 +4382,6 @@
       "name": "DocumentQueriesTest::testNestedJoinOnIsValid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -4496,7 +4398,7 @@
                 "filters": []
               }
             },
-            "as": "o582"
+            "as": "o13681"
           },
           "expect": {
             "$document": {
@@ -4527,7 +4429,7 @@
                 "filters": []
               }
             },
-            "as": "o583"
+            "as": "o13682"
           },
           "expect": {
             "$document": {
@@ -4552,9 +4454,9 @@
                 "type": "string"
               }
             },
-            "as": "o584"
+            "as": "o13683"
           },
-          "bind": "s1037",
+          "bind": "s23852",
           "expect": {
             "$document": {
               "key": "name",
@@ -4572,9 +4474,9 @@
                 "type": "integer"
               }
             },
-            "as": "o585"
+            "as": "o13684"
           },
-          "bind": "s1038",
+          "bind": "s23853",
           "expect": {
             "$document": {
               "key": "amount",
@@ -4610,9 +4512,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o586"
+            "as": "o13685"
           },
-          "bind": "s1039",
+          "bind": "s23854",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -4647,7 +4549,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o586"
+                "$obj": "o13685"
               },
               "capabilities": [
                 {
@@ -4664,9 +4566,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o587"
+            "as": "o13686"
           },
-          "bind": "s1040",
+          "bind": "s23855",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -4721,19 +4623,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o584"
+                  "$obj": "o13683"
                 },
                 {
-                  "$obj": "o585"
+                  "$obj": "o13684"
                 }
               ],
               "profile": {
-                "$obj": "o587"
+                "$obj": "o13686"
               }
             },
-            "as": "o588"
+            "as": "o13687"
           },
-          "bind": "s1041",
+          "bind": "s23856",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -4748,9 +4650,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o589"
+            "as": "o13688"
           },
-          "bind": "s1042",
+          "bind": "s23857",
           "expect": {
             "$query": {
               "method": "on",
@@ -4773,13 +4675,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o589"
+                  "$obj": "o13688"
                 }
               ]
             },
-            "as": "o590"
+            "as": "o13689"
           },
-          "bind": "s1043",
+          "bind": "s23858",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -4805,13 +4707,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o588"
+              "$obj": "o13687"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o590"
+                  "$obj": "o13689"
                 }
               ]
             }
@@ -4822,7 +4724,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o588"
+              "$obj": "o13687"
             },
             "method": "getDescription",
             "args": {}
@@ -4835,13 +4737,6 @@
       "name": "DocumentQueriesTest::testNestedJoinOnWithFilterIsValidWithoutFilterValidator",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -4858,7 +4753,7 @@
                 "filters": []
               }
             },
-            "as": "o591"
+            "as": "o13690"
           },
           "expect": {
             "$document": {
@@ -4889,7 +4784,7 @@
                 "filters": []
               }
             },
-            "as": "o592"
+            "as": "o13691"
           },
           "expect": {
             "$document": {
@@ -4914,9 +4809,9 @@
                 "type": "string"
               }
             },
-            "as": "o593"
+            "as": "o13692"
           },
-          "bind": "s1048",
+          "bind": "s23863",
           "expect": {
             "$document": {
               "key": "name",
@@ -4934,9 +4829,9 @@
                 "type": "integer"
               }
             },
-            "as": "o594"
+            "as": "o13693"
           },
-          "bind": "s1049",
+          "bind": "s23864",
           "expect": {
             "$document": {
               "key": "amount",
@@ -4972,9 +4867,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o595"
+            "as": "o13694"
           },
-          "bind": "s1050",
+          "bind": "s23865",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -5009,7 +4904,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o595"
+                "$obj": "o13694"
               },
               "capabilities": [
                 {
@@ -5026,9 +4921,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o596"
+            "as": "o13695"
           },
-          "bind": "s1051",
+          "bind": "s23866",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -5083,19 +4978,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o593"
+                  "$obj": "o13692"
                 },
                 {
-                  "$obj": "o594"
+                  "$obj": "o13693"
                 }
               ],
               "profile": {
-                "$obj": "o596"
+                "$obj": "o13695"
               }
             },
-            "as": "o597"
+            "as": "o13696"
           },
-          "bind": "s1052",
+          "bind": "s23867",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -5110,9 +5005,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o598"
+            "as": "o13697"
           },
-          "bind": "s1053",
+          "bind": "s23868",
           "expect": {
             "$query": {
               "method": "on",
@@ -5136,9 +5031,9 @@
                 "paid"
               ]
             },
-            "as": "o599"
+            "as": "o13698"
           },
-          "bind": "s1054",
+          "bind": "s23869",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5159,16 +5054,16 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o598"
+                  "$obj": "o13697"
                 },
                 {
-                  "$obj": "o599"
+                  "$obj": "o13698"
                 }
               ]
             },
-            "as": "o600"
+            "as": "o13699"
           },
-          "bind": "s1055",
+          "bind": "s23870",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -5203,13 +5098,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o597"
+              "$obj": "o13696"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o600"
+                  "$obj": "o13699"
                 }
               ]
             }
@@ -5220,7 +5115,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o597"
+              "$obj": "o13696"
             },
             "method": "getDescription",
             "args": {}
@@ -5233,13 +5128,6 @@
       "name": "DocumentQueriesTest::testNestedJoinOnRequiresColumns",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -5256,7 +5144,7 @@
                 "filters": []
               }
             },
-            "as": "o601"
+            "as": "o13700"
           },
           "expect": {
             "$document": {
@@ -5287,7 +5175,7 @@
                 "filters": []
               }
             },
-            "as": "o602"
+            "as": "o13701"
           },
           "expect": {
             "$document": {
@@ -5312,9 +5200,9 @@
                 "type": "string"
               }
             },
-            "as": "o603"
+            "as": "o13702"
           },
-          "bind": "s1060",
+          "bind": "s23875",
           "expect": {
             "$document": {
               "key": "name",
@@ -5332,9 +5220,9 @@
                 "type": "integer"
               }
             },
-            "as": "o604"
+            "as": "o13703"
           },
-          "bind": "s1061",
+          "bind": "s23876",
           "expect": {
             "$document": {
               "key": "amount",
@@ -5370,9 +5258,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o605"
+            "as": "o13704"
           },
-          "bind": "s1062",
+          "bind": "s23877",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -5407,7 +5295,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o605"
+                "$obj": "o13704"
               },
               "capabilities": [
                 {
@@ -5424,9 +5312,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o606"
+            "as": "o13705"
           },
-          "bind": "s1063",
+          "bind": "s23878",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -5481,19 +5369,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o603"
+                  "$obj": "o13702"
                 },
                 {
-                  "$obj": "o604"
+                  "$obj": "o13703"
                 }
               ],
               "profile": {
-                "$obj": "o606"
+                "$obj": "o13705"
               }
             },
-            "as": "o607"
+            "as": "o13706"
           },
-          "bind": "s1064",
+          "bind": "s23879",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -5508,9 +5396,9 @@
               "left": "",
               "right": "customerId"
             },
-            "as": "o608"
+            "as": "o13707"
           },
-          "bind": "s1065",
+          "bind": "s23880",
           "expect": {
             "$query": {
               "method": "on",
@@ -5533,13 +5421,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o608"
+                  "$obj": "o13707"
                 }
               ]
             },
-            "as": "o609"
+            "as": "o13708"
           },
-          "bind": "s1066",
+          "bind": "s23881",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -5565,13 +5453,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o607"
+              "$obj": "o13706"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o609"
+                  "$obj": "o13708"
                 }
               ]
             }
@@ -5582,7 +5470,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o607"
+              "$obj": "o13706"
             },
             "method": "getDescription",
             "args": {}
@@ -5595,13 +5483,6 @@
       "name": "DocumentQueriesTest::testSelectWithNestedJoinAliasIsValid",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "testformat"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
@@ -5618,7 +5499,7 @@
                 "filters": []
               }
             },
-            "as": "o610"
+            "as": "o13709"
           },
           "expect": {
             "$document": {
@@ -5649,7 +5530,7 @@
                 "filters": []
               }
             },
-            "as": "o611"
+            "as": "o13710"
           },
           "expect": {
             "$document": {
@@ -5674,9 +5555,9 @@
                 "type": "string"
               }
             },
-            "as": "o612"
+            "as": "o13711"
           },
-          "bind": "s1071",
+          "bind": "s23886",
           "expect": {
             "$document": {
               "key": "name",
@@ -5694,9 +5575,9 @@
                 "type": "integer"
               }
             },
-            "as": "o613"
+            "as": "o13712"
           },
-          "bind": "s1072",
+          "bind": "s23887",
           "expect": {
             "$document": {
               "key": "amount",
@@ -5732,9 +5613,9 @@
               "keywords": [],
               "internalIndexKeys": []
             },
-            "as": "o614"
+            "as": "o13713"
           },
-          "bind": "s1073",
+          "bind": "s23888",
           "expect": {
             "$value": "Adapter\\Limits",
             "fields": {
@@ -5769,7 +5650,7 @@
             "class": "Adapter\\Profile",
             "args": {
               "limits": {
-                "$obj": "o614"
+                "$obj": "o13713"
               },
               "capabilities": [
                 {
@@ -5786,9 +5667,9 @@
               "sharedTables": false,
               "migrating": false
             },
-            "as": "o615"
+            "as": "o13714"
           },
-          "bind": "s1074",
+          "bind": "s23889",
           "expect": {
             "$value": "Adapter\\Profile",
             "fields": {
@@ -5843,19 +5724,19 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o612"
+                  "$obj": "o13711"
                 },
                 {
-                  "$obj": "o613"
+                  "$obj": "o13712"
                 }
               ],
               "profile": {
-                "$obj": "o615"
+                "$obj": "o13714"
               }
             },
-            "as": "o616"
+            "as": "o13715"
           },
-          "bind": "s1075",
+          "bind": "s23890",
           "expect": {
             "$value": "Validator\\Queries\\Document",
             "fields": {}
@@ -5871,9 +5752,9 @@
                 "ord.amount"
               ]
             },
-            "as": "o617"
+            "as": "o13716"
           },
-          "bind": "s1076",
+          "bind": "s23891",
           "expect": {
             "$query": {
               "method": "select",
@@ -5893,9 +5774,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o618"
+            "as": "o13717"
           },
-          "bind": "s1077",
+          "bind": "s23892",
           "expect": {
             "$query": {
               "method": "on",
@@ -5918,13 +5799,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o618"
+                  "$obj": "o13717"
                 }
               ]
             },
-            "as": "o619"
+            "as": "o13718"
           },
-          "bind": "s1078",
+          "bind": "s23893",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -5950,16 +5831,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o616"
+              "$obj": "o13715"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o617"
+                  "$obj": "o13716"
                 },
                 {
-                  "$obj": "o619"
+                  "$obj": "o13718"
                 }
               ]
             }
@@ -5970,7 +5851,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o616"
+              "$obj": "o13715"
             },
             "method": "getDescription",
             "args": {}

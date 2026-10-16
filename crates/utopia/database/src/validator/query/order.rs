@@ -42,6 +42,9 @@ struct State {
 #[derive(Debug)]
 pub struct Order {
     schema: HashSet<String>,
+    /// The relationships whose related ids live on the other collection or
+    /// in a junction table, so this collection holds no column to order by.
+    columnless: HashSet<String>,
     support_for_attributes: bool,
     support_for_order_random: bool,
     state: Mutex<State>,
@@ -60,6 +63,10 @@ impl Order {
     pub fn new(attributes: &[Attribute], support_for_attributes: bool, support_for_order_random: bool) -> Self {
         Order {
             schema: attributes.iter().map(|a| a.key.clone()).collect(),
+            columnless: Collection::columns(attributes)
+                .into_iter()
+                .filter_map(|(key, holds_column)| (!holds_column).then_some(key))
+                .collect(),
             support_for_attributes,
             support_for_order_random,
             state: Mutex::new(State::default()),
@@ -96,6 +103,9 @@ impl Order {
         let attribute = query.attribute();
         match query.method() {
             Method::OrderAsc | Method::OrderDesc => {
+                if self.columnless.contains(attribute) {
+                    return self.fail(format!("Cannot order by relationship attribute: {attribute}"));
+                }
                 let state = self.state();
                 self.is_valid_attribute(&state, attribute) && self.is_grouped_order(&state, attribute)
             }

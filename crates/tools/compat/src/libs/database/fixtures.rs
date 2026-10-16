@@ -40,6 +40,7 @@ const FILTERS: &[(&str, &str)] = &[
     ("subQueryProbe", "subQueryProbe"),
     ("operator_double_decode", "operatorDoubleDecode"),
     ("joinedSeal", "joinedSeal"),
+    ("nsSliceAuthorSpy", "nsSliceAuthorSpy"),
 ];
 
 /// The fixtures every `db.open` registers, under their own names

@@ -431,6 +431,8 @@ impl Database {
             return Err(Error::authorization(authorization.description()));
         }
 
+        let queries = self.without_relationship_queries(queries)?;
+
         if self.is_validating() {
             let validator = self.queries_validator(&collection, &queries, false)?;
             if !validator.check(&queries) {

@@ -7127,13 +7127,13 @@
           },
           "expect": [
             {
-              "people": "2",
-              "score": "5",
+              "people": 2,
+              "score": 5,
               "dotsname": "v"
             },
             {
-              "people": "1",
-              "score": "5",
+              "people": 1,
+              "score": 5,
               "dotsname": "w"
             }
           ]
@@ -7173,7 +7173,7 @@
           },
           "expect": [
             {
-              "people": "1",
+              "people": 1,
               "dotsname": "w"
             }
           ]
@@ -7221,7 +7221,7 @@
           },
           "expect": [
             {
-              "people": "2",
+              "people": 2,
               "dotsname": "v"
             }
           ]

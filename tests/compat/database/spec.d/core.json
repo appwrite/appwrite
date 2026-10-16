@@ -1294,6 +1294,7 @@
         "Utopia\\Database\\Adapter::addTransform",
         "Utopia\\Database\\Adapter::addWriteHook",
         "Utopia\\Database\\Adapter::capabilities",
+        "Utopia\\Database\\Adapter::deleteDocumentsMatching",
         "Utopia\\Database\\Adapter::filter",
         "Utopia\\Database\\Adapter::getAuthorization",
         "Utopia\\Database\\Adapter::getDatabase",

@@ -103778,6 +103778,12 @@
             },
             {
               "$document": {
+                "column": "_permissions",
+                "definition": "jsonb NULL"
+              }
+            },
+            {
+              "$document": {
                 "column": "_createdAt",
                 "definition": "timestamp(3) without time zone NULL"
               }
@@ -103786,12 +103792,6 @@
               "$document": {
                 "column": "_updatedAt",
                 "definition": "timestamp(3) without time zone NULL"
-              }
-            },
-            {
-              "$document": {
-                "column": "_permissions",
-                "definition": "jsonb NULL"
               }
             },
             {
@@ -104450,6 +104450,12 @@
             },
             {
               "$document": {
+                "column": "_permissions",
+                "definition": "jsonb NULL"
+              }
+            },
+            {
+              "$document": {
                 "column": "_createdAt",
                 "definition": "timestamp(3) without time zone NULL"
               }
@@ -104458,12 +104464,6 @@
               "$document": {
                 "column": "_updatedAt",
                 "definition": "timestamp(3) without time zone NULL"
-              }
-            },
-            {
-              "$document": {
-                "column": "_permissions",
-                "definition": "jsonb NULL"
               }
             },
             {
