@@ -4,6 +4,7 @@ namespace Appwrite\Realtime\Message\Handlers;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\Store as PresenceStore;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -30,6 +31,7 @@ class Authentication extends Action
             ->inject('database')
             ->inject('register')
             ->inject('response')
+            ->inject('presenceStore')
             ->callback($this->action(...));
     }
 
@@ -43,6 +45,7 @@ class Authentication extends Action
         Database $database,
         Registry $register,
         Response $response,
+        PresenceStore $presenceStore,
     ): array {
         $store = new Store();
         $store->decode($session);
@@ -74,9 +77,10 @@ class Authentication extends Action
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
-        // Capture the pre-auth userId before unsubscribe() clears the connection entry,
-        // so we can rebind any account channels that were stored under it.
+        // Capture the pre-auth userId and presence hold before unsubscribe() clears the
+        // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
+        $presenceHold = $realtime->connections[$connectionId]['presence'] ?? null;
 
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
@@ -111,6 +115,18 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);
             // Now authenticated by this session, not by any JWT it was opened with.
             $realtime->connections[$connectionId]['jwtExpire'] = null;
+        }
+
+        // Carry the presence hold across a re-auth to the same user; on a user change release
+        // it from the previous user so its row is no longer kept alive by this connection.
+        if ($presenceHold !== null && !empty($projectId)) {
+            if ($previousUserId === $user->getId()) {
+                if (isset($realtime->connections[$connectionId])) {
+                    $realtime->connections[$connectionId]['presence'] = $presenceHold;
+                }
+            } else {
+                $presenceStore->release((string) $projectId, (string) $previousUserId, (string) ($presenceHold['connectionId'] ?? ''));
+            }
         }
 
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));

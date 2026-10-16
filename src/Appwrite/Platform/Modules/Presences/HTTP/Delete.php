@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\Presences\State as PresenceState;
+use Appwrite\Presences\Store as PresenceStore;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -13,6 +14,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Validator\UID;
@@ -53,13 +55,14 @@ class Delete extends PlatformAction
             ))
             ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $presenceId, Response $response, Database $dbForProject, Event $queueForEvents, Context $usage): void
+    public function action(string $presenceId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Context $usage): void
     {
         $presence = $dbForProject->getDocument('presenceLogs', $presenceId);
 
@@ -76,6 +79,7 @@ class Delete extends PlatformAction
         }
 
         (new PresenceState())->purgeListCache($dbForProject);
+        (new PresenceStore($dbForProject->getCache()))->clear($project->getId(), $presence->getAttribute('userId', ''));
 
         $usage->addMetric(METRIC_USERS_PRESENCE, -1);
 
