@@ -540,6 +540,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "customer-story-creators-mind",
+    "href": "/blog/post/customer-story-creators-mind",
+    "title": "How Creators Mind runs 1,100+ coaching apps on Appwrite",
+    "description": "Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite Cloud that powers 1,100+ coaching apps for Indian educators and reaches nearly 10 million students.",
+    "date": "2026-09-16",
+    "lastUpdated": "2026-09-16",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-creators-mind/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "well-known-change-password-url",
     "href": "/blog/post/well-known-change-password-url",
     "title": "Support the well-known change password URL with Appwrite Auth",
