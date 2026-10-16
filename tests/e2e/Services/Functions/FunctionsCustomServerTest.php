@@ -351,6 +351,20 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertSame('', $nullSchedule['body']['schedule']);
         $this->assertSame('', $nullSchedule['body']['description']);
 
+        // ...description included, which is sent explicitly here rather than omitted:
+        // Utopia hands the action the null instead of the declared default, so the
+        // action has to resolve it on the way through.
+        $nullDescription = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'description' => null,
+        ]);
+
+        $this->assertEquals(201, $nullDescription['headers']['status-code']);
+        $this->assertSame('', $nullDescription['body']['description']);
+
         $function = $this->getFunction($functionId);
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertSame('Function created via E2E test', $function['body']['description']);

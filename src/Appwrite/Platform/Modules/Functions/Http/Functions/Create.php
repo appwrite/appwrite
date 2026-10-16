@@ -176,7 +176,7 @@ class Create extends Base
         string $templateVersion,
         int $deploymentRetention,
         int $interval,
-        string $description,
+        ?string $description,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -198,6 +198,7 @@ class Create extends Base
         Bus $bus,
         array $platform
     ) {
+        $description ??= '';
         $schedule ??= '';
 
         if ($schedule !== '' && $interval !== 0) {

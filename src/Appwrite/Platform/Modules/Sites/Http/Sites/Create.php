@@ -137,7 +137,7 @@ class Create extends Base
         string $runtimeSpecification,
         int $deploymentRetention,
         array $scopes,
-        string $description,
+        ?string $description,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -146,6 +146,7 @@ class Create extends Base
         VcsFactory $vcsFactory,
         RepositoryWebhooks $repositoryWebhooks
     ) {
+        $description ??= '';
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);

@@ -91,7 +91,7 @@ class Create extends Action
         ?string        $default,
         bool           $array,
         bool           $encrypt,
-        string         $description,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -100,6 +100,7 @@ class Create extends Action
         array $plan,
         Authorization $authorization
     ): void {
+        $description ??= '';
         if (!Http::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted ' . $this->getSDKGroup() . '.');
         }

@@ -71,8 +71,9 @@ class Create extends Base
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, string $description, Response $response, QueueEvent $queueForEvents, Database $dbForProject, Document $project)
+    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, ?string $description, Response $response, QueueEvent $queueForEvents, Database $dbForProject, Document $project)
     {
+        $description ??= '';
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {

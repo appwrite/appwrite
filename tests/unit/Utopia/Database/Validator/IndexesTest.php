@@ -6,7 +6,7 @@ namespace Tests\Unit\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Validator\Indexes;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
+use Utopia\Query\Schema\IndexType;
 
 final class IndexesTest extends TestCase
 {
@@ -20,17 +20,17 @@ final class IndexesTest extends TestCase
     public function testDescription(): void
     {
         $this->assertTrue($this->object->isValid([
-            ['key' => 'titleIndex', 'type' => Database::INDEX_KEY, 'attributes' => ['title'], 'description' => 'Speeds up lookups by title'],
-            ['key' => 'bodyIndex', 'type' => Database::INDEX_FULLTEXT, 'attributes' => ['body'], 'description' => \str_repeat('a', 1024)],
-            ['key' => 'slugIndex', 'type' => Database::INDEX_UNIQUE, 'attributes' => ['slug']],
+            ['key' => 'titleIndex', 'type' => IndexType::Key->value, 'attributes' => ['title'], 'description' => 'Speeds up lookups by title'],
+            ['key' => 'bodyIndex', 'type' => IndexType::Fulltext->value, 'attributes' => ['body'], 'description' => \str_repeat('a', 1024)],
+            ['key' => 'slugIndex', 'type' => IndexType::Unique->value, 'attributes' => ['slug']],
         ]), $this->object->getDescription());
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'titleIndex', 'type' => Database::INDEX_KEY, 'attributes' => ['title'], 'description' => 42],
+            ['key' => 'titleIndex', 'type' => IndexType::Key->value, 'attributes' => ['title'], 'description' => 42],
         ]));
 
         $this->assertFalse($this->object->isValid([
-            ['key' => 'titleIndex', 'type' => Database::INDEX_KEY, 'attributes' => ['title'], 'description' => \str_repeat('a', 1025)],
+            ['key' => 'titleIndex', 'type' => IndexType::Key->value, 'attributes' => ['title'], 'description' => \str_repeat('a', 1025)],
         ]));
     }
 }

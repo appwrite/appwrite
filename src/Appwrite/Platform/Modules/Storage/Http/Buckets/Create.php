@@ -94,11 +94,12 @@ class Create extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
-        string $description,
+        ?string $description,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
     ) {
+        $description ??= '';
         $bucketId = $bucketId === 'unique()' ? Id::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.

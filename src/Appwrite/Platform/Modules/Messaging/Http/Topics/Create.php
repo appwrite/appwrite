@@ -67,8 +67,9 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $topicId, string $name, array $subscribe, ?int $qos, ?int $expiry, string $description, Event $queueForEvents, Database $dbForProject, Response $response)
+    public function action(string $topicId, string $name, array $subscribe, ?int $qos, ?int $expiry, ?string $description, Event $queueForEvents, Database $dbForProject, Response $response)
     {
+        $description ??= '';
         $topicId = $topicId == 'unique()' ? Id::unique() : $topicId;
 
         $topic = new Document([

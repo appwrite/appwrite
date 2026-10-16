@@ -523,6 +523,36 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals(201, $plain['headers']['status-code']);
         $this->assertSame('', $plain['body']['description']);
 
+        // Utopia skips validation for an optional param sent as an explicit null and
+        // hands that null to the action instead of the declared default, so null has
+        // to mean something on both paths. On create nothing is saved yet, so it
+        // means "not provided" and reads back as the empty default.
+        $null = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'Explicit null',
+            'description' => null,
+        ]);
+
+        $this->assertEquals(201, $null['headers']['status-code']);
+        $this->assertSame('', $null['body']['description']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => 'Receipts tagged ' . $newKeyword,
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
+        // On update it means "keep the saved value", so only '' clears it.
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, $headers, [
+            'name' => 'Invoices',
+            'description' => null,
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertSame('Receipts tagged ' . $newKeyword, $bucket['body']['description']);
+
         /**
          * Test for FAILURE
          */

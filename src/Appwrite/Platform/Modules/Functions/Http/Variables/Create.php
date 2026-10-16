@@ -77,12 +77,13 @@ class Create extends Base
         string $key,
         string $value,
         bool $secret,
-        string $description,
+        ?string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject,
         Document $project
     ) {
+        $description ??= '';
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

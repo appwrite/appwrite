@@ -77,8 +77,9 @@ class Create extends CollectionCreate
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
+        $description ??= '';
         parent::action($databaseId, $tableId, $name, $permissions, $rowSecurity, $enabled, $columns, $indexes, $description, $response, $dbForProject, $getDatabasesDB, $queueForEvents, $authorization);
     }
 }

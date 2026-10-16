@@ -70,11 +70,12 @@ class Create extends Action
         string $key,
         string $value,
         bool $secret,
-        string $description,
+        ?string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject,
     ) {
+        $description ??= '';
         $variableId = ($variableId === 'unique()') ? Id::unique() : $variableId;
 
         $variable = new Document([
