@@ -131,6 +131,115 @@ class TestableS3 extends S3
  * Client stub that replays scripted responses and records every request.
  * Implements the full utopia-php/client Adapter so the Retry decorator can wrap it.
  */
+/**
+ * An in-memory bucket: it answers listings from the keys it holds and applies
+ * deletes to them, so a test can assert which objects survive rather than which
+ * requests were sent.
+ */
+final class FakeBucket implements Adapter
+{
+    /**
+     * @param  array<string>  $keys
+     */
+    public function __construct(public array $keys = [])
+    {
+    }
+
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $query = [];
+        parse_str($request->getUri()->getQuery(), $query);
+
+        if ($request->getMethod() === 'GET' && isset($query['list-type'])) {
+            $prefix = \is_string($query['prefix'] ?? null) ? $query['prefix'] : '';
+            $matched = array_values(array_filter($this->keys, static fn (string $key): bool => str_starts_with($key, $prefix)));
+
+            $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>' . \count($matched) . '</KeyCount><IsTruncated>false</IsTruncated>';
+            foreach ($matched as $key) {
+                $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Key></Contents>';
+            }
+            $body .= '</ListBucketResult>';
+
+            return new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml');
+        }
+
+        if ($request->getMethod() === 'POST' && isset($query['delete'])) {
+            $document = simplexml_load_string((string) $request->getBody());
+            if ($document === false) {
+                return new Response(400, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><Error><Code>MalformedXML</Code><Message>The XML you provided was not well-formed</Message></Error>'))
+                    ->withHeader('content-type', 'application/xml');
+            }
+
+            foreach ($document->Object as $object) {
+                $this->forget((string) $object->Key);
+            }
+
+            return new Response(200);
+        }
+
+        if ($request->getMethod() === 'DELETE') {
+            $this->forget(ltrim(rawurldecode($request->getUri()->getPath()), '/'));
+
+            return new Response(204);
+        }
+
+        throw new \RuntimeException('Unexpected request ' . $request->getMethod() . ' ' . $request->getUri());
+    }
+
+    private function forget(string $key): void
+    {
+        $this->keys = array_values(array_filter($this->keys, static fn (string $held): bool => $held !== $key));
+    }
+
+    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    {
+        $response = $this->sendRequest($request);
+        $sink((string) $response->getBody());
+
+        return $response;
+    }
+
+    public function withTimeout(float $seconds): static
+    {
+        return $this;
+    }
+
+    public function withConnectTimeout(float $seconds): static
+    {
+        return $this;
+    }
+
+    public function withSslVerification(bool $enabled = true): static
+    {
+        return $this;
+    }
+
+    public function withCustomCA(string $path): static
+    {
+        return $this;
+    }
+
+    public function withCertificate(string $certPath, string $keyPath, ?string $passphrase = null): static
+    {
+        return $this;
+    }
+
+    public function withMinTlsVersion(Tls $version): static
+    {
+        return $this;
+    }
+
+    public function withConnectionReuse(bool $enabled = true): static
+    {
+        return $this;
+    }
+
+    public function withFollowRedirects(bool $enabled = true, int $maxHops = Redirect::MAX_HOPS): static
+    {
+        return $this;
+    }
+}
+
 final class ScriptedClient implements Adapter
 {
     /**
@@ -672,6 +781,93 @@ final class S3Test extends TestCase
         $this->assertContains('s3:createMultipartUpload', $this->s3->calls);
         $this->assertContains('s3:abort', $this->s3->calls);
         $this->assertNotContains('s3:completeMultipartUpload', $this->s3->calls);
+    }
+
+    private function bucket(FakeBucket $bucket): S3
+    {
+        return new S3(
+            root: '/root',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            client: new Retry($bucket, new RetryStrategy(delay: 0.0)),
+        );
+    }
+
+    /**
+     * `Device::delete()` takes a `$recursive` flag and `Local` honours it, but
+     * `S3` ignored it and sent one DELETE for the directory key, which removes
+     * nothing. A caller deleting a tree left every object behind.
+     */
+    public function testRecursiveDeleteRemovesEveryObjectUnderThePath(): void
+    {
+        $bucket = new FakeBucket(['root/dir/a.txt', 'root/dir/nested/b.txt', 'root/keep.txt']);
+
+        $this->assertTrue($this->bucket($bucket)->delete('/root/dir', true));
+        $this->assertSame(['root/keep.txt'], $bucket->keys);
+    }
+
+    public function testDeleteWithoutRecursiveLeavesTheSubtreeAlone(): void
+    {
+        $bucket = new FakeBucket(['root/dir/a.txt', 'root/dir']);
+
+        $this->assertTrue($this->bucket($bucket)->delete('/root/dir'));
+        $this->assertSame(['root/dir/a.txt'], $bucket->keys);
+    }
+
+    /** `app-1` and `app-12` share a prefix, so a listing has to be bounded by a separator. */
+    public function testDeletePathLeavesASiblingWithASharedPrefixIntact(): void
+    {
+        $bucket = new FakeBucket(['root/app-1/a.txt', 'root/app-12/b.txt']);
+
+        $this->assertTrue($this->bucket($bucket)->deletePath('app-1'));
+        $this->assertSame(['root/app-12/b.txt'], $bucket->keys);
+    }
+
+    /** A key holding `&` or `<` would make the bulk delete request malformed. */
+    public function testRecursiveDeleteRemovesKeysHoldingXmlSpecialCharacters(): void
+    {
+        $bucket = new FakeBucket(['root/dir/a&b<c>d.txt', 'root/keep.txt']);
+
+        $this->assertTrue($this->bucket($bucket)->delete('/root/dir', true));
+        $this->assertSame(['root/keep.txt'], $bucket->keys);
+    }
+
+    /** A bulk delete reports a per-key failure in the body of a 200, so the status alone is not success. */
+    public function testDeletePathSurfacesAPerKeyBulkDeleteFailure(): void
+    {
+        $listing = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated>'
+            . '<Contents><Key>root/dir/a.txt</Key></Contents></ListBucketResult>';
+        $failure = '<?xml version="1.0" encoding="UTF-8"?><DeleteResult>'
+            . '<Error><Key>root/dir/a.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>'
+            . '</DeleteResult>';
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream($listing))->withHeader('content-type', 'application/xml'),
+            new Response(200, body: new Stream($failure))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->expectException(RemoteException::class);
+        $this->expectExceptionMessage('S3 could not delete "root/dir/a.txt": AccessDenied Access Denied');
+
+        $this->device($client)->deletePath('dir');
+    }
+
+    /** `application/xml; charset=UTF-8` with no declaration is left undecoded, and must not read as success. */
+    public function testDeletePathSurfacesABulkDeleteFailureThatArrivesUndecoded(): void
+    {
+        $listing = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated>'
+            . '<Contents><Key>root/dir/a.txt</Key></Contents></ListBucketResult>';
+        $failure = '<DeleteResult><Error><Key>root/dir/a.txt</Key><Code>InternalError</Code><Message>We encountered an internal error</Message></Error></DeleteResult>';
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream($listing))->withHeader('content-type', 'application/xml'),
+            new Response(200, body: new Stream($failure))->withHeader('content-type', 'application/xml; charset=UTF-8'),
+        ]);
+
+        $this->expectException(RemoteException::class);
+        $this->expectExceptionMessage('S3 could not delete "root/dir/a.txt": InternalError');
+
+        $this->device($client)->deletePath('dir');
     }
 
     public function testXmlListingIsDecodedIntoTypedFiles(): void
