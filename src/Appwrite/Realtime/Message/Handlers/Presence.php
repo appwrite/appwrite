@@ -109,8 +109,9 @@ class Presence extends Action
         try {
             $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
         } catch (\Throwable $th) {
-            // Roll back the reservation so it can't decrement a count it never incremented.
-            if (!$alreadyHeld) {
+            // Roll back only our own reservation (still `true`); a concurrent message on this
+            // connection that already succeeded has overwritten it with a row id -- leave that.
+            if (!$alreadyHeld && ($realtime->presenceHolders[$projectId][$userId][$connectionId] ?? null) === true) {
                 unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
                 if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
                     unset($realtime->presenceHolders[$projectId][$userId]);
