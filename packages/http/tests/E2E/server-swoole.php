@@ -31,6 +31,13 @@ Http::get('/aborted')
         $response->chunk('ignored', true);
     });
 
+Http::get('/empty-final')
+    ->inject('response')
+    ->action(function (Response $response): void {
+        $response->chunk('prefix');
+        $response->chunk('', true);
+    });
+
 $server = new Server('0.0.0.0', '80', Mode::HYPERLOOP_B);
 $http = new Http($server, 'UTC');
 
