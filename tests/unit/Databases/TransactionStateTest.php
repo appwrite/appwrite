@@ -196,7 +196,7 @@ final class TransactionStateTest extends TestCase
     /**
      * @param array<string, mixed> $data
      */
-    private function stage(Document $transaction, string $action, string $customerId, array $data): void
+    private function stage(Document $transaction, string $action, ?string $customerId, array $data): void
     {
         $this->store->createDocument('transactionLogs', new Document([
             'transactionInternalId' => (string) $transaction->getSequence(),
@@ -268,6 +268,37 @@ final class TransactionStateTest extends TestCase
         $this->assertSame([['dee', 'Abe', null], ['ada', 'Ada', null]], $page([Query::cursorBefore($bob)]), 'before a stored row');
         $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null], ['cy', 'Cy', null]], $page([Query::cursorAfter(new Document(['$id' => 'dee', 'name' => 'Abe']))]), 'after a staged row');
         $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null]], $page([Query::cursorBefore(new Document(['$id' => 'cy', 'name' => 'Cy'])), Query::limit(2)]), 'the rows nearest before a staged row');
+    }
+
+    public function testOrderOnAnAttributeTheReadSelectsAwayStillOrdersStoredRows(): void
+    {
+        $transaction = $this->shop();
+        $this->store->createDocument(self::CUSTOMERS, new Document(['$id' => 'abe', 'name' => 'Abe']));
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::select(['$id']), Query::orderAsc('name')]);
+
+        $this->assertSame(['abe', 'ada', 'bob', 'cy'], \array_map(static fn (Document $row): string => $row->getId(), $rows));
+        $this->assertNull($rows[0]->getAttribute('name'), 'the order attribute is selected for the merge only');
+    }
+
+    public function testExistsFilterSeesAStagedUpdateThatSetsTheAttribute(): void
+    {
+        $transaction = $this->shop();
+        $this->store->createDocument(self::CUSTOMERS, new Document(['$id' => 'nameless']));
+        $this->stage($transaction, 'update', 'nameless', ['name' => 'Named']);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::exists(['name']), Query::equal('$id', ['nameless'])]);
+        $this->assertSame([['nameless', 'Named', null]], $this->project($rows));
+    }
+
+    public function testStagedWriteIsNotMatchedByAFilterOnlyTheEngineEvaluates(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+        $this->stage($transaction, 'bulkDelete', null, ['queries' => [Query::regex('name', '^B')->toString()]]);
+
+        $this->assertSame('Cy', $this->state->getDocument(new Document(), self::CUSTOMERS, 'cy', $transaction->getId())->getAttribute('name'), 'a staged bulk delete by a pattern the matcher cannot evaluate leaves a staged create alone');
     }
 
     private function shopWithStagedCreates(): Document

@@ -308,10 +308,11 @@ class TransactionState
         $rows = [];
         foreach ($dbForDatabases->find($collectionId, $window) as $row) {
             if (!isset($staged[$row->getId()])) {
+                $key = $this->sortKey($row, $orders, null);
                 foreach ($added as $attribute) {
                     $row->removeAttribute($attribute);
                 }
-                $rows[] = ['document' => $row, 'key' => $this->sortKey($row, $orders, null)];
+                $rows[] = ['document' => $row, 'key' => $key];
             }
         }
 
@@ -531,11 +532,11 @@ class TransactionState
     {
         $attributes = [];
         foreach ($filters as $filter) {
-            if (\in_array($filter->getMethod(), [Method::And, Method::Or], true)) {
-                \array_push($attributes, ...$this->filterAttributes($filter->getValues()));
-            } else {
-                $attributes[] = $filter->getAttribute();
-            }
+            match ($filter->getMethod()) {
+                Method::And, Method::Or => \array_push($attributes, ...$this->filterAttributes($filter->getValues())),
+                Method::Exists, Method::NotExists => \array_push($attributes, ...\array_map(\strval(...), $filter->getValues())),
+                default => $attributes[] = $filter->getAttribute(),
+            };
         }
 
         return $attributes;
@@ -1011,26 +1012,12 @@ class TransactionState
      */
     private function extractFilters(array $queries): array
     {
-        $filters = [];
-        foreach ($queries as $query) {
-            $method = $query->getMethod();
-            if (!\in_array($method, [
-                Method::Limit,
-                Method::Offset,
-                Method::CursorAfter,
-                Method::CursorBefore,
-                Method::Select,
-                Method::OrderAsc,
-                Method::OrderDesc
-            ])) {
-                $filters[] = $query;
-            }
-        }
-        return $filters;
+        return Query::groupByType($queries)->filters;
     }
 
     /**
-     * Check if a document matches filter queries
+     * Check if a document matches filter queries. A filter evaluated only by the engine (search, regex, spatial,
+     * vector, JSON, elemMatch) does not match a staged value.
      *
      * @param Document $doc Document to check
      * @param array $filters Pre-filtered Query filters (use extractFilters first)
@@ -1210,6 +1197,9 @@ class TransactionState
                         return false;
                     }
                     break;
+
+                default:
+                    return false;
             }
         }
 
