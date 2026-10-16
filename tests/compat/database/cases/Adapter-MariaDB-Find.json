@@ -8247,8 +8247,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8284,8 +8284,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8321,8 +8321,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8358,8 +8358,8 @@
           },
           "expect": {
             "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -8812,6 +8812,22 @@
             {
               "transform": "document_find",
               "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE NOT ST_Touches(`area`, ST_GeomFromText(?, 4326)) LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) < ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) > ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) = ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_f` AS `table_main` WHERE ST_Distance(`loc`, ST_GeomFromText(?, 4326)) != ? LIMIT ?"
             },
             {
               "transform": "document_find",

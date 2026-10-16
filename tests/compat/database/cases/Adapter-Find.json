@@ -11520,12 +11520,31 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+          "expect": [
+            {
+              "$document": {
+                "title": "Alien",
+                "year": "1979",
+                "rating": "8.5",
+                "active": "1",
+                "released": "1979-05-25 00:00:00",
+                "tags": "[\"sci-fi\", \"horror\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\"}, \"lang\": \"en\", \"skills\": [\"typescript\", \"go\"]}",
+                "loc": "0101000020E6100000000000000000F03F000000000000F03F",
+                "path": "0102000020E6100000020000000000000000000000000000000000000000000000000000400000000000000040",
+                "area": "0103000020E610000001000000050000000000000000000000000000000000000000000000000010400000000000000000000000000000104000000000000010400000000000000000000000000000104000000000000000000000000000000000",
+                "emb": "[1,0,0]",
+                "body": "In space no one can hear you scream",
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "2020-01-06 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
             }
-          }
+          ]
         },
         {
           "op": "adapter.call",
@@ -11557,12 +11576,54 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+          "expect": [
+            {
+              "$document": {
+                "title": "Aliens",
+                "year": "1986",
+                "rating": "8.4",
+                "active": "0",
+                "released": "1986-07-18 00:00:00",
+                "tags": "[\"sci-fi\", \"action\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\", \"count\": 3}, \"lang\": \"en\"}",
+                "loc": "0101000020E610000000000000000014400000000000001440",
+                "path": "0102000020E6100000020000000000000000001440000000000000144000000000000018400000000000001840",
+                "area": "0103000020E610000001000000050000000000000000002440000000000000244000000000000028400000000000002440000000000000284000000000000028400000000000002440000000000000284000000000000024400000000000002440",
+                "emb": "[0.9,0.1,0]",
+                "body": "This time it's war",
+                "$id": "aliens",
+                "$sequence": "2",
+                "$createdAt": "2020-01-07 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "Heat",
+                "year": "1995",
+                "rating": "8.3",
+                "active": "1",
+                "released": "1995-12-15 00:00:00",
+                "tags": "[\"crime\"]",
+                "meta": "{\"lang\": \"fr\"}",
+                "loc": "0101000020E610000000000000000008C00000000000000040",
+                "path": null,
+                "area": null,
+                "emb": "[0,1,0]",
+                "body": "A Los Angeles crime saga",
+                "$id": "heat",
+                "$sequence": "3",
+                "$createdAt": "2020-01-05 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"user:1\")"
+                ]
+              }
             }
-          }
+          ]
         },
         {
           "op": "adapter.call",
@@ -11594,12 +11655,31 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+          "expect": [
+            {
+              "$document": {
+                "title": "Alien",
+                "year": "1979",
+                "rating": "8.5",
+                "active": "1",
+                "released": "1979-05-25 00:00:00",
+                "tags": "[\"sci-fi\", \"horror\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\"}, \"lang\": \"en\", \"skills\": [\"typescript\", \"go\"]}",
+                "loc": "0101000020E6100000000000000000F03F000000000000F03F",
+                "path": "0102000020E6100000020000000000000000000000000000000000000000000000000000400000000000000040",
+                "area": "0103000020E610000001000000050000000000000000000000000000000000000000000000000010400000000000000000000000000000104000000000000010400000000000000000000000000000104000000000000000000000000000000000",
+                "emb": "[1,0,0]",
+                "body": "In space no one can hear you scream",
+                "$id": "alien",
+                "$sequence": "1",
+                "$createdAt": "2020-01-06 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
             }
-          }
+          ]
         },
         {
           "op": "adapter.call",
@@ -11631,12 +11711,54 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "Utopia\\Query\\Builder\\SpatialDistanceFilter::__construct(): Argument #3 ($meters) must be of type bool, null given, called in /usr/src/code/packages/query/src/Builder/SpatialDistanceFilter.php on line 26"
+          "expect": [
+            {
+              "$document": {
+                "title": "Aliens",
+                "year": "1986",
+                "rating": "8.4",
+                "active": "0",
+                "released": "1986-07-18 00:00:00",
+                "tags": "[\"sci-fi\", \"action\"]",
+                "meta": "{\"cast\": {\"lead\": \"Weaver\", \"count\": 3}, \"lang\": \"en\"}",
+                "loc": "0101000020E610000000000000000014400000000000001440",
+                "path": "0102000020E6100000020000000000000000001440000000000000144000000000000018400000000000001840",
+                "area": "0103000020E610000001000000050000000000000000002440000000000000244000000000000028400000000000002440000000000000284000000000000028400000000000002440000000000000284000000000000024400000000000002440",
+                "emb": "[0.9,0.1,0]",
+                "body": "This time it's war",
+                "$id": "aliens",
+                "$sequence": "2",
+                "$createdAt": "2020-01-07 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "title": "Heat",
+                "year": "1995",
+                "rating": "8.3",
+                "active": "1",
+                "released": "1995-12-15 00:00:00",
+                "tags": "[\"crime\"]",
+                "meta": "{\"lang\": \"fr\"}",
+                "loc": "0101000020E610000000000000000008C00000000000000040",
+                "path": null,
+                "area": null,
+                "emb": "[0,1,0]",
+                "body": "A Los Angeles crime saga",
+                "$id": "heat",
+                "$sequence": "3",
+                "$createdAt": "2020-01-05 10:00:00",
+                "$updatedAt": "2021-01-01 10:00:00",
+                "$permissions": [
+                  "read(\"user:1\")"
+                ]
+              }
             }
-          }
+          ]
         },
         {
           "op": "adapter.call",
@@ -12253,6 +12375,22 @@
             {
               "transform": "document_find",
               "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE NOT ST_Touches(\"area\", ST_GeomFromText(?, 4326)) LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE (ST_DWithin(\"loc\", ST_GeomFromText(?, 4326), ?) AND ST_Distance(\"loc\", ST_GeomFromText(?, 4326)) < ?) LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE ST_Distance(\"loc\", ST_GeomFromText(?, 4326)) > ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE ST_Distance(\"loc\", ST_GeomFromText(?, 4326)) = ? LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM \"${ns}\".\"ns_f\" AS \"table_main\" WHERE ST_Distance(\"loc\", ST_GeomFromText(?, 4326)) != ? LIMIT ?"
             },
             {
               "transform": "document_find",
