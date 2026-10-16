@@ -54,18 +54,18 @@ class State
 
     public function decrementConnections(\Redis $redis, string $projectId, string $userId): int
     {
+        return $this->decrementConnectionsBy($redis, $projectId, $userId, 1);
+    }
+
+    public function decrementConnectionsBy(\Redis $redis, string $projectId, string $userId, int $by): int
+    {
         $key = self::getConnectionCounterKey($projectId, $userId);
-        $remaining = (int) $redis->decr($key);
+        $remaining = (int) $redis->decrBy($key, $by);
         if ($remaining <= 0) {
             $redis->del($key);
         }
 
         return $remaining;
-    }
-
-    public function clearConnections(\Redis $redis, string $projectId, string $userId): void
-    {
-        $redis->del(self::getConnectionCounterKey($projectId, $userId));
     }
 
     /**
@@ -116,6 +116,27 @@ class State
         });
 
         return $deleted;
+    }
+
+    /**
+     * Balance the counter after a REST delete removed the row out-of-band: the holders it
+     * dropped stop counting. Counter only -- the row is already gone, nothing to delete.
+     */
+    public function releaseStrippedHolders(Group $pools, string $projectId, string $userId, int $count): void
+    {
+        if ($count <= 0) {
+            return;
+        }
+
+        $pools->get('lock')->use(function (\Redis $redis) use ($projectId, $userId, $count): void {
+            $lock = new Distributed($redis, self::getLockKey($projectId, $userId), ttl: self::LOCK_TTL);
+
+            try {
+                $lock->withLock(fn () => $this->decrementConnectionsBy($redis, $projectId, $userId, $count), timeout: self::LOCK_TIMEOUT);
+            } catch (Contention) {
+                // On contention, let the counter drift; the row is already gone and expiresAt covers it.
+            }
+        });
     }
 
     public function stripInternalAttributes(Document $presence): Document

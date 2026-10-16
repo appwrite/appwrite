@@ -586,7 +586,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState, $container) {
                 $event = json_decode($payload, true);
                 $closing = [];
 
@@ -730,13 +730,21 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
 
                 // Strip deleted presences from in-memory connection state so onClose doesn't
-                // re-fire delete events for rows already removed via HTTP DELETE.
+                // re-fire delete events for rows already removed via HTTP DELETE, and balance the
+                // holder counter for the connections that stripped it (their close no longer can).
                 $deletedPresenceId = Realtime::extractDeletedPresenceId($event);
                 if ($deletedPresenceId !== null) {
-                    $realtime->removePresenceFromConnections(
-                        (string) ($event['project'] ?? ''),
-                        $deletedPresenceId,
-                    );
+                    $deletedProjectId = (string) ($event['project'] ?? '');
+                    $strippedHolders = $realtime->removePresenceFromConnections($deletedProjectId, $deletedPresenceId);
+
+                    if (!empty($strippedHolders) && $deletedProjectId !== '' && $deletedProjectId !== 'console') {
+                        go(function () use ($strippedHolders, $deletedProjectId, $container, $presenceState): void {
+                            $pools = $container->get('pools');
+                            foreach ($strippedHolders as $strippedUserId => $strippedCount) {
+                                $presenceState->releaseStrippedHolders($pools, $deletedProjectId, (string) $strippedUserId, $strippedCount);
+                            }
+                        });
+                    }
                 }
 
                 $receivers = $realtime->getSubscribers($event);
