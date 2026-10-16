@@ -303,8 +303,8 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
         foreach ($this->expectedDimAssertions(Metric::EVENT_COLUMNS, 'event') as $expected) {
             $this->assertStringContainsString($expected, $eventsDdl);
         }
-        $this->assertStringNotContainsString('TTL', $eventsDdl, 'migrate() must leave the events retention as it is');
-        $this->assertStringNotContainsString('TTL', $this->showCreateFor($adapter, $dailyTable), 'migrate() must leave the daily retention as it is');
+        $this->assertStringNotContainsString('TTL', $eventsDdl, 'migrate() must leave an existing table\'s retention as it is');
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $dailyTable), 'A table migrate() creates must carry the retention');
 
         $this->assertTrue($usage->addBatch([[
             'tenant' => '1',
@@ -317,6 +317,165 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
 
         $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $eventsTable));
         $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $dailyTable));
+    }
+
+    public function testMigrateConvergesColumnsThatPredateTheirTypeAndCodec(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_converge',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+        );
+        $database = $this->databaseName($adapter);
+        $table = $this->resolveTableName($adapter, 'getEventsTableName');
+        $eventsTable = "`{$database}`.`{$table}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} DROP INDEX `index-protocol`");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `protocol` Nullable(String) SETTINGS mutations_sync = 2");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} ADD INDEX `index-protocol` (`protocol`) TYPE set(0) GRANULARITY 1");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `accept` REMOVE CODEC");
+        $this->assertSame(['type' => 'Nullable(String)', 'codec' => ''], $this->columnShape($adapter, $table, 'protocol'));
+        $this->assertSame('', $this->columnShape($adapter, $table, 'accept')['codec']);
+        $this->assertStringContainsString('INDEX `index-accept` accept TYPE bloom_filter', $this->showCreateFor($adapter, $eventsTable));
+
+        $usage->migrate();
+
+        $this->assertSame('LowCardinality(Nullable(String))', $this->columnShape($adapter, $table, 'protocol')['type']);
+        $this->assertSame('CODEC(ZSTD(3))', $this->columnShape($adapter, $table, 'accept')['codec']);
+        $ddl = $this->showCreateFor($adapter, $eventsTable);
+        $this->assertStringContainsString('INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1', $ddl);
+        $this->assertStringContainsString('INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1', $ddl);
+
+        $mutations = $this->mutationCount($adapter, $table);
+        $usage->migrate();
+        $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A converged table must not be altered again');
+    }
+
+    public function testMigrateRealignsSkipIndexesWhoseExpressionOrTypeDrifted(): void
+    {
+        $adapter = $this->migrationAdapter('utopia_usage_schema_index_drift');
+        $table = $this->resolveTableName($adapter, 'getGaugesTableName');
+        $gaugesTable = "`{$this->databaseName($adapter)}`.`{$table}`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$gaugesTable}");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+        $this->assertTrue($usage->addBatch([[
+            'tenant' => '1',
+            'metric' => 'storage',
+            'value' => 1,
+            'tags' => ['service' => 'storage', 'resourceType' => 'bucket', 'resourceId' => 'b1'],
+        ]], Usage::TYPE_GAUGE));
+
+        $this->queryRaw($adapter, "ALTER TABLE {$gaugesTable} DROP INDEX `index-resourceType`, DROP INDEX `index-resourceId`");
+        $this->queryRaw($adapter, "ALTER TABLE {$gaugesTable} ADD INDEX `index-resourceType` (`service`) TYPE set(0) GRANULARITY 1, ADD INDEX `index-resourceId` (`resourceId`) TYPE set(0) GRANULARITY 1");
+        $this->assertSame(['expression' => 'service', 'type' => 'set(0)'], $this->skipIndexes($adapter, $table)['index-resourceType']);
+        $this->assertSame(['expression' => 'resourceId', 'type' => 'set(0)'], $this->skipIndexes($adapter, $table)['index-resourceId']);
+
+        $usage->migrate();
+
+        $indexes = $this->skipIndexes($adapter, $table);
+        $realigned = $indexes;
+        $this->assertSame(['expression' => 'resourceType', 'type' => 'set(0)'], $indexes['index-resourceType'], 'An index whose expression drifted must be recreated on the defined column');
+        $this->assertSame(['expression' => 'resourceId', 'type' => 'bloom_filter'], $indexes['index-resourceId'], 'An index whose type drifted must be recreated with the defined type');
+        $this->assertSame(['expression' => 'service', 'type' => 'set(0)'], $indexes['index-service'], 'An index that matches its definition must be left as it is');
+        $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceType`', $this->mutationCommands($adapter, $table));
+        $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceId`', $this->mutationCommands($adapter, $table));
+        $this->assertStringNotContainsString('MATERIALIZE INDEX `index-service`', $this->mutationCommands($adapter, $table));
+
+        $mutations = $this->mutationCount($adapter, $table);
+        $usage->migrate();
+        $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A realigned table must not be altered again');
+        $this->assertSame($realigned, $this->skipIndexes($adapter, $table));
+    }
+
+    /**
+     * Production tables predate the `resource` -> `resourceType` rename: their
+     * index on `resourceType` is still named `index-resource`, which the
+     * definition no longer has, so `index-resourceType` duplicates it.
+     */
+    public function testMigrateDropsAnIndexThatDuplicatesADefinedIndexUnderAnotherName(): void
+    {
+        $adapter = $this->migrationAdapter('utopia_usage_schema_index_renamed');
+        $database = $this->databaseName($adapter);
+        $tables = [
+            $this->resolveTableName($adapter, 'getGaugesTableName') => 'set(0)',
+            $this->resolveTableName($adapter, 'getEventsTableName') => 'bloom_filter',
+        ];
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        foreach ($tables as $table => $type) {
+            $this->queryRaw($adapter, "DROP TABLE IF EXISTS `{$database}`.`{$table}`");
+        }
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        foreach ($tables as $table => $type) {
+            $this->queryRaw($adapter, "ALTER TABLE `{$database}`.`{$table}` DROP INDEX `index-resourceType`");
+            $this->queryRaw($adapter, "ALTER TABLE `{$database}`.`{$table}` ADD INDEX `index-resource` (`resourceType`) TYPE {$type} GRANULARITY 1, ADD INDEX `index-custom` (`metric`) TYPE bloom_filter GRANULARITY 1");
+            $this->assertArrayNotHasKey('index-resourceType', $this->skipIndexes($adapter, $table));
+        }
+
+        $usage->migrate();
+
+        foreach ($tables as $table => $type) {
+            $indexes = $this->skipIndexes($adapter, $table);
+            $this->assertArrayNotHasKey('index-resource', $indexes, "{$table}: the stale duplicate of index-resourceType must be dropped");
+            $this->assertSame(['expression' => 'resourceType', 'type' => $type], $indexes['index-resourceType'], "{$table}: the defined index must replace it");
+            $this->assertSame(['expression' => 'metric', 'type' => 'bloom_filter'], $indexes['index-custom'], "{$table}: an index that duplicates nothing must be left as it is");
+            $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceType`', $this->mutationCommands($adapter, $table), "{$table}: the replacement must be built for the parts the duplicate covered");
+
+            $mutations = $this->mutationCount($adapter, $table);
+            $usage->migrate();
+            $this->assertSame($mutations, $this->mutationCount($adapter, $table), "{$table}: a realigned table must not be altered again");
+            $this->assertSame($indexes, $this->skipIndexes($adapter, $table));
+        }
+    }
+
+    public function testMigrateCreatesNewTablesWithTheRetention(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_migrate_retention',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+            retention: 30,
+        );
+        $database = $this->databaseName($adapter);
+        $eventsTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsTableName')}`";
+        $dailyTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsDailyTableName')}`";
+        $gaugesTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getGaugesTableName')}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$gaugesTable}");
+
+        new Usage($adapter)->migrate();
+
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $eventsTable));
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $dailyTable));
+        $this->assertStringNotContainsString('TTL', $this->showCreateFor($adapter, $gaugesTable));
     }
 
     public function testRetentionAppliesTtlToEventsAndDailyTables(): void
@@ -402,6 +561,107 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
             $expected[] = "`{$column}` {$suffix}";
         }
         return $expected;
+    }
+
+    /**
+     * @return array{type: string, codec: string}
+     */
+    private function columnShape(ClickHouseAdapter $adapter, string $table, string $column): array
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT type, compression_codec AS codec FROM system.columns WHERE database = {database:String} AND table = {table:String} AND name = {column:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table, 'column' => $column],
+        );
+        $row = $this->firstRow($raw);
+
+        return [
+            'type' => is_string($row['type'] ?? null) ? $row['type'] : '',
+            'codec' => is_string($row['codec'] ?? null) ? $row['codec'] : '',
+        ];
+    }
+
+    private function migrationAdapter(string $namespace): ClickHouseAdapter
+    {
+        return new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: $namespace,
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+        );
+    }
+
+    /**
+     * @return array<string, array{expression: string, type: string}>
+     */
+    private function skipIndexes(ClickHouseAdapter $adapter, string $table): array
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $json = json_decode($raw, true);
+        $rows = is_array($json) && is_array($json['data'] ?? null) ? $json['data'] : [];
+
+        $indexes = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['name'] ?? null) && is_string($row['expr'] ?? null) && is_string($row['type_full'] ?? null)) {
+                $indexes[$row['name']] = ['expression' => $row['expr'], 'type' => $row['type_full']];
+            }
+        }
+        ksort($indexes);
+
+        return $indexes;
+    }
+
+    private function mutationCommands(ClickHouseAdapter $adapter, string $table): string
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT command FROM system.mutations WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $json = json_decode($raw, true);
+        $rows = is_array($json) && is_array($json['data'] ?? null) ? $json['data'] : [];
+
+        $commands = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['command'] ?? null)) {
+                $commands[] = $row['command'];
+            }
+        }
+
+        return implode(PHP_EOL, $commands);
+    }
+
+    private function mutationCount(ClickHouseAdapter $adapter, string $table): int
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $total = $this->firstRow($raw)['total'] ?? 0;
+
+        return is_numeric($total) ? (int) $total : 0;
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function firstRow(string $raw): array
+    {
+        $json = json_decode($raw, true);
+        if (!is_array($json) || !is_array($json['data'] ?? null) || !is_array($json['data'][0] ?? null)) {
+            return [];
+        }
+
+        return $json['data'][0];
     }
 
     private function showCreateFor(ClickHouseAdapter $adapter, string $fullName): string

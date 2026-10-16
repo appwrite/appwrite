@@ -3296,12 +3296,26 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Project environment switcher
   Environments: 'סביבות',
-  Staging: 'Staging',
-  Development: 'פיתוח',
   'Switch environment': 'החלפת סביבה',
-  'Environment switched': 'הסביבה הוחלפה',
   'Create environment': 'יצירת סביבה',
-  'Custom environments are coming soon': 'סביבות מותאמות אישית יגיעו בקרוב',
+  'Rename environment': 'שינוי שם הסביבה',
+  'Delete environment': 'מחיקת סביבה',
+  'Environment ID': 'מזהה סביבה',
+  'Enter environment name': 'הזינו שם סביבה',
+  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
+    'לכל סביבה יש משאבים ומשתמשים משלה, באותו אזור של הפרויקט הזה. השימוש בה מחויב תחת הפרויקט הזה.',
+  'Only the name changes. The environment ID stays the same.':
+    'רק השם משתנה. מזהה הסביבה נשאר זהה.',
+  'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הסביבה הזו? המשאבים והמשתמשים שלה יוסרו יחד איתה. פעולה זו אינה ניתנת לביטול.',
+  'Environment created': 'הסביבה נוצרה',
+  'Environment renamed': 'שם הסביבה שונה',
+  'Environment deleted': 'הסביבה נמחקה',
+  'Failed to create environment': 'יצירת הסביבה נכשלה',
+  'Failed to rename environment': 'שינוי שם הסביבה נכשל',
+  'Failed to delete environment': 'מחיקת הסביבה נכשלה',
+  'Too many environments created for this project in the last hour. Try again later.':
+    'נוצרו יותר מדי סביבות לפרויקט הזה בשעה האחרונה. נסו שוב מאוחר יותר.',
   'Send your first message': 'שליחת ההודעה הראשונה שלכם',
   'Reach your users by email, SMS, and push notifications from one place.':
     'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',

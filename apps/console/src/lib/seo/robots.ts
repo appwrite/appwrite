@@ -20,42 +20,42 @@ const RETRIEVAL_BOTS = [
   'Google-Extended',
 ] as const
 
-function retrievalBotAllowBlocks(): string {
-  return RETRIEVAL_BOTS.map(
-    (bot) => `User-agent: ${bot}
-Allow: /`,
-  ).join('\n\n')
-}
+/** Console and authenticated areas (not public marketing content). */
+const CONSOLE_PATHS = [
+  '/projects/',
+  '/organizations/',
+  '/account/',
+  '/sign-in',
+  '/sign-up',
+  '/sign-out',
+  '/recovery',
+  '/reset',
+  '/join',
+  '/mfa',
+  '/verify-email',
+  '/debug/',
+  '/_protected/',
+  '/comps',
+  '/blocks',
+  '/cache',
+] as const
 
-function defaultUserAgentBlock(): string {
-  return `User-agent: *
-Allow: /
-
-# Console and authenticated areas (not public marketing content)
-Disallow: /projects/
-Disallow: /organizations/
-Disallow: /account/
-Disallow: /sign-in
-Disallow: /sign-up
-Disallow: /sign-out
-Disallow: /recovery
-Disallow: /reset
-Disallow: /join
-Disallow: /mfa
-Disallow: /verify-email
-Disallow: /debug/
-Disallow: /_protected/
-Disallow: /comps
-Disallow: /blocks
-Disallow: /cache`
+function userAgentBlock(userAgent: string): string {
+  return [
+    `User-agent: ${userAgent}`,
+    'Allow: /',
+    ...CONSOLE_PATHS.map((path) => `Disallow: ${path}`),
+  ].join('\n')
 }
 
 export function getProductionRobotsTxt(): string {
   return `# https://www.robotstxt.org/robotstxt.html
-${defaultUserAgentBlock()}
+${userAgentBlock('*')}
 
-# Retrieval crawlers that answer live queries (not training-only bots)
-${retrievalBotAllowBlocks()}
+# Retrieval crawlers that answer live queries, and Google-Extended (the token
+# that controls Gemini use). Each repeats the full rules, since a named group
+# replaces the * group for that crawler.
+${RETRIEVAL_BOTS.map(userAgentBlock).join('\n\n')}
 
 Sitemap: https://appwrite.io/sitemap.xml
 Sitemap: https://appwrite.io/sitemap/news.xml
