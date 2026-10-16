@@ -60,7 +60,7 @@ class TestableS3 extends S3
     public array $amzHeadersByOperation = [];
 
     #[\Override]
-    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null): S3Response
+    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null, ?callable $onResponse = null): S3Response
     {
         $operation = match (true) {
             $method === 'HEAD' => 's3:info',
