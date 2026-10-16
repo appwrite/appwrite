@@ -139,7 +139,25 @@ class State
         bool $firstWorkerHold,
     ): Document {
         try {
-            return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, $firstWorkerHold) {
+            // Not this worker's first hold: the counter is already correct, so just refresh the
+            // value with a sparse update (connections is not in the document, so it is left as is).
+            // No transaction -- nothing reads-then-writes the counter here.
+            if (!$firstWorkerHold) {
+                $existing = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
+                );
+                if (!$existing->isEmpty()) {
+                    $presenceDocument->setAttribute('$id', $existing->getId());
+
+                    return $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
+                }
+                // The row is gone (e.g. a REST delete) -- fall through to recreate it.
+            }
+
+            // First hold for this worker (or the row vanished): create with connections = 1 or +1,
+            // in a transaction so the counter read-modify-write is serialized against another
+            // worker's increment or the decrement-to-zero delete.
+            return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId) {
                 $existing = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                 );
@@ -160,9 +178,8 @@ class State
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
                 }
 
-                $connections = (int) $current->getAttribute('connections', 0);
                 $presenceDocument->setAttribute('$id', $current->getId());
-                $presenceDocument->setAttribute('connections', $firstWorkerHold ? $connections + 1 : \max($connections, 1));
+                $presenceDocument->setAttribute('connections', (int) $current->getAttribute('connections', 0) + 1);
 
                 return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
             });
