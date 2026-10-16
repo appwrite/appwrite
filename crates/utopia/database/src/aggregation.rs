@@ -100,7 +100,6 @@ impl Aggregation {
         joined: &[(String, Collection)],
         queries: &[Query],
     ) -> Self {
-        let database = database;
         let internal = database.internal_attributes();
 
         let mut schema: Vec<(String, Attribute)> = Vec::new();
