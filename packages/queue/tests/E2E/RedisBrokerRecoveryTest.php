@@ -299,6 +299,31 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->assertSame(1, $broker->getQueueSize($this->queue), 'the message is back on the queue');
     }
 
+    public function testMaintainPreservesPublishTimeAndParksExhaustedClaims(): void
+    {
+        $broker = new Redis($this->connection, $this->connection, reapAfter: 0, reapMaxAttempts: 1);
+        $broker->publish($this->queue, ['n' => 1]);
+        $claimed = $broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $claimed);
+        $timestamp = $claimed->getTimestamp();
+        $this->expire('.claims.*');
+
+        $broker->maintain();
+        $retried = $broker->receive($this->queue, 0)[0] ?? null;
+
+        $this->assertInstanceOf(\Utopia\Queue\Message::class, $retried);
+        $this->assertSame(1, $retried->getAttempts());
+        $this->assertSame($timestamp, $retried->getTimestamp());
+        $this->expire('.claims.*');
+        $this->expire('.reap-lock.*');
+
+        $broker->maintain();
+
+        $this->assertSame(0, $this->processingSize());
+        $this->assertSame(1, $this->deadSize());
+        $this->assertSame(0, $broker->getQueueSize($this->queue));
+    }
+
     public function testTheReapLockAdmitsOneSweepPerInterval(): void
     {
         $broker = new Redis($this->connection, $this->connection, reapAfter: 0);

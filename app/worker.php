@@ -105,6 +105,8 @@ $createConsumer = static function (): Redis {
     return new Redis(
         receive: new Connection(...$connection),
         commands: new Locking(new Connection(...$connection)),
+        reapAfter: 270,
+        reapMaxAttempts: 3,
     );
 };
 

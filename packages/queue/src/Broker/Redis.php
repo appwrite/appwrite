@@ -56,8 +56,9 @@ class Redis implements Synchronous, Consumer
         // queue that already holds messages.
         private readonly Codec $codec = new Json(),
         // Minimum publish age for recovery without a live heartbeat.
-        // Keep conservative until all workers and adapters heartbeat.
         private readonly int $reapAfter = 90_000,
+        // Claims requeued this many times are parked on the dead queue.
+        private readonly ?int $reapMaxAttempts = null,
     ) {
     }
 
@@ -276,7 +277,13 @@ class Redis implements Synchronous, Consumer
             if ($expired !== []) {
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
-            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+            $this->reap(
+                $queue,
+                $this->reapAfter,
+                limit: self::REAP_LIMIT,
+                maxAttempts: $this->reapMaxAttempts,
+                scan: self::REAP_LIMIT * 2
+            );
         }
     }
 
@@ -513,8 +520,8 @@ class Redis implements Synchronous, Consumer
     }
 
     /**
-     * Requeue with a fresh pid and timestamp, carrying the attempt count
-     * forward so retry() and reap() can park messages that never succeed.
+        * Requeue with a fresh pid, retaining the publish timestamp and carrying
+        * the attempt count forward so retry() and reap() can park stuck messages.
      */
     private function requeue(Queue $queue, Message $job): void
     {
@@ -526,7 +533,7 @@ class Redis implements Synchronous, Consumer
         $payload = [
             'pid' => uniqid(more_entropy: true),
             'queue' => $queue->name,
-            'timestamp' => time(),
+            'timestamp' => $job->getTimestamp(),
             'payload' => $job->getPayload(),
             'attempts' => $job->getAttempts() + 1,
         ];

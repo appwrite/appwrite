@@ -436,6 +436,7 @@ services:
       - _APP_MQTT_MAX_PACKET_SIZE
 
   appwrite-worker:
+    stop_grace_period: 40s
     entrypoint: worker
     restart: unless-stopped
     logging:
@@ -658,6 +659,7 @@ services:
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
 
   appwrite-worker-stats-usage:
+    stop_grace_period: 40s
     profiles:
       - separate
     extends:
@@ -666,6 +668,7 @@ services:
     container_name: appwrite-worker-stats-usage
 
   appwrite-worker-stats-resources:
+    stop_grace_period: 40s
     profiles:
       - separate
     extends:
@@ -682,6 +685,7 @@ services:
     container_name: appwrite-task-stats-resources
 
   appwrite-worker-webhooks:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-webhooks
@@ -725,6 +729,7 @@ services:
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
   appwrite-worker-deletes:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-deletes
@@ -813,6 +818,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
   appwrite-worker-databases:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-databases
@@ -867,6 +873,7 @@ services:
       - _APP_VECTORSDB
       - _APP_EMBEDDING
   appwrite-worker-builds:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-builds
@@ -970,6 +977,7 @@ services:
       - host.docker.internal:host-gateway
 
   appwrite-worker-jobs:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-jobs
@@ -1041,6 +1049,7 @@ services:
       - host.docker.internal:host-gateway
 
   appwrite-worker-screenshots:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-screenshots
@@ -1107,6 +1116,7 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   appwrite-worker-certificates:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-certificates
@@ -1155,6 +1165,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-executions:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-executions
@@ -1196,6 +1207,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-functions:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-functions
@@ -1242,6 +1254,7 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-mails:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-mails
@@ -1288,6 +1301,7 @@ services:
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-notifications:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-notifications
@@ -1332,6 +1346,7 @@ services:
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-messaging:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-messaging
@@ -1396,6 +1411,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_DATABASE_SHARED_TABLES
   appwrite-worker-migrations:
+    stop_grace_period: 40s
     profiles:
       - separate
     entrypoint: worker-migrations
