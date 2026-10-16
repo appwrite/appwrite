@@ -661,7 +661,7 @@ A Flutter app that runs on both picks the endpoint with `kIsWeb`.
 * Notification permission declined, the app was force-stopped, or exact alarms aren't allowed. Check `backgroundStatus().bestEffort`.
 ---
 * iOS devices get no APNs notifications, or debug builds use the production provider
-* The APNs provider has no bundle ID saved, so Appwrite can't match devices to it. Open the provider in the Console and save it with its bundle ID, or rerun `appwrite init apns`.
+* No enabled APNs provider matches the app's bundle ID and build: sandbox for debug and Simulator builds, production for TestFlight and App Store builds. Rerun `appwrite init apns` to create both, or set the bundle ID on the provider in the Console. Devices pick up the change the next time the app launches.
 ---
 * iOS shows "New message" instead of the real message
 * The Notification Service Extension is missing, or `AppwritePushAppGroup` isn't set in both `Info.plist` files.
