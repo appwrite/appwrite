@@ -6,7 +6,14 @@ description: Let users sign up and sign in with a passkey, a key pair stored on 
 
 A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use it.
 
-Appwrite implements the [WebAuthn](https://www.w3.org/TR/webauthn-3/) standard behind passkeys. Your app passes the options Appwrite returns to the platform's passkey API, such as `navigator.credentials` in the browser or Credential Manager on Android, and sends the result back to Appwrite. The same passkey works on your website and in your Android and iOS apps, because they all share one relying party.
+Passkeys follow the [WebAuthn](https://www.w3.org/TR/webauthn-3/) standard. Your app gets a challenge from Appwrite and hands it to the device. The user unlocks a passkey to answer it, and your app sends the signed answer back to Appwrite. One passkey works on your website and in your Android and iOS apps, because they all belong to the same domain.
+
+{% only_dark %}
+![Appwrite sends a challenge to your app, the user's device signs it with a passkey, and your app sends the signed answer back to Appwrite](/images/docs/auth/passkeys/dark/how-it-works.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite sends a challenge to your app, the user's device signs it with a passkey, and your app sends the signed answer back to Appwrite](/images/docs/auth/passkeys/how-it-works.avif)
+{% /only_light %}
 
 Sign-in is usernameless. The user picks a passkey, and Appwrite finds the account it belongs to, so your sign-in screen needs no email field.
 
@@ -111,8 +118,6 @@ Passkeys created on localhost only work on localhost. They are separate from you
 Add a web platform for each hostname your app runs on, such as `example.com` and `app.example.com`. The hostname must be the relying party ID or one of its subdomains. A wildcard platform such as `*.example.com` covers every subdomain, but not `example.com` itself.
 
 Browsers need no other setup. Passkeys work on HTTPS origins on the default port, and on `http://localhost` on any port for development.
-
-The web examples below use `PublicKeyCredential.parseCreationOptionsFromJSON()`, `parseRequestOptionsFromJSON()` and `toJSON()`, which need Chrome and Edge 129, Firefox 119, or Safari 18.4 and later. For older browsers, convert the options with a library such as [`@simplewebauthn/browser`](https://www.npmjs.com/package/@simplewebauthn/browser).
 
 ## Android {% #android %}
 
@@ -598,10 +603,13 @@ const client = new Client()
 
 const account = new Account(client);
 
+// List the passkeys on the account
 const { passkeys } = await account.listPasskeys();
 
+// Rename a passkey
 await account.updatePasskey({ passkeyId: passkeys[0].$id, name: 'Work laptop' });
 
+// Delete a passkey
 await account.deletePasskey({ passkeyId: passkeys[0].$id });
 ```
 ```client-flutter
@@ -613,10 +621,13 @@ final client = Client()
 
 final account = Account(client);
 
+// List the passkeys on the account
 final list = await account.listPasskeys();
 
+// Rename a passkey
 await account.updatePasskey(passkeyId: list.passkeys.first.$id, name: 'Work laptop');
 
+// Delete a passkey
 await account.deletePasskey(passkeyId: list.passkeys.first.$id);
 ```
 ```client-android-kotlin
@@ -629,10 +640,13 @@ val client = Client(context)
 
 val account = Account(client)
 
+// List the passkeys on the account
 val list = account.listPasskeys()
 
+// Rename a passkey
 account.updatePasskey(passkeyId = list.passkeys.first().id, name = "Work laptop")
 
+// Delete a passkey
 account.deletePasskey(passkeyId = list.passkeys.first().id)
 ```
 ```client-apple
@@ -644,10 +658,13 @@ let client = Client()
 
 let account = Account(client)
 
+// List the passkeys on the account
 let list = try await account.listPasskeys()
 
+// Rename a passkey
 _ = try await account.updatePasskey(passkeyId: list.passkeys[0].id, name: "Work laptop")
 
+// Delete a passkey
 _ = try await account.deletePasskey(passkeyId: list.passkeys[0].id)
 ```
 ```client-react-native
@@ -659,10 +676,13 @@ const client = new Client()
 
 const account = new Account(client);
 
+// List the passkeys on the account
 const { passkeys } = await account.listPasskeys();
 
+// Rename a passkey
 await account.updatePasskey({ passkeyId: passkeys[0].$id, name: 'Work phone' });
 
+// Delete a passkey
 await account.deletePasskey({ passkeyId: passkeys[0].$id });
 ```
 {% /multicode %}
