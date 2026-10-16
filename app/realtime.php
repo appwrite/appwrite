@@ -421,7 +421,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -586,7 +586,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState, $container) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState) {
                 $event = json_decode($payload, true);
                 $closing = [];
 
@@ -738,8 +738,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $strippedHolders = $realtime->removePresenceFromConnections($deletedProjectId, $deletedPresenceId);
 
                     if (!empty($strippedHolders) && $deletedProjectId !== '' && $deletedProjectId !== 'console') {
-                        go(function () use ($strippedHolders, $deletedProjectId, $container, $presenceState): void {
-                            $pools = $container->get('pools');
+                        go(function () use ($strippedHolders, $deletedProjectId, $register, $presenceState): void {
+                            $pools = $register->get('pools');
                             foreach ($strippedHolders as $strippedUserId => $strippedCount) {
                                 $presenceState->releaseStrippedHolders($pools, $deletedProjectId, (string) $strippedUserId, $strippedCount);
                             }
