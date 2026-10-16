@@ -20,6 +20,7 @@ final class StreamSource
         public readonly ?string $filterSubject = null,
         public readonly ?array $subjectTransforms = null,
         public readonly ?ExternalStream $external = null,
+        public readonly ?StreamConsumerSource $consumer = null,
     ) {
     }
 
@@ -45,6 +46,9 @@ final class StreamSource
         if ($this->external instanceof \Utopia\NATS\JetStream\ExternalStream) {
             $data['external'] = $this->external->toArray();
         }
+        if ($this->consumer instanceof StreamConsumerSource) {
+            $data['consumer'] = $this->consumer->toArray();
+        }
 
         return $data;
     }
@@ -60,6 +64,7 @@ final class StreamSource
                 ? array_map(SubjectTransform::fromArray(...), $data['subject_transforms'])
                 : null,
             external: isset($data['external']) ? ExternalStream::fromArray($data['external']) : null,
+            consumer: isset($data['consumer']) && \is_array($data['consumer']) ? StreamConsumerSource::fromArray($data['consumer']) : null,
         );
     }
 }
