@@ -6894,6 +6894,27 @@ trait TransactionsBase
         ], $this->getHeaders()));
         $this->assertSame(201, $transaction['headers']['status-code']);
 
+        $transactionId = $transaction['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b']);
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'distinct-c'],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], \json_encode($staged['body']) ?: '');
+        $recordIds[] = $staged['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b', 'distinct-c']);
+    }
+
+    /**
+     * @param list<string> $recordIds
+     * @param list<string> $expected
+     */
+    private function assertDistinctNamesInTransaction(string $databaseId, string $collectionId, string $transactionId, array $recordIds, array $expected): void
+    {
         $rows = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6903,17 +6924,17 @@ trait TransactionsBase
                 Query::distinct()->toString(),
                 Query::select(['name'])->toString(),
             ],
-            'transactionId' => $transaction['body']['$id'],
+            'transactionId' => $transactionId,
         ]);
 
         $this->assertSame(200, $rows['headers']['status-code'], \json_encode($rows['body']) ?: '');
         $records = $rows['body'][$this->getRecordResource()];
-        $this->assertCount(2, $records);
+        $this->assertCount(\count($expected), $records, \json_encode($records) ?: '');
         foreach ($records as $record) {
-            $this->assertSame(['name'], \array_keys($record));
+            $this->assertSame(['name'], \array_keys($record), \json_encode($record) ?: '');
         }
         $names = \array_column($records, 'name');
         \sort($names);
-        $this->assertSame(['distinct-a', 'distinct-b'], $names);
+        $this->assertSame($expected, $names);
     }
 }
