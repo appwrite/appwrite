@@ -166,7 +166,7 @@ class Create extends Base
             // connections from the fail-fast lock pool at once.
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
-            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $upload, $selected);
+            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);
             if ($event !== null) {
                 $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
                 $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
@@ -210,14 +210,14 @@ class Create extends Base
             if (\strtoupper($request->getHeaderLine('x-amz-metadata-directive')) === 'REPLACE') {
                 $metadata = $this->requestObjectMetadata($request);
             }
-            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
+            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
             $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
             $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             $this->sendXml($response, S3Xml::copyObject($file->getAttribute('signature', ''), $file->getUpdatedAt() ?: $file->getCreatedAt()));
             return;
         }
 
-        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
         $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response
