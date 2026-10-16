@@ -9,7 +9,7 @@ class Response
     private int $deliveredTo = 0;
 
     /**
-     * @var array<array{recipient: string, status: string, error: string, permanent: bool}>
+     * @var array<array{recipient: string, status: string, error: string, permanent: bool, code: int}>
      */
     private array $results = [];
 
@@ -43,7 +43,7 @@ class Response
     }
 
     /**
-     * @return array<array{recipient: string, status: string, error: string, permanent: bool}>
+     * @return array<array{recipient: string, status: string, error: string, permanent: bool, code: int}>
      */
     public function getDetails(): array
     {
@@ -54,8 +54,9 @@ class Response
      * @param  bool  $permanent  The provider said sending the same message again gets the same answer,
      *                           such as an SMTP 5xx reply. Only an adapter that can tell says so, which
      *                           is why a failure defaults to one worth retrying.
+     * @param  int  $code  The provider's reply code behind the failure, such as an SMTP 535, or 0 when it gave none.
      */
-    public function addResult(string $recipient, string $error = '', bool $permanent = false): void
+    public function addResult(string $recipient, string $error = '', bool $permanent = false, int $code = 0): void
     {
         $failed = !($error === '' || $error === '0');
 
@@ -64,6 +65,7 @@ class Response
             'status' => $failed ? 'failure' : 'success',
             'error' => $error,
             'permanent' => $failed && $permanent,
+            'code' => $failed ? $code : 0,
         ];
     }
 
