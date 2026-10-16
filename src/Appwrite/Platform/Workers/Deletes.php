@@ -525,13 +525,11 @@ class Deletes extends Action
 
         $dbForProject = $getProjectDB($project);
 
-        // A project database created before `targets` existed never got it, and nothing
-        // backfills one. Without a sink the sweep does not skip that database -- it fails
-        // the whole maintenance run on it, every run, and the sweeps queued behind this
-        // one never happen. Matches the sinks the other maintenance sweeps here pass.
-        Targets::delete($dbForProject, Query::equal('expired', [true]), function (Throwable $th) use ($dbForProject): void {
-            Console::warning("Skipped the targets sweep on {$dbForProject->getDatabase()}: {$th->getMessage()}");
-        });
+        // Nothing backfills `targets` into a database that predates it, and failing there
+        // fails the maintenance run and every sweep queued behind this one.
+        if (!Targets::deleteExpired($dbForProject)) {
+            Console::warning("Skipped the targets sweep on {$dbForProject->getDatabase()}: no targets collection");
+        }
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void

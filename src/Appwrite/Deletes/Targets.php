@@ -3,7 +3,6 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
-use Throwable;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -12,14 +11,7 @@ use Utopia\Database\Query;
 
 class Targets
 {
-    /**
-     * @param callable(Throwable): void|null $onError Receives a failure instead of it
-     *        being thrown. Only a maintenance sweep passes one: it may run against a
-     *        database created before `targets` existed and should skip it rather than
-     *        fail the run. Deleting a user's or a session's targets passes none, so a
-     *        failure there fails the job instead of reporting it done.
-     */
-    public static function delete(Database $database, Query $query, ?callable $onError = null): void
+    public static function delete(Database $database, Query $query): void
     {
         $database->deleteDocuments(
             'targets',
@@ -28,9 +20,23 @@ class Targets
                 Query::orderAsc()
             ],
             Database::BATCH_SIZE,
-            fn (Document $target) => self::deleteSubscribers($database, $target),
-            $onError
+            fn (Document $target) => self::deleteSubscribers($database, $target)
         );
+    }
+
+    /**
+     * Returns false, deleting nothing, on a database without `targets`: one created before
+     * the collection existed never got it. Any other failure is thrown.
+     */
+    public static function deleteExpired(Database $database): bool
+    {
+        if ($database->findCollection('targets') === null) {
+            return false;
+        }
+
+        self::delete($database, Query::equal('expired', [true]));
+
+        return true;
     }
 
     public static function deleteSubscribers(Database $database, Document $target): void
