@@ -2281,6 +2281,11 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_CONNECTION_STORAGE=\${_APP_EXECUTOR_CONNECTION_STORAGE:-local://localhost}
       - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+    command:
+      - php
+      - -d
+      - memory_limit=\${_APP_EXECUTOR_MEMORY_LIMIT:-1024M}
+      - app/http.php
     healthcheck:
       test:
         - CMD-SHELL
@@ -2666,6 +2671,7 @@ _APP_EXECUTOR_HOST=http://exc1/v1
 _APP_EXECUTOR_SECRET=your-secret-key
 _APP_EXECUTOR_IMAGES=openruntimes/node:v5-22,openruntimes/static:v5-1
 _APP_EXECUTOR_CONNECTION_STORAGE=local://localhost
+_APP_EXECUTOR_MEMORY_LIMIT=1024M
 _APP_BUILDS_VOLUME=appwrite-builds
 _APP_JOBS_HOST=http://orchestrator:8080
 _APP_JOBS_SECRET=41a51c959d1027bd9f40e86217ddad25f4567b4e07af16f54a1c556bad7ddaf8
