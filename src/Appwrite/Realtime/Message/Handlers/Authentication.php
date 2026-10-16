@@ -125,7 +125,10 @@ class Authentication extends Action
                     $realtime->connections[$connectionId]['presence'] = $presenceHold;
                 }
             } else {
-                $presenceStore->release((string) $projectId, (string) $previousUserId, (string) ($presenceHold['connectionId'] ?? ''));
+                $remaining = $presenceStore->release((string) $projectId, (string) $previousUserId, (string) ($presenceHold['connectionId'] ?? ''));
+                if ($remaining === 0) {
+                    $presenceStore->markForReap((string) $projectId, (string) $previousUserId);
+                }
             }
         }
 
