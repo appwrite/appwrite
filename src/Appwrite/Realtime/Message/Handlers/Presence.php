@@ -117,6 +117,13 @@ class Presence extends Action
                     $firstHold = empty($realtime->connections[$connectionId]['presences']);
                     $presence = $upsert();
 
+                    // The upsert can suspend the coroutine; if the socket closed meanwhile, onClose
+                    // already removed the connection. Don't resurrect it or count a hold its close
+                    // can never release -- leave the row to expiresAt.
+                    if (!isset($realtime->connections[$connectionId])) {
+                        return $presence;
+                    }
+
                     if ($firstHold) {
                         $presenceState->incrementConnections($redis, $projectId, $userId);
                     }

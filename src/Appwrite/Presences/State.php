@@ -95,15 +95,16 @@ class State
                         return;
                     }
 
-                    // Fence: refresh() proves we still hold the lease. If lost, another op may own the row, so leave it to expiresAt.
-                    if (!$lock->refresh()) {
-                        return;
-                    }
-
                     foreach ($presenceIds as $presenceId) {
                         $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(self::COLLECTION_ID, $presenceId));
                         if ($presence->isEmpty()) {
                             continue;
+                        }
+
+                        // Fence immediately before the delete: refresh() proves we still hold the
+                        // lease. If lost (our work outran the TTL), another op may own the row now.
+                        if (!$lock->refresh()) {
+                            return;
                         }
 
                         $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument(self::COLLECTION_ID, $presenceId));
