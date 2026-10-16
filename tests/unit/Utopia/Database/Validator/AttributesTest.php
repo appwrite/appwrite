@@ -71,6 +71,23 @@ final class AttributesTest extends TestCase
         ]));
     }
 
+    public function testDescription(): void
+    {
+        $this->assertTrue($this->object->isValid([
+            ['key' => 'title', 'type' => ColumnType::Varchar->value, 'size' => 128, 'description' => 'Shown in listings'],
+            ['key' => 'body', 'type' => ColumnType::Text->value, 'description' => \str_repeat('a', 1024)],
+            ['key' => 'summary', 'type' => ColumnType::Text->value, 'description' => ''],
+        ]), $this->object->getDescription());
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'title', 'type' => ColumnType::Varchar->value, 'size' => 128, 'description' => 42],
+        ]));
+
+        $this->assertFalse($this->object->isValid([
+            ['key' => 'title', 'type' => ColumnType::Varchar->value, 'size' => 128, 'description' => \str_repeat('a', 1025)],
+        ]));
+    }
+
     public function testEmailWithoutSize(): void
     {
         $this->assertTrue($this->object->isValid([

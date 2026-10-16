@@ -182,6 +182,7 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
             'siteId' => Id::unique()
         ]);
@@ -192,6 +193,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
         $this->assertEquals('other', $site['body']['framework']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
@@ -199,6 +201,10 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals($buildSpecification, $site['body']['buildSpecification']);
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
 
         $variable = $this->createVariable($siteId, [
             'variableId' => Id::unique(),
@@ -234,6 +240,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(400, $site['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $site['body']['type']);
         $this->assertStringContainsString('Runtime "node-24" is not supported', (string) $site['body']['message']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'description' => \str_repeat('a', 1025),
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }
@@ -686,6 +703,93 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateVariableDescription(): void
+    {
+        $settings = [
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Description',
+            'outputDirectory' => './',
+        ];
+
+        $site = $this->createSite([...$settings, 'siteId' => ID::unique()]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => false,
+            'description' => 'Stripe key used at checkout',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $plain = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'PLAIN_KEY',
+            'value' => 'plain',
+        ]);
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        // Re-saving unchanged settings marks the site live again
+        $site = $this->updateSite([...$settings, '$id' => $siteId]);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => 'Rotated quarterly',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertSame('STRIPE_KEY', $response['body']['key']);
+        $this->assertSame('sk_test', $response['body']['value']);
+        $this->assertTrue($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'value' => 'sk_live',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertFalse($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LONG_DESCRIPTION',
+            'value' => 'value',
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $variable['body']['type']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateVariableNotFound(): void
     {
         $site = $this->createSite([
@@ -1051,6 +1155,28 @@ final class SitesCustomServerTest extends Scope
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
+        // Test search description
+        $keyword = ID::unique();
+        $describedId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Described',
+            'description' => 'Renders avatars tagged ' . $keyword,
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $sites = $this->listSites([
+            'search' => $keyword
+        ]);
+
+        $this->assertEquals(200, $sites['headers']['status-code']);
+        $this->assertCount(1, $sites['body']['sites']);
+        $this->assertSame($describedId, $sites['body']['sites'][0]['$id']);
+
+        $this->cleanupSite($describedId);
+
         /**
          * Test pagination
          */
@@ -1135,6 +1261,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('', $site['body']['description']);
 
         /**
          * Test for FAILURE
@@ -1153,6 +1280,7 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
@@ -1170,6 +1298,7 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site Updated',
+            'description' => 'Updated site description',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
@@ -1182,9 +1311,49 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site Updated', $site['body']['name']);
+        $this->assertSame('Updated site description', $site['body']['description']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
         $this->assertEquals('npm ci', $site['body']['installCommand']);
+
+        // Omitting description keeps the stored one
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Updated site description', $site['body']['description']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => '',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('', $site['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => \str_repeat('a', 1025),
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }

@@ -1231,7 +1231,8 @@
         "databases.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "databases.createBigIntAttribute": [
             "databaseId",
@@ -1241,7 +1242,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createBooleanAttribute": [
             "databaseId",
@@ -1249,7 +1251,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createCollection": [
             "databaseId",
@@ -1259,7 +1262,8 @@
             "documentSecurity",
             "enabled",
             "attributes",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "databases.createDatetimeAttribute": [
             "databaseId",
@@ -1267,7 +1271,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -1289,7 +1294,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createEnumAttribute": [
             "databaseId",
@@ -1298,7 +1304,8 @@
             "elements",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createFloatAttribute": [
             "databaseId",
@@ -1308,7 +1315,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createIndex": [
             "databaseId",
@@ -1317,7 +1325,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "databases.createIntegerAttribute": [
             "databaseId",
@@ -1327,7 +1336,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createIpAttribute": [
             "databaseId",
@@ -1335,14 +1345,16 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createLineAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createLongtextAttribute": [
             "databaseId",
@@ -1351,7 +1363,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createMediumtextAttribute": [
             "databaseId",
@@ -1360,7 +1373,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createOperations": [
             "transactionId",
@@ -1371,14 +1385,16 @@
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createPolygonAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createQuery": [
             "databaseId",
@@ -1396,7 +1412,8 @@
             "twoWay",
             "key",
             "twoWayKey",
-            "onDelete"
+            "onDelete",
+            "description"
         ],
         "databases.createStringAttribute": [
             "databaseId",
@@ -1406,7 +1423,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createTextAttribute": [
             "databaseId",
@@ -1415,7 +1433,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createTransaction": [
             "ttl"
@@ -1426,7 +1445,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createVarcharAttribute": [
             "databaseId",
@@ -1436,7 +1456,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.decrementDocumentAttribute": [
             "databaseId",
@@ -1553,7 +1574,8 @@
         "databases.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "databases.updateBigIntAttribute": [
             "databaseId",
@@ -1563,7 +1585,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateBooleanAttribute": [
             "databaseId",
@@ -1571,7 +1594,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateCollection": [
             "databaseId",
@@ -1580,7 +1604,8 @@
             "permissions",
             "documentSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "databases.updateDatetimeAttribute": [
             "databaseId",
@@ -1588,7 +1613,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateDocument": [
             "databaseId",
@@ -1611,7 +1637,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateEnumAttribute": [
             "databaseId",
@@ -1620,7 +1647,8 @@
             "elements",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateFloatAttribute": [
             "databaseId",
@@ -1630,7 +1658,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateIntegerAttribute": [
             "databaseId",
@@ -1640,7 +1669,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateIpAttribute": [
             "databaseId",
@@ -1648,7 +1678,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateLineAttribute": [
             "databaseId",
@@ -1656,7 +1687,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateLongtextAttribute": [
             "databaseId",
@@ -1664,7 +1696,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateMediumtextAttribute": [
             "databaseId",
@@ -1672,7 +1705,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updatePointAttribute": [
             "databaseId",
@@ -1680,7 +1714,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updatePolygonAttribute": [
             "databaseId",
@@ -1688,14 +1723,16 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateRelationshipAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "onDelete",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateStringAttribute": [
             "databaseId",
@@ -1704,7 +1741,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateTextAttribute": [
             "databaseId",
@@ -1712,7 +1750,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateTransaction": [
             "transactionId",
@@ -1725,7 +1764,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateVarcharAttribute": [
             "databaseId",
@@ -1734,7 +1774,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.upsertDocument": [
             "databaseId",
@@ -1753,7 +1794,8 @@
         "documentsDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "documentsDB.createCollection": [
             "databaseId",
@@ -1763,7 +1805,8 @@
             "documentSecurity",
             "enabled",
             "attributes",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "documentsDB.createDocument": [
             "databaseId",
@@ -1786,7 +1829,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "documentsDB.createQuery": [
             "databaseId",
@@ -1898,7 +1942,8 @@
         "documentsDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "documentsDB.updateCollection": [
             "databaseId",
@@ -1907,7 +1952,8 @@
             "permissions",
             "documentSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "documentsDB.updateDocument": [
             "databaseId",
@@ -1970,7 +2016,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "interval"
+            "interval",
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -2007,7 +2054,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "functions.createVcsDeployment": [
             "functionId",
@@ -2112,7 +2160,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "interval"
+            "interval",
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -2127,7 +2176,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "graphql.get": [
             "query",
@@ -2368,7 +2418,8 @@
             "name",
             "subscribe",
             "qos",
-            "expiry"
+            "expiry",
+            "description"
         ],
         "messaging.createTwilioProvider": [
             "providerId",
@@ -2639,7 +2690,8 @@
             "name",
             "subscribe",
             "qos",
-            "expiry"
+            "expiry",
+            "description"
         ],
         "messaging.updateTwilioProvider": [
             "providerId",
@@ -2789,7 +2841,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "organization.deleteProject": [
             "projectId"
@@ -2824,7 +2877,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -2872,7 +2926,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "project.createLinuxPlatform": [
             "platformId",
@@ -2890,7 +2945,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -3007,7 +3063,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "project.updateLabels": [
             "labels"
@@ -3377,7 +3434,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "project.updateWebPlatform": [
             "platformId",
@@ -3476,7 +3534,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "scopes"
+            "scopes",
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -3504,7 +3563,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "sites.createVcsDeployment": [
             "siteId",
@@ -3610,7 +3670,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "scopes"
+            "scopes",
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -3625,7 +3686,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "storage.createBucket": [
             "bucketId",
@@ -3638,7 +3700,8 @@
             "compression",
             "encryption",
             "antivirus",
-            "transformations"
+            "transformations",
+            "description"
         ],
         "storage.createFile": [
             "bucketId",
@@ -3709,7 +3772,8 @@
             "compression",
             "encryption",
             "antivirus",
-            "transformations"
+            "transformations",
+            "description"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -3720,7 +3784,8 @@
         "tablesDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "tablesDB.createBigIntColumn": [
             "databaseId",
@@ -3730,7 +3795,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createBooleanColumn": [
             "databaseId",
@@ -3738,7 +3804,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createDatetimeColumn": [
             "databaseId",
@@ -3746,7 +3813,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createEmailColumn": [
             "databaseId",
@@ -3754,7 +3822,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createEnumColumn": [
             "databaseId",
@@ -3763,7 +3832,8 @@
             "elements",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createFloatColumn": [
             "databaseId",
@@ -3773,7 +3843,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createIndex": [
             "databaseId",
@@ -3782,7 +3853,8 @@
             "type",
             "columns",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "tablesDB.createIntegerColumn": [
             "databaseId",
@@ -3792,7 +3864,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createIpColumn": [
             "databaseId",
@@ -3800,14 +3873,16 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createLineColumn": [
             "databaseId",
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createLongtextColumn": [
             "databaseId",
@@ -3816,7 +3891,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createMediumtextColumn": [
             "databaseId",
@@ -3825,7 +3901,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createOperations": [
             "transactionId",
@@ -3836,14 +3913,16 @@
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createPolygonColumn": [
             "databaseId",
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createQuery": [
             "databaseId",
@@ -3861,7 +3940,8 @@
             "twoWay",
             "key",
             "twoWayKey",
-            "onDelete"
+            "onDelete",
+            "description"
         ],
         "tablesDB.createRow": [
             "databaseId",
@@ -3885,7 +3965,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createTable": [
             "databaseId",
@@ -3895,7 +3976,8 @@
             "rowSecurity",
             "enabled",
             "columns",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "tablesDB.createTextColumn": [
             "databaseId",
@@ -3904,7 +3986,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createTransaction": [
             "ttl"
@@ -3915,7 +3998,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createVarcharColumn": [
             "databaseId",
@@ -3925,7 +4009,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.decrementRowColumn": [
             "databaseId",
@@ -4042,7 +4127,8 @@
         "tablesDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "tablesDB.updateBigIntColumn": [
             "databaseId",
@@ -4052,7 +4138,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateBooleanColumn": [
             "databaseId",
@@ -4060,7 +4147,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateDatetimeColumn": [
             "databaseId",
@@ -4068,7 +4156,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateEmailColumn": [
             "databaseId",
@@ -4076,7 +4165,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateEnumColumn": [
             "databaseId",
@@ -4085,7 +4175,8 @@
             "elements",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateFloatColumn": [
             "databaseId",
@@ -4095,7 +4186,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateIntegerColumn": [
             "databaseId",
@@ -4105,7 +4197,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateIpColumn": [
             "databaseId",
@@ -4113,7 +4206,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateLineColumn": [
             "databaseId",
@@ -4121,7 +4215,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateLongtextColumn": [
             "databaseId",
@@ -4129,7 +4224,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateMediumtextColumn": [
             "databaseId",
@@ -4137,7 +4233,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updatePointColumn": [
             "databaseId",
@@ -4145,7 +4242,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updatePolygonColumn": [
             "databaseId",
@@ -4153,14 +4251,16 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateRelationshipColumn": [
             "databaseId",
             "tableId",
             "key",
             "onDelete",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateRow": [
             "databaseId",
@@ -4184,7 +4284,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateTable": [
             "databaseId",
@@ -4193,7 +4294,8 @@
             "permissions",
             "rowSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "tablesDB.updateTextColumn": [
             "databaseId",
@@ -4201,7 +4303,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateTransaction": [
             "transactionId",
@@ -4214,7 +4317,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateVarcharColumn": [
             "databaseId",
@@ -4223,7 +4327,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.upsertRow": [
             "databaseId",
@@ -4668,7 +4773,8 @@
         "vectorsDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.createCollection": [
             "databaseId",
@@ -4677,7 +4783,8 @@
             "dimension",
             "permissions",
             "documentSecurity",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.createDocument": [
             "databaseId",
@@ -4700,7 +4807,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "vectorsDB.createOperations": [
             "transactionId",
@@ -4798,7 +4906,8 @@
         "vectorsDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.updateCollection": [
             "databaseId",
@@ -4807,7 +4916,8 @@
             "dimension",
             "permissions",
             "documentSecurity",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.updateDocument": [
             "databaseId",
@@ -4852,7 +4962,8 @@
             "tls",
             "authUsername",
             "authPassword",
-            "secret"
+            "secret",
+            "description"
         ],
         "webhooks.delete": [
             "webhookId"
@@ -4872,7 +4983,8 @@
             "enabled",
             "tls",
             "authUsername",
-            "authPassword"
+            "authPassword",
+            "description"
         ],
         "webhooks.updateSecret": [
             "webhookId",
@@ -5196,7 +5308,8 @@
         "databases.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "databases.createBigIntAttribute": [
             "databaseId",
@@ -5206,7 +5319,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createBooleanAttribute": [
             "databaseId",
@@ -5214,7 +5328,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createCollection": [
             "databaseId",
@@ -5224,7 +5339,8 @@
             "documentSecurity",
             "enabled",
             "attributes",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "databases.createDatetimeAttribute": [
             "databaseId",
@@ -5232,7 +5348,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createDocument": [
             "databaseId",
@@ -5254,7 +5371,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createEnumAttribute": [
             "databaseId",
@@ -5263,7 +5381,8 @@
             "elements",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createFloatAttribute": [
             "databaseId",
@@ -5273,7 +5392,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createIndex": [
             "databaseId",
@@ -5282,7 +5402,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "databases.createIntegerAttribute": [
             "databaseId",
@@ -5292,7 +5413,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createIpAttribute": [
             "databaseId",
@@ -5300,14 +5422,16 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createLineAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createLongtextAttribute": [
             "databaseId",
@@ -5316,7 +5440,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createMediumtextAttribute": [
             "databaseId",
@@ -5325,7 +5450,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createOperations": [
             "transactionId",
@@ -5336,14 +5462,16 @@
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createPolygonAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "databases.createQuery": [
             "databaseId",
@@ -5361,7 +5489,8 @@
             "twoWay",
             "key",
             "twoWayKey",
-            "onDelete"
+            "onDelete",
+            "description"
         ],
         "databases.createStringAttribute": [
             "databaseId",
@@ -5371,7 +5500,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createTextAttribute": [
             "databaseId",
@@ -5380,7 +5510,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.createTransaction": [
             "ttl"
@@ -5391,7 +5522,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "databases.createVarcharAttribute": [
             "databaseId",
@@ -5401,7 +5533,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "databases.decrementDocumentAttribute": [
             "databaseId",
@@ -5518,7 +5651,8 @@
         "databases.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "databases.updateBigIntAttribute": [
             "databaseId",
@@ -5528,7 +5662,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateBooleanAttribute": [
             "databaseId",
@@ -5536,7 +5671,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateCollection": [
             "databaseId",
@@ -5545,7 +5681,8 @@
             "permissions",
             "documentSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "databases.updateDatetimeAttribute": [
             "databaseId",
@@ -5553,7 +5690,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateDocument": [
             "databaseId",
@@ -5576,7 +5714,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateEnumAttribute": [
             "databaseId",
@@ -5585,7 +5724,8 @@
             "elements",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateFloatAttribute": [
             "databaseId",
@@ -5595,7 +5735,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateIntegerAttribute": [
             "databaseId",
@@ -5605,7 +5746,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateIpAttribute": [
             "databaseId",
@@ -5613,7 +5755,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateLineAttribute": [
             "databaseId",
@@ -5621,7 +5764,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateLongtextAttribute": [
             "databaseId",
@@ -5629,7 +5773,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateMediumtextAttribute": [
             "databaseId",
@@ -5637,7 +5782,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updatePointAttribute": [
             "databaseId",
@@ -5645,7 +5791,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updatePolygonAttribute": [
             "databaseId",
@@ -5653,14 +5800,16 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateRelationshipAttribute": [
             "databaseId",
             "collectionId",
             "key",
             "onDelete",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateStringAttribute": [
             "databaseId",
@@ -5669,7 +5818,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateTextAttribute": [
             "databaseId",
@@ -5677,7 +5827,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateTransaction": [
             "transactionId",
@@ -5690,7 +5841,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.updateVarcharAttribute": [
             "databaseId",
@@ -5699,7 +5851,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "databases.upsertDocument": [
             "databaseId",
@@ -5718,7 +5871,8 @@
         "documentsDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "documentsDB.createCollection": [
             "databaseId",
@@ -5728,7 +5882,8 @@
             "documentSecurity",
             "enabled",
             "attributes",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "documentsDB.createDocument": [
             "databaseId",
@@ -5751,7 +5906,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "documentsDB.createOperations": [
             "transactionId",
@@ -5867,7 +6023,8 @@
         "documentsDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "documentsDB.updateCollection": [
             "databaseId",
@@ -5876,7 +6033,8 @@
             "permissions",
             "documentSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "documentsDB.updateDocument": [
             "databaseId",
@@ -5939,7 +6097,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "interval"
+            "interval",
+            "description"
         ],
         "functions.createDeployment": [
             "functionId",
@@ -5976,7 +6135,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "functions.createVcsDeployment": [
             "functionId",
@@ -6071,7 +6231,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "interval"
+            "interval",
+            "description"
         ],
         "functions.updateDeploymentStatus": [
             "functionId",
@@ -6086,7 +6247,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "graphql.get": [
             "query",
@@ -6327,7 +6489,8 @@
             "name",
             "subscribe",
             "qos",
-            "expiry"
+            "expiry",
+            "description"
         ],
         "messaging.createTwilioProvider": [
             "providerId",
@@ -6598,7 +6761,8 @@
             "name",
             "subscribe",
             "qos",
-            "expiry"
+            "expiry",
+            "description"
         ],
         "messaging.updateTwilioProvider": [
             "providerId",
@@ -6659,7 +6823,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -6721,7 +6886,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -6838,7 +7004,8 @@
             "keyId",
             "name",
             "scopes",
-            "expire"
+            "expire",
+            "description"
         ],
         "project.updateLabels": [
             "labels"
@@ -7208,7 +7375,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "project.updateWebPlatform": [
             "platformId",
@@ -7277,7 +7445,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "scopes"
+            "scopes",
+            "description"
         ],
         "sites.createDeployment": [
             "siteId",
@@ -7305,7 +7474,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "sites.createVcsDeployment": [
             "siteId",
@@ -7401,7 +7571,8 @@
             "buildSpecification",
             "runtimeSpecification",
             "deploymentRetention",
-            "scopes"
+            "scopes",
+            "description"
         ],
         "sites.updateDeploymentStatus": [
             "siteId",
@@ -7416,7 +7587,8 @@
             "variableId",
             "key",
             "value",
-            "secret"
+            "secret",
+            "description"
         ],
         "storage.createBucket": [
             "bucketId",
@@ -7429,7 +7601,8 @@
             "compression",
             "encryption",
             "antivirus",
-            "transformations"
+            "transformations",
+            "description"
         ],
         "storage.createFile": [
             "bucketId",
@@ -7500,7 +7673,8 @@
             "compression",
             "encryption",
             "antivirus",
-            "transformations"
+            "transformations",
+            "description"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -7511,7 +7685,8 @@
         "tablesDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "tablesDB.createBigIntColumn": [
             "databaseId",
@@ -7521,7 +7696,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createBooleanColumn": [
             "databaseId",
@@ -7529,7 +7705,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createDatetimeColumn": [
             "databaseId",
@@ -7537,7 +7714,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createEmailColumn": [
             "databaseId",
@@ -7545,7 +7723,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createEnumColumn": [
             "databaseId",
@@ -7554,7 +7733,8 @@
             "elements",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createFloatColumn": [
             "databaseId",
@@ -7564,7 +7744,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createIndex": [
             "databaseId",
@@ -7573,7 +7754,8 @@
             "type",
             "columns",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "tablesDB.createIntegerColumn": [
             "databaseId",
@@ -7583,7 +7765,8 @@
             "min",
             "max",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createIpColumn": [
             "databaseId",
@@ -7591,14 +7774,16 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createLineColumn": [
             "databaseId",
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createLongtextColumn": [
             "databaseId",
@@ -7607,7 +7792,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createMediumtextColumn": [
             "databaseId",
@@ -7616,7 +7802,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createOperations": [
             "transactionId",
@@ -7627,14 +7814,16 @@
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createPolygonColumn": [
             "databaseId",
             "tableId",
             "key",
             "required",
-            "default"
+            "default",
+            "description"
         ],
         "tablesDB.createQuery": [
             "databaseId",
@@ -7652,7 +7841,8 @@
             "twoWay",
             "key",
             "twoWayKey",
-            "onDelete"
+            "onDelete",
+            "description"
         ],
         "tablesDB.createRow": [
             "databaseId",
@@ -7676,7 +7866,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createTable": [
             "databaseId",
@@ -7686,7 +7877,8 @@
             "rowSecurity",
             "enabled",
             "columns",
-            "indexes"
+            "indexes",
+            "description"
         ],
         "tablesDB.createTextColumn": [
             "databaseId",
@@ -7695,7 +7887,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.createTransaction": [
             "ttl"
@@ -7706,7 +7899,8 @@
             "key",
             "required",
             "default",
-            "array"
+            "array",
+            "description"
         ],
         "tablesDB.createVarcharColumn": [
             "databaseId",
@@ -7716,7 +7910,8 @@
             "required",
             "default",
             "array",
-            "encrypt"
+            "encrypt",
+            "description"
         ],
         "tablesDB.decrementRowColumn": [
             "databaseId",
@@ -7833,7 +8028,8 @@
         "tablesDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "tablesDB.updateBigIntColumn": [
             "databaseId",
@@ -7843,7 +8039,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateBooleanColumn": [
             "databaseId",
@@ -7851,7 +8048,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateDatetimeColumn": [
             "databaseId",
@@ -7859,7 +8057,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateEmailColumn": [
             "databaseId",
@@ -7867,7 +8066,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateEnumColumn": [
             "databaseId",
@@ -7876,7 +8076,8 @@
             "elements",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateFloatColumn": [
             "databaseId",
@@ -7886,7 +8087,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateIntegerColumn": [
             "databaseId",
@@ -7896,7 +8098,8 @@
             "default",
             "min",
             "max",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateIpColumn": [
             "databaseId",
@@ -7904,7 +8107,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateLineColumn": [
             "databaseId",
@@ -7912,7 +8116,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateLongtextColumn": [
             "databaseId",
@@ -7920,7 +8125,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateMediumtextColumn": [
             "databaseId",
@@ -7928,7 +8134,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updatePointColumn": [
             "databaseId",
@@ -7936,7 +8143,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updatePolygonColumn": [
             "databaseId",
@@ -7944,14 +8152,16 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateRelationshipColumn": [
             "databaseId",
             "tableId",
             "key",
             "onDelete",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateRow": [
             "databaseId",
@@ -7975,7 +8185,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateTable": [
             "databaseId",
@@ -7984,7 +8195,8 @@
             "permissions",
             "rowSecurity",
             "enabled",
-            "purge"
+            "purge",
+            "description"
         ],
         "tablesDB.updateTextColumn": [
             "databaseId",
@@ -7992,7 +8204,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateTransaction": [
             "transactionId",
@@ -8005,7 +8218,8 @@
             "key",
             "required",
             "default",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.updateVarcharColumn": [
             "databaseId",
@@ -8014,7 +8228,8 @@
             "required",
             "default",
             "size",
-            "newKey"
+            "newKey",
+            "description"
         ],
         "tablesDB.upsertRow": [
             "databaseId",
@@ -8381,7 +8596,8 @@
         "vectorsDB.create": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.createCollection": [
             "databaseId",
@@ -8390,7 +8606,8 @@
             "dimension",
             "permissions",
             "documentSecurity",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.createDocument": [
             "databaseId",
@@ -8413,7 +8630,8 @@
             "type",
             "attributes",
             "orders",
-            "lengths"
+            "lengths",
+            "description"
         ],
         "vectorsDB.createOperations": [
             "transactionId",
@@ -8511,7 +8729,8 @@
         "vectorsDB.update": [
             "databaseId",
             "name",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.updateCollection": [
             "databaseId",
@@ -8520,7 +8739,8 @@
             "dimension",
             "permissions",
             "documentSecurity",
-            "enabled"
+            "enabled",
+            "description"
         ],
         "vectorsDB.updateDocument": [
             "databaseId",
@@ -8565,7 +8785,8 @@
             "tls",
             "authUsername",
             "authPassword",
-            "secret"
+            "secret",
+            "description"
         ],
         "webhooks.delete": [
             "webhookId"
@@ -8585,7 +8806,8 @@
             "enabled",
             "tls",
             "authUsername",
-            "authPassword"
+            "authPassword",
+            "description"
         ],
         "webhooks.updateSecret": [
             "webhookId",

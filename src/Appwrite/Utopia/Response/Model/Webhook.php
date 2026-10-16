@@ -35,6 +35,12 @@ class Webhook extends Model
                 'default' => '',
                 'example' => 'My Webhook',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the webhook.',
+                'default' => '',
+                'example' => 'Notifies the billing service about new users.',
+            ])
             ->addRule('url', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
