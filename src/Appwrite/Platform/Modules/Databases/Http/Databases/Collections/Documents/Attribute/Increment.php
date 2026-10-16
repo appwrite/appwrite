@@ -193,7 +193,7 @@ class Increment extends Action
                 ? new Exception($this->getNotFoundException(), params: [$documentId])
                 : new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the maximum value of ' . $max);
+            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the maximum value of ' . $this->getReachedMaximum($collection, $attribute, $max));
         } catch (TypeException $e) {
             if ($value <= 0) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
