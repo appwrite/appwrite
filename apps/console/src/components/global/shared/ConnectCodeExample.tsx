@@ -83,6 +83,8 @@ type ConnectCodeExampleProps = {
   actions?: ReactNode
   /** Omit outer border when nested inside another framed container. */
   headless?: boolean
+  /** Called after the copy button copies the code (e.g. for analytics). */
+  onCopied?: () => void
 }
 
 /** Toolbar (optional language selector + copy) and code - connect modal SDK code panel. */
@@ -98,6 +100,7 @@ export function ConnectCodeExample({
   className,
   actions,
   headless = false,
+  onCopied,
 }: ConnectCodeExampleProps) {
   const t = useT()
   const displayCode = normalizeCodeBlockContent(code)
@@ -212,7 +215,10 @@ export function ConnectCodeExample({
           {actions}
           <CodeSnippetCopyButton
             content={displayCode}
-            onCopied={markActiveTabCopied}
+            onCopied={() => {
+              markActiveTabCopied()
+              onCopied?.()
+            }}
           />
         </div>
       </div>

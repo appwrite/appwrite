@@ -28,8 +28,9 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     question: 'What is Appwrite?',
     answer: (
       <>
-        Appwrite is an open-source backend platform: Auth, Databases, Storage, Functions,
-        Realtime, Messaging, and hosting for sites. You can build against{' '}
+        Appwrite is an open-source backend platform: Auth, Databases, Storage,
+        Functions, Realtime, Messaging, and hosting for sites. You can build
+        against{' '}
         <a
           href="https://cloud.appwrite.io/"
           target="_blank"
@@ -39,7 +40,10 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
           Appwrite Cloud
         </a>{' '}
         or run the same stack{' '}
-        <DocsRouteLink href="/docs/advanced/self-hosting" className={FAQ_LINK_CLASS}>
+        <DocsRouteLink
+          href="/docs/advanced/self-hosting"
+          className={FAQ_LINK_CLASS}
+        >
           self-hosted
         </DocsRouteLink>
         .
@@ -47,11 +51,39 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     ),
   },
   {
+    question: 'How do I set up Appwrite with a coding agent?',
+    answer: (
+      <>
+        Copy the prompt at the top of this page and paste it into Claude Code,
+        Cursor, Codex, or another coding agent. The agent follows a public setup
+        guide: it connects the Appwrite MCP server, installs the CLI and the
+        matching SDK, and links a project. You approve the sign-ins in your
+        browser. The{' '}
+        <DocsRouteLink href="/docs/quick-starts" className={FAQ_LINK_CLASS}>
+          Quick start
+        </DocsRouteLink>{' '}
+        also lists the manual steps for each agent.
+      </>
+    ),
+  },
+  {
+    question: 'Does my agent need a project ID or an API key?',
+    answer: (
+      <>
+        No. The MCP server and the CLI sign in with your Appwrite account, so
+        the agent can list your projects, link one, or create a new one. If you
+        are signed in to the docs, you can pick a project on the prompt to skip
+        that question. Only server-side SDK code needs a project API key.
+      </>
+    ),
+  },
+  {
     question: 'What is Appwrite used for, and what does Appwrite do?',
     answer: (
       <>
-        You use it as the server side for your app: user sign-in, persisted data, file uploads,
-        scheduled or event-driven logic, notifications, and live updates, exposed over APIs and{' '}
+        You use it as the server side for your app: user sign-in, persisted
+        data, file uploads, scheduled or event-driven logic, notifications, and
+        live updates, exposed over APIs and{' '}
         <DocsRouteLink href="/docs/sdks" className={FAQ_LINK_CLASS}>
           SDKs
         </DocsRouteLink>{' '}
@@ -64,20 +96,27 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     ),
   },
   {
-    question: 'How do I use Appwrite from React, Next.js, or another framework?',
+    question:
+      'How do I use Appwrite from React, Next.js, or another framework?',
     answer: (
       <>
-        Appwrite is framework-agnostic: you call it from the browser or server with an SDK or
-        plain HTTP. Pick a{' '}
+        Appwrite is framework-agnostic: you call it from the browser or server
+        with an SDK or plain HTTP. Pick a{' '}
         <DocsRouteLink href="/docs/quick-starts" className={FAQ_LINK_CLASS}>
           quick start
         </DocsRouteLink>{' '}
         for your stack (for example{' '}
-        <DocsRouteLink href="/docs/quick-starts/react" className={FAQ_LINK_CLASS}>
+        <DocsRouteLink
+          href="/docs/quick-starts/react"
+          className={FAQ_LINK_CLASS}
+        >
           React
         </DocsRouteLink>{' '}
         or{' '}
-        <DocsRouteLink href="/docs/quick-starts/nextjs" className={FAQ_LINK_CLASS}>
+        <DocsRouteLink
+          href="/docs/quick-starts/nextjs"
+          className={FAQ_LINK_CLASS}
+        >
           Next.js
         </DocsRouteLink>
         ), or follow a full{' '}
@@ -92,15 +131,17 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     question: 'Where should I start in the documentation?',
     answer: (
       <>
-        Use{' '}
+        Start with the{' '}
         <DocsRouteLink href="/docs/quick-starts" className={FAQ_LINK_CLASS}>
-          Quick starts
+          Quick start
         </DocsRouteLink>{' '}
-        to connect a project in minutes. Use{' '}
+        to set up Appwrite from your coding agent, or pick a framework guide
+        there. Use{' '}
         <DocsRouteLink href="/docs/tutorials" className={FAQ_LINK_CLASS}>
           Tutorials
         </DocsRouteLink>{' '}
-        for end-to-end apps. When you need exact request shapes and types, open the{' '}
+        for end-to-end apps. When you need exact request shapes and types, open
+        the{' '}
         <DocsRouteLink href="/docs/references" className={FAQ_LINK_CLASS}>
           API references
         </DocsRouteLink>{' '}
@@ -112,19 +153,23 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
     question: 'Should I use Appwrite Cloud or self-host?',
     answer: (
       <>
-        Appwrite Cloud is the convenient option: we run the stack, ship upgrades, and you pay a
-        predictable subscription. Self-hosting suits strict regulation, full data residency,
-        air-gapped networks, or when you prefer to pay with engineering time instead of a managed
-        service fee, but you operate the cluster yourself: you plan{' '}
+        Appwrite Cloud is the convenient option: we run the stack, ship
+        upgrades, and you pay a predictable subscription. Self-hosting suits
+        strict regulation, full data residency, air-gapped networks, or when you
+        prefer to pay with engineering time instead of a managed service fee,
+        but you operate the cluster yourself: you plan{' '}
         <DocsRouteLink
           href="/docs/advanced/self-hosting/production/updates"
           className={FAQ_LINK_CLASS}
         >
           version upgrades and data migrations
         </DocsRouteLink>{' '}
-        between releases (including backups and rollback), instead of Appwrite doing that for you.
-        The product surface is aligned either way; see{' '}
-        <DocsRouteLink href="/docs/advanced/self-hosting" className={FAQ_LINK_CLASS}>
+        between releases (including backups and rollback), instead of Appwrite
+        doing that for you. The product surface is aligned either way; see{' '}
+        <DocsRouteLink
+          href="/docs/advanced/self-hosting"
+          className={FAQ_LINK_CLASS}
+        >
           self-hosting
         </DocsRouteLink>{' '}
         and compare{' '}
@@ -143,7 +188,8 @@ const FAQ_ITEMS: DocsHubFaqItem[] = [
         <DocsRouteLink href="/docs/references" className={FAQ_LINK_CLASS}>
           API references
         </DocsRouteLink>{' '}
-        for REST payloads, GraphQL, and Realtime, organized by platform (web, mobile, server). The{' '}
+        for REST payloads, GraphQL, and Realtime, organized by platform (web,
+        mobile, server). The{' '}
         <DocsRouteLink href="/docs/sdks" className={FAQ_LINK_CLASS}>
           SDKs
         </DocsRouteLink>{' '}

@@ -8,7 +8,7 @@ export const Route = createFileRoute('/docs/quick-starts')({
     getDocsRouteHead({
       title: 'Quick start',
       description:
-        'Get started with your favorite framework and language in just a few clicks.',
+        'Set up Appwrite from your coding agent with one prompt, or follow a framework guide and write the code yourself.',
       slug: 'quick-starts',
     }),
   component: View,

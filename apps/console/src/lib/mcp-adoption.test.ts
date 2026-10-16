@@ -32,6 +32,17 @@ describe('buildConnectMcpPrompt', () => {
     expect(prompt).not.toContain('Endpoint')
     expect(prompt).not.toContain('``')
   })
+
+  test('leaves the project out when none is given', () => {
+    const prompt = buildConnectMcpPrompt()
+
+    expect(prompt).toContain(
+      `Install Appwrite MCP, the Appwrite skills, the latest CLI, and the matching official SDK by following ${AGENT_SETUP_URL}`,
+    )
+    expect(prompt).not.toContain('Project ID')
+    expect(prompt).not.toContain('Endpoint')
+    expect(prompt).toContain('ask me to paste it')
+  })
 })
 
 describe('generateAgentSetupMarkdown', () => {
@@ -115,5 +126,12 @@ describe('generateAgentSetupMarkdown', () => {
       'skip the plugin and server setup, but still install the skills if they are missing',
     )
     expect(markdown).not.toContain('MCP is connected. Skip step 3.')
+  })
+
+  test('links or creates a project when the prompt has none', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('appwrite init project')
+    expect(markdown).toContain('appwrite.config.json')
+    expect(markdown).toContain('may include a project ID')
   })
 })
