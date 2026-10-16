@@ -309,6 +309,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/products/auth/native-sign-in',
           },
           {
+            label: 'Passkeys',
+            href: '/docs/products/auth/passkeys',
+          },
+          {
             label: 'Sign in with Appwrite',
             href: '/docs/products/auth/sign-in-with-appwrite',
           },
