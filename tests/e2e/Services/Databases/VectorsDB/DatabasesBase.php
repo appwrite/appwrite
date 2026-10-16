@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Databases\VectorsDB;
 
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
-use Utopia\Database\Database;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -1283,7 +1282,7 @@ trait DatabasesBase
          */
         $index = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", $headers, [
             'key' => 'embeddingCosine',
-            'type' => Database::INDEX_HNSW_COSINE,
+            'type' => IndexType::HnswCosine->value,
             'attributes' => ['embeddings'],
             'description' => 'Nearest products by cosine',
         ]);
@@ -1301,7 +1300,7 @@ trait DatabasesBase
          */
         $index = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes", $headers, [
             'key' => 'embeddingDot',
-            'type' => Database::INDEX_HNSW_DOT,
+            'type' => IndexType::HnswDot->value,
             'attributes' => ['embeddings'],
             'description' => \str_repeat('a', 1025),
         ]);

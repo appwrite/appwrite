@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -50,9 +51,8 @@ final class DescriptionParamTest extends TestCase
 
     /**
      * The action must accept the null that Utopia will hand it.
-     *
-     * @dataProvider descriptionEndpoints
      */
+    #[DataProvider('descriptionEndpoints')]
     public function testActionAcceptsAnExplicitNullDescription(string $class, string $file): void
     {
         $parameter = null;
@@ -67,8 +67,9 @@ final class DescriptionParamTest extends TestCase
             // A subclass that re-declares the params and reuses its parent's
             // action(), e.g. TablesDB\Create extends Databases\Create. The parent
             // carries the signature and is covered as its own case.
-            $this->assertTrue(
-                (new ReflectionMethod($class, 'action'))->getDeclaringClass()->getName() !== $class,
+            $this->assertNotSame(
+                $class,
+                (new ReflectionMethod($class, 'action'))->getDeclaringClass()->getName(),
                 $file . ' declares a description param but its own action() takes no $description.',
             );
 
