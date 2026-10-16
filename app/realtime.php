@@ -421,7 +421,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -586,7 +586,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson, $presenceState) {
                 $event = json_decode($payload, true);
                 $closing = [];
 
@@ -730,13 +730,21 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
 
                 // Strip deleted presences from in-memory connection state so onClose doesn't
-                // re-fire delete events for rows already removed via HTTP DELETE.
+                // re-fire delete events for rows already removed via HTTP DELETE, and balance the
+                // holder counter for the connections that stripped it (their close no longer can).
                 $deletedPresenceId = Realtime::extractDeletedPresenceId($event);
                 if ($deletedPresenceId !== null) {
-                    $realtime->removePresenceFromConnections(
-                        (string) ($event['project'] ?? ''),
-                        $deletedPresenceId,
-                    );
+                    $deletedProjectId = (string) ($event['project'] ?? '');
+                    $strippedHolders = $realtime->removePresenceFromConnections($deletedProjectId, $deletedPresenceId);
+
+                    if (!empty($strippedHolders) && $deletedProjectId !== '' && $deletedProjectId !== 'console') {
+                        go(function () use ($strippedHolders, $deletedProjectId, $register, $presenceState): void {
+                            $pools = $register->get('pools');
+                            foreach ($strippedHolders as $strippedUserId => $strippedCount) {
+                                $presenceState->releaseStrippedHolders($pools, $deletedProjectId, (string) $strippedUserId, $strippedCount);
+                            }
+                        });
+                    }
                 }
 
                 $receivers = $realtime->getSubscribers($event);
@@ -1489,36 +1497,18 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                         /** @var UsagePublisher $publisherForUsage */
                         $publisherForUsage = $container->get('publisherForUsage');
+                        /** @var Group $pools */
+                        $pools = $container->get('pools');
 
-                        /** @var array<string, Document> $deletedPresences */
-                        $deletedPresences = [];
-                        try {
-                            $deletionCount = $dbForProject->getAuthorization()->skip(
-                                function () use ($dbForProject, $presenceIds, &$deletedPresences): int {
-                                    return $dbForProject->deleteDocuments(
-                                        'presenceLogs',
-                                        [Query::equal('$id', $presenceIds)],
-                                        onNext: function (Document $deleted) use (&$deletedPresences): void {
-                                            $deletedPresences[$deleted->getId()] = $deleted;
-                                        },
-                                    );
-                                }
-                            );
-                            $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
-                        } catch (Throwable $th) {
-                            Span::current()?->setError($th);
-                            Span::add('presence.delete_count', \count($presenceIds));
-                            Span::add('presence.delete_ids', \implode(',', \array_slice($presenceIds, 0, 10)));
+                        $deletedPresences = $presenceState->releaseConnection($pools, $dbForProject, $projectId, (string) $userId, $presenceIds);
+
+                        if (!empty($deletedPresences)) {
+                            $presenceState->triggerUsage($publisherForUsage, $project, -\count($deletedPresences));
                         }
 
                         $queueForEvents = getQueueForEvents();
                         $queueForRealtime = getQueueForRealtime();
                         foreach ($deletedPresences as $presence) {
-                            $presence->removeAttribute('$collection');
-                            $presence->removeAttribute('$tenant');
-                            $presence->removeAttribute('hostname');
-                            $presence->removeAttribute('permissionsHash');
-                            $presence->removeAttribute('userInternalId');
                             try {
                                 $presenceState->triggerEvent(
                                     $queueForEvents,

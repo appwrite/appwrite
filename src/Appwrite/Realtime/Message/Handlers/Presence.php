@@ -16,7 +16,10 @@ use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
@@ -37,6 +40,7 @@ class Presence extends Action
             ->inject('authorization')
             ->inject('presenceState')
             ->inject('project')
+            ->inject('pools')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -58,6 +62,7 @@ class Presence extends Action
         Authorization $authorization,
         PresenceState $presenceState,
         ?Document $project,
+        Group $pools,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
         QueueRealtime $queueForRealtime,
@@ -91,23 +96,48 @@ class Presence extends Action
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
 
-        $presence = $presenceState->upsertForUser(
+        $projectId = $project->getId();
+        $userId = $user->getId();
+        $lockKey = PresenceState::getLockKey($projectId, $userId);
+
+        $upsert = fn (): Document => $presenceState->upsertForUser(
             $database,
             $presenceDocument,
             $presenceId,
             (string) $user->getSequence(),
-            function () use ($presenceState, $publisherForUsage, $project): void {
-                $presenceState->triggerUsage($publisherForUsage, $project, 1);
-            },
+            fn () => $presenceState->triggerUsage($publisherForUsage, $project, 1),
         );
 
-        $presence->removeAttribute('$collection');
-        $presence->removeAttribute('$tenant');
-        $presence->removeAttribute('hostname');
-        $presence->removeAttribute('permissionsHash');
-        $presence->removeAttribute('userInternalId');
+        // Serialize this upsert against a close that may delete the row, and against a second message on this connection.
+        $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $lockKey, $presenceState, $projectId, $userId, $realtime, $connectionId): Document {
+            $lock = new Distributed($redis, $lockKey, ttl: PresenceState::LOCK_TTL);
 
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+            try {
+                return $lock->withLock(function () use ($upsert, $presenceState, $redis, $projectId, $userId, $realtime, $connectionId): Document {
+                    $firstHold = empty($realtime->connections[$connectionId]['presences']);
+                    $presence = $upsert();
+
+                    // The upsert can suspend the coroutine; if the socket closed meanwhile, onClose
+                    // already removed the connection. Don't resurrect it or count a hold its close
+                    // can never release -- leave the row to expiresAt.
+                    if (!isset($realtime->connections[$connectionId])) {
+                        return $presence;
+                    }
+
+                    if ($firstHold) {
+                        $presenceState->incrementConnections($redis, $projectId, $userId);
+                    }
+                    $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+
+                    return $presence;
+                }, timeout: PresenceState::LOCK_TIMEOUT);
+            } catch (Contention) {
+                // On contention, upsert anyway but skip the count and hold so they stay balanced.
+                return $upsert();
+            }
+        });
+
+        $presence = $presenceState->stripInternalAttributes($presence);
 
         $presenceState->triggerEvent(
             $queueForEvents,
