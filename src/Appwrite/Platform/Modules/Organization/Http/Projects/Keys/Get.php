@@ -73,6 +73,6 @@ class Get extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response->dynamic($this->withoutSecret($apiKey, $key), Response::MODEL_KEY);
     }
 }

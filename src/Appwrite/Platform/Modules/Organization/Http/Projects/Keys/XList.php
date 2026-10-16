@@ -126,7 +126,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'keys' => $keys,
+            'keys' => $this->withoutSecrets($apiKey, $keys),
             'total' => $total,
         ]), Response::MODEL_KEY_LIST);
     }

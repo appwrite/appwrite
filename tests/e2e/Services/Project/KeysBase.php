@@ -80,4 +80,119 @@ trait KeysBase
         $this->assertSame(404, $get['headers']['status-code']);
         $this->assertSame('key_not_found', $get['body']['type']);
     }
+
+    public function testHideKeySecretsFromApiKey(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $usersKey = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Users Read Key',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $usersKey['headers']['status-code']);
+        $this->assertNotEmpty($usersKey['body']['secret']);
+        $usersKeyId = $usersKey['body']['$id'];
+        $usersSecret = $usersKey['body']['secret'];
+
+        $readKey = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Keys Read Key',
+            'scopes' => ['keys.read'],
+        ]);
+        $this->assertSame(201, $readKey['headers']['status-code']);
+        $this->assertNotEmpty($readKey['body']['secret']);
+        $readSecret = $readKey['body']['secret'];
+        $readKeyId = $readKey['body']['$id'];
+
+        $writeKey = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Keys Write Key',
+            'scopes' => ['keys.write'],
+        ]);
+        $this->assertSame(201, $writeKey['headers']['status-code']);
+        $this->assertNotEmpty($writeKey['body']['secret']);
+        $writeSecret = $writeKey['body']['secret'];
+        $writeKeyId = $writeKey['body']['$id'];
+
+        $readHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $readSecret,
+        ];
+        $writeHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $writeSecret,
+        ];
+
+        $routes = [
+            '/project/keys',
+            '/projects/' . $projectId . '/keys',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ($routes as $path) {
+            $list = $this->client->call(Client::METHOD_GET, $path, $readHeaders, [
+                'total' => false,
+            ]);
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertContains($usersKeyId, \array_column($list['body']['keys'], '$id'));
+            foreach ($list['body']['keys'] as $key) {
+                $this->assertSame('', $key['secret']);
+            }
+
+            $get = $this->client->call(Client::METHOD_GET, $path . '/' . $usersKeyId, $readHeaders);
+            $this->assertSame(200, $get['headers']['status-code']);
+            $this->assertSame($usersKeyId, $get['body']['$id']);
+            $this->assertSame('', $get['body']['secret']);
+        }
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $usersKeyId, $writeHeaders, [
+            'name' => 'Users Read Key',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['secret']);
+
+        $consoleGet = $this->client->call(Client::METHOD_GET, '/project/keys/' . $usersKeyId, $consoleHeaders);
+        $this->assertSame(200, $consoleGet['headers']['status-code']);
+        $this->assertSame($usersSecret, $consoleGet['body']['secret']);
+
+        $consoleList = $this->client->call(Client::METHOD_GET, '/project/keys', $consoleHeaders, [
+            'total' => false,
+        ]);
+        $this->assertSame(200, $consoleList['headers']['status-code']);
+        $consoleUsersKey = null;
+        foreach ($consoleList['body']['keys'] as $key) {
+            if ($key['$id'] === $usersKeyId) {
+                $consoleUsersKey = $key;
+                break;
+            }
+        }
+        $this->assertNotNull($consoleUsersKey);
+        $this->assertSame($usersSecret, $consoleUsersKey['secret']);
+
+        $created = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Create Still Returns Secret',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertNotEmpty($created['body']['secret']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $created['body']['$id'], $consoleHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $usersKeyId, $consoleHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $readKeyId, $consoleHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $writeKeyId, $consoleHeaders);
+    }
 }

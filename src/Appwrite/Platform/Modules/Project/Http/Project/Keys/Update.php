@@ -2,10 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key as ApiKey;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -28,7 +27,7 @@ use Utopia\Validator\WhiteList;
  * TODO: Remove once the Console, CLI and SDKs use the Organization API
  * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
  */
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 
@@ -72,6 +71,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -85,6 +85,7 @@ class Update extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?ApiKey $apiKey,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -108,6 +109,6 @@ class Update extends Base
 
         $queueForEvents->setParam('keyId', $key->getId());
 
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response->dynamic($this->withoutSecret($apiKey, $key), Response::MODEL_KEY);
     }
 }
