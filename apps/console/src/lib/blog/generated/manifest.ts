@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-databases-hackathon",
+    "href": "/blog/post/announcing-appwrite-databases-hackathon",
+    "title": "Announcing the Appwrite Databases Hackathon",
+    "description": "Build something new with Appwrite Databases from October 19–31, compete for prizes, and show us what you can create.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 5,
+    "author": "aishwari",
+    "category": "hackathons",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-databases-hackathon/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-passkeys",
     "href": "/blog/post/announcing-passkeys",
     "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
