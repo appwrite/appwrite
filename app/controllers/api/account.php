@@ -5458,7 +5458,9 @@ Http::post('/v1/account/targets/push')
 
             foreach ($candidates as $candidate) {
                 $sandbox = (bool) ($candidate->getAttribute('options', [])['sandbox'] ?? false);
-                if (($candidate->getAttribute('credentials', [])['bundleId'] ?? '') === $bundleId
+                // A legacy `bundle` key holds the bundle ID set by an earlier provider update and wins over `bundleId`.
+                $credentials = $candidate->getAttribute('credentials', []);
+                if (($credentials['bundle'] ?? $credentials['bundleId'] ?? '') === $bundleId
                     && ($environment === '' || $sandbox === ($environment === 'sandbox'))) {
                     $provider = $candidate;
                     $providerId = $candidate->getId();
@@ -5646,7 +5648,9 @@ Http::put('/v1/account/targets/:targetId/push')
 
                 foreach ($candidates as $candidate) {
                     $sandbox = (bool) ($candidate->getAttribute('options', [])['sandbox'] ?? false);
-                    if (($candidate->getAttribute('credentials', [])['bundleId'] ?? '') === $bundleId
+                    // A legacy `bundle` key holds the bundle ID set by an earlier provider update and wins over `bundleId`.
+                    $credentials = $candidate->getAttribute('credentials', []);
+                    if (($credentials['bundle'] ?? $credentials['bundleId'] ?? '') === $bundleId
                         && ($environment === '' || $sandbox === ($environment === 'sandbox'))) {
                         if ($candidate->getId() !== $target->getAttribute('providerId')) {
                             $changes

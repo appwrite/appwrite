@@ -11,8 +11,10 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Query\Schema\ColumnType;
 
@@ -218,6 +220,38 @@ abstract class Action extends DatabasesAction
         }
 
         return [null, false];
+    }
+
+    /**
+     * A batch write refused as a duplicate names the ID it repeats, else the first one already stored.
+     *
+     * @param array<Document> $documents
+     */
+    protected function getBatchDuplicateException(Database $dbForDatabases, string $collectionTableId, array $documents, Throwable $previous): Exception
+    {
+        $ids = [];
+        foreach ($documents as $document) {
+            $id = $document->getId();
+            if (isset($ids[$id])) {
+                return new Exception($this->getDuplicateException(), previous: $previous, params: [$id]);
+            }
+            $ids[$id] = true;
+        }
+
+        $stored = empty($ids) ? new Document() : $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->findOne($collectionTableId, [
+            Query::equal('$id', \array_map(\strval(...), \array_keys($ids))),
+            Query::select(['$id']),
+        ]));
+
+        if (!$stored->isEmpty()) {
+            return new Exception($this->getDuplicateException(), previous: $previous, params: [$stored->getId()]);
+        }
+
+        return new Exception(
+            $this->getDuplicateException(),
+            ($this->isCollectionsAPI() ? 'Document' : 'Row') . ' with one of the requested IDs already exists. Try again with different IDs or use ID.unique() to generate unique IDs.',
+            previous: $previous,
+        );
     }
 
     /**

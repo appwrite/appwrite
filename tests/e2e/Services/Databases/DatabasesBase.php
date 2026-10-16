@@ -46,6 +46,7 @@ trait DatabasesBase
     use RejectedValues;
     use Totals;
     use DottedPaths;
+    use ErrorMessages;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
