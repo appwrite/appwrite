@@ -96,16 +96,18 @@ class Presence extends Action
 
         $projectId = $project->getId();
 
-        // Track this connection as a holder on this worker; bump the row's worker count only on
-        // this worker's first hold for the user (0->1). Later messages just refresh the value.
-        $firstWorkerHold = false;
-        if (!isset($realtime->connections[$connectionId]['presence'])) {
-            $firstWorkerHold = empty($realtime->presenceHolders[$projectId][$userId] ?? []);
+        // Bump the row's worker count only on this worker's first hold for the user (0->1).
+        $alreadyHeld = isset($realtime->connections[$connectionId]['presence']);
+        $firstWorkerHold = !$alreadyHeld && empty($realtime->presenceHolders[$projectId][$userId] ?? []);
+
+        $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
+
+        // Record the in-memory hold only after the write committed, so a failed write cannot
+        // leave a phantom hold that later decrements a count it never incremented.
+        if (!$alreadyHeld) {
             $realtime->presenceHolders[$projectId][$userId][$connectionId] = true;
             $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId];
         }
-
-        $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
 
         // A worker's first hold that lands connections at 1 is the global create: the user came
         // online. Guard on firstWorkerHold so a heartbeat on a single-connection user doesn't

@@ -273,6 +273,20 @@ class Realtime extends MessagingAdapter
      * @param string $presenceId
      * @return int Number of connections whose presences map was updated.
      */
+    /**
+     * Forget this worker's holds on a user whose presence row was deleted out of band (e.g. an
+     * HTTP delete), so a later close does not decrement a worker count the row no longer carries.
+     * Live connections re-register on their next presence message.
+     */
+    public function clearPresenceHolders(string $projectId, string $userId): void
+    {
+        foreach (\array_keys($this->presenceHolders[$projectId][$userId] ?? []) as $connectionId) {
+            unset($this->connections[$connectionId]['presence']);
+        }
+
+        unset($this->presenceHolders[$projectId][$userId]);
+    }
+
     public function removePresenceFromConnections(string $projectId, string $presenceId): int
     {
         if ($projectId === '' || $presenceId === '') {

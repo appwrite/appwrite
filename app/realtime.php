@@ -732,6 +732,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
+                // A presence delete (HTTP or worker) means the row is gone; forget any stale
+                // worker holds so a later close does not decrement a count that no longer has them.
+                if (Realtime::extractDeletedPresenceId($event) !== null) {
+                    $deletedUserId = (string) ($event['data']['payload']['userId'] ?? '');
+                    if ($deletedUserId !== '') {
+                        $realtime->clearPresenceHolders((string) ($event['project'] ?? ''), $deletedUserId);
+                    }
+                }
+
                 $receivers = $realtime->getSubscribers($event);
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {

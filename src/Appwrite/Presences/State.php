@@ -156,35 +156,42 @@ class State
 
             // First hold for this worker (or the row vanished): create with connections = 1 or +1,
             // in a transaction so the counter read-modify-write is serialized against another
-            // worker's increment or the decrement-to-zero delete.
-            return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId) {
-                $existing = $dbForProject->getAuthorization()->skip(
-                    fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
-                );
+            // worker's increment or the decrement-to-zero delete. If a concurrent create wins the
+            // unique-userId race, retry once: the row now exists, so the retry increments it.
+            for ($attempt = 1; ; $attempt++) {
+                try {
+                    return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId) {
+                        $existing = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
+                        );
 
-                if ($existing->isEmpty()) {
-                    if (!\is_string($presenceDocument->getId()) || $presenceDocument->getId() === '') {
-                        $presenceDocument->setAttribute('$id', Id::unique());
+                        if ($existing->isEmpty()) {
+                            if (!\is_string($presenceDocument->getId()) || $presenceDocument->getId() === '') {
+                                $presenceDocument->setAttribute('$id', Id::unique());
+                            }
+                            $presenceDocument->setAttribute('connections', 1);
+
+                            return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
+                        }
+
+                        $current = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
+                        );
+                        if ($current->isEmpty()) {
+                            throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
+                        }
+
+                        $presenceDocument->setAttribute('$id', $current->getId());
+                        $presenceDocument->setAttribute('connections', (int) $current->getAttribute('connections', 0) + 1);
+
+                        return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
+                    });
+                } catch (DuplicateException $e) {
+                    if ($attempt >= 2) {
+                        throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$userId], previous: $e);
                     }
-                    $presenceDocument->setAttribute('connections', 1);
-
-                    return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                 }
-
-                $current = $dbForProject->getAuthorization()->skip(
-                    fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
-                );
-                if ($current->isEmpty()) {
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
-                }
-
-                $presenceDocument->setAttribute('$id', $current->getId());
-                $presenceDocument->setAttribute('connections', (int) $current->getAttribute('connections', 0) + 1);
-
-                return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
-            });
-        } catch (DuplicateException $e) {
-            throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$userId], previous: $e);
+            }
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
         } catch (ConflictException $e) {
