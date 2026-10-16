@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Utopia\Storage\Tests\Device;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Storage\Device;
 use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\Telemetry;
 use Utopia\Storage\Exception\NotFoundException;
 use Utopia\Storage\Exception\RemoteException;
+use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
 final class S3StreamingTest extends TestCase
 {
@@ -20,7 +23,7 @@ final class S3StreamingTest extends TestCase
 
     public function testBytesReachSinkBeforeTheBackendFinishes(): void
     {
-        $this->serve(function (S3 $device, string $marker): void {
+        $this->serve(function (Device $device, string $marker): void {
             $bytes = 0;
             $hash = hash_init('sha256');
             $baseline = memory_get_usage();
@@ -39,7 +42,7 @@ final class S3StreamingTest extends TestCase
 
     public function testBackendErrorBytesNeverReachTheSink(): void
     {
-        $this->serve(function (S3 $device): void {
+        $this->serve(function (Device $device): void {
             $bytes = '';
             try {
                 $device->stream('/missing', static function (string $chunk) use (&$bytes): void {
@@ -54,7 +57,7 @@ final class S3StreamingTest extends TestCase
 
     public function testIgnoredRangeIsRejectedBeforeDelivery(): void
     {
-        $this->serve(function (S3 $device): void {
+        $this->serve(function (Device $device): void {
             $bytes = '';
             try {
                 $device->stream('/ignores-range', static function (string $chunk) use (&$bytes): void {
@@ -69,7 +72,7 @@ final class S3StreamingTest extends TestCase
 
     public function testTruncatedBackendResponseIsNotReplayed(): void
     {
-        $this->serve(function (S3 $device, string $marker): void {
+        $this->serve(function (Device $device, string $marker): void {
             $bytes = '';
             try {
                 $device->stream('/truncated', static function (string $chunk) use (&$bytes): void {
@@ -85,7 +88,7 @@ final class S3StreamingTest extends TestCase
 
     public function testCancelledSinkStopsTheBackendRequestWithoutReplay(): void
     {
-        $this->serve(function (S3 $device, string $marker): void {
+        $this->serve(function (Device $device, string $marker): void {
             $received = 0;
             $cancelled = new \RuntimeException('Downstream disconnected');
             try {
@@ -103,7 +106,7 @@ final class S3StreamingTest extends TestCase
         });
     }
 
-    /** @param callable(S3, string): void $test */
+    /** @param callable(Device, string): void $test */
     private function serve(callable $test): void
     {
         $listener = stream_socket_server('tcp://127.0.0.1:0');
@@ -129,7 +132,7 @@ final class S3StreamingTest extends TestCase
                 usleep(10000);
             }
             $this->assertTrue($ready);
-            $device = new S3('', 'key', 'secret', 'http://' . $address, 'us-east-1');
+            $device = new Telemetry(new TestTelemetry(), new S3('', 'key', 'secret', 'http://' . $address, 'us-east-1'));
             $test($device, $marker);
         } finally {
             proc_terminate($process);
