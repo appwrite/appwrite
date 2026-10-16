@@ -116,6 +116,41 @@ pub(crate) struct JoinAlias {
     pub alias: String,
 }
 
+/// The queries of a `find()` or a row count split by how the statement
+/// reads them (`SQL\Plan`).
+pub(crate) struct Plan {
+    /// Every query but the vector and adapter filter ones, the join columns
+    /// qualified.
+    pub(crate) queries: Vec<Query>,
+    /// The vector queries.
+    pub(crate) vector_queries: Vec<Query>,
+    /// The queries the adapter compiles itself (SQLite's searches).
+    pub(crate) adapter_filter_queries: Vec<Query>,
+    /// The joins, by alias.
+    pub(crate) joins: Vec<JoinAlias>,
+    /// The join aliases a join cannot look its rows up by an index for.
+    pub(crate) unindexed: Vec<String>,
+    /// Whether the queries aggregate or group.
+    pub(crate) has_aggregation: bool,
+    /// Whether the queries join.
+    pub(crate) has_joins: bool,
+    /// Whether the queries read distinct rows.
+    pub(crate) has_distinct: bool,
+    /// Whether a right or full outer join keeps unmatched joined rows.
+    pub(crate) has_preserving_outer_join: bool,
+    /// Whether the engine emulates a full outer join.
+    pub(crate) emulates_full_outer_join: bool,
+}
+
+/// Whether the queries read rows other than one per matching document:
+/// groups, aggregates or distinct values (`shapesRows()`).
+pub(crate) fn shapes_rows(queries: &[Query]) -> bool {
+    queries.iter().any(|q| {
+        let method = q.method();
+        method.is_aggregate() || method == Method::GroupBy || method == Method::Distinct
+    })
+}
+
 /// A SQL fragment with its positional bindings.
 ///
 /// PHP: `Utopia\Database\Adapter\SQL\Expression`.
@@ -293,81 +328,55 @@ impl Sql {
             return self.find_page_fast(&name, alias, limit, offset).await;
         }
 
-        let mut vector_queries = Vec::new();
-        let mut adapter_filter_queries = Vec::new();
-        let mut other_queries = Vec::new();
-        let (mut has_aggregation, mut has_joins, mut has_distinct) = (false, false, false);
-        for query in queries {
-            let method = query.method();
-            if method.is_vector() {
-                vector_queries.push(query);
-                continue;
-            }
-            if self.is_adapter_filter_query(&query) {
-                adapter_filter_queries.push(query);
-                continue;
-            }
-            if method.is_aggregate() || method == Method::GroupBy {
-                has_aggregation = true;
-            }
-            if method.is_join() {
-                has_joins = true;
-            }
-            if method == Method::Distinct {
-                has_distinct = true;
-            }
-            other_queries.push(query);
-        }
-        let mut queries = other_queries;
-
-        let joins = if has_joins { self.remap_join_queries(&mut queries)? } else { Vec::new() };
-        let unindexed = self.unindexed_joins(collection, &queries, &joins);
-
-        let has_preserving_outer_join =
-            has_joins && queries.iter().any(|q| matches!(q.method(), Method::RightJoin | Method::FullOuterJoin));
+        let Plan {
+            mut queries,
+            mut vector_queries,
+            adapter_filter_queries,
+            joins,
+            unindexed,
+            has_aggregation,
+            has_joins,
+            has_distinct,
+            has_preserving_outer_join,
+            emulates_full_outer_join,
+        } = self.plan(collection, queries)?;
 
         if !joins.is_empty() {
             (order_attributes, cursor) = self.qualify_joined_orders(order_attributes, cursor, collection, &joins)?;
         }
 
         let join_aliases = aliases_of(&joins);
-        let emulates_full_outer_join = self.needs_full_outer_join_emulation(&queries);
 
         let results = if emulates_full_outer_join && has_aggregation {
-            self.find_full_outer_join_aggregate(
-                collection,
-                &mut queries,
-                &joins,
-                has_distinct,
-                &adapter_filter_queries,
-                &name,
-                alias,
-                &roles,
-                for_permission,
-                &order_attributes,
-                &order_types,
-                limit,
-                offset,
-                &cursor,
-                cursor_direction,
-                authorize,
-            )
-            .await?
+            let (mut aggregation, columns, qualified_groups) = self
+                .full_outer_join_aggregation(
+                    collection,
+                    &mut queries,
+                    &joins,
+                    has_distinct,
+                    &adapter_filter_queries,
+                    &name,
+                    alias,
+                    &roles,
+                    for_permission,
+                    &order_attributes,
+                    &order_types,
+                    limit,
+                    offset,
+                    &cursor,
+                    cursor_direction,
+                    authorize,
+                )
+                .await?;
+            let rows = self.execute_select(&mut aggregation, Event::DocumentFind, &name).await?;
+            self.full_outer_join_result_names(rows, &columns, &qualified_groups)
         } else if emulates_full_outer_join {
-            if has_distinct {
-                self.assert_distinct_order_is_selected(&queries, &order_attributes, &order_types, &join_aliases)?;
-            }
-
-            let (mut left_queries, mut right_queries) = self.emulate_full_outer_join(&queries, alias)?;
-            let left_preserving = keeps_unmatched_rows(&left_queries);
-
-            let mut left = self.new_builder(&name, alias, left_preserving, Vec::new(), unindexed.clone())?;
-            let left_projected = self
-                .configure_find_builder(
-                    &mut left,
+            let mut union = self
+                .full_outer_join_union(
                     collection,
-                    &mut left_queries,
+                    &queries,
                     &joins,
+                    &unindexed,
                     has_aggregation,
                     has_distinct,
                     &adapter_filter_queries,
@@ -375,80 +384,16 @@ impl Sql {
                     alias,
                     &roles,
                     for_permission,
-                    true,
                     &order_attributes,
+                    &order_types,
+                    limit,
+                    offset,
+                    &cursor,
+                    cursor_direction,
                     authorize,
                 )
                 .await?;
-            self.apply_full_outer_join_order_projection(
-                &mut left,
-                collection,
-                alias,
-                &order_attributes,
-                &order_types,
-                left_projected,
-                &joins,
-            )?;
-            self.apply_find_cursor(
-                &mut left,
-                &order_attributes,
-                &order_types,
-                &cursor,
-                cursor_direction,
-                &join_aliases,
-                true,
-            )?;
-
-            let mut right = self.new_builder(&name, alias, true, Vec::new(), unindexed)?;
-            let right_projected = self
-                .configure_find_builder(
-                    &mut right,
-                    collection,
-                    &mut right_queries,
-                    &joins,
-                    has_aggregation,
-                    has_distinct,
-                    &adapter_filter_queries,
-                    &name,
-                    alias,
-                    &roles,
-                    for_permission,
-                    true,
-                    &order_attributes,
-                    authorize,
-                )
-                .await?;
-            self.apply_full_outer_join_order_projection(
-                &mut right,
-                collection,
-                alias,
-                &order_attributes,
-                &order_types,
-                right_projected,
-                &joins,
-            )?;
-            self.apply_find_cursor(
-                &mut right,
-                &order_attributes,
-                &order_types,
-                &cursor,
-                cursor_direction,
-                &join_aliases,
-                true,
-            )?;
-
-            union(&mut left, &mut right, !has_distinct)?;
-            self.apply_find_page(
-                &mut left,
-                &order_attributes,
-                &order_types,
-                limit,
-                offset,
-                cursor_direction,
-                true,
-                &[],
-            )?;
-            self.execute_select(&mut left, Event::DocumentFind, &name).await?
+            self.execute_select(&mut union, Event::DocumentFind, &name).await?
         } else {
             let bound = if has_joins
                 && !has_aggregation
@@ -515,14 +460,7 @@ impl Sql {
                 }
             };
 
-            let mut vector_distance = None;
-            if let Some(vector_query) = vector_queries.first_mut() {
-                vector_distance = self.vector_order_raw(vector_query, alias);
-                if vector_distance.is_some() {
-                    let attribute = self.quote(&self.filter(vector_query.attribute()));
-                    where_raw(&mut builder, &format!("{}.{attribute} IS NOT NULL", self.quote(alias)), Vec::new());
-                }
-            }
+            let vector_distance = self.vector_distance(&mut builder, vector_queries.first_mut(), alias);
 
             if let Some(vector) = vector_distance.as_ref().filter(|_| !cursor.is_empty() && !has_distinct) {
                 let distance = cursor.get_str(document::DISTANCE).cloned().unwrap_or(Value::Null);
@@ -710,6 +648,255 @@ impl Sql {
         builder.limit(1);
 
         self.execute_select(&mut builder, Event::DocumentRead, &name).await
+    }
+
+    /// The queries of a `find()` or a row count split by how the statement
+    /// reads them, the join columns qualified (`plan()`).
+    pub(crate) fn plan(&self, collection: &Collection, queries: Vec<Query>) -> Result<Plan> {
+        let mut vector_queries = Vec::new();
+        let mut adapter_filter_queries = Vec::new();
+        let mut other_queries = Vec::new();
+        let (mut has_aggregation, mut has_joins, mut has_distinct) = (false, false, false);
+        for query in queries {
+            let method = query.method();
+            if method.is_vector() {
+                vector_queries.push(query);
+                continue;
+            }
+            if self.is_adapter_filter_query(&query) {
+                adapter_filter_queries.push(query);
+                continue;
+            }
+            if method.is_aggregate() || method == Method::GroupBy {
+                has_aggregation = true;
+            }
+            if method.is_join() {
+                has_joins = true;
+            }
+            if method == Method::Distinct {
+                has_distinct = true;
+            }
+            other_queries.push(query);
+        }
+        let mut queries = other_queries;
+
+        let joins = if has_joins { self.remap_join_queries(&mut queries)? } else { Vec::new() };
+        let unindexed = self.unindexed_joins(collection, &queries, &joins);
+
+        let has_preserving_outer_join =
+            has_joins && queries.iter().any(|q| matches!(q.method(), Method::RightJoin | Method::FullOuterJoin));
+        let emulates_full_outer_join = self.needs_full_outer_join_emulation(&queries);
+
+        Ok(Plan {
+            queries,
+            vector_queries,
+            adapter_filter_queries,
+            joins,
+            unindexed,
+            has_aggregation,
+            has_joins,
+            has_distinct,
+            has_preserving_outer_join,
+            emulates_full_outer_join,
+        })
+    }
+
+    /// Keeps the rows a vector query can rank, those with a vector, and
+    /// returns the distance it ranks them by (`vectorDistance()`).
+    pub(crate) fn vector_distance(
+        &self,
+        builder: &mut SqlBuilder,
+        vector_query: Option<&mut Query>,
+        alias: &str,
+    ) -> Option<Expression> {
+        let vector_query = vector_query?;
+        let distance = self.vector_order_raw(vector_query, alias);
+        if distance.is_some() {
+            let attribute = self.quote(&self.filter(vector_query.attribute()));
+            where_raw(builder, &format!("{}.{attribute} IS NOT NULL", self.quote(alias)), Vec::new());
+        }
+        distance
+    }
+
+    /// The rows of an emulated full outer join: its left and right halves,
+    /// each filtered, projected and past the cursor, as one union, ordered
+    /// and paged (`fullOuterJoinUnion()`).
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) async fn full_outer_join_union(
+        &self,
+        collection: &Collection,
+        queries: &[Query],
+        joins: &[JoinAlias],
+        unindexed: &[String],
+        has_aggregation: bool,
+        has_distinct: bool,
+        adapter_filter_queries: &[Query],
+        name: &str,
+        alias: &str,
+        roles: &[String],
+        for_permission: PermissionType,
+        order_attributes: &[String],
+        order_types: &[OrderDirection],
+        limit: Option<i64>,
+        offset: Option<i64>,
+        cursor: &Array,
+        cursor_direction: CursorDirection,
+        authorize: bool,
+    ) -> Result<SqlBuilder> {
+        let join_aliases = aliases_of(joins);
+        if has_distinct {
+            self.assert_distinct_order_is_selected(queries, order_attributes, order_types, &join_aliases)?;
+        }
+
+        let (left_queries, right_queries) = self.emulate_full_outer_join(queries, alias)?;
+        let left_preserving = keeps_unmatched_rows(&left_queries);
+
+        let mut halves = Vec::with_capacity(2);
+        for (mut half_queries, preserving) in [(left_queries, left_preserving), (right_queries, true)] {
+            let mut half = self.new_builder(name, alias, preserving, Vec::new(), unindexed.to_vec())?;
+            let projected = self
+                .configure_find_builder(
+                    &mut half,
+                    collection,
+                    &mut half_queries,
+                    joins,
+                    has_aggregation,
+                    has_distinct,
+                    adapter_filter_queries,
+                    name,
+                    alias,
+                    roles,
+                    for_permission,
+                    true,
+                    order_attributes,
+                    authorize,
+                )
+                .await?;
+            self.apply_full_outer_join_order_projection(
+                &mut half,
+                collection,
+                alias,
+                order_attributes,
+                order_types,
+                projected,
+                joins,
+            )?;
+            self.apply_find_cursor(
+                &mut half,
+                order_attributes,
+                order_types,
+                cursor,
+                cursor_direction,
+                &join_aliases,
+                true,
+            )?;
+            halves.push(half);
+        }
+
+        let mut right = halves.pop().expect("two halves");
+        let mut left = halves.pop().expect("two halves");
+        union(&mut left, &mut right, !has_distinct)?;
+        self.apply_find_page(&mut left, order_attributes, order_types, limit, offset, cursor_direction, true, &[])?;
+        Ok(left)
+    }
+
+    /// The statement `find()` reads for the plan, unordered and unpaged,
+    /// bounded to the first `max` rows (`rowsBuilder()`).
+    pub(crate) async fn rows_builder(
+        &self,
+        collection: &Collection,
+        plan: Plan,
+        name: &str,
+        alias: &str,
+        roles: &[String],
+        max: Option<i64>,
+    ) -> Result<SqlBuilder> {
+        let authorize = self.authorization().status();
+        let Plan {
+            mut queries,
+            mut vector_queries,
+            adapter_filter_queries,
+            joins,
+            unindexed,
+            has_aggregation,
+            has_distinct,
+            has_preserving_outer_join,
+            emulates_full_outer_join,
+            ..
+        } = plan;
+        let join_aliases = aliases_of(&joins);
+        let read = PermissionType::Read;
+
+        if emulates_full_outer_join && has_aggregation {
+            let (aggregation, ..) = self
+                .full_outer_join_aggregation(
+                    collection,
+                    &mut queries,
+                    &joins,
+                    has_distinct,
+                    &adapter_filter_queries,
+                    name,
+                    alias,
+                    roles,
+                    read,
+                    &[],
+                    &[],
+                    max,
+                    None,
+                    &Array::new(),
+                    CursorDirection::After,
+                    authorize,
+                )
+                .await?;
+            return Ok(aggregation);
+        }
+
+        if emulates_full_outer_join {
+            return self
+                .full_outer_join_union(
+                    collection,
+                    &queries,
+                    &joins,
+                    &unindexed,
+                    has_aggregation,
+                    has_distinct,
+                    &adapter_filter_queries,
+                    name,
+                    alias,
+                    roles,
+                    read,
+                    &[],
+                    &[],
+                    max,
+                    None,
+                    &Array::new(),
+                    CursorDirection::After,
+                    authorize,
+                )
+                .await;
+        }
+
+        let mut builder = self.new_builder(name, alias, has_preserving_outer_join, Vec::new(), unindexed)?;
+        self.configure_find_builder(
+            &mut builder,
+            collection,
+            &mut queries,
+            &joins,
+            has_aggregation,
+            has_distinct,
+            &adapter_filter_queries,
+            name,
+            alias,
+            roles,
+            read,
+            true,
+            &[],
+            authorize,
+        )
+        .await?;
+        self.vector_distance(&mut builder, vector_queries.first_mut(), alias);
+        self.apply_find_page(&mut builder, &[], &[], max, None, CursorDirection::After, false, &join_aliases)?;
+        Ok(builder)
     }
 
     /// `configureFindBuilder()`: the projection, the groups an aggregation

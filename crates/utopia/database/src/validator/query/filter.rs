@@ -311,12 +311,16 @@ impl Filter {
     }
 
     /// The nested queries of a logical query, when every value is a query
-    /// `Query::groupByType()` puts under its filters; else `message`.
+    /// `Query::groupByType()` puts under its filters, a relationship query
+    /// aside: it shapes related documents rather than matching a row
+    /// (`filters()`); else `message`.
     fn children<'a>(&self, values: &'a QArray, message: &str) -> Option<Vec<&'a utopia_query::Query>> {
         let mut children = Vec::with_capacity(values.len());
         for value in values.values() {
             match nested(value) {
-                Some(child) if grouped_as_filter(child.method()) => children.push(child),
+                Some(child) if grouped_as_filter(child.method()) && child.method() != Method::Relationship => {
+                    children.push(child)
+                }
                 _ => {
                     self.fail(message);
                     return None;
@@ -350,12 +354,26 @@ impl Filter {
             if !self.is_valid_object_path(alias, attribute) {
                 return false;
             }
+            if !self.is_nestable(alias) {
+                return self.fail(format!("Cannot query nested attribute on: {alias}"));
+            }
             base = alias;
         }
         if self.options.support_for_attributes && !self.schema.contains_key(base) {
             return self.fail(format!("Attribute not found in schema: {base}"));
         }
         true
+    }
+
+    /// Whether a path can go into the attribute: a relationship or an object
+    /// one, or one the schema does not hold or check (`isNestable()`).
+    fn is_nestable(&self, base: &str) -> bool {
+        match self.schema.get(base) {
+            Some(attribute) if self.options.support_for_attributes => {
+                matches!(attribute.kind, ColumnType::Relationship | ColumnType::Object)
+            }
+            _ => true,
+        }
     }
 
     fn is_valid_object_path(&self, base: &str, path: &str) -> bool {

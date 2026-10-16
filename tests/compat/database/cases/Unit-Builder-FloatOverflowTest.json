@@ -1,0 +1,1401 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/FloatOverflowTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb sum",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1064"
+          },
+          "bind": "s1704",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1064"
+              }
+            }
+          },
+          "expect": "SUM(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb avg",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1065"
+          },
+          "bind": "s1705",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1065"
+              }
+            }
+          },
+          "expect": "AVG(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb variance",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "variance",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1066"
+          },
+          "bind": "s1706",
+          "expect": {
+            "$query": {
+              "method": "variance",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1066"
+              }
+            }
+          },
+          "expect": "VARIANCE(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb varPop",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "varPop",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1067"
+          },
+          "bind": "s1707",
+          "expect": {
+            "$query": {
+              "method": "varPop",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1067"
+              }
+            }
+          },
+          "expect": "VAR_POP(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb varSamp",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "varSamp",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1068"
+          },
+          "bind": "s1708",
+          "expect": {
+            "$query": {
+              "method": "varSamp",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1068"
+              }
+            }
+          },
+          "expect": "VAR_SAMP(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddev",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddev",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1069"
+          },
+          "bind": "s1709",
+          "expect": {
+            "$query": {
+              "method": "stddev",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1069"
+              }
+            }
+          },
+          "expect": "SQRT(VARIANCE(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddevPop",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddevPop",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1070"
+          },
+          "bind": "s1710",
+          "expect": {
+            "$query": {
+              "method": "stddevPop",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1070"
+              }
+            }
+          },
+          "expect": "SQRT(VAR_POP(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddevSamp",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddevSamp",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1071"
+          },
+          "bind": "s1711",
+          "expect": {
+            "$query": {
+              "method": "stddevSamp",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1071"
+              }
+            }
+          },
+          "expect": "SQRT(VAR_SAMP(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb unaliased sum keeps the name the engine gives it",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o1072"
+          },
+          "bind": "s1712",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1072"
+              }
+            }
+          },
+          "expect": "SUM(`reading`) + 0 AS `SUM(``reading``)`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb count is an integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "total"
+            },
+            "as": "o1073"
+          },
+          "bind": "s1713",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1073"
+              }
+            }
+          },
+          "expect": "COUNT(*) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb min cannot overflow",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "min",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1074"
+          },
+          "bind": "s1714",
+          "expect": {
+            "$query": {
+              "method": "min",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1074"
+              }
+            }
+          },
+          "expect": "MIN(`reading`) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb max cannot overflow",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1063"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "max",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1075"
+          },
+          "bind": "s1715",
+          "expect": {
+            "$query": {
+              "method": "max",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1063"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1075"
+              }
+            }
+          },
+          "expect": "MAX(`reading`) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql sum",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1077"
+          },
+          "bind": "s1717",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1077"
+              }
+            }
+          },
+          "expect": "SUM(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql avg",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1078"
+          },
+          "bind": "s1718",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1078"
+              }
+            }
+          },
+          "expect": "AVG(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql variance",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "variance",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1079"
+          },
+          "bind": "s1719",
+          "expect": {
+            "$query": {
+              "method": "variance",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1079"
+              }
+            }
+          },
+          "expect": "VARIANCE(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql varPop",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "varPop",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1080"
+          },
+          "bind": "s1720",
+          "expect": {
+            "$query": {
+              "method": "varPop",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1080"
+              }
+            }
+          },
+          "expect": "VAR_POP(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql varSamp",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "varSamp",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1081"
+          },
+          "bind": "s1721",
+          "expect": {
+            "$query": {
+              "method": "varSamp",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1081"
+              }
+            }
+          },
+          "expect": "VAR_SAMP(`reading`) + 0 AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddev",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddev",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1082"
+          },
+          "bind": "s1722",
+          "expect": {
+            "$query": {
+              "method": "stddev",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1082"
+              }
+            }
+          },
+          "expect": "SQRT(VARIANCE(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddevPop",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddevPop",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1083"
+          },
+          "bind": "s1723",
+          "expect": {
+            "$query": {
+              "method": "stddevPop",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1083"
+              }
+            }
+          },
+          "expect": "SQRT(VAR_POP(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddevSamp",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddevSamp",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1084"
+          },
+          "bind": "s1724",
+          "expect": {
+            "$query": {
+              "method": "stddevSamp",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1084"
+              }
+            }
+          },
+          "expect": "SQRT(VAR_SAMP(`reading`) + 0) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql unaliased sum keeps the name the engine gives it",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading"
+            },
+            "as": "o1085"
+          },
+          "bind": "s1725",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1085"
+              }
+            }
+          },
+          "expect": "SUM(`reading`) + 0 AS `SUM(``reading``)`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql count is an integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "total"
+            },
+            "as": "o1086"
+          },
+          "bind": "s1726",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1086"
+              }
+            }
+          },
+          "expect": "COUNT(*) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql min cannot overflow",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "min",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1087"
+          },
+          "bind": "s1727",
+          "expect": {
+            "$query": {
+              "method": "min",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1087"
+              }
+            }
+          },
+          "expect": "MIN(`reading`) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql max cannot overflow",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1076"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "max",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1088"
+          },
+          "bind": "s1728",
+          "expect": {
+            "$query": {
+              "method": "max",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1076"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1088"
+              }
+            }
+          },
+          "expect": "MAX(`reading`) AS `total`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testPostgresRaisesAnOverflowItselfSoItsAggregatesAreLeftAsTheyAre",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1089"
+          },
+          "bind": "s1753",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1090"
+          },
+          "bind": "s1754",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1089"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1090"
+              }
+            }
+          },
+          "expect": "SUM(\"reading\") AS \"total\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1091"
+          },
+          "bind": "s1756",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "stddevPop",
+            "args": {
+              "attribute": "reading",
+              "alias": "total"
+            },
+            "as": "o1092"
+          },
+          "bind": "s1757",
+          "expect": {
+            "$query": {
+              "method": "stddevPop",
+              "attribute": "reading",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1091"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o1092"
+              }
+            }
+          },
+          "expect": "STDDEV_POP(\"reading\") AS \"total\""
+        }
+      ]
+    }
+  ]
+}

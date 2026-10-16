@@ -580,6 +580,20 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
             };
             ok(adapter.delete_documents(&collection(a, "collection")?, sequences, a.strings("permissionIds")?).await)?
         }
+        "deleteDocumentsMatching" => {
+            let sequences = match a.value("sequences")? {
+                Value::Array(arr) => arr.into_iter().map(|(_, v)| v).collect(),
+                _ => Vec::new(),
+            };
+            ok(adapter
+                .delete_documents_matching(
+                    &collection(a, "collection")?,
+                    sequences,
+                    a.strings("permissionIds")?,
+                    a.queries("queries")?,
+                )
+                .await)?
+        }
         "find" => ok(adapter.find(&collection(a, "collection")?, a.queries("queries")?, find_options(a)?).await)?,
         "count" => ok(adapter.count(&collection(a, "collection")?, a.queries("queries")?, a.opt_int("max")?).await)?,
         "sum" => ok(adapter

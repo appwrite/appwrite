@@ -51,6 +51,9 @@ pub struct Engine {
     counter: u64,
     pub verbose: bool,
     trace: Option<Trace>,
+    /// The PHP error of the running case that matched one of its spec's
+    /// `flakes`, if any.
+    flaked: Option<String>,
 }
 
 /// What `compat report` keeps of a run: every step of every case with both
@@ -110,6 +113,15 @@ fn label(lib: &str, file: &CaseFile, case: &Case) -> String {
     format!("{lib}/{name}#{}", case.name)
 }
 
+/// Whether a case's recording expects one of its spec's `flakes` (a case
+/// that tests that failure on purpose).
+fn expects_flake(spec: &Spec, case: &Case) -> bool {
+    case.steps.iter().filter_map(|s| s.expect.as_ref()).any(|e| {
+        let text = e.to_string();
+        spec.flakes.keys().any(|f| text.contains(f.as_str()))
+    })
+}
+
 fn fault_text(side: &str, f: &Fault) -> String {
     format!("{side} fault: {f}")
 }
@@ -123,7 +135,7 @@ impl Engine {
             run.push(char::from_digit((seed % 36) as u32, 36).unwrap_or('0'));
             seed /= 36;
         }
-        Self { cfg, php: None, rust: None, run, counter: 0, verbose: false, trace: None }
+        Self { cfg, php: None, rust: None, run, counter: 0, verbose: false, trace: None, flaked: None }
     }
 
     fn ensure(&mut self, side: &'static str) -> Result<(), String> {
@@ -282,8 +294,22 @@ impl Engine {
                     eprintln!("skip  {name}: {why}");
                     continue;
                 }
-                let r =
+                let mut r =
                     if case.interop { self.interop_case(lib, &spec, case)? } else { self.diff_case(lib, &spec, case)? };
+                // The PHP library giving way under load (spec `flakes`) is
+                // not a difference: such a case runs once more, unless its
+                // recording expects that very failure.
+                if let Some(error) = self.flaked.take()
+                    && (!r.differences.is_empty() || !r.faults.is_empty())
+                    && !expects_flake(&spec, case)
+                {
+                    eprintln!("retry {name}: PHP failed under load ({error}); running the case again");
+                    if let Some(t) = &mut self.trace {
+                        t.steps.clear();
+                    }
+                    r = self.diff_case(lib, &spec, case)?;
+                    self.flaked = None;
+                }
                 let failed = !r.differences.is_empty() || !r.faults.is_empty();
                 if let Some(t) = &mut self.trace {
                     t.cases.push(json!({
@@ -349,6 +375,13 @@ impl Engine {
             let idp = php.send(lib, &step.op, &ap)?;
             let idr = rust.send(lib, &step.op, &ar)?;
             let (rp, rr) = (php.recv(idp)?, rust.recv(idr)?);
+            if let Ok(Outcome::Err { message, .. }) = &rp
+                && let Some(message) = message.as_str()
+                && self.flaked.is_none()
+                && spec.flakes.keys().any(|f| message.contains(f.as_str()))
+            {
+                self.flaked = Some(message.to_owned());
+            }
             let (op, or) = match (rp, rr) {
                 (Ok(p), Ok(r)) => (p, r),
                 (p, r) => {
@@ -1015,4 +1048,41 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
         }
     }
     Ok(report)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn step(expect: Value) -> Step {
+        Step {
+            op: "database.create_collection".into(),
+            args: json!({}),
+            bind: None,
+            expect: Some(expect),
+            side: None,
+            mask: None,
+        }
+    }
+
+    fn case(steps: Vec<Step>) -> Case {
+        Case { name: "c".into(), steps, interop: false, state: None, short: false, requires: Vec::new() }
+    }
+
+    #[test]
+    fn a_case_recorded_with_a_flake_is_not_retried() {
+        let spec: Spec = serde_json::from_value(json!({
+            "lib": "x", "php": { "src": [] }, "ops": {},
+            "flakes": { "the transaction was lost before it could commit": "load" },
+        }))
+        .unwrap();
+        let lost = json!({ "$error": { "class": "Utopia\\Database\\Exception\\Transaction",
+            "message": "Failed to execute transaction: the transaction was lost before it could commit" } });
+
+        assert!(expects_flake(&spec, &case(vec![step(json!(true)), step(lost)])));
+        assert!(!expects_flake(
+            &spec,
+            &case(vec![step(json!(true)), step(json!({ "$error": { "message": "other" } }))])
+        ));
+    }
 }

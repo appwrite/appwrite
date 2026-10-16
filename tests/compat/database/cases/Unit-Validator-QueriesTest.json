@@ -12,9 +12,9 @@
           "args": {
             "class": "Validator\\Queries\\Base",
             "args": {},
-            "as": "o919"
+            "as": "o13719"
           },
-          "bind": "s1584",
+          "bind": "s23896",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -24,7 +24,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o919"
+              "$obj": "o13719"
             },
             "method": "isValid",
             "args": {
@@ -44,9 +44,9 @@
           "args": {
             "class": "Validator\\Queries\\Base",
             "args": {},
-            "as": "o920"
+            "as": "o13720"
           },
-          "bind": "s1586",
+          "bind": "s23898",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -63,9 +63,9 @@
                 "value"
               ]
             },
-            "as": "o921"
+            "as": "o13721"
           },
-          "bind": "s1587",
+          "bind": "s23899",
           "expect": {
             "$query": {
               "method": "equal",
@@ -80,13 +80,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o920"
+              "$obj": "o13720"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o921"
+                  "$obj": "o13721"
                 }
               ]
             }
@@ -98,9 +98,9 @@
           "args": {
             "class": "Validator\\Query\\Limit",
             "args": {},
-            "as": "o922"
+            "as": "o13722"
           },
-          "bind": "s1589",
+          "bind": "s23901",
           "expect": {
             "$value": "Validator\\Query\\Limit",
             "fields": {}
@@ -113,13 +113,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o922"
+                  "$obj": "o13722"
                 }
               ]
             },
-            "as": "o923"
+            "as": "o13723"
           },
-          "bind": "s1590",
+          "bind": "s23902",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -136,9 +136,9 @@
                 "value"
               ]
             },
-            "as": "o924"
+            "as": "o13724"
           },
-          "bind": "s1591",
+          "bind": "s23903",
           "expect": {
             "$query": {
               "method": "equal",
@@ -153,13 +153,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o923"
+              "$obj": "o13723"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o924"
+                  "$obj": "o13724"
                 }
               ]
             }
@@ -177,9 +177,9 @@
           "args": {
             "class": "Validator\\Query\\Limit",
             "args": {},
-            "as": "o925"
+            "as": "o13725"
           },
-          "bind": "s1593",
+          "bind": "s23905",
           "expect": {
             "$value": "Validator\\Query\\Limit",
             "fields": {}
@@ -192,13 +192,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o925"
+                  "$obj": "o13725"
                 }
               ]
             },
-            "as": "o926"
+            "as": "o13726"
           },
-          "bind": "s1594",
+          "bind": "s23906",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -212,9 +212,9 @@
             "args": {
               "value": -1
             },
-            "as": "o927"
+            "as": "o13727"
           },
-          "bind": "s1595",
+          "bind": "s23907",
           "expect": {
             "$query": {
               "method": "limit",
@@ -229,13 +229,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o926"
+              "$obj": "o13726"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o927"
+                  "$obj": "o13727"
                 }
               ]
             }
@@ -260,9 +260,9 @@
                 "array": false
               }
             },
-            "as": "o928"
+            "as": "o13728"
           },
-          "bind": "s1597",
+          "bind": "s23909",
           "expect": {
             "$document": {
               "$id": "name",
@@ -284,9 +284,9 @@
                 "array": false
               }
             },
-            "as": "o929"
+            "as": "o13729"
           },
-          "bind": "s1598",
+          "bind": "s23910",
           "expect": {
             "$document": {
               "$id": "meta",
@@ -301,9 +301,9 @@
           "args": {
             "class": "Validator\\Query\\Cursor",
             "args": {},
-            "as": "o930"
+            "as": "o13730"
           },
-          "bind": "s1599",
+          "bind": "s23911",
           "expect": {
             "$value": "Validator\\Query\\Cursor",
             "fields": {}
@@ -316,17 +316,17 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o928"
+                  "$obj": "o13728"
                 },
                 {
-                  "$obj": "o929"
+                  "$obj": "o13729"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o931"
+            "as": "o13731"
           },
-          "bind": "s1600",
+          "bind": "s23912",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -337,9 +337,9 @@
           "args": {
             "class": "Validator\\Query\\Limit",
             "args": {},
-            "as": "o932"
+            "as": "o13732"
           },
-          "bind": "s1601",
+          "bind": "s23913",
           "expect": {
             "$value": "Validator\\Query\\Limit",
             "fields": {}
@@ -350,9 +350,9 @@
           "args": {
             "class": "Validator\\Query\\Offset",
             "args": {},
-            "as": "o933"
+            "as": "o13733"
           },
-          "bind": "s1602",
+          "bind": "s23914",
           "expect": {
             "$value": "Validator\\Query\\Offset",
             "fields": {}
@@ -365,16 +365,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o928"
+                  "$obj": "o13728"
                 },
                 {
-                  "$obj": "o929"
+                  "$obj": "o13729"
                 }
               ]
             },
-            "as": "o934"
+            "as": "o13734"
           },
-          "bind": "s1603",
+          "bind": "s23915",
           "expect": {
             "$value": "Validator\\Query\\Order",
             "fields": {}
@@ -387,25 +387,25 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o930"
+                  "$obj": "o13730"
                 },
                 {
-                  "$obj": "o931"
+                  "$obj": "o13731"
                 },
                 {
-                  "$obj": "o932"
+                  "$obj": "o13732"
                 },
                 {
-                  "$obj": "o933"
+                  "$obj": "o13733"
                 },
                 {
-                  "$obj": "o934"
+                  "$obj": "o13734"
                 }
               ]
             },
-            "as": "o935"
+            "as": "o13735"
           },
-          "bind": "s1604",
+          "bind": "s23916",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -420,9 +420,9 @@
                 "$id": "asdf"
               }
             },
-            "as": "o936"
+            "as": "o13736"
           },
-          "bind": "s1605",
+          "bind": "s23917",
           "expect": {
             "$document": {
               "$id": "asdf"
@@ -436,12 +436,12 @@
             "method": "cursorAfter",
             "args": {
               "value": {
-                "$obj": "o936"
+                "$obj": "o13736"
               }
             },
-            "as": "o937"
+            "as": "o13737"
           },
-          "bind": "s1606",
+          "bind": "s23918",
           "expect": {
             "$query": {
               "method": "cursorAfter",
@@ -460,13 +460,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o937"
+                  "$obj": "o13737"
                 }
               ]
             }
@@ -477,7 +477,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -495,9 +495,9 @@
                 "value"
               ]
             },
-            "as": "o938"
+            "as": "o13738"
           },
-          "bind": "s1609",
+          "bind": "s23921",
           "expect": {
             "$query": {
               "method": "equal",
@@ -512,13 +512,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o938"
+                  "$obj": "o13738"
                 }
               ]
             }
@@ -529,7 +529,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -544,9 +544,9 @@
             "args": {
               "value": 10
             },
-            "as": "o939"
+            "as": "o13739"
           },
-          "bind": "s1612",
+          "bind": "s23924",
           "expect": {
             "$query": {
               "method": "limit",
@@ -561,13 +561,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o939"
+                  "$obj": "o13739"
                 }
               ]
             }
@@ -578,7 +578,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -593,9 +593,9 @@
             "args": {
               "value": 10
             },
-            "as": "o940"
+            "as": "o13740"
           },
-          "bind": "s1615",
+          "bind": "s23927",
           "expect": {
             "$query": {
               "method": "offset",
@@ -610,13 +610,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o940"
+                  "$obj": "o13740"
                 }
               ]
             }
@@ -627,7 +627,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -642,9 +642,9 @@
             "args": {
               "attribute": "name"
             },
-            "as": "o941"
+            "as": "o13741"
           },
-          "bind": "s1618",
+          "bind": "s23930",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -657,13 +657,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o941"
+                  "$obj": "o13741"
                 }
               ]
             }
@@ -674,7 +674,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -702,9 +702,9 @@
                 }
               ]
             },
-            "as": "o942"
+            "as": "o13742"
           },
-          "bind": "s1621",
+          "bind": "s23933",
           "expect": {
             "$query": {
               "method": "equal",
@@ -729,13 +729,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o942"
+                  "$obj": "o13742"
                 }
               ]
             }
@@ -746,7 +746,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "getDescription",
             "args": {}
@@ -771,9 +771,9 @@
                 }
               ]
             },
-            "as": "o943"
+            "as": "o13743"
           },
-          "bind": "s1624",
+          "bind": "s23936",
           "expect": {
             "$query": {
               "method": "equal",
@@ -795,13 +795,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o943"
+                  "$obj": "o13743"
                 }
               ]
             }
@@ -829,9 +829,9 @@
                 }
               ]
             },
-            "as": "o944"
+            "as": "o13744"
           },
-          "bind": "s1626",
+          "bind": "s23938",
           "expect": {
             "$query": {
               "method": "containsAny",
@@ -856,13 +856,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o935"
+              "$obj": "o13735"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o944"
+                  "$obj": "o13744"
                 }
               ]
             }
@@ -880,9 +880,9 @@
           "args": {
             "class": "Validator\\Queries\\Base",
             "args": {},
-            "as": "o945"
+            "as": "o13745"
           },
-          "bind": "s1628",
+          "bind": "s23940",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -892,7 +892,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o945"
+              "$obj": "o13745"
             },
             "method": "isValid",
             "args": {
@@ -905,7 +905,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o945"
+              "$obj": "o13745"
             },
             "method": "getDescription",
             "args": {}
@@ -916,7 +916,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o945"
+              "$obj": "o13745"
             },
             "method": "isValid",
             "args": {
@@ -929,7 +929,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o945"
+              "$obj": "o13745"
             },
             "method": "isValid",
             "args": {
@@ -949,9 +949,9 @@
           "args": {
             "class": "Validator\\Query\\Limit",
             "args": {},
-            "as": "o946"
+            "as": "o13746"
           },
-          "bind": "s1633",
+          "bind": "s23945",
           "expect": {
             "$value": "Validator\\Query\\Limit",
             "fields": {}
@@ -964,14 +964,14 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o946"
+                  "$obj": "o13746"
                 }
               ],
               "length": 2
             },
-            "as": "o947"
+            "as": "o13747"
           },
-          "bind": "s1634",
+          "bind": "s23946",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -985,9 +985,9 @@
             "args": {
               "value": 10
             },
-            "as": "o948"
+            "as": "o13748"
           },
-          "bind": "s1635",
+          "bind": "s23947",
           "expect": {
             "$query": {
               "method": "limit",
@@ -1006,9 +1006,9 @@
             "args": {
               "value": 20
             },
-            "as": "o949"
+            "as": "o13749"
           },
-          "bind": "s1636",
+          "bind": "s23948",
           "expect": {
             "$query": {
               "method": "limit",
@@ -1027,9 +1027,9 @@
             "args": {
               "value": 30
             },
-            "as": "o950"
+            "as": "o13750"
           },
-          "bind": "s1637",
+          "bind": "s23949",
           "expect": {
             "$query": {
               "method": "limit",
@@ -1044,19 +1044,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o947"
+              "$obj": "o13747"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o948"
+                  "$obj": "o13748"
                 },
                 {
-                  "$obj": "o949"
+                  "$obj": "o13749"
                 },
                 {
-                  "$obj": "o950"
+                  "$obj": "o13750"
                 }
               ]
             }
@@ -1081,9 +1081,9 @@
                 "array": false
               }
             },
-            "as": "o951"
+            "as": "o13751"
           },
-          "bind": "s1639",
+          "bind": "s23951",
           "expect": {
             "$document": {
               "$id": "price",
@@ -1100,13 +1100,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o951"
+                  "$obj": "o13751"
                 }
               ]
             },
-            "as": "o952"
+            "as": "o13752"
           },
-          "bind": "s1640",
+          "bind": "s23952",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -1119,13 +1119,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o951"
+                  "$obj": "o13751"
                 }
               ]
             },
-            "as": "o953"
+            "as": "o13753"
           },
-          "bind": "s1641",
+          "bind": "s23953",
           "expect": {
             "$value": "Validator\\Query\\Order",
             "fields": {}
@@ -1138,16 +1138,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o952"
+                  "$obj": "o13752"
                 },
                 {
-                  "$obj": "o953"
+                  "$obj": "o13753"
                 }
               ]
             },
-            "as": "o954"
+            "as": "o13754"
           },
-          "bind": "s1642",
+          "bind": "s23954",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1162,9 +1162,9 @@
               "attribute": "price",
               "alias": "avg_price"
             },
-            "as": "o955"
+            "as": "o13755"
           },
-          "bind": "s1643",
+          "bind": "s23955",
           "expect": {
             "$query": {
               "method": "avg",
@@ -1182,9 +1182,9 @@
             "args": {
               "attribute": "avg_price"
             },
-            "as": "o956"
+            "as": "o13756"
           },
-          "bind": "s1644",
+          "bind": "s23956",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -1197,16 +1197,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o954"
+              "$obj": "o13754"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o955"
+                  "$obj": "o13755"
                 },
                 {
-                  "$obj": "o956"
+                  "$obj": "o13756"
                 }
               ]
             }
@@ -1226,9 +1226,9 @@
             "args": {
               "supportForAttributes": false
             },
-            "as": "o957"
+            "as": "o13757"
           },
-          "bind": "s1646",
+          "bind": "s23958",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -1241,13 +1241,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o957"
+                  "$obj": "o13757"
                 }
               ]
             },
-            "as": "o958"
+            "as": "o13758"
           },
-          "bind": "s1647",
+          "bind": "s23959",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1262,9 +1262,9 @@
               "attribute": "col",
               "alias": "var_col"
             },
-            "as": "o959"
+            "as": "o13759"
           },
-          "bind": "s1648",
+          "bind": "s23960",
           "expect": {
             "$query": {
               "method": "variance",
@@ -1278,13 +1278,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o958"
+              "$obj": "o13758"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o959"
+                  "$obj": "o13759"
                 }
               ]
             }
@@ -1300,9 +1300,9 @@
               "attribute": "col",
               "alias": "std_col"
             },
-            "as": "o960"
+            "as": "o13760"
           },
-          "bind": "s1650",
+          "bind": "s23962",
           "expect": {
             "$query": {
               "method": "stddev",
@@ -1316,13 +1316,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o958"
+              "$obj": "o13758"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o960"
+                  "$obj": "o13760"
                 }
               ]
             }
@@ -1340,9 +1340,9 @@
           "args": {
             "class": "Validator\\Query\\Distinct",
             "args": {},
-            "as": "o961"
+            "as": "o13761"
           },
-          "bind": "s1652",
+          "bind": "s23964",
           "expect": {
             "$value": "Validator\\Query\\Distinct",
             "fields": {}
@@ -1355,13 +1355,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o961"
+                  "$obj": "o13761"
                 }
               ]
             },
-            "as": "o962"
+            "as": "o13762"
           },
-          "bind": "s1653",
+          "bind": "s23965",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1373,9 +1373,9 @@
             "class": "Query",
             "method": "distinct",
             "args": {},
-            "as": "o963"
+            "as": "o13763"
           },
-          "bind": "s1654",
+          "bind": "s23966",
           "expect": {
             "$query": {
               "method": "distinct",
@@ -1388,13 +1388,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o962"
+              "$obj": "o13762"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o963"
+                  "$obj": "o13763"
                 }
               ]
             }
@@ -1414,9 +1414,9 @@
             "args": {
               "supportForAttributes": false
             },
-            "as": "o964"
+            "as": "o13764"
           },
-          "bind": "s1656",
+          "bind": "s23968",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -1429,13 +1429,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o964"
+                  "$obj": "o13764"
                 }
               ]
             },
-            "as": "o965"
+            "as": "o13765"
           },
-          "bind": "s1657",
+          "bind": "s23969",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1451,9 +1451,9 @@
                 "category"
               ]
             },
-            "as": "o966"
+            "as": "o13766"
           },
-          "bind": "s1658",
+          "bind": "s23970",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -1468,13 +1468,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o965"
+              "$obj": "o13765"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o966"
+                  "$obj": "o13766"
                 }
               ]
             }
@@ -1492,9 +1492,9 @@
           "args": {
             "class": "Validator\\Query\\Having",
             "args": {},
-            "as": "o967"
+            "as": "o13767"
           },
-          "bind": "s1660",
+          "bind": "s23972",
           "expect": {
             "$value": "Validator\\Query\\Having",
             "fields": {}
@@ -1507,13 +1507,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o967"
+                  "$obj": "o13767"
                 }
               ]
             },
-            "as": "o968"
+            "as": "o13768"
           },
-          "bind": "s1661",
+          "bind": "s23973",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1528,9 +1528,9 @@
               "attribute": "count",
               "value": 5
             },
-            "as": "o969"
+            "as": "o13769"
           },
-          "bind": "s1662",
+          "bind": "s23974",
           "expect": {
             "$query": {
               "method": "greaterThan",
@@ -1549,13 +1549,13 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o969"
+                  "$obj": "o13769"
                 }
               ]
             },
-            "as": "o970"
+            "as": "o13770"
           },
-          "bind": "s1663",
+          "bind": "s23975",
           "expect": {
             "$query": {
               "method": "having",
@@ -1578,13 +1578,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o968"
+              "$obj": "o13768"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o970"
+                  "$obj": "o13770"
                 }
               ]
             }
@@ -1602,9 +1602,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o971"
+            "as": "o13771"
           },
-          "bind": "s1665",
+          "bind": "s23977",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1617,13 +1617,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o971"
+                  "$obj": "o13771"
                 }
               ]
             },
-            "as": "o972"
+            "as": "o13772"
           },
-          "bind": "s1666",
+          "bind": "s23978",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1638,9 +1638,9 @@
               "left": "user_id",
               "right": "id"
             },
-            "as": "o973"
+            "as": "o13773"
           },
-          "bind": "s1667",
+          "bind": "s23979",
           "expect": {
             "$query": {
               "method": "on",
@@ -1663,13 +1663,13 @@
               "alias": "j0",
               "on": [
                 {
-                  "$obj": "o973"
+                  "$obj": "o13773"
                 }
               ]
             },
-            "as": "o974"
+            "as": "o13774"
           },
-          "bind": "s1668",
+          "bind": "s23980",
           "expect": {
             "$query": {
               "method": "join",
@@ -1695,13 +1695,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o972"
+              "$obj": "o13772"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o974"
+                  "$obj": "o13774"
                 }
               ]
             }
@@ -1726,9 +1726,9 @@
                 "array": false
               }
             },
-            "as": "o975"
+            "as": "o13775"
           },
-          "bind": "s1670",
+          "bind": "s23982",
           "expect": {
             "$document": {
               "$id": "price",
@@ -1745,13 +1745,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o975"
+                  "$obj": "o13775"
                 }
               ]
             },
-            "as": "o976"
+            "as": "o13776"
           },
-          "bind": "s1671",
+          "bind": "s23983",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -1764,13 +1764,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o975"
+                  "$obj": "o13775"
                 }
               ]
             },
-            "as": "o977"
+            "as": "o13777"
           },
-          "bind": "s1672",
+          "bind": "s23984",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -1781,9 +1781,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o978"
+            "as": "o13778"
           },
-          "bind": "s1673",
+          "bind": "s23985",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1796,19 +1796,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o976"
+                  "$obj": "o13776"
                 },
                 {
-                  "$obj": "o977"
+                  "$obj": "o13777"
                 },
                 {
-                  "$obj": "o978"
+                  "$obj": "o13778"
                 }
               ]
             },
-            "as": "o979"
+            "as": "o13779"
           },
-          "bind": "s1674",
+          "bind": "s23986",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -1826,9 +1826,9 @@
                 "array": false
               }
             },
-            "as": "o980"
+            "as": "o13780"
           },
-          "bind": "s1675",
+          "bind": "s23987",
           "expect": {
             "$document": {
               "$id": "score",
@@ -1847,14 +1847,14 @@
                 "$id": "reviews",
                 "attributes": [
                   {
-                    "$obj": "o980"
+                    "$obj": "o13780"
                   }
                 ]
               }
             },
-            "as": "o981"
+            "as": "o13781"
           },
-          "bind": "s1676",
+          "bind": "s23988",
           "expect": {
             "$document": {
               "$id": "reviews",
@@ -1875,13 +1875,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o979"
+              "$obj": "o13779"
             },
             "method": "setJoinedCollections",
             "args": {
               "collections": [
                 {
-                  "$obj": "o981"
+                  "$obj": "o13781"
                 }
               ]
             }
@@ -1897,9 +1897,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o982"
+            "as": "o13782"
           },
-          "bind": "s1678",
+          "bind": "s23990",
           "expect": {
             "$query": {
               "method": "on",
@@ -1922,13 +1922,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o982"
+                  "$obj": "o13782"
                 }
               ]
             },
-            "as": "o983"
+            "as": "o13783"
           },
-          "bind": "s1679",
+          "bind": "s23991",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -1958,9 +1958,9 @@
             "args": {
               "attribute": "rev.score"
             },
-            "as": "o984"
+            "as": "o13784"
           },
-          "bind": "s1680",
+          "bind": "s23992",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1979,9 +1979,9 @@
                 "score"
               ]
             },
-            "as": "o985"
+            "as": "o13785"
           },
-          "bind": "s1681",
+          "bind": "s23993",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -1996,19 +1996,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o979"
+              "$obj": "o13779"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o983"
+                  "$obj": "o13783"
                 },
                 {
-                  "$obj": "o984"
+                  "$obj": "o13784"
                 },
                 {
-                  "$obj": "o985"
+                  "$obj": "o13785"
                 }
               ]
             }
@@ -2033,9 +2033,9 @@
                 "array": false
               }
             },
-            "as": "o986"
+            "as": "o13786"
           },
-          "bind": "s1683",
+          "bind": "s23995",
           "expect": {
             "$document": {
               "$id": "price",
@@ -2052,13 +2052,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o986"
+                  "$obj": "o13786"
                 }
               ]
             },
-            "as": "o987"
+            "as": "o13787"
           },
-          "bind": "s1684",
+          "bind": "s23996",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -2071,13 +2071,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o986"
+                  "$obj": "o13786"
                 }
               ]
             },
-            "as": "o988"
+            "as": "o13788"
           },
-          "bind": "s1685",
+          "bind": "s23997",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -2088,9 +2088,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o989"
+            "as": "o13789"
           },
-          "bind": "s1686",
+          "bind": "s23998",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2103,19 +2103,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o987"
+                  "$obj": "o13787"
                 },
                 {
-                  "$obj": "o988"
+                  "$obj": "o13788"
                 },
                 {
-                  "$obj": "o989"
+                  "$obj": "o13789"
                 }
               ]
             },
-            "as": "o990"
+            "as": "o13790"
           },
-          "bind": "s1687",
+          "bind": "s23999",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -2129,9 +2129,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o991"
+            "as": "o13791"
           },
-          "bind": "s1688",
+          "bind": "s24000",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2144,13 +2144,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o990"
+              "$obj": "o13790"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o991"
+                  "$obj": "o13791"
                 }
               ]
             }
@@ -2167,9 +2167,9 @@
                 "score"
               ]
             },
-            "as": "o992"
+            "as": "o13792"
           },
-          "bind": "s1690",
+          "bind": "s24002",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -2184,13 +2184,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o990"
+              "$obj": "o13790"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o992"
+                  "$obj": "o13792"
                 }
               ]
             }
@@ -2215,9 +2215,9 @@
                 "array": false
               }
             },
-            "as": "o993"
+            "as": "o13793"
           },
-          "bind": "s1692",
+          "bind": "s24004",
           "expect": {
             "$document": {
               "$id": "price",
@@ -2234,13 +2234,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o993"
+                  "$obj": "o13793"
                 }
               ]
             },
-            "as": "o994"
+            "as": "o13794"
           },
-          "bind": "s1693",
+          "bind": "s24005",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -2253,13 +2253,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o993"
+                  "$obj": "o13793"
                 }
               ]
             },
-            "as": "o995"
+            "as": "o13795"
           },
-          "bind": "s1694",
+          "bind": "s24006",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -2270,9 +2270,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o996"
+            "as": "o13796"
           },
-          "bind": "s1695",
+          "bind": "s24007",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2285,19 +2285,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o994"
+                  "$obj": "o13794"
                 },
                 {
-                  "$obj": "o995"
+                  "$obj": "o13795"
                 },
                 {
-                  "$obj": "o996"
+                  "$obj": "o13796"
                 }
               ]
             },
-            "as": "o997"
+            "as": "o13797"
           },
-          "bind": "s1696",
+          "bind": "s24008",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -2312,9 +2312,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o998"
+            "as": "o13798"
           },
-          "bind": "s1697",
+          "bind": "s24009",
           "expect": {
             "$query": {
               "method": "on",
@@ -2337,13 +2337,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o998"
+                  "$obj": "o13798"
                 }
               ]
             },
-            "as": "o999"
+            "as": "o13799"
           },
-          "bind": "s1698",
+          "bind": "s24010",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2373,9 +2373,9 @@
             "args": {
               "attribute": "revv.score"
             },
-            "as": "o1000"
+            "as": "o13800"
           },
-          "bind": "s1699",
+          "bind": "s24011",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2388,16 +2388,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o997"
+              "$obj": "o13797"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o999"
+                  "$obj": "o13799"
                 },
                 {
-                  "$obj": "o1000"
+                  "$obj": "o13800"
                 }
               ]
             }
@@ -2413,9 +2413,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o1001"
+            "as": "o13801"
           },
-          "bind": "s1701",
+          "bind": "s24013",
           "expect": {
             "$query": {
               "method": "on",
@@ -2438,13 +2438,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o1001"
+                  "$obj": "o13801"
                 }
               ]
             },
-            "as": "o1002"
+            "as": "o13802"
           },
-          "bind": "s1702",
+          "bind": "s24014",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2476,9 +2476,9 @@
                 "revv.score"
               ]
             },
-            "as": "o1003"
+            "as": "o13803"
           },
-          "bind": "s1703",
+          "bind": "s24015",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -2493,16 +2493,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o997"
+              "$obj": "o13797"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1002"
+                  "$obj": "o13802"
                 },
                 {
-                  "$obj": "o1003"
+                  "$obj": "o13803"
                 }
               ]
             }
@@ -2518,9 +2518,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o1004"
+            "as": "o13804"
           },
-          "bind": "s1705",
+          "bind": "s24017",
           "expect": {
             "$query": {
               "method": "on",
@@ -2543,13 +2543,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o1004"
+                  "$obj": "o13804"
                 }
               ]
             },
-            "as": "o1005"
+            "as": "o13805"
           },
-          "bind": "s1706",
+          "bind": "s24018",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2579,9 +2579,9 @@
             "args": {
               "attribute": "rev.score.nested"
             },
-            "as": "o1006"
+            "as": "o13806"
           },
-          "bind": "s1707",
+          "bind": "s24019",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2594,16 +2594,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o997"
+              "$obj": "o13797"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1005"
+                  "$obj": "o13805"
                 },
                 {
-                  "$obj": "o1006"
+                  "$obj": "o13806"
                 }
               ]
             }
@@ -2628,9 +2628,9 @@
                 "array": false
               }
             },
-            "as": "o1007"
+            "as": "o13807"
           },
-          "bind": "s1709",
+          "bind": "s24021",
           "expect": {
             "$document": {
               "$id": "price",
@@ -2647,13 +2647,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1007"
+                  "$obj": "o13807"
                 }
               ]
             },
-            "as": "o1008"
+            "as": "o13808"
           },
-          "bind": "s1710",
+          "bind": "s24022",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -2666,13 +2666,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1007"
+                  "$obj": "o13807"
                 }
               ]
             },
-            "as": "o1009"
+            "as": "o13809"
           },
-          "bind": "s1711",
+          "bind": "s24023",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -2683,9 +2683,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1010"
+            "as": "o13810"
           },
-          "bind": "s1712",
+          "bind": "s24024",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2698,19 +2698,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1008"
+                  "$obj": "o13808"
                 },
                 {
-                  "$obj": "o1009"
+                  "$obj": "o13809"
                 },
                 {
-                  "$obj": "o1010"
+                  "$obj": "o13810"
                 }
               ]
             },
-            "as": "o1011"
+            "as": "o13811"
           },
-          "bind": "s1713",
+          "bind": "s24025",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -2725,9 +2725,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o1012"
+            "as": "o13812"
           },
-          "bind": "s1714",
+          "bind": "s24026",
           "expect": {
             "$query": {
               "method": "on",
@@ -2750,13 +2750,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o1012"
+                  "$obj": "o13812"
                 }
               ]
             },
-            "as": "o1013"
+            "as": "o13813"
           },
-          "bind": "s1715",
+          "bind": "s24027",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2786,9 +2786,9 @@
             "args": {
               "attribute": "rev.score"
             },
-            "as": "o1014"
+            "as": "o13814"
           },
-          "bind": "s1716",
+          "bind": "s24028",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2801,16 +2801,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1011"
+              "$obj": "o13811"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1013"
+                  "$obj": "o13813"
                 },
                 {
-                  "$obj": "o1014"
+                  "$obj": "o13814"
                 }
               ]
             }
@@ -2826,9 +2826,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o1015"
+            "as": "o13815"
           },
-          "bind": "s1718",
+          "bind": "s24030",
           "expect": {
             "$query": {
               "method": "on",
@@ -2851,13 +2851,13 @@
               "alias": "other",
               "on": [
                 {
-                  "$obj": "o1015"
+                  "$obj": "o13815"
                 }
               ]
             },
-            "as": "o1016"
+            "as": "o13816"
           },
-          "bind": "s1719",
+          "bind": "s24031",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2887,9 +2887,9 @@
             "args": {
               "attribute": "rev.score"
             },
-            "as": "o1017"
+            "as": "o13817"
           },
-          "bind": "s1720",
+          "bind": "s24032",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2902,16 +2902,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1011"
+              "$obj": "o13811"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1016"
+                  "$obj": "o13816"
                 },
                 {
-                  "$obj": "o1017"
+                  "$obj": "o13817"
                 }
               ]
             }
@@ -2936,9 +2936,9 @@
                 "array": false
               }
             },
-            "as": "o1018"
+            "as": "o13818"
           },
-          "bind": "s1722",
+          "bind": "s24034",
           "expect": {
             "$document": {
               "$id": "price",
@@ -2955,13 +2955,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1018"
+                  "$obj": "o13818"
                 }
               ]
             },
-            "as": "o1019"
+            "as": "o13819"
           },
-          "bind": "s1723",
+          "bind": "s24035",
           "expect": {
             "$value": "Validator\\Query\\Aggregate",
             "fields": {}
@@ -2974,13 +2974,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1018"
+                  "$obj": "o13818"
                 }
               ]
             },
-            "as": "o1020"
+            "as": "o13820"
           },
-          "bind": "s1724",
+          "bind": "s24036",
           "expect": {
             "$value": "Validator\\Query\\GroupBy",
             "fields": {}
@@ -2991,9 +2991,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1021"
+            "as": "o13821"
           },
-          "bind": "s1725",
+          "bind": "s24037",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3006,19 +3006,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1019"
+                  "$obj": "o13819"
                 },
                 {
-                  "$obj": "o1020"
+                  "$obj": "o13820"
                 },
                 {
-                  "$obj": "o1021"
+                  "$obj": "o13821"
                 }
               ]
             },
-            "as": "o1022"
+            "as": "o13822"
           },
-          "bind": "s1726",
+          "bind": "s24038",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -3036,9 +3036,9 @@
                 "array": false
               }
             },
-            "as": "o1023"
+            "as": "o13823"
           },
-          "bind": "s1727",
+          "bind": "s24039",
           "expect": {
             "$document": {
               "$id": "score",
@@ -3057,14 +3057,14 @@
                 "$id": "reviews",
                 "attributes": [
                   {
-                    "$obj": "o1023"
+                    "$obj": "o13823"
                   }
                 ]
               }
             },
-            "as": "o1024"
+            "as": "o13824"
           },
-          "bind": "s1728",
+          "bind": "s24040",
           "expect": {
             "$document": {
               "$id": "reviews",
@@ -3085,13 +3085,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1022"
+              "$obj": "o13822"
             },
             "method": "setJoinedCollections",
             "args": {
               "collections": [
                 {
-                  "$obj": "o1024"
+                  "$obj": "o13824"
                 }
               ]
             }
@@ -3107,9 +3107,9 @@
               "left": "productId",
               "right": "$id"
             },
-            "as": "o1025"
+            "as": "o13825"
           },
-          "bind": "s1730",
+          "bind": "s24042",
           "expect": {
             "$query": {
               "method": "on",
@@ -3132,13 +3132,13 @@
               "alias": "rev",
               "on": [
                 {
-                  "$obj": "o1025"
+                  "$obj": "o13825"
                 }
               ]
             },
-            "as": "o1026"
+            "as": "o13826"
           },
-          "bind": "s1731",
+          "bind": "s24043",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -3168,9 +3168,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o1027"
+            "as": "o13827"
           },
-          "bind": "s1732",
+          "bind": "s24044",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3183,16 +3183,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1022"
+              "$obj": "o13822"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1026"
+                  "$obj": "o13826"
                 },
                 {
-                  "$obj": "o1027"
+                  "$obj": "o13827"
                 }
               ]
             }
@@ -3207,9 +3207,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o1028"
+            "as": "o13828"
           },
-          "bind": "s1734",
+          "bind": "s24046",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3222,13 +3222,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1022"
+              "$obj": "o13822"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1028"
+                  "$obj": "o13828"
                 }
               ]
             }
@@ -3253,9 +3253,9 @@
                 "array": false
               }
             },
-            "as": "o1029"
+            "as": "o13829"
           },
-          "bind": "s1736",
+          "bind": "s24048",
           "expect": {
             "$document": {
               "$id": "name",
@@ -3272,13 +3272,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1029"
+                  "$obj": "o13829"
                 }
               ]
             },
-            "as": "o1030"
+            "as": "o13830"
           },
-          "bind": "s1737",
+          "bind": "s24049",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -3289,9 +3289,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1031"
+            "as": "o13831"
           },
-          "bind": "s1738",
+          "bind": "s24050",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3304,16 +3304,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1030"
+                  "$obj": "o13830"
                 },
                 {
-                  "$obj": "o1031"
+                  "$obj": "o13831"
                 }
               ]
             },
-            "as": "o1032"
+            "as": "o13832"
           },
-          "bind": "s1739",
+          "bind": "s24051",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -3329,9 +3329,9 @@
                 "ord.amount"
               ]
             },
-            "as": "o1033"
+            "as": "o13833"
           },
-          "bind": "s1740",
+          "bind": "s24052",
           "expect": {
             "$query": {
               "method": "select",
@@ -3351,9 +3351,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1034"
+            "as": "o13834"
           },
-          "bind": "s1741",
+          "bind": "s24053",
           "expect": {
             "$query": {
               "method": "on",
@@ -3376,13 +3376,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o1034"
+                  "$obj": "o13834"
                 }
               ]
             },
-            "as": "o1035"
+            "as": "o13835"
           },
-          "bind": "s1742",
+          "bind": "s24054",
           "expect": {
             "$query": {
               "method": "join",
@@ -3408,16 +3408,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1032"
+              "$obj": "o13832"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1033"
+                  "$obj": "o13833"
                 },
                 {
-                  "$obj": "o1035"
+                  "$obj": "o13835"
                 }
               ]
             }
@@ -3428,7 +3428,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1032"
+              "$obj": "o13832"
             },
             "method": "getDescription",
             "args": {}
@@ -3453,9 +3453,9 @@
                 "array": false
               }
             },
-            "as": "o1036"
+            "as": "o13836"
           },
-          "bind": "s1745",
+          "bind": "s24057",
           "expect": {
             "$document": {
               "$id": "name",
@@ -3472,14 +3472,14 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1036"
+                  "$obj": "o13836"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1037"
+            "as": "o13837"
           },
-          "bind": "s1746",
+          "bind": "s24058",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -3490,9 +3490,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1038"
+            "as": "o13838"
           },
-          "bind": "s1747",
+          "bind": "s24059",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3505,16 +3505,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1037"
+                  "$obj": "o13837"
                 },
                 {
-                  "$obj": "o1038"
+                  "$obj": "o13838"
                 }
               ]
             },
-            "as": "o1039"
+            "as": "o13839"
           },
-          "bind": "s1748",
+          "bind": "s24060",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -3531,9 +3531,9 @@
                 777
               ]
             },
-            "as": "o1040"
+            "as": "o13840"
           },
-          "bind": "s1749",
+          "bind": "s24061",
           "expect": {
             "$query": {
               "method": "equal",
@@ -3553,9 +3553,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1041"
+            "as": "o13841"
           },
-          "bind": "s1750",
+          "bind": "s24062",
           "expect": {
             "$query": {
               "method": "on",
@@ -3578,13 +3578,13 @@
               "alias": "sec",
               "on": [
                 {
-                  "$obj": "o1041"
+                  "$obj": "o13841"
                 }
               ]
             },
-            "as": "o1042"
+            "as": "o13842"
           },
-          "bind": "s1751",
+          "bind": "s24063",
           "expect": {
             "$query": {
               "method": "join",
@@ -3610,16 +3610,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1039"
+              "$obj": "o13839"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1040"
+                  "$obj": "o13840"
                 },
                 {
-                  "$obj": "o1042"
+                  "$obj": "o13842"
                 }
               ]
             }
@@ -3630,7 +3630,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1039"
+              "$obj": "o13839"
             },
             "method": "getDescription",
             "args": {}
@@ -3655,9 +3655,9 @@
                 "array": false
               }
             },
-            "as": "o1043"
+            "as": "o13843"
           },
-          "bind": "s1754",
+          "bind": "s24066",
           "expect": {
             "$document": {
               "$id": "name",
@@ -3674,13 +3674,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1043"
+                  "$obj": "o13843"
                 }
               ]
             },
-            "as": "o1044"
+            "as": "o13844"
           },
-          "bind": "s1755",
+          "bind": "s24067",
           "expect": {
             "$value": "Validator\\Query\\Select",
             "fields": {}
@@ -3693,14 +3693,14 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1043"
+                  "$obj": "o13843"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1045"
+            "as": "o13845"
           },
-          "bind": "s1756",
+          "bind": "s24068",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -3711,9 +3711,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1046"
+            "as": "o13846"
           },
-          "bind": "s1757",
+          "bind": "s24069",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3726,19 +3726,19 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1044"
+                  "$obj": "o13844"
                 },
                 {
-                  "$obj": "o1045"
+                  "$obj": "o13845"
                 },
                 {
-                  "$obj": "o1046"
+                  "$obj": "o13846"
                 }
               ]
             },
-            "as": "o1047"
+            "as": "o13847"
           },
-          "bind": "s1758",
+          "bind": "s24070",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -3754,9 +3754,9 @@
                 "ord.amount"
               ]
             },
-            "as": "o1048"
+            "as": "o13848"
           },
-          "bind": "s1759",
+          "bind": "s24071",
           "expect": {
             "$query": {
               "method": "select",
@@ -3776,9 +3776,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1049"
+            "as": "o13849"
           },
-          "bind": "s1760",
+          "bind": "s24072",
           "expect": {
             "$query": {
               "method": "on",
@@ -3802,9 +3802,9 @@
                 "paid"
               ]
             },
-            "as": "o1050"
+            "as": "o13850"
           },
-          "bind": "s1761",
+          "bind": "s24073",
           "expect": {
             "$query": {
               "method": "equal",
@@ -3825,16 +3825,16 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o1049"
+                  "$obj": "o13849"
                 },
                 {
-                  "$obj": "o1050"
+                  "$obj": "o13850"
                 }
               ]
             },
-            "as": "o1051"
+            "as": "o13851"
           },
-          "bind": "s1762",
+          "bind": "s24074",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -3869,16 +3869,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1047"
+              "$obj": "o13847"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1048"
+                  "$obj": "o13848"
                 },
                 {
-                  "$obj": "o1051"
+                  "$obj": "o13851"
                 }
               ]
             }
@@ -3889,7 +3889,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1047"
+              "$obj": "o13847"
             },
             "method": "getDescription",
             "args": {}
@@ -3914,9 +3914,9 @@
                 "array": false
               }
             },
-            "as": "o1052"
+            "as": "o13852"
           },
-          "bind": "s1765",
+          "bind": "s24077",
           "expect": {
             "$document": {
               "$id": "name",
@@ -3933,14 +3933,14 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1052"
+                  "$obj": "o13852"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1053"
+            "as": "o13853"
           },
-          "bind": "s1766",
+          "bind": "s24078",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -3951,9 +3951,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1054"
+            "as": "o13854"
           },
-          "bind": "s1767",
+          "bind": "s24079",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3966,16 +3966,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1053"
+                  "$obj": "o13853"
                 },
                 {
-                  "$obj": "o1054"
+                  "$obj": "o13854"
                 }
               ]
             },
-            "as": "o1055"
+            "as": "o13855"
           },
-          "bind": "s1768",
+          "bind": "s24080",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -3990,9 +3990,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1056"
+            "as": "o13856"
           },
-          "bind": "s1769",
+          "bind": "s24081",
           "expect": {
             "$query": {
               "method": "on",
@@ -4016,9 +4016,9 @@
                 "paid"
               ]
             },
-            "as": "o1057"
+            "as": "o13857"
           },
-          "bind": "s1770",
+          "bind": "s24082",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4039,16 +4039,16 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o1056"
+                  "$obj": "o13856"
                 },
                 {
-                  "$obj": "o1057"
+                  "$obj": "o13857"
                 }
               ]
             },
-            "as": "o1058"
+            "as": "o13858"
           },
-          "bind": "s1771",
+          "bind": "s24083",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -4083,13 +4083,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1055"
+              "$obj": "o13855"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1058"
+                  "$obj": "o13858"
                 }
               ]
             }
@@ -4100,7 +4100,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1055"
+              "$obj": "o13855"
             },
             "method": "getDescription",
             "args": {}
@@ -4125,9 +4125,9 @@
                 "array": false
               }
             },
-            "as": "o1059"
+            "as": "o13859"
           },
-          "bind": "s1774",
+          "bind": "s24086",
           "expect": {
             "$document": {
               "$id": "name",
@@ -4144,13 +4144,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1059"
+                  "$obj": "o13859"
                 }
               ]
             },
-            "as": "o1060"
+            "as": "o13860"
           },
-          "bind": "s1775",
+          "bind": "s24087",
           "expect": {
             "$value": "Validator\\Query\\Order",
             "fields": {}
@@ -4161,9 +4161,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1061"
+            "as": "o13861"
           },
-          "bind": "s1776",
+          "bind": "s24088",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -4176,16 +4176,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1060"
+                  "$obj": "o13860"
                 },
                 {
-                  "$obj": "o1061"
+                  "$obj": "o13861"
                 }
               ]
             },
-            "as": "o1062"
+            "as": "o13862"
           },
-          "bind": "s1777",
+          "bind": "s24089",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -4199,9 +4199,9 @@
             "args": {
               "attribute": "sec.amount"
             },
-            "as": "o1063"
+            "as": "o13863"
           },
-          "bind": "s1778",
+          "bind": "s24090",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -4219,9 +4219,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1064"
+            "as": "o13864"
           },
-          "bind": "s1779",
+          "bind": "s24091",
           "expect": {
             "$query": {
               "method": "on",
@@ -4244,13 +4244,13 @@
               "alias": "sec",
               "on": [
                 {
-                  "$obj": "o1064"
+                  "$obj": "o13864"
                 }
               ]
             },
-            "as": "o1065"
+            "as": "o13865"
           },
-          "bind": "s1780",
+          "bind": "s24092",
           "expect": {
             "$query": {
               "method": "join",
@@ -4276,16 +4276,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1062"
+              "$obj": "o13862"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1063"
+                  "$obj": "o13863"
                 },
                 {
-                  "$obj": "o1065"
+                  "$obj": "o13865"
                 }
               ]
             }
@@ -4296,7 +4296,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1062"
+              "$obj": "o13862"
             },
             "method": "getDescription",
             "args": {}
@@ -4321,9 +4321,9 @@
                 "array": false
               }
             },
-            "as": "o1066"
+            "as": "o13866"
           },
-          "bind": "s1783",
+          "bind": "s24095",
           "expect": {
             "$document": {
               "$id": "name",
@@ -4340,14 +4340,14 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1066"
+                  "$obj": "o13866"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1067"
+            "as": "o13867"
           },
-          "bind": "s1784",
+          "bind": "s24096",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -4358,9 +4358,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1068"
+            "as": "o13868"
           },
-          "bind": "s1785",
+          "bind": "s24097",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -4373,16 +4373,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1067"
+                  "$obj": "o13867"
                 },
                 {
-                  "$obj": "o1068"
+                  "$obj": "o13868"
                 }
               ]
             },
-            "as": "o1069"
+            "as": "o13869"
           },
-          "bind": "s1786",
+          "bind": "s24098",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -4399,9 +4399,9 @@
                 777
               ]
             },
-            "as": "o1070"
+            "as": "o13870"
           },
-          "bind": "s1787",
+          "bind": "s24099",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4421,9 +4421,9 @@
               "left": "$id",
               "right": "customer_uid"
             },
-            "as": "o1071"
+            "as": "o13871"
           },
-          "bind": "s1788",
+          "bind": "s24100",
           "expect": {
             "$query": {
               "method": "on",
@@ -4446,13 +4446,13 @@
               "alias": "sec",
               "on": [
                 {
-                  "$obj": "o1071"
+                  "$obj": "o13871"
                 }
               ]
             },
-            "as": "o1072"
+            "as": "o13872"
           },
-          "bind": "s1789",
+          "bind": "s24101",
           "expect": {
             "$query": {
               "method": "join",
@@ -4478,16 +4478,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1069"
+              "$obj": "o13869"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1070"
+                  "$obj": "o13870"
                 },
                 {
-                  "$obj": "o1072"
+                  "$obj": "o13872"
                 }
               ]
             }
@@ -4498,7 +4498,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1069"
+              "$obj": "o13869"
             },
             "method": "getDescription",
             "args": {}
@@ -4523,9 +4523,9 @@
                 "array": false
               }
             },
-            "as": "o1073"
+            "as": "o13873"
           },
-          "bind": "s1792",
+          "bind": "s24104",
           "expect": {
             "$document": {
               "$id": "name",
@@ -4547,9 +4547,9 @@
                 "array": false
               }
             },
-            "as": "o1074"
+            "as": "o13874"
           },
-          "bind": "s1793",
+          "bind": "s24105",
           "expect": {
             "$document": {
               "$id": "rank",
@@ -4566,17 +4566,17 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1073"
+                  "$obj": "o13873"
                 },
                 {
-                  "$obj": "o1074"
+                  "$obj": "o13874"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1075"
+            "as": "o13875"
           },
-          "bind": "s1794",
+          "bind": "s24106",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -4587,9 +4587,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1076"
+            "as": "o13876"
           },
-          "bind": "s1795",
+          "bind": "s24107",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -4602,16 +4602,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1075"
+                  "$obj": "o13875"
                 },
                 {
-                  "$obj": "o1076"
+                  "$obj": "o13876"
                 }
               ]
             },
-            "as": "o1077"
+            "as": "o13877"
           },
-          "bind": "s1796",
+          "bind": "s24108",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -4626,9 +4626,9 @@
               "left": "$id",
               "right": "mainId"
             },
-            "as": "o1078"
+            "as": "o13878"
           },
-          "bind": "s1797",
+          "bind": "s24109",
           "expect": {
             "$query": {
               "method": "on",
@@ -4651,13 +4651,13 @@
               "alias": "meta",
               "on": [
                 {
-                  "$obj": "o1078"
+                  "$obj": "o13878"
                 }
               ]
             },
-            "as": "o1079"
+            "as": "o13879"
           },
-          "bind": "s1798",
+          "bind": "s24110",
           "expect": {
             "$query": {
               "method": "join",
@@ -4690,9 +4690,9 @@
                 "Main"
               ]
             },
-            "as": "o1080"
+            "as": "o13880"
           },
-          "bind": "s1799",
+          "bind": "s24111",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4714,9 +4714,9 @@
                 10
               ]
             },
-            "as": "o1081"
+            "as": "o13881"
           },
-          "bind": "s1800",
+          "bind": "s24112",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4738,9 +4738,9 @@
                 2
               ]
             },
-            "as": "o1082"
+            "as": "o13882"
           },
-          "bind": "s1801",
+          "bind": "s24113",
           "expect": {
             "$query": {
               "method": "equal",
@@ -4759,16 +4759,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1081"
+                  "$obj": "o13881"
                 },
                 {
-                  "$obj": "o1082"
+                  "$obj": "o13882"
                 }
               ]
             },
-            "as": "o1083"
+            "as": "o13883"
           },
-          "bind": "s1802",
+          "bind": "s24114",
           "expect": {
             "$query": {
               "method": "or",
@@ -4804,16 +4804,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1080"
+                  "$obj": "o13880"
                 },
                 {
-                  "$obj": "o1083"
+                  "$obj": "o13883"
                 }
               ]
             },
-            "as": "o1084"
+            "as": "o13884"
           },
-          "bind": "s1803",
+          "bind": "s24115",
           "expect": {
             "$query": {
               "method": "and",
@@ -4862,16 +4862,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1077"
+              "$obj": "o13877"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1079"
+                  "$obj": "o13879"
                 },
                 {
-                  "$obj": "o1084"
+                  "$obj": "o13884"
                 }
               ]
             }
@@ -4882,7 +4882,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1077"
+              "$obj": "o13877"
             },
             "method": "getDescription",
             "args": {}
@@ -4907,9 +4907,9 @@
                 "array": false
               }
             },
-            "as": "o1085"
+            "as": "o13885"
           },
-          "bind": "s1806",
+          "bind": "s24118",
           "expect": {
             "$document": {
               "$id": "name",
@@ -4931,9 +4931,9 @@
                 "array": false
               }
             },
-            "as": "o1086"
+            "as": "o13886"
           },
-          "bind": "s1807",
+          "bind": "s24119",
           "expect": {
             "$document": {
               "$id": "rank",
@@ -4950,17 +4950,17 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1085"
+                  "$obj": "o13885"
                 },
                 {
-                  "$obj": "o1086"
+                  "$obj": "o13886"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1087"
+            "as": "o13887"
           },
-          "bind": "s1808",
+          "bind": "s24120",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -4971,9 +4971,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1088"
+            "as": "o13888"
           },
-          "bind": "s1809",
+          "bind": "s24121",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -4986,16 +4986,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1087"
+                  "$obj": "o13887"
                 },
                 {
-                  "$obj": "o1088"
+                  "$obj": "o13888"
                 }
               ]
             },
-            "as": "o1089"
+            "as": "o13889"
           },
-          "bind": "s1810",
+          "bind": "s24122",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -5010,9 +5010,9 @@
               "left": "$id",
               "right": "mainId"
             },
-            "as": "o1090"
+            "as": "o13890"
           },
-          "bind": "s1811",
+          "bind": "s24123",
           "expect": {
             "$query": {
               "method": "on",
@@ -5035,13 +5035,13 @@
               "alias": "meta",
               "on": [
                 {
-                  "$obj": "o1090"
+                  "$obj": "o13890"
                 }
               ]
             },
-            "as": "o1091"
+            "as": "o13891"
           },
-          "bind": "s1812",
+          "bind": "s24124",
           "expect": {
             "$query": {
               "method": "join",
@@ -5074,9 +5074,9 @@
                 "Main"
               ]
             },
-            "as": "o1092"
+            "as": "o13892"
           },
-          "bind": "s1813",
+          "bind": "s24125",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5098,9 +5098,9 @@
                 10
               ]
             },
-            "as": "o1093"
+            "as": "o13893"
           },
-          "bind": "s1814",
+          "bind": "s24126",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5122,9 +5122,9 @@
                 2
               ]
             },
-            "as": "o1094"
+            "as": "o13894"
           },
-          "bind": "s1815",
+          "bind": "s24127",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5143,16 +5143,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1093"
+                  "$obj": "o13893"
                 },
                 {
-                  "$obj": "o1094"
+                  "$obj": "o13894"
                 }
               ]
             },
-            "as": "o1095"
+            "as": "o13895"
           },
-          "bind": "s1816",
+          "bind": "s24128",
           "expect": {
             "$query": {
               "method": "or",
@@ -5188,16 +5188,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1092"
+                  "$obj": "o13892"
                 },
                 {
-                  "$obj": "o1095"
+                  "$obj": "o13895"
                 }
               ]
             },
-            "as": "o1096"
+            "as": "o13896"
           },
-          "bind": "s1817",
+          "bind": "s24129",
           "expect": {
             "$query": {
               "method": "and",
@@ -5246,16 +5246,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1089"
+              "$obj": "o13889"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1091"
+                  "$obj": "o13891"
                 },
                 {
-                  "$obj": "o1096"
+                  "$obj": "o13896"
                 }
               ]
             }
@@ -5266,7 +5266,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1089"
+              "$obj": "o13889"
             },
             "method": "getDescription",
             "args": {}
@@ -5291,9 +5291,9 @@
                 "array": false
               }
             },
-            "as": "o1097"
+            "as": "o13897"
           },
-          "bind": "s1820",
+          "bind": "s24132",
           "expect": {
             "$document": {
               "$id": "name",
@@ -5315,9 +5315,9 @@
                 "array": false
               }
             },
-            "as": "o1098"
+            "as": "o13898"
           },
-          "bind": "s1821",
+          "bind": "s24133",
           "expect": {
             "$document": {
               "$id": "rank",
@@ -5334,17 +5334,17 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1097"
+                  "$obj": "o13897"
                 },
                 {
-                  "$obj": "o1098"
+                  "$obj": "o13898"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1099"
+            "as": "o13899"
           },
-          "bind": "s1822",
+          "bind": "s24134",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -5355,9 +5355,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1100"
+            "as": "o13900"
           },
-          "bind": "s1823",
+          "bind": "s24135",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -5370,16 +5370,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1099"
+                  "$obj": "o13899"
                 },
                 {
-                  "$obj": "o1100"
+                  "$obj": "o13900"
                 }
               ]
             },
-            "as": "o1101"
+            "as": "o13901"
           },
-          "bind": "s1824",
+          "bind": "s24136",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -5394,9 +5394,9 @@
               "left": "$id",
               "right": "mainId"
             },
-            "as": "o1102"
+            "as": "o13902"
           },
-          "bind": "s1825",
+          "bind": "s24137",
           "expect": {
             "$query": {
               "method": "on",
@@ -5419,13 +5419,13 @@
               "alias": "meta",
               "on": [
                 {
-                  "$obj": "o1102"
+                  "$obj": "o13902"
                 }
               ]
             },
-            "as": "o1103"
+            "as": "o13903"
           },
-          "bind": "s1826",
+          "bind": "s24138",
           "expect": {
             "$query": {
               "method": "join",
@@ -5458,9 +5458,9 @@
                 "Main"
               ]
             },
-            "as": "o1104"
+            "as": "o13904"
           },
-          "bind": "s1827",
+          "bind": "s24139",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5482,9 +5482,9 @@
                 10
               ]
             },
-            "as": "o1105"
+            "as": "o13905"
           },
-          "bind": "s1828",
+          "bind": "s24140",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5506,9 +5506,9 @@
                 2
               ]
             },
-            "as": "o1106"
+            "as": "o13906"
           },
-          "bind": "s1829",
+          "bind": "s24141",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5527,16 +5527,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1105"
+                  "$obj": "o13905"
                 },
                 {
-                  "$obj": "o1106"
+                  "$obj": "o13906"
                 }
               ]
             },
-            "as": "o1107"
+            "as": "o13907"
           },
-          "bind": "s1830",
+          "bind": "s24142",
           "expect": {
             "$query": {
               "method": "or",
@@ -5572,16 +5572,16 @@
             "args": {
               "queries": [
                 {
-                  "$obj": "o1104"
+                  "$obj": "o13904"
                 },
                 {
-                  "$obj": "o1107"
+                  "$obj": "o13907"
                 }
               ]
             },
-            "as": "o1108"
+            "as": "o13908"
           },
-          "bind": "s1831",
+          "bind": "s24143",
           "expect": {
             "$query": {
               "method": "and",
@@ -5630,16 +5630,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1101"
+              "$obj": "o13901"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1103"
+                  "$obj": "o13903"
                 },
                 {
-                  "$obj": "o1108"
+                  "$obj": "o13908"
                 }
               ]
             }
@@ -5650,7 +5650,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1101"
+              "$obj": "o13901"
             },
             "method": "getDescription",
             "args": {}
@@ -5675,9 +5675,9 @@
                 "array": false
               }
             },
-            "as": "o1109"
+            "as": "o13909"
           },
-          "bind": "s1834",
+          "bind": "s24146",
           "expect": {
             "$document": {
               "$id": "name",
@@ -5699,9 +5699,9 @@
                 "array": false
               }
             },
-            "as": "o1110"
+            "as": "o13910"
           },
-          "bind": "s1835",
+          "bind": "s24147",
           "expect": {
             "$document": {
               "$id": "rank",
@@ -5718,17 +5718,17 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1109"
+                  "$obj": "o13909"
                 },
                 {
-                  "$obj": "o1110"
+                  "$obj": "o13910"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1111"
+            "as": "o13911"
           },
-          "bind": "s1836",
+          "bind": "s24148",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -5739,9 +5739,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1112"
+            "as": "o13912"
           },
-          "bind": "s1837",
+          "bind": "s24149",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -5754,16 +5754,16 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1111"
+                  "$obj": "o13911"
                 },
                 {
-                  "$obj": "o1112"
+                  "$obj": "o13912"
                 }
               ]
             },
-            "as": "o1113"
+            "as": "o13913"
           },
-          "bind": "s1838",
+          "bind": "s24150",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -5778,9 +5778,9 @@
               "left": "$id",
               "right": "mainId"
             },
-            "as": "o1114"
+            "as": "o13914"
           },
-          "bind": "s1839",
+          "bind": "s24151",
           "expect": {
             "$query": {
               "method": "on",
@@ -5803,13 +5803,13 @@
               "alias": "meta",
               "on": [
                 {
-                  "$obj": "o1114"
+                  "$obj": "o13914"
                 }
               ]
             },
-            "as": "o1115"
+            "as": "o13915"
           },
-          "bind": "s1840",
+          "bind": "s24152",
           "expect": {
             "$query": {
               "method": "join",
@@ -5842,9 +5842,9 @@
                 10
               ]
             },
-            "as": "o1116"
+            "as": "o13916"
           },
-          "bind": "s1841",
+          "bind": "s24153",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5859,16 +5859,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1113"
+              "$obj": "o13913"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1115"
+                  "$obj": "o13915"
                 },
                 {
-                  "$obj": "o1116"
+                  "$obj": "o13916"
                 }
               ]
             }
@@ -5879,7 +5879,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1113"
+              "$obj": "o13913"
             },
             "method": "getDescription",
             "args": {}
@@ -5895,9 +5895,9 @@
               "left": "$id",
               "right": "mainId"
             },
-            "as": "o1117"
+            "as": "o13917"
           },
-          "bind": "s1844",
+          "bind": "s24156",
           "expect": {
             "$query": {
               "method": "on",
@@ -5920,13 +5920,13 @@
               "alias": "peer",
               "on": [
                 {
-                  "$obj": "o1117"
+                  "$obj": "o13917"
                 }
               ]
             },
-            "as": "o1118"
+            "as": "o13918"
           },
-          "bind": "s1845",
+          "bind": "s24157",
           "expect": {
             "$query": {
               "method": "join",
@@ -5959,9 +5959,9 @@
                 8686
               ]
             },
-            "as": "o1119"
+            "as": "o13919"
           },
-          "bind": "s1846",
+          "bind": "s24158",
           "expect": {
             "$query": {
               "method": "equal",
@@ -5976,16 +5976,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1113"
+              "$obj": "o13913"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1118"
+                  "$obj": "o13918"
                 },
                 {
-                  "$obj": "o1119"
+                  "$obj": "o13919"
                 }
               ]
             }
@@ -5996,7 +5996,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1113"
+              "$obj": "o13913"
             },
             "method": "getDescription",
             "args": {}
@@ -6007,7 +6007,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1113"
+              "$obj": "o13913"
             },
             "method": "getDescription",
             "args": {}
@@ -6032,9 +6032,9 @@
                 "array": false
               }
             },
-            "as": "o1120"
+            "as": "o13920"
           },
-          "bind": "s1850",
+          "bind": "s24162",
           "expect": {
             "$document": {
               "$id": "name",
@@ -6051,14 +6051,14 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o1120"
+                  "$obj": "o13920"
                 }
               ],
               "idAttributeType": "integer"
             },
-            "as": "o1121"
+            "as": "o13921"
           },
-          "bind": "s1851",
+          "bind": "s24163",
           "expect": {
             "$value": "Validator\\Query\\Filter",
             "fields": {}
@@ -6071,13 +6071,13 @@
             "args": {
               "validators": [
                 {
-                  "$obj": "o1121"
+                  "$obj": "o13921"
                 }
               ]
             },
-            "as": "o1122"
+            "as": "o13922"
           },
-          "bind": "s1852",
+          "bind": "s24164",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -6094,9 +6094,9 @@
                 "Main"
               ]
             },
-            "as": "o1123"
+            "as": "o13923"
           },
-          "bind": "s1853",
+          "bind": "s24165",
           "expect": {
             "$query": {
               "method": "equal",
@@ -6119,13 +6119,13 @@
               "values": [
                 123,
                 {
-                  "$obj": "o1123"
+                  "$obj": "o13923"
                 }
               ]
             },
-            "as": "o1124"
+            "as": "o13924"
           },
-          "bind": "s1854",
+          "bind": "s24166",
           "expect": {
             "$query": {
               "method": "and",
@@ -6149,13 +6149,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1122"
+              "$obj": "o13922"
             },
             "method": "isValid",
             "args": {
               "value": [
                 {
-                  "$obj": "o1124"
+                  "$obj": "o13924"
                 }
               ]
             }
@@ -6166,12 +6166,886 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1122"
+              "$obj": "o13922"
             },
             "method": "getDescription",
             "args": {}
           },
           "expect": "Invalid query: nested query must be a string"
+        }
+      ]
+    },
+    {
+      "name": "QueriesTest::test_relationship_query_is_validated_by_its_validator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o13925"
+          },
+          "bind": "s24169",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "twoWay": true,
+              "twoWayKey": "post"
+            },
+            "as": "o13926"
+          },
+          "bind": "s24170",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": null,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "comments",
+              "relationship": {
+                "$obj": "o13926"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o13927"
+          },
+          "bind": "s24171",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "comments",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "comments",
+                  "type": {
+                    "$enum": "RelationshipType::OneToMany"
+                  },
+                  "twoWay": true,
+                  "key": "comments",
+                  "twoWayKey": "post",
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o13925"
+                },
+                {
+                  "$obj": "o13927"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o13928"
+          },
+          "bind": "s24172",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Relationship",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o13925"
+                },
+                {
+                  "$obj": "o13927"
+                }
+              ]
+            },
+            "as": "o13929"
+          },
+          "bind": "s24173",
+          "expect": {
+            "$value": "Validator\\Query\\Relationship",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o13928"
+                },
+                {
+                  "$obj": "o13929"
+                }
+              ]
+            },
+            "as": "o13930"
+          },
+          "bind": "s24174",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o13931"
+          },
+          "bind": "s24175",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o13931"
+                }
+              ]
+            },
+            "as": "o13932"
+          },
+          "bind": "s24176",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13930"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o13932"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13930"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o13933"
+          },
+          "bind": "s24179",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "name",
+              "queries": [
+                {
+                  "$obj": "o13933"
+                }
+              ]
+            },
+            "as": "o13934"
+          },
+          "bind": "s24180",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "name",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13930"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o13934"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13930"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Relationship queries can only be used on relationship attributes: name"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o13935"
+          },
+          "bind": "s24183",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o13935"
+                }
+              ]
+            },
+            "as": "o13936"
+          },
+          "bind": "s24184",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o13937"
+          },
+          "bind": "s24185",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o13937"
+                }
+              ]
+            },
+            "as": "o13938"
+          },
+          "bind": "s24186",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13936"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o13938"
+                }
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QueriesTest::test_logical_query_rejects_relationship_query",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o13939"
+          },
+          "bind": "s24188",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "oneToMany",
+            "args": {
+              "relatedCollection": "comments",
+              "twoWay": true,
+              "twoWayKey": "post"
+            },
+            "as": "o13940"
+          },
+          "bind": "s24189",
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "comments",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": null,
+              "twoWayKey": "post",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "relationship",
+            "args": {
+              "key": "comments",
+              "relationship": {
+                "$obj": "o13940"
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            },
+            "as": "o13941"
+          },
+          "bind": "s24190",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "comments",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "comments",
+                  "type": {
+                    "$enum": "RelationshipType::OneToMany"
+                  },
+                  "twoWay": true,
+                  "key": "comments",
+                  "twoWayKey": "post",
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o13939"
+                },
+                {
+                  "$obj": "o13941"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o13942"
+          },
+          "bind": "s24191",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Relationship",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o13939"
+                },
+                {
+                  "$obj": "o13941"
+                }
+              ]
+            },
+            "as": "o13943"
+          },
+          "bind": "s24192",
+          "expect": {
+            "$value": "Validator\\Query\\Relationship",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o13942"
+                },
+                {
+                  "$obj": "o13943"
+                }
+              ]
+            },
+            "as": "o13944"
+          },
+          "bind": "s24193",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o13945"
+          },
+          "bind": "s24194",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o13945"
+                }
+              ]
+            },
+            "as": "o13946"
+          },
+          "bind": "s24195",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "value"
+              ]
+            },
+            "as": "o13947"
+          },
+          "bind": "s24196",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "value"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13944"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$query": {
+                    "method": "or",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$obj": "o13946"
+                      },
+                      {
+                        "$obj": "o13947"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13944"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Or queries can only contain filter queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 1
+            },
+            "as": "o13948"
+          },
+          "bind": "s24199",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "relationship",
+            "args": {
+              "attribute": "comments",
+              "queries": [
+                {
+                  "$obj": "o13948"
+                }
+              ]
+            },
+            "as": "o13949"
+          },
+          "bind": "s24200",
+          "expect": {
+            "$query": {
+              "method": "relationship",
+              "attribute": "comments",
+              "values": [
+                {
+                  "$query": {
+                    "method": "limit",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "name",
+              "values": [
+                "value"
+              ]
+            },
+            "as": "o13950"
+          },
+          "bind": "s24201",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "name",
+              "values": [
+                "value"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13944"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$query": {
+                    "method": "and",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$obj": "o13949"
+                      },
+                      {
+                        "$obj": "o13950"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o13944"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: And queries can only contain filter queries"
         }
       ]
     },
@@ -6184,9 +7058,9 @@
           "args": {
             "class": "Validator\\Queries\\Base",
             "args": {},
-            "as": "o1125"
+            "as": "o13951"
           },
-          "bind": "s1857",
+          "bind": "s24204",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -6196,7 +7070,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1125"
+              "$obj": "o13951"
             },
             "method": "isArray",
             "args": {}
@@ -6214,9 +7088,9 @@
           "args": {
             "class": "Validator\\Queries\\Base",
             "args": {},
-            "as": "o1126"
+            "as": "o13952"
           },
-          "bind": "s1859",
+          "bind": "s24206",
           "expect": {
             "$value": "Validator\\Queries\\Base",
             "fields": {}
@@ -6226,7 +7100,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1126"
+              "$obj": "o13952"
             },
             "method": "getType",
             "args": {}

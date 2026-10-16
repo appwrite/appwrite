@@ -103763,13 +103763,74 @@
               ]
             }
           },
-          "mask": {
-            "paths": [
-              ""
-            ],
-            "reason": "PostgreSQL returns the pg_attribute rows the test reads without an ORDER BY in the order of the plan it picks (the catalog index, by attnum, or the heap, where altering a column moves its row), so the column order depends on the server, not the runtime"
-          },
-          "expect": "<masked>"
+          "expect": [
+            {
+              "$document": {
+                "column": "_id",
+                "definition": "bigint NOT NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_uid",
+                "definition": "character varying(255) NOT NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_permissions",
+                "definition": "jsonb NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_createdAt",
+                "definition": "timestamp(3) without time zone NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_updatedAt",
+                "definition": "timestamp(3) without time zone NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "singlePoint",
+                "definition": "geometry(Point,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "singleRoute",
+                "definition": "geometry(LineString,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "singleArea",
+                "definition": "geometry(Polygon,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "batchPoint",
+                "definition": "geometry(Point,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "batchRoute",
+                "definition": "geometry(LineString,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "batchArea",
+                "definition": "geometry(Polygon,4326) NULL"
+              }
+            }
+          ]
         },
         {
           "op": "database.create_document",
@@ -104374,13 +104435,62 @@
               ]
             }
           },
-          "mask": {
-            "paths": [
-              ""
-            ],
-            "reason": "PostgreSQL returns the pg_attribute rows the test reads without an ORDER BY in the order of the plan it picks (the catalog index, by attnum, or the heap, where altering a column moves its row), so the column order depends on the server, not the runtime"
-          },
-          "expect": "<masked>"
+          "expect": [
+            {
+              "$document": {
+                "column": "_id",
+                "definition": "bigint NOT NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_uid",
+                "definition": "character varying(255) NOT NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_permissions",
+                "definition": "jsonb NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_createdAt",
+                "definition": "timestamp(3) without time zone NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "_updatedAt",
+                "definition": "timestamp(3) without time zone NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "name",
+                "definition": "character varying(64) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "location",
+                "definition": "geometry(Point,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "route",
+                "definition": "geometry(LineString,4326) NULL"
+              }
+            },
+            {
+              "$document": {
+                "column": "area",
+                "definition": "geometry(Polygon,4326) NULL"
+              }
+            }
+          ]
         },
         {
           "op": "database.get_document",

@@ -76,6 +76,12 @@ pub struct Spec {
     /// PHP behaviour kept on purpose; each entry names its pinning case.
     #[serde(default)]
     pub quirks: Vec<Quirk>,
+    /// PHP failures that are the PHP library giving way under load, not a
+    /// difference: error message fragment -> reason. A case whose PHP side
+    /// fails with one (and whose recording expects none of them) runs once
+    /// more, and the retry is logged.
+    #[serde(default)]
+    pub flakes: BTreeMap<String, String>,
     /// Inputs PHP accepts that a Rust type makes unrepresentable
     /// (crates/CONVERSION.md §6), with PHP's behaviour for them.
     #[serde(default)]

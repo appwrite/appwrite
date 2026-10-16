@@ -1038,13 +1038,40 @@ pub trait Adapter: Send + Sync + 'static {
     async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool>;
 
     /// Deletes documents by sequence, and the permissions of `permission_ids`
-    /// (`deleteDocuments()`).
+    /// (`deleteDocuments()`); returns the number of rows deleted, which
+    /// [`crate::Database::delete_documents`] takes as a hint: a count below
+    /// the sequences given makes it check which of the documents are still
+    /// stored, and a higher one is ignored.
     async fn delete_documents(
         &self,
         collection: &Collection,
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
     ) -> Result<i64>;
+
+    /// Deletes the rows of `sequences` that match every filter of
+    /// `queries` (filter queries as `find()` is handed them), and the
+    /// permission rows of `permission_ids` but those of a row kept because
+    /// it no longer matches; returns the number of rows deleted
+    /// (`deleteDocumentsMatching()`). [`crate::Database::delete_documents`]
+    /// calls it for a batch it deletes with filters, so that a document
+    /// another write changed after it was found is kept.
+    ///
+    /// The bundled adapters delete only the rows that match. This default,
+    /// for an adapter that does not read the filters, deletes every row of
+    /// `sequences` with [`Adapter::delete_documents`], as before them (PHP
+    /// hands the filters to `deleteDocuments()` through `deletionFilters()`
+    /// instead).
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        let _ = queries;
+        self.delete_documents(collection, sequences, permission_ids).await
+    }
 
     /// Reads documents (`find()`): documents, or rows of aggregates and
     /// `groupBy` queries.

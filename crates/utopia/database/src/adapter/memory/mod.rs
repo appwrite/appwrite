@@ -508,7 +508,19 @@ impl Adapter for Memory {
         permission_ids: Vec<String>,
     ) -> Result<i64> {
         let ctx = self.ctx();
-        self.store().delete_documents(&ctx, collection, &sequences, &permission_ids)
+        self.store().delete_documents(&ctx, collection, &sequences, &permission_ids, &[])
+    }
+
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        let ctx = self.ctx();
+        let filters = Query::group_by_type(&queries)?.filters;
+        self.store().delete_documents(&ctx, collection, &sequences, &permission_ids, &filters)
     }
 
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {

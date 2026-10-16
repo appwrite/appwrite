@@ -526,17 +526,17 @@
                           "op": "database.get_document",
                           "args": {
                             "collection": "_metadata",
-                            "id": "_1676_1677"
+                            "id": "_1797_1798"
                           }
                         },
                         {
                           "op": "database.update_document",
                           "args": {
                             "collection": "_metadata",
-                            "id": "_1676_1677",
+                            "id": "_1797_1798",
                             "document": {
                               "$document": {
-                                "name": "_1676_1677",
+                                "name": "_1797_1798",
                                 "attributes": [
                                   {
                                     "$id": "tags",
@@ -588,8 +588,8 @@
                                   }
                                 ],
                                 "documentSecurity": true,
-                                "$sequence": "1678",
-                                "$id": "_1676_1677",
+                                "$sequence": "1799",
+                                "$id": "_1797_1798",
                                 "$createdAt": {
                                   "$now": 0,
                                   "format": "Y-m-d\\TH:i:s.vP"
@@ -624,7 +624,7 @@
         {
           "op": "database.purge_cached_collection",
           "args": {
-            "collection": "_1676_1677"
+            "collection": "_1797_1798"
           },
           "expect": null
         },
@@ -662,7 +662,7 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "_1676_1677"
+            "collection": "_1797_1798"
           },
           "expect": {
             "$error": {
@@ -2144,7 +2144,7 @@
                 "$sequence": "1",
                 "$id": "playlist1",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -2416,11 +2416,11 @@
                 "$sequence": "1",
                 "$id": "playlist1",
                 "$createdAt": {
-                  "$now": -2,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$permissions": [
@@ -3867,11 +3867,11 @@
                 "name": "Student 1 Updated",
                 "$collection": "students",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$sequence": "1",
@@ -4008,11 +4008,11 @@
                 "$sequence": "2",
                 "$id": "class2",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$permissions": [
@@ -4130,7 +4130,7 @@
                 "$sequence": "1",
                 "$id": "student1",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -4150,11 +4150,11 @@
                     "$id": "class1",
                     "$sequence": "1",
                     "$createdAt": {
-                      "$now": -1,
+                      "$now": 0,
                       "format": "Y-m-d\\TH:i:s.vP"
                     },
                     "$updatedAt": {
-                      "$now": -1,
+                      "$now": 0,
                       "format": "Y-m-d\\TH:i:s.vP"
                     },
                     "$permissions": [
@@ -4254,7 +4254,7 @@
                 "$sequence": "2",
                 "$id": "class2",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -4273,11 +4273,11 @@
                     "$id": "student2",
                     "$sequence": "2",
                     "$createdAt": {
-                      "$now": -1,
+                      "$now": 0,
                       "format": "Y-m-d\\TH:i:s.vP"
                     },
                     "$updatedAt": {
-                      "$now": -1,
+                      "$now": 0,
                       "format": "Y-m-d\\TH:i:s.vP"
                     },
                     "$permissions": [
@@ -4670,11 +4670,11 @@
                 "$sequence": "1",
                 "$id": "student1",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$permissions": [
@@ -4759,7 +4759,7 @@
                 "$sequence": "1",
                 "$id": "class1",
                 "$createdAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -5103,11 +5103,11 @@
                 "$sequence": "1",
                 "$id": "student1",
                 "$createdAt": {
-                  "$now": -2,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": -1,
+                  "$now": 0,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$permissions": [
@@ -11717,6 +11717,94 @@
               "parentNumber": []
             }
           }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "child_combined_m2m",
+            "id": "child1"
+          },
+          "expect": {
+            "$document": {
+              "name": "Child 1",
+              "parentNumber": null,
+              "$sequence": "1",
+              "$id": "child1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "child_combined_m2m"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "child_combined_m2m",
+            "updates": {
+              "$document": {
+                "parentNumber": "not-a-number"
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "child1"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"parentNumber\" has invalid type. Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "parent_combined_m2m",
+            "id": "parent1"
+          },
+          "expect": {
+            "$document": {
+              "name": "Parent 1 Updated",
+              "$sequence": "1",
+              "$id": "parent1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "parent_combined_m2m",
+              "parentNumber": []
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "parent_combined_m2m"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "child_combined_m2m"
+          },
+          "expect": null
         }
       ]
     },
@@ -15571,36 +15659,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
                   }
                 ],
                 "$collection": "brands"
@@ -15654,50 +15712,6 @@
                             "label": "Eco-Friendly",
                             "$id": "tag_eco",
                             "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
-                            "label": "Premium",
-                            "$id": "tag_premium",
-                            "$sequence": "2",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
                             "$permissions": [
@@ -15791,50 +15805,6 @@
                 "products": [
                   {
                     "$document": {
-                      "title": "Product A",
-                      "$id": "prod_a",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Eco-Friendly",
-                            "$id": "tag_eco",
-                            "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
-                            "label": "Premium",
-                            "$id": "tag_premium",
-                            "$sequence": "2",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
                       "title": "Product B",
                       "$id": "prod_b",
                       "$sequence": "2",
@@ -15912,53 +15882,9 @@
                       "tags": [
                         {
                           "$document": {
-                            "label": "Eco-Friendly",
-                            "$id": "tag_eco",
-                            "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
                             "label": "Premium",
                             "$id": "tag_premium",
                             "$sequence": "2",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
                             "$permissions": [
@@ -16006,35 +15932,6 @@
                   "update(\"any\")"
                 ],
                 "products": [
-                  {
-                    "$document": {
-                      "title": "Product A",
-                      "$id": "prod_a",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "brands": [
-                        {
-                          "$document": {
-                            "name": "BrandX",
-                            "$id": "brand_x",
-                            "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "brands"
-                          }
-                        }
-                      ]
-                    }
-                  },
                   {
                     "$document": {
                       "title": "Product C",
@@ -16117,35 +16014,6 @@
                             "name": "BrandX",
                             "$id": "brand_x",
                             "$sequence": "1",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "brands"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product C",
-                      "$id": "prod_c",
-                      "$sequence": "3",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "brands": [
-                        {
-                          "$document": {
-                            "name": "BrandY",
-                            "$id": "brand_y",
-                            "$sequence": "2",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
                             "$permissions": [
@@ -16721,6 +16589,60 @@
               }
             }
           ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2m_select_cascade_child",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "child1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "parents": [
+                  {
+                    "$document": {
+                      "name": null,
+                      "$id": "parent1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "m2m_select_cascade_parent"
+                    }
+                  }
+                ],
+                "$collection": "m2m_select_cascade_child"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2m_select_cascade_parent"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2m_select_cascade_child"
+          },
+          "expect": null
         }
       ]
     },
@@ -17428,10 +17350,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'u0000000000000000237': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "u0000000000000000237",
+              "name": "u0000000000000000237",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -17491,9 +17425,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Related collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "u0000000000000000237",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "parents",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -17512,9 +17455,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "readonly",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"user:tagAdmin\")"
+              ],
+              "$collection": "u0000000000000000237",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "parents": []
             }
           }
         },
@@ -17535,7 +17486,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$sequence": "1"
+              "$sequence": "1",
+              "tags": []
             }
           }
         },
@@ -17565,7 +17517,8 @@
                   "$createdAt": "<now>",
                   "$updatedAt": "<now>",
                   "$permissions": [],
-                  "$collection": "u0000000000000000236"
+                  "$collection": "u0000000000000000236",
+                  "tags": []
                 }
               }
             }
@@ -17609,8 +17562,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17631,8 +17584,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17654,8 +17607,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17674,8 +17627,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17696,8 +17649,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17719,8 +17672,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"user:tagAdmin\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:tagAdmin\"]\" was given."
             }
           }
         },
@@ -17737,7 +17690,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "u0000000000000000236"
+              "$collection": "u0000000000000000236",
+              "tags": []
             }
           }
         },
@@ -17748,9 +17702,17 @@
             "id": "readonly"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$sequence": "1",
+              "$id": "readonly",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"user:tagAdmin\")"
+              ],
+              "$collection": "u0000000000000000237",
+              "parents": []
             }
           }
         },
@@ -17767,6 +17729,7 @@
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
+                "tags": [],
                 "$collection": "u0000000000000000236"
               }
             }
@@ -17795,9 +17758,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+            "$document": {
+              "$sequence": "1",
+              "$id": "parent1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "u0000000000000000236",
+              "tags": [
+                {
+                  "$document": {
+                    "$id": "readonly",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"user:tagAdmin\")"
+                    ],
+                    "$collection": "u0000000000000000237"
+                  }
+                }
+              ]
             }
           }
         },
@@ -17814,7 +17796,22 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "u0000000000000000236"
+              "$collection": "u0000000000000000236",
+              "tags": [
+                {
+                  "$document": {
+                    "$id": "readonly",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"user:tagAdmin\")"
+                    ],
+                    "$collection": "u0000000000000000237"
+                  }
+                }
+              ]
             }
           }
         },
@@ -17853,12 +17850,7 @@
           "args": {
             "collection": "u0000000000000000237"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         }
       ]
     },
@@ -19269,6 +19261,2765 @@
           "op": "database.delete_collection",
           "args": {
             "collection": "u0000000000000000243"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderDescending",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderDesc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderAscending",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderAsc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderPerParentWithOverlap",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderAsc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            },
+            {
+              "$document": {
+                "title": "Album Two",
+                "$id": "m2mno_album2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderJunctionOrderPreservedWithoutOrder",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "select",
+                        "attribute": "",
+                        "values": [
+                          "name"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
           },
           "expect": null
         }

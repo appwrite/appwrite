@@ -111,8 +111,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metacreateattr6d273084",
-                "name": "metacreateattr6d273084",
+                "$id": "metacreateattr6d894536",
+                "name": "metacreateattr6d894536",
                 "attributes": [
                   {
                     "$id": "name",
@@ -142,8 +142,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metacreateattr6d273084",
-              "name": "metacreateattr6d273084",
+              "$id": "metacreateattr6d894536",
+              "name": "metacreateattr6d894536",
               "attributes": [
                 {
                   "$document": {
@@ -180,7 +180,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metacreateattr6d273084",
+            "collection": "metacreateattr6d894536",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -204,7 +204,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metacreateattr6d273084",
+              "$collection": "metacreateattr6d894536",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -214,7 +214,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metacreateattr6d273084",
+            "collection": "metacreateattr6d894536",
             "id": "warm"
           },
           "expect": {
@@ -230,14 +230,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metacreateattr6d273084"
+              "$collection": "metacreateattr6d894536"
             }
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "metacreateattr6d273084",
+            "collection": "metacreateattr6d894536",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -279,11 +279,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metacreateattr6d273084"
+            "collection": "metacreateattr6d894536"
           },
           "expect": {
             "$document": {
-              "name": "metacreateattr6d273084",
+              "name": "metacreateattr6d894536",
               "attributes": [
                 {
                   "$document": {
@@ -319,7 +319,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metacreateattr6d273084",
+              "$id": "metacreateattr6d894536",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -336,7 +336,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metacreateattr6d273084",
+            "collection": "metacreateattr6d894536",
             "document": {
               "$document": {
                 "$id": "after",
@@ -356,7 +356,7 @@
               ],
               "name": "after",
               "nickname": "nick",
-              "$collection": "metacreateattr6d273084",
+              "$collection": "metacreateattr6d894536",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "2"
@@ -366,7 +366,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metacreateattr6d273084",
+            "collection": "metacreateattr6d894536",
             "id": "after"
           },
           "expect": {
@@ -380,7 +380,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "metacreateattr6d273084"
+              "$collection": "metacreateattr6d894536"
             }
           }
         }
@@ -493,8 +493,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metadelattr6d279522",
-                "name": "metadelattr6d279522",
+                "$id": "metadelattr6d898e66",
+                "name": "metadelattr6d898e66",
                 "attributes": [
                   {
                     "$id": "name",
@@ -524,8 +524,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metadelattr6d279522",
-              "name": "metadelattr6d279522",
+              "$id": "metadelattr6d898e66",
+              "name": "metadelattr6d898e66",
               "attributes": [
                 {
                   "$document": {
@@ -562,7 +562,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -586,7 +586,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metadelattr6d279522",
+              "$collection": "metadelattr6d898e66",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -596,7 +596,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "id": "warm"
           },
           "expect": {
@@ -612,14 +612,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metadelattr6d279522"
+              "$collection": "metadelattr6d898e66"
             }
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -661,11 +661,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metadelattr6d279522"
+            "collection": "metadelattr6d898e66"
           },
           "expect": {
             "$document": {
-              "name": "metadelattr6d279522",
+              "name": "metadelattr6d898e66",
               "attributes": [
                 {
                   "$document": {
@@ -701,7 +701,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metadelattr6d279522",
+              "$id": "metadelattr6d898e66",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -718,7 +718,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "id": "warm"
           },
           "expect": {
@@ -735,14 +735,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metadelattr6d279522"
+              "$collection": "metadelattr6d898e66"
             }
           }
         },
         {
           "op": "database.delete_attribute",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "key": "doomed"
           },
           "expect": null
@@ -750,11 +750,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metadelattr6d279522"
+            "collection": "metadelattr6d898e66"
           },
           "expect": {
             "$document": {
-              "name": "metadelattr6d279522",
+              "name": "metadelattr6d898e66",
               "attributes": [
                 {
                   "$document": {
@@ -775,7 +775,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metadelattr6d279522",
+              "$id": "metadelattr6d898e66",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -792,7 +792,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metadelattr6d279522",
+            "collection": "metadelattr6d898e66",
             "document": {
               "$document": {
                 "$id": "orphan",
@@ -920,8 +920,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metaupdattr6d280a0c",
-                "name": "metaupdattr6d280a0c",
+                "$id": "metaupdattr6d89de3b",
+                "name": "metaupdattr6d89de3b",
                 "attributes": [
                   {
                     "$id": "name",
@@ -951,8 +951,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metaupdattr6d280a0c",
-              "name": "metaupdattr6d280a0c",
+              "$id": "metaupdattr6d89de3b",
+              "name": "metaupdattr6d89de3b",
               "attributes": [
                 {
                   "$document": {
@@ -989,7 +989,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metaupdattr6d280a0c",
+            "collection": "metaupdattr6d89de3b",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -1013,7 +1013,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metaupdattr6d280a0c",
+              "$collection": "metaupdattr6d89de3b",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -1023,7 +1023,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaupdattr6d280a0c",
+            "collection": "metaupdattr6d89de3b",
             "id": "warm"
           },
           "expect": {
@@ -1039,14 +1039,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaupdattr6d280a0c"
+              "$collection": "metaupdattr6d89de3b"
             }
           }
         },
         {
           "op": "database.update_attribute",
           "args": {
-            "collection": "metaupdattr6d280a0c",
+            "collection": "metaupdattr6d89de3b",
             "key": "name",
             "update": {
               "$value": "Attribute\\Update",
@@ -1089,11 +1089,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metaupdattr6d280a0c"
+            "collection": "metaupdattr6d89de3b"
           },
           "expect": {
             "$document": {
-              "name": "metaupdattr6d280a0c",
+              "name": "metaupdattr6d89de3b",
               "attributes": [
                 {
                   "$document": {
@@ -1114,7 +1114,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metaupdattr6d280a0c",
+              "$id": "metaupdattr6d89de3b",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -1131,7 +1131,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metaupdattr6d280a0c",
+            "collection": "metaupdattr6d89de3b",
             "document": {
               "$document": {
                 "$id": "long",
@@ -1149,7 +1149,7 @@
                 "read(\"any\")"
               ],
               "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              "$collection": "metaupdattr6d280a0c",
+              "$collection": "metaupdattr6d89de3b",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "2"
@@ -1159,7 +1159,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaupdattr6d280a0c",
+            "collection": "metaupdattr6d89de3b",
             "id": "long"
           },
           "expect": {
@@ -1172,7 +1172,7 @@
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$collection": "metaupdattr6d280a0c"
+              "$collection": "metaupdattr6d89de3b"
             }
           }
         }
@@ -1285,8 +1285,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metarenattr6d2868cc",
-                "name": "metarenattr6d2868cc",
+                "$id": "metarenattr6d8a2523",
+                "name": "metarenattr6d8a2523",
                 "attributes": [
                   {
                     "$id": "name",
@@ -1316,8 +1316,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metarenattr6d2868cc",
-              "name": "metarenattr6d2868cc",
+              "$id": "metarenattr6d8a2523",
+              "name": "metarenattr6d8a2523",
               "attributes": [
                 {
                   "$document": {
@@ -1354,7 +1354,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metarenattr6d2868cc",
+            "collection": "metarenattr6d8a2523",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -1378,7 +1378,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metarenattr6d2868cc",
+              "$collection": "metarenattr6d8a2523",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -1388,7 +1388,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metarenattr6d2868cc",
+            "collection": "metarenattr6d8a2523",
             "id": "warm"
           },
           "expect": {
@@ -1404,14 +1404,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metarenattr6d2868cc"
+              "$collection": "metarenattr6d8a2523"
             }
           }
         },
         {
           "op": "database.rename_attribute",
           "args": {
-            "collection": "metarenattr6d2868cc",
+            "collection": "metarenattr6d8a2523",
             "old": "name",
             "new": "label"
           },
@@ -1420,11 +1420,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metarenattr6d2868cc"
+            "collection": "metarenattr6d8a2523"
           },
           "expect": {
             "$document": {
-              "name": "metarenattr6d2868cc",
+              "name": "metarenattr6d8a2523",
               "attributes": [
                 {
                   "$document": {
@@ -1445,7 +1445,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metarenattr6d2868cc",
+              "$id": "metarenattr6d8a2523",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -1462,7 +1462,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metarenattr6d2868cc",
+            "collection": "metarenattr6d8a2523",
             "id": "warm"
           },
           "expect": {
@@ -1478,7 +1478,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metarenattr6d2868cc"
+              "$collection": "metarenattr6d8a2523"
             }
           }
         }
@@ -1591,8 +1591,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metacreateidx6d28cb91",
-                "name": "metacreateidx6d28cb91",
+                "$id": "metacreateidx6d8a6539",
+                "name": "metacreateidx6d8a6539",
                 "attributes": [
                   {
                     "$id": "name",
@@ -1622,8 +1622,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metacreateidx6d28cb91",
-              "name": "metacreateidx6d28cb91",
+              "$id": "metacreateidx6d8a6539",
+              "name": "metacreateidx6d8a6539",
               "attributes": [
                 {
                   "$document": {
@@ -1660,7 +1660,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metacreateidx6d28cb91",
+            "collection": "metacreateidx6d8a6539",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -1684,7 +1684,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metacreateidx6d28cb91",
+              "$collection": "metacreateidx6d8a6539",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -1694,7 +1694,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metacreateidx6d28cb91",
+            "collection": "metacreateidx6d8a6539",
             "id": "warm"
           },
           "expect": {
@@ -1710,14 +1710,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metacreateidx6d28cb91"
+              "$collection": "metacreateidx6d8a6539"
             }
           }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "metacreateidx6d28cb91",
+            "collection": "metacreateidx6d8a6539",
             "index": {
               "$value": "Index",
               "fields": {
@@ -1757,11 +1757,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metacreateidx6d28cb91"
+            "collection": "metacreateidx6d8a6539"
           },
           "expect": {
             "$document": {
-              "name": "metacreateidx6d28cb91",
+              "name": "metacreateidx6d8a6539",
               "attributes": [
                 {
                   "$document": {
@@ -1797,7 +1797,7 @@
               ],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metacreateidx6d28cb91",
+              "$id": "metacreateidx6d8a6539",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -1920,8 +1920,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metadelidx6d294338",
-                "name": "metadelidx6d294338",
+                "$id": "metadelidx6d8aa3ea",
+                "name": "metadelidx6d8aa3ea",
                 "attributes": [
                   {
                     "$id": "name",
@@ -1951,8 +1951,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metadelidx6d294338",
-              "name": "metadelidx6d294338",
+              "$id": "metadelidx6d8aa3ea",
+              "name": "metadelidx6d8aa3ea",
               "attributes": [
                 {
                   "$document": {
@@ -1989,7 +1989,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metadelidx6d294338",
+            "collection": "metadelidx6d8aa3ea",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -2013,7 +2013,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metadelidx6d294338",
+              "$collection": "metadelidx6d8aa3ea",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -2023,7 +2023,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelidx6d294338",
+            "collection": "metadelidx6d8aa3ea",
             "id": "warm"
           },
           "expect": {
@@ -2039,14 +2039,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metadelidx6d294338"
+              "$collection": "metadelidx6d8aa3ea"
             }
           }
         },
         {
           "op": "database.create_index",
           "args": {
-            "collection": "metadelidx6d294338",
+            "collection": "metadelidx6d8aa3ea",
             "index": {
               "$value": "Index",
               "fields": {
@@ -2086,11 +2086,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metadelidx6d294338"
+            "collection": "metadelidx6d8aa3ea"
           },
           "expect": {
             "$document": {
-              "name": "metadelidx6d294338",
+              "name": "metadelidx6d8aa3ea",
               "attributes": [
                 {
                   "$document": {
@@ -2126,7 +2126,7 @@
               ],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metadelidx6d294338",
+              "$id": "metadelidx6d8aa3ea",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -2143,7 +2143,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelidx6d294338",
+            "collection": "metadelidx6d8aa3ea",
             "id": "warm"
           },
           "expect": {
@@ -2159,14 +2159,14 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metadelidx6d294338"
+              "$collection": "metadelidx6d8aa3ea"
             }
           }
         },
         {
           "op": "database.delete_index",
           "args": {
-            "collection": "metadelidx6d294338",
+            "collection": "metadelidx6d8aa3ea",
             "key": "byName"
           },
           "expect": null
@@ -2174,11 +2174,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metadelidx6d294338"
+            "collection": "metadelidx6d8aa3ea"
           },
           "expect": {
             "$document": {
-              "name": "metadelidx6d294338",
+              "name": "metadelidx6d8aa3ea",
               "attributes": [
                 {
                   "$document": {
@@ -2199,7 +2199,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metadelidx6d294338",
+              "$id": "metadelidx6d8aa3ea",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -2322,8 +2322,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metaupdcoll6d29c02e",
-                "name": "metaupdcoll6d29c02e",
+                "$id": "metaupdcoll6d8af4e0",
+                "name": "metaupdcoll6d8af4e0",
                 "attributes": [
                   {
                     "$id": "name",
@@ -2353,8 +2353,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metaupdcoll6d29c02e",
-              "name": "metaupdcoll6d29c02e",
+              "$id": "metaupdcoll6d8af4e0",
+              "name": "metaupdcoll6d8af4e0",
               "attributes": [
                 {
                   "$document": {
@@ -2391,7 +2391,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metaupdcoll6d29c02e",
+            "collection": "metaupdcoll6d8af4e0",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -2415,7 +2415,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metaupdcoll6d29c02e",
+              "$collection": "metaupdcoll6d8af4e0",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -2425,7 +2425,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaupdcoll6d29c02e",
+            "collection": "metaupdcoll6d8af4e0",
             "id": "warm"
           },
           "expect": {
@@ -2441,18 +2441,18 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaupdcoll6d29c02e"
+              "$collection": "metaupdcoll6d8af4e0"
             }
           }
         },
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metaupdcoll6d29c02e"
+            "collection": "metaupdcoll6d8af4e0"
           },
           "expect": {
             "$document": {
-              "name": "metaupdcoll6d29c02e",
+              "name": "metaupdcoll6d8af4e0",
               "attributes": [
                 {
                   "$document": {
@@ -2473,7 +2473,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metaupdcoll6d29c02e",
+              "$id": "metaupdcoll6d8af4e0",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -2490,7 +2490,7 @@
         {
           "op": "database.update_collection",
           "args": {
-            "collection": "metaupdcoll6d29c02e",
+            "collection": "metaupdcoll6d8af4e0",
             "update": {
               "$value": "Collection\\Update",
               "fields": {
@@ -2503,7 +2503,7 @@
           },
           "expect": {
             "$document": {
-              "name": "metaupdcoll6d29c02e",
+              "name": "metaupdcoll6d8af4e0",
               "attributes": [
                 {
                   "$document": {
@@ -2524,7 +2524,7 @@
               "indexes": [],
               "documentSecurity": true,
               "$sequence": "1",
-              "$id": "metaupdcoll6d29c02e",
+              "$id": "metaupdcoll6d8af4e0",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -2538,11 +2538,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metaupdcoll6d29c02e"
+            "collection": "metaupdcoll6d8af4e0"
           },
           "expect": {
             "$document": {
-              "name": "metaupdcoll6d29c02e",
+              "name": "metaupdcoll6d8af4e0",
               "attributes": [
                 {
                   "$document": {
@@ -2563,7 +2563,7 @@
               "indexes": [],
               "documentSecurity": true,
               "$sequence": "1",
-              "$id": "metaupdcoll6d29c02e",
+              "$id": "metaupdcoll6d8af4e0",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -2683,8 +2683,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metadelcoll6d2a0c2a",
-                "name": "metadelcoll6d2a0c2a",
+                "$id": "metadelcoll6d8b2ebf",
+                "name": "metadelcoll6d8b2ebf",
                 "attributes": [
                   {
                     "$id": "name",
@@ -2714,8 +2714,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metadelcoll6d2a0c2a",
-              "name": "metadelcoll6d2a0c2a",
+              "$id": "metadelcoll6d8b2ebf",
+              "name": "metadelcoll6d8b2ebf",
               "attributes": [
                 {
                   "$document": {
@@ -2752,7 +2752,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metadelcoll6d2a0c2a",
+            "collection": "metadelcoll6d8b2ebf",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -2776,7 +2776,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metadelcoll6d2a0c2a",
+              "$collection": "metadelcoll6d8b2ebf",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -2786,7 +2786,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelcoll6d2a0c2a",
+            "collection": "metadelcoll6d8b2ebf",
             "id": "warm"
           },
           "expect": {
@@ -2802,28 +2802,28 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metadelcoll6d2a0c2a"
+              "$collection": "metadelcoll6d8b2ebf"
             }
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "collection": "metadelcoll6d2a0c2a"
+            "collection": "metadelcoll6d8b2ebf"
           },
           "expect": null
         },
         {
           "op": "database.find_collection",
           "args": {
-            "collection": "metadelcoll6d2a0c2a"
+            "collection": "metadelcoll6d8b2ebf"
           },
           "expect": null
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metadelcoll6d2a0c2a",
+            "collection": "metadelcoll6d8b2ebf",
             "id": "warm"
           },
           "expect": {
@@ -2942,8 +2942,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metarelparent6d2a6c71",
-                "name": "metarelparent6d2a6c71",
+                "$id": "metarelparent6d8b7285",
+                "name": "metarelparent6d8b7285",
                 "attributes": [
                   {
                     "$id": "name",
@@ -2973,8 +2973,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metarelparent6d2a6c71",
-              "name": "metarelparent6d2a6c71",
+              "$id": "metarelparent6d8b7285",
+              "name": "metarelparent6d8b7285",
               "attributes": [
                 {
                   "$document": {
@@ -3011,7 +3011,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metarelparent6d2a6c71",
+            "collection": "metarelparent6d8b7285",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -3035,7 +3035,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metarelparent6d2a6c71",
+              "$collection": "metarelparent6d8b7285",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -3045,7 +3045,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metarelparent6d2a6c71",
+            "collection": "metarelparent6d8b7285",
             "id": "warm"
           },
           "expect": {
@@ -3061,7 +3061,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metarelparent6d2a6c71"
+              "$collection": "metarelparent6d8b7285"
             }
           }
         },
@@ -3070,8 +3070,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metarelchild6d2aa5e9",
-                "name": "metarelchild6d2aa5e9",
+                "$id": "metarelchild6d8b9d0b",
+                "name": "metarelchild6d8b9d0b",
                 "attributes": [
                   {
                     "$id": "name",
@@ -3100,84 +3100,9 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'metarelchild6d2aa5e9': Failed to execute transaction: the transaction was lost before it could commit"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "metarelchild6d2aa5e9",
-            "document": {
-              "$document": {
-                "$id": "warm",
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "name": "warm"
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "metarelchild6d2aa5e9",
-            "id": "warm"
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "database.create_relationship",
-          "args": {
-            "collection": "metarelparent6d2a6c71",
-            "relationship": {
-              "$value": "Relationship",
-              "fields": {
-                "relatedCollection": "metarelchild6d2aa5e9",
-                "type": {
-                  "$enum": "RelationshipType::OneToOne"
-                },
-                "twoWay": false,
-                "key": "child",
-                "twoWayKey": null,
-                "onDelete": {
-                  "$enum": "RelationshipDeleteAction::Restrict"
-                }
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Related collection not found"
-            }
-          }
-        },
-        {
-          "op": "database.get_collection",
-          "args": {
-            "collection": "metarelparent6d2a6c71"
-          },
-          "expect": {
             "$document": {
-              "name": "metarelparent6d2a6c71",
+              "$id": "metarelchild6d8b9d0b",
+              "name": "metarelchild6d8b9d0b",
               "attributes": [
                 {
                   "$document": {
@@ -3197,8 +3122,178 @@
               ],
               "indexes": [],
               "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metarelchild6d8b9d0b",
+            "document": {
+              "$document": {
+                "$id": "warm",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "warm"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warm",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "warm",
+              "$collection": "metarelchild6d8b9d0b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "metarelchild6d8b9d0b",
+            "id": "warm"
+          },
+          "expect": {
+            "$document": {
+              "name": "warm",
               "$sequence": "1",
-              "$id": "metarelparent6d2a6c71",
+              "$id": "warm",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "metarelchild6d8b9d0b"
+            }
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "metarelparent6d8b7285",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "metarelchild6d8b9d0b",
+                "type": {
+                  "$enum": "RelationshipType::OneToOne"
+                },
+                "twoWay": false,
+                "key": "child",
+                "twoWayKey": null,
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "metarelchild6d8b9d0b",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "child",
+              "twoWayKey": "metarelparent6d8b7285",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "metarelparent6d8b7285"
+          },
+          "expect": {
+            "$document": {
+              "name": "metarelparent6d8b7285",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child",
+                    "key": "child",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "metarelchild6d8b9d0b",
+                      "relationType": "oneToOne",
+                      "twoWay": false,
+                      "twoWayKey": "metarelparent6d8b7285",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_child",
+                    "key": "_index_child",
+                    "type": "unique",
+                    "attributes": [
+                      "child"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "metarelparent6d8b7285",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -3215,7 +3310,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metarelparent6d2a6c71",
+            "collection": "metarelparent6d8b7285",
             "document": {
               "$document": {
                 "$id": "linked",
@@ -3234,20 +3329,63 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"child\""
+            "$document": {
+              "$id": "linked",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "linked",
+              "$collection": "metarelparent6d8b7285",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchild6d8b9d0b"
+                }
+              }
             }
           }
         },
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metarelparent6d2a6c71",
+            "collection": "metarelparent6d8b7285",
             "id": "linked"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "linked",
+              "$sequence": "2",
+              "$id": "linked",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "metarelparent6d8b7285",
+              "child": {
+                "$document": {
+                  "name": "linkedchild",
+                  "$id": "linkedchild",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "metarelchild6d8b9d0b"
+                }
+              }
+            }
           }
         }
       ]
@@ -3359,8 +3497,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metaunrelparent6d2b3f17",
-                "name": "metaunrelparent6d2b3f17",
+                "$id": "metaunrelparent6d8c162e",
+                "name": "metaunrelparent6d8c162e",
                 "attributes": [
                   {
                     "$id": "name",
@@ -3390,8 +3528,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metaunrelparent6d2b3f17",
-              "name": "metaunrelparent6d2b3f17",
+              "$id": "metaunrelparent6d8c162e",
+              "name": "metaunrelparent6d8c162e",
               "attributes": [
                 {
                   "$document": {
@@ -3428,7 +3566,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metaunrelparent6d2b3f17",
+            "collection": "metaunrelparent6d8c162e",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -3452,7 +3590,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metaunrelparent6d2b3f17",
+              "$collection": "metaunrelparent6d8c162e",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -3462,7 +3600,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaunrelparent6d2b3f17",
+            "collection": "metaunrelparent6d8c162e",
             "id": "warm"
           },
           "expect": {
@@ -3478,7 +3616,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaunrelparent6d2b3f17"
+              "$collection": "metaunrelparent6d8c162e"
             }
           }
         },
@@ -3487,8 +3625,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metaunrelchild6d2b7982",
-                "name": "metaunrelchild6d2b7982",
+                "$id": "metaunrelchild6d8c43a1",
+                "name": "metaunrelchild6d8c43a1",
                 "attributes": [
                   {
                     "$id": "name",
@@ -3518,8 +3656,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metaunrelchild6d2b7982",
-              "name": "metaunrelchild6d2b7982",
+              "$id": "metaunrelchild6d8c43a1",
+              "name": "metaunrelchild6d8c43a1",
               "attributes": [
                 {
                   "$document": {
@@ -3556,7 +3694,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metaunrelchild6d2b7982",
+            "collection": "metaunrelchild6d8c43a1",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -3580,7 +3718,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metaunrelchild6d2b7982",
+              "$collection": "metaunrelchild6d8c43a1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -3590,7 +3728,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaunrelchild6d2b7982",
+            "collection": "metaunrelchild6d8c43a1",
             "id": "warm"
           },
           "expect": {
@@ -3606,18 +3744,18 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaunrelchild6d2b7982"
+              "$collection": "metaunrelchild6d8c43a1"
             }
           }
         },
         {
           "op": "database.create_relationship",
           "args": {
-            "collection": "metaunrelparent6d2b3f17",
+            "collection": "metaunrelparent6d8c162e",
             "relationship": {
               "$value": "Relationship",
               "fields": {
-                "relatedCollection": "metaunrelchild6d2b7982",
+                "relatedCollection": "metaunrelchild6d8c43a1",
                 "type": {
                   "$enum": "RelationshipType::OneToOne"
                 },
@@ -3633,7 +3771,7 @@
           "expect": {
             "$value": "Relationship",
             "fields": {
-              "relatedCollection": "metaunrelchild6d2b7982",
+              "relatedCollection": "metaunrelchild6d8c43a1",
               "type": {
                 "$enum": "RelationshipType::OneToOne"
               },
@@ -3649,7 +3787,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaunrelparent6d2b3f17",
+            "collection": "metaunrelparent6d8c162e",
             "id": "warm"
           },
           "expect": {
@@ -3665,7 +3803,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaunrelparent6d2b3f17",
+              "$collection": "metaunrelparent6d8c162e",
               "child": null
             }
           }
@@ -3673,7 +3811,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metaunrelchild6d2b7982",
+            "collection": "metaunrelchild6d8c43a1",
             "id": "warm"
           },
           "expect": {
@@ -3689,7 +3827,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metaunrelchild6d2b7982",
+              "$collection": "metaunrelchild6d8c43a1",
               "parent": null
             }
           }
@@ -3697,7 +3835,7 @@
         {
           "op": "database.delete_relationship",
           "args": {
-            "collection": "metaunrelparent6d2b3f17",
+            "collection": "metaunrelparent6d8c162e",
             "key": "child"
           },
           "expect": null
@@ -3705,11 +3843,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metaunrelparent6d2b3f17"
+            "collection": "metaunrelparent6d8c162e"
           },
           "expect": {
             "$document": {
-              "name": "metaunrelparent6d2b3f17",
+              "name": "metaunrelparent6d8c162e",
               "attributes": [
                 {
                   "$document": {
@@ -3730,7 +3868,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metaunrelparent6d2b3f17",
+              "$id": "metaunrelparent6d8c162e",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -3747,11 +3885,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metaunrelchild6d2b7982"
+            "collection": "metaunrelchild6d8c43a1"
           },
           "expect": {
             "$document": {
-              "name": "metaunrelchild6d2b7982",
+              "name": "metaunrelchild6d8c43a1",
               "attributes": [
                 {
                   "$document": {
@@ -3772,7 +3910,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "3",
-              "$id": "metaunrelchild6d2b7982",
+              "$id": "metaunrelchild6d8c43a1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -3898,7 +4036,7 @@
         {
           "op": "database.set_database",
           "args": {
-            "name": "${ns}_scopedone6d2c772d"
+            "name": "${ns}_scopedone6d8cfb83"
           },
           "expect": {
             "$database": true
@@ -3979,7 +4117,7 @@
         {
           "op": "database.set_database",
           "args": {
-            "name": "${ns}_scopedtwo6d2c772d"
+            "name": "${ns}_scopedtwo6d8cfb83"
           },
           "expect": {
             "$database": true
@@ -4100,7 +4238,7 @@
         {
           "op": "database.set_database",
           "args": {
-            "name": "${ns}_scopedone6d2c772d"
+            "name": "${ns}_scopedone6d8cfb83"
           },
           "expect": {
             "$database": true
@@ -4197,28 +4335,28 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "${ns}_scopedone6d2c772d"
+            "database": "${ns}_scopedone6d8cfb83"
           },
           "expect": true
         },
         {
           "op": "database.delete",
           "args": {
-            "database": "${ns}_scopedone6d2c772d"
+            "database": "${ns}_scopedone6d8cfb83"
           },
           "expect": true
         },
         {
           "op": "database.exists",
           "args": {
-            "database": "${ns}_scopedtwo6d2c772d"
+            "database": "${ns}_scopedtwo6d8cfb83"
           },
           "expect": true
         },
         {
           "op": "database.delete",
           "args": {
-            "database": "${ns}_scopedtwo6d2c772d"
+            "database": "${ns}_scopedtwo6d8cfb83"
           },
           "expect": true
         },
@@ -4354,8 +4492,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "metarollback6d2d715a",
-                "name": "metarollback6d2d715a",
+                "$id": "metarollback6d8dc16a",
+                "name": "metarollback6d8dc16a",
                 "attributes": [
                   {
                     "$id": "name",
@@ -4385,8 +4523,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "metarollback6d2d715a",
-              "name": "metarollback6d2d715a",
+              "$id": "metarollback6d8dc16a",
+              "name": "metarollback6d8dc16a",
               "attributes": [
                 {
                   "$document": {
@@ -4423,7 +4561,7 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "metarollback6d2d715a",
+            "collection": "metarollback6d8dc16a",
             "document": {
               "$document": {
                 "$id": "warm",
@@ -4447,7 +4585,7 @@
                 "delete(\"any\")"
               ],
               "name": "warm",
-              "$collection": "metarollback6d2d715a",
+              "$collection": "metarollback6d8dc16a",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -4457,7 +4595,7 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "metarollback6d2d715a",
+            "collection": "metarollback6d8dc16a",
             "id": "warm"
           },
           "expect": {
@@ -4473,7 +4611,7 @@
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "$collection": "metarollback6d2d715a"
+              "$collection": "metarollback6d8dc16a"
             }
           }
         },
@@ -4485,7 +4623,7 @@
                 {
                   "op": "database.update_collection",
                   "args": {
-                    "collection": "metarollback6d2d715a",
+                    "collection": "metarollback6d8dc16a",
                     "update": {
                       "$value": "Collection\\Update",
                       "fields": {
@@ -4500,7 +4638,7 @@
                 {
                   "op": "database.get_collection",
                   "args": {
-                    "collection": "metarollback6d2d715a"
+                    "collection": "metarollback6d8dc16a"
                   }
                 },
                 {
@@ -4523,11 +4661,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metarollback6d2d715a"
+            "collection": "metarollback6d8dc16a"
           },
           "expect": {
             "$document": {
-              "name": "metarollback6d2d715a",
+              "name": "metarollback6d8dc16a",
               "attributes": [
                 {
                   "$document": {
@@ -4548,7 +4686,7 @@
               "indexes": [],
               "documentSecurity": false,
               "$sequence": "1",
-              "$id": "metarollback6d2d715a",
+              "$id": "metarollback6d8dc16a",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -4565,7 +4703,7 @@
         {
           "op": "database.update_collection",
           "args": {
-            "collection": "metarollback6d2d715a",
+            "collection": "metarollback6d8dc16a",
             "update": {
               "$value": "Collection\\Update",
               "fields": {
@@ -4578,7 +4716,7 @@
           },
           "expect": {
             "$document": {
-              "name": "metarollback6d2d715a",
+              "name": "metarollback6d8dc16a",
               "attributes": [
                 {
                   "$document": {
@@ -4599,7 +4737,7 @@
               "indexes": [],
               "documentSecurity": true,
               "$sequence": "1",
-              "$id": "metarollback6d2d715a",
+              "$id": "metarollback6d8dc16a",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -4613,11 +4751,11 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "metarollback6d2d715a"
+            "collection": "metarollback6d8dc16a"
           },
           "expect": {
             "$document": {
-              "name": "metarollback6d2d715a",
+              "name": "metarollback6d8dc16a",
               "attributes": [
                 {
                   "$document": {
@@ -4638,7 +4776,7 @@
               "indexes": [],
               "documentSecurity": true,
               "$sequence": "1",
-              "$id": "metarollback6d2d715a",
+              "$id": "metarollback6d8dc16a",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [

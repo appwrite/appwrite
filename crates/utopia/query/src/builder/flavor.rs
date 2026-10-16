@@ -12,6 +12,7 @@
 //! |---|---|
 //! | `Builder\PreparesSearchTerms` | [`Flavor::search_terms`] |
 //! | `Builder\MatchesContainsAllPatterns` | [`Flavor::contains_all_patterns`] |
+//! | `Builder\RaisesFloatOverflow` | [`Flavor::float_overflow`] |
 //! | `Builder\Postgres::compileFilter()` (object paths) | [`Flavor::object_path`] |
 //! | `Builder\Postgres::compileSpatialFilter()` | [`Flavor::indexed_distance`] |
 //! | `Builder\SQLite` | [`Flavor::sqlite`] ([`SqliteFlavor`]) |
@@ -56,6 +57,16 @@ pub struct Flavor {
     ///
     /// PHP: `Utopia\Database\Builder\MatchesContainsAllPatterns`.
     pub contains_all_patterns: bool,
+    /// Each floating aggregate (`sum`, `avg`, the variances and, through
+    /// `SQRT()` of a variance, the deviations) compiles through the engine's
+    /// float range check, `+ 0`, which raises an error for a value that is
+    /// not finite: MySQL and MariaDB send a `DOUBLE` aggregate that
+    /// overflowed as `0` over the text protocol, and turn an infinite or
+    /// undefined variance into `DBL_MAX` or `NULL` under `STDDEV`. An
+    /// unaliased aggregate keeps the name the engine gave it.
+    ///
+    /// PHP: `Utopia\Database\Builder\RaisesFloatOverflow`.
+    pub float_overflow: bool,
     /// Checks the path of a filter into an object attribute
     /// (`attribute.key.key`) before it compiles (PostgreSQL); its error is
     /// the filter's.
@@ -76,6 +87,7 @@ impl std::fmt::Debug for Flavor {
         f.debug_struct("Flavor")
             .field("search_terms", &self.search_terms)
             .field("contains_all_patterns", &self.contains_all_patterns)
+            .field("float_overflow", &self.float_overflow)
             .field("object_path", &self.object_path.is_some())
             .field("indexed_distance", &self.indexed_distance)
             .field("sqlite", &self.sqlite)
@@ -343,6 +355,47 @@ impl<D: Dialect> Builder<D> {
             _ => Vec::new(),
         };
         Some(value::list([Value::Str(prepare_search_term(&term).into())]))
+    }
+
+    // ----- RaisesFloatOverflow -------------------------------------------
+
+    /// An aggregate as [`Flavor::float_overflow`] compiles it, when it is set
+    /// and the aggregate is floating.
+    pub(crate) fn flavored_aggregate(&mut self, query: &Query) -> Option<Result<String>> {
+        if !self.core.flavor.float_overflow {
+            return None;
+        }
+        let method = query.method();
+        let variance = match method {
+            Method::Stddev => Some(Method::Variance),
+            Method::StddevPop => Some(Method::VarPop),
+            Method::StddevSamp => Some(Method::VarSamp),
+            _ => None,
+        };
+        if variance.is_none()
+            && !matches!(method, Method::Sum | Method::Avg | Method::Variance | Method::VarPop | Method::VarSamp)
+        {
+            return None;
+        }
+        Some(self.checked_aggregate(query, variance))
+    }
+
+    fn checked_aggregate(&mut self, query: &Query, variance: Option<Method>) -> Result<String> {
+        let expression =
+            self.base_compile_aggregate(&Query::new(query.method(), query.attribute(), Array::new(), ""))?;
+        let checked = match variance {
+            None => format!("{expression} + 0"),
+            Some(variance) => format!(
+                "SQRT({} + 0)",
+                self.base_compile_aggregate(&Query::new(variance, query.attribute(), Array::new(), ""))?
+            ),
+        };
+        let alias = if query.alias().is_empty() {
+            crate::quote_literal(&expression, D::WRAP)?
+        } else {
+            self.quote(query.alias())?
+        };
+        Ok(format!("{checked} AS {alias}"))
     }
 
     // ----- MatchesContainsAllPatterns -----------------------------------

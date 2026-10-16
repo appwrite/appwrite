@@ -144,6 +144,11 @@ pub(crate) struct Tweaked {
     lower_case_reads: bool,
     cast_hook: Option<fn(&mut Document)>,
     updates: Mutex<Vec<Document>>,
+    /// A write run the first time a find of its collection returns its
+    /// document: `(collection, id, attribute, value)`.
+    refresh: Mutex<Option<(String, String, String, Value)>>,
+    finds: AtomicI64,
+    deletes: AtomicI64,
 }
 
 impl Tweaked {
@@ -158,7 +163,28 @@ impl Tweaked {
             lower_case_reads: false,
             cast_hook: None,
             updates: Mutex::new(Vec::new()),
+            refresh: Mutex::new(None),
+            finds: AtomicI64::new(0),
+            deletes: AtomicI64::new(0),
         }
+    }
+
+    /// Sets `attribute` of the document `id` of `collection` to `value`
+    /// the first time a find of that collection returns it, as another
+    /// connection's write landing right after the find would
+    /// (`Interleaving\Refresh` on `Interleaves::$afterFind`).
+    pub(crate) fn refresh_once(&self, collection: &str, id: &str, attribute: &str, value: Value) {
+        *self.refresh.lock().unwrap() = Some((collection.to_owned(), id.to_owned(), attribute.to_owned(), value));
+    }
+
+    /// The finds run (`Interleaves::$finds`).
+    pub(crate) fn finds(&self) -> i64 {
+        self.finds.load(Ordering::SeqCst)
+    }
+
+    /// The bulk deletes run (`Interleaves::$deletes`).
+    pub(crate) fn deletes(&self) -> i64 {
+        self.deletes.load(Ordering::SeqCst)
     }
 
     /// Without `capability`.
@@ -440,11 +466,37 @@ impl Adapter for Tweaked {
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
     ) -> Result<i64> {
+        self.deletes.fetch_add(1, Ordering::SeqCst);
         self.inner.delete_documents(collection, sequences, permission_ids).await
     }
 
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        self.deletes.fetch_add(1, Ordering::SeqCst);
+        self.inner.delete_documents_matching(collection, sequences, permission_ids, queries).await
+    }
+
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
-        self.inner.find(collection, queries, options).await
+        self.finds.fetch_add(1, Ordering::SeqCst);
+        let documents = self.inner.find(collection, queries, options).await?;
+        let refresh = {
+            let mut refresh = self.refresh.lock().unwrap();
+            match refresh.as_ref() {
+                Some((c, id, ..)) if c == collection.id() && documents.iter().any(|d| d.id() == id) => refresh.take(),
+                _ => None,
+            }
+        };
+        if let Some((_, id, attribute, value)) = refresh {
+            let mut stored = self.inner.get_document(collection, &id, Vec::new(), false).await?;
+            stored.put(attribute.as_str(), value);
+            self.inner.update_document(collection, &id, stored, true).await?;
+        }
+        Ok(documents)
     }
 
     async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64> {

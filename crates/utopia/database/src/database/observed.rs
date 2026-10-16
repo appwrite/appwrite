@@ -427,6 +427,16 @@ impl Adapter for Observed {
         self.observe(Op::Delete { collection: collection.id().to_owned() }).await?;
         self.inner.delete_documents(collection, sequences, permission_ids).await
     }
+
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        self.inner.delete_documents_matching(collection, sequences, permission_ids, queries).await
+    }
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         let documents = self.inner.find(collection, queries, options).await?;
         self.observe(Op::Find { collection: collection.id().to_owned() }).await?;

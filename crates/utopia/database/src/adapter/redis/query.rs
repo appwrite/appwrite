@@ -443,7 +443,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     }
 
     /// `filterDocumentsByQueries()`: the documents every filter matches.
-    fn filter_by_queries(&self, documents: Vec<Document>, queries: &[Query]) -> Result<Vec<Document>> {
+    pub(super) fn filter_by_queries(&self, documents: Vec<Document>, queries: &[Query]) -> Result<Vec<Document>> {
         if documents.is_empty() {
             return Ok(Vec::new());
         }

@@ -239,6 +239,9 @@ pub fn decode_value(class: &str, fields: &Json) -> R<Obj> {
     if let Some(obj) = services::decode_value(class, fields)? {
         return Ok(obj);
     }
+    if let Some(obj) = query::decode_value(class, fields)? {
+        return Ok(obj);
+    }
     fault(format!("no value class `{class}`"))
 }
 

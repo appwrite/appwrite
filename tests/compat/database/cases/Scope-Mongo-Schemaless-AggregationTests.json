@@ -3043,6 +3043,37 @@
       ]
     },
     {
+      "name": "AggregationTests::testFloatAggregateOverflowIsRefused",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
       "name": "AggregationTests::testStddevPopOfPrice",
       "state": [
         "mongo@database-mongo"
@@ -5146,7 +5177,7 @@
               }
             }
           },
-          "bind": "s1102",
+          "bind": "s1109",
           "expect": {
             "$document": {
               "$id": "laptop",
@@ -5504,7 +5535,7 @@
               }
             }
           },
-          "bind": "s1111",
+          "bind": "s1118",
           "expect": {
             "$document": {
               "$id": "dock",
@@ -5540,7 +5571,7 @@
               }
             }
           },
-          "bind": "s1112",
+          "bind": "s1119",
           "expect": {
             "$document": {
               "$id": "sleeve",
@@ -5576,7 +5607,7 @@
               }
             }
           },
-          "bind": "s1113",
+          "bind": "s1120",
           "expect": {
             "$document": {
               "$id": "bag",
@@ -5728,9 +5759,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1102",
+                          "$ref": "s1109",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0115-706a-ac73-85296670f0e7"
+                          "default": "01a141c0-8df1-706d-bb0f-b8aa44218fd4"
                         },
                         "$id": "laptop"
                       }
@@ -5808,9 +5839,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1111",
+                          "$ref": "s1118",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-012e-7280-b3ff-efbb332a4a92"
+                          "default": "01a141c0-8dfd-7346-8e70-8c12267cda02"
                         },
                         "$id": "dock"
                       }
@@ -5888,9 +5919,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1112",
+                          "$ref": "s1119",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0130-7227-97a6-b3d7c14ab919"
+                          "default": "01a141c0-8dfe-7387-879b-1d63a90d4c50"
                         },
                         "$id": "sleeve"
                       }
@@ -5968,9 +5999,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1113",
+                          "$ref": "s1120",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0132-7035-b26c-87d22b534c42"
+                          "default": "01a141c0-8e00-732a-bc4e-a992478e493f"
                         },
                         "$id": "bag"
                       }
@@ -6054,9 +6085,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1113",
+                          "$ref": "s1120",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0132-7035-b26c-87d22b534c42"
+                          "default": "01a141c0-8e00-732a-bc4e-a992478e493f"
                         },
                         "$id": "bag"
                       }
@@ -6134,9 +6165,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1112",
+                          "$ref": "s1119",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0130-7227-97a6-b3d7c14ab919"
+                          "default": "01a141c0-8dfe-7387-879b-1d63a90d4c50"
                         },
                         "$id": "sleeve"
                       }
@@ -6214,9 +6245,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1111",
+                          "$ref": "s1118",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-012e-7280-b3ff-efbb332a4a92"
+                          "default": "01a141c0-8dfd-7346-8e70-8c12267cda02"
                         },
                         "$id": "dock"
                       }
@@ -6298,9 +6329,9 @@
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$sequence": {
-                          "$ref": "s1102",
+                          "$ref": "s1109",
                           "path": "/$document/$sequence",
-                          "default": "01a13e1d-0115-706a-ac73-85296670f0e7"
+                          "default": "01a141c0-8df1-706d-bb0f-b8aa44218fd4"
                         },
                         "$id": "laptop"
                       }
@@ -6407,6 +6438,3790 @@
             "collection": "search_cursor_pages"
           },
           "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testAggregateRowsAreTypedNamedAndDecodedAsAReadReturnsThem",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testCountMatchesTheRowsOfGroupedDistinctAndAggregateReads",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "counted_rows_products",
+                "name": "counted_rows_products",
+                "attributes": [
+                  {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counted_rows_products",
+              "name": "counted_rows_products",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "counted_rows_reviews",
+                "name": "counted_rows_reviews",
+                "attributes": [
+                  {
+                    "$id": "product",
+                    "key": "product",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counted_rows_reviews",
+              "name": "counted_rows_reviews",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "product",
+                    "key": "product",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p1",
+                "category": "electronics",
+                "price": 1200,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "category": "electronics",
+              "price": 1200,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p2",
+                "category": "electronics",
+                "price": 800,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p2",
+              "category": "electronics",
+              "price": 800,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p3",
+                "category": "electronics",
+                "price": 500,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p3",
+              "category": "electronics",
+              "price": 500,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p4",
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p4",
+              "category": "clothing",
+              "price": 30,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p5",
+                "category": "clothing",
+                "price": 50,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p5",
+              "category": "clothing",
+              "price": 50,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p6",
+                "category": "clothing",
+                "price": 120,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p6",
+              "category": "clothing",
+              "price": 120,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p7",
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p7",
+              "category": "books",
+              "price": 15,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p8",
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p8",
+              "category": "books",
+              "price": 60,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p9",
+                "category": "books",
+                "price": 10,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p9",
+              "category": "books",
+              "price": 10,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p10",
+                "category": "toys",
+                "price": 25,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p10",
+              "category": "toys",
+              "price": 25,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r1",
+                "product": "p1",
+                "score": 5,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r1",
+              "product": "p1",
+              "score": 5,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r2",
+                "product": "p1",
+                "score": 4,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r2",
+              "product": "p1",
+              "score": 4,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r3",
+                "product": "p4",
+                "score": 3,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r3",
+              "product": "p4",
+              "score": 3,
+              "$permissions": [],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r4",
+                "product": "p7",
+                "score": 5,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r4",
+              "product": "p7",
+              "score": 5,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r5",
+                "product": "p3",
+                "score": 2,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r5",
+              "product": "p3",
+              "score": 2,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r6",
+                "product": "p10",
+                "score": 1,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r6",
+              "product": "p10",
+              "score": 1,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:admin"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": 10
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "category": "electronics",
+                "price": 1200,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p1"
+              }
+            },
+            {
+              "$document": {
+                "category": "electronics",
+                "price": 800,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p2"
+              }
+            },
+            {
+              "$document": {
+                "category": "electronics",
+                "price": 500,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p3"
+              }
+            },
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p4"
+              }
+            },
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 50,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p5"
+              }
+            },
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 120,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p6"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p7"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p8"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 10,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p9"
+              }
+            },
+            {
+              "$document": {
+                "category": "toys",
+                "price": 25,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p10"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p4"
+              }
+            },
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 50,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p5"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p7"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p8"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 10,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p9"
+              }
+            },
+            {
+              "$document": {
+                "category": "toys",
+                "price": 25,
+                "$permissions": [],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p10"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "having",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "greaterThan",
+                        "attribute": "n",
+                        "values": [
+                          1
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: distinct"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "price",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: sum"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: leftJoin"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: fullOuterJoin"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: fullOuterJoin"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:viewer"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": 5
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "category": "electronics",
+                "price": 1200,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p1"
+              }
+            },
+            {
+              "$document": {
+                "category": "electronics",
+                "price": 800,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p2"
+              }
+            },
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p4"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p7"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p8"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p4"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p7"
+              }
+            },
+            {
+              "$document": {
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ],
+                "$collection": "counted_rows_products",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "p8"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "having",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "greaterThan",
+                        "attribute": "n",
+                        "values": [
+                          1
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "lessThan",
+                  "attribute": "price",
+                  "values": [
+                    100
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: distinct"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "price",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: sum"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "leftJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: leftJoin"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: fullOuterJoin"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "counted_rows_products",
+            "queries": [
+              {
+                "$query": {
+                  "method": "fullOuterJoin",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "category"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: fullOuterJoin"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumAddsUpTheRowsOfGroupedAndDistinctReads",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "counted_rows_products",
+                "name": "counted_rows_products",
+                "attributes": [
+                  {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counted_rows_products",
+              "name": "counted_rows_products",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "counted_rows_reviews",
+                "name": "counted_rows_reviews",
+                "attributes": [
+                  {
+                    "$id": "product",
+                    "key": "product",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "counted_rows_reviews",
+              "name": "counted_rows_reviews",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "product",
+                    "key": "product",
+                    "type": "string",
+                    "size": 36,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p1",
+                "category": "electronics",
+                "price": 1200,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p1",
+              "category": "electronics",
+              "price": 1200,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p2",
+                "category": "electronics",
+                "price": 800,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p2",
+              "category": "electronics",
+              "price": 800,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p3",
+                "category": "electronics",
+                "price": 500,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p3",
+              "category": "electronics",
+              "price": 500,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p4",
+                "category": "clothing",
+                "price": 30,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p4",
+              "category": "clothing",
+              "price": 30,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p5",
+                "category": "clothing",
+                "price": 50,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p5",
+              "category": "clothing",
+              "price": 50,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p6",
+                "category": "clothing",
+                "price": 120,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p6",
+              "category": "clothing",
+              "price": 120,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p7",
+                "category": "books",
+                "price": 15,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p7",
+              "category": "books",
+              "price": 15,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p8",
+                "category": "books",
+                "price": 60,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p8",
+              "category": "books",
+              "price": 60,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p9",
+                "category": "books",
+                "price": 10,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p9",
+              "category": "books",
+              "price": 10,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_products",
+            "document": {
+              "$document": {
+                "$id": "p10",
+                "category": "toys",
+                "price": 25,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "p10",
+              "category": "toys",
+              "price": 25,
+              "$permissions": [],
+              "$collection": "counted_rows_products",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r1",
+                "product": "p1",
+                "score": 5,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r1",
+              "product": "p1",
+              "score": 5,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r2",
+                "product": "p1",
+                "score": 4,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r2",
+              "product": "p1",
+              "score": 4,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r3",
+                "product": "p4",
+                "score": 3,
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r3",
+              "product": "p4",
+              "score": 3,
+              "$permissions": [],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r4",
+                "product": "p7",
+                "score": 5,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r4",
+              "product": "p7",
+              "score": 5,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r5",
+                "product": "p3",
+                "score": 2,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r5",
+              "product": "p3",
+              "score": 2,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "document": {
+              "$document": {
+                "$id": "r6",
+                "product": "p10",
+                "score": 1,
+                "$permissions": [
+                  "read(\"user:viewer\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "r6",
+              "product": "p10",
+              "score": 1,
+              "$permissions": [
+                "read(\"user:viewer\")"
+              ],
+              "$collection": "counted_rows_reviews",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:admin"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score"
+          },
+          "expect": 20
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: distinct"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_products",
+            "attribute": "r.score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:viewer"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score"
+          },
+          "expect": 17
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "n"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: count"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_reviews",
+            "attribute": "score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: distinct"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "counted_rows_products",
+            "attribute": "r.score",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "counted_rows_reviews",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "product"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "r"
+                }
+              },
+              {
+                "$query": {
+                  "method": "distinct",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "r.score"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid query method: join"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "counted_rows_products"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "counted_rows_reviews"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testSumOfGroupedOrDistinctRowsThatOverflowsIsRefused",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": false
         }
       ]
     }

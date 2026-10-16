@@ -506,11 +506,15 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
 
     /// `deleteDocuments()`: the stored documents with one of `sequences`,
     /// and the permissions of `permission_ids`; the count deleted.
+    /// `deleteDocuments()`: the documents of `sequences` that match every one
+    /// of `queries` (`deletionFilters()`), and the permissions of the deleted
+    /// documents and of `permission_ids` but a kept document's.
     pub(super) async fn remove_documents(
         &self,
         collection: &Collection,
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
+        queries: &[Query],
     ) -> Result<i64> {
         if sequences.is_empty() && permission_ids.is_empty() {
             return Ok(0);
@@ -527,18 +531,25 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
             }
             let payloads = if doc_keys.is_empty() { Vec::new() } else { self.pipe(&pipe).await? };
             let mut deleted: Vec<(String, Vec<u8>, String)> = Vec::new();
+            let mut kept: HashSet<String> = HashSet::new();
             for (position, _) in ids.iter().enumerate() {
                 let Some(payload) = payload_of(payloads.get(position)) else {
                     continue;
                 };
                 let document = Self::decode(&payload)?;
                 let sequence = document.sequence().map(to_text).unwrap_or_default();
-                if wanted.contains(&sequence) {
-                    let entry = (document.id().to_owned(), payload, doc_keys[position].clone());
-                    match deleted.iter_mut().find(|(id, _, _)| *id == entry.0) {
-                        Some(slot) => *slot = entry,
-                        None => deleted.push(entry),
-                    }
+                if !wanted.contains(&sequence) {
+                    continue;
+                }
+                let id = document.id().to_owned();
+                if self.filter_by_queries(vec![document], queries)?.is_empty() {
+                    kept.insert(id);
+                    continue;
+                }
+                let entry = (id, payload, doc_keys[position].clone());
+                match deleted.iter_mut().find(|(id, _, _)| *id == entry.0) {
+                    Some(slot) => *slot = entry,
+                    None => deleted.push(entry),
                 }
             }
             for (id, payload, doc_key) in &deleted {
@@ -557,7 +568,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                 let _: i64 = self.run(redis::cmd("SREM").arg(&idx_key).arg(lower(id))).await?;
             }
             for id in &permission_ids {
-                if deleted.iter().any(|(d, _, _)| d == id) {
+                if deleted.iter().any(|(d, _, _)| d == id) || kept.contains(id) {
                     continue;
                 }
                 self.clear_permissions(&col, id, None).await?;

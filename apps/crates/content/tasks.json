@@ -1,13 +1,13 @@
 {
-  "updated": "2026-10-16T06:47:00Z",
+  "updated": "2026-10-16T12:07:00Z",
   "tasks": [
     {
-      "id": "db83",
-      "title": "Database: follow PHP from 8.1.3 to 8.3.0",
-      "area": "Database 8",
+      "id": "query-sync",
+      "title": "Sync utopia-query with main",
+      "area": "Libraries",
       "status": "progress",
-      "updated": "2026-10-15T22:25:00Z",
-      "note": "main bumped utopia-php/database to 8.3.0 on 2026-10-16. Port the 8.1.3→8.3.0 changes to Rust, move the PHP harness and its recordings to 8.3.0, and update every crate that uses it. Also: aggregate group naming and casts, relationship population with queries, the ParsedQuery relationships field, and PHP line numbers in messages."
+      "updated": "2026-10-16T12:07:00Z",
+      "note": "The last cause of database compat differences: spatial validation (NaN or infinite distances refused), distinct with an attribute refused, stricter limit and offset parsing. Fixes the remaining PostgresDistance and spatial relationship cases."
     },
     {
       "id": "async-compat",
@@ -16,6 +16,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "db83",
+      "title": "Database: follow PHP from 8.1.3 to 8.3.0",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-16T12:07:00Z",
+      "note": "8.1.4's race-free bulk delete, 8.2.0's relationship queries with per-parent paging, and 8.3.0's typed aggregates, row counts over grouped reads and float overflow checks. 26,086 cases re-recorded on 8.3.0; 557 of 557 PHP tests ported; the replay is down to 4 cases, all spatial validation from main's query package."
     },
     {
       "id": "users-ci-parity",
@@ -88,14 +96,6 @@
       "status": "done",
       "updated": "2026-10-15T22:03:00Z",
       "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). A callback that cannot fail returns nothing; only one that uses ? ends with Ok(()). CONVERSION.md makes it the rule."
-    },
-    {
-      "id": "query-sync",
-      "title": "Sync utopia-query with main",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-15T21:05:00Z",
-      "note": "main's query package added spatial validation, refuses distinct with an attribute or values, and parses limit and offset more strictly. filter_distance must start returning an error, which touches the database crate."
     },
     {
       "id": "async-traits",

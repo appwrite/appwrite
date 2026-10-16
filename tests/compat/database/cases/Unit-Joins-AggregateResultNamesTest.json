@@ -18,9 +18,9 @@
                 }
               }
             },
-            "as": "o16335"
+            "as": "o5551"
           },
-          "bind": "s38353",
+          "bind": "s9398",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -31,13 +31,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16335"
+                "$obj": "o5551"
               },
               "cache": "none"
             },
-            "as": "o16336"
+            "as": "o5552"
           },
-          "bind": "s38354",
+          "bind": "s9399",
           "expect": {
             "$database": true
           }
@@ -46,7 +46,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "setDatabase",
             "args": {
@@ -61,11 +61,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000074"
+              "namespace": "aggregate_result_names_u000000000141"
             }
           },
           "expect": {
@@ -77,9 +77,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16337"
+            "as": "o5553"
           },
-          "bind": "s38357",
+          "bind": "s9402",
           "expect": {
             "$authorization": true
           }
@@ -88,12 +88,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16337"
+                "$obj": "o5553"
               }
             }
           },
@@ -106,9 +106,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16338"
+            "as": "o5554"
           },
-          "bind": "s38359",
+          "bind": "s9404",
           "expect": {
             "$hook": "Permissions"
           }
@@ -117,12 +117,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16338"
+                "$obj": "o5554"
               }
             }
           },
@@ -134,7 +134,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "create",
             "args": {}
@@ -147,9 +147,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16339"
+            "as": "o5555"
           },
-          "bind": "s38362",
+          "bind": "s9407",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -162,7 +162,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16339"
+                "$obj": "o5555"
               }
             }
           },
@@ -174,9 +174,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16340"
+            "as": "o5556"
           },
-          "bind": "s38364",
+          "bind": "s9409",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -189,7 +189,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16340"
+                "$obj": "o5556"
               }
             }
           },
@@ -204,9 +204,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16341"
+            "as": "o5557"
           },
-          "bind": "s38366",
+          "bind": "s9411",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -235,9 +235,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16342"
+            "as": "o5558"
           },
-          "bind": "s38367",
+          "bind": "s9412",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -265,9 +265,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16343"
+            "as": "o5559"
           },
-          "bind": "s38368",
+          "bind": "s9413",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -296,13 +296,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16341"
+                  "$obj": "o5557"
                 },
                 {
-                  "$obj": "o16342"
+                  "$obj": "o5558"
                 },
                 {
-                  "$obj": "o16343"
+                  "$obj": "o5559"
                 }
               ],
               "permissions": [
@@ -310,9 +310,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16344"
+            "as": "o5560"
           },
-          "bind": "s38369",
+          "bind": "s9414",
           "expect": {
             "$document": {
               "$id": "main",
@@ -378,15 +378,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16344"
+                "$obj": "o5560"
               }
             },
-            "as": "o16345"
+            "as": "o5561"
           },
           "expect": {
             "$document": {
@@ -462,9 +462,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16346"
+            "as": "o5562"
           },
-          "bind": "s38371",
+          "bind": "s9416",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -493,9 +493,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16347"
+            "as": "o5563"
           },
-          "bind": "s38372",
+          "bind": "s9417",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -523,9 +523,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16348"
+            "as": "o5564"
           },
-          "bind": "s38373",
+          "bind": "s9418",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -554,13 +554,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16346"
+                  "$obj": "o5562"
                 },
                 {
-                  "$obj": "o16347"
+                  "$obj": "o5563"
                 },
                 {
-                  "$obj": "o16348"
+                  "$obj": "o5564"
                 }
               ],
               "permissions": [
@@ -568,9 +568,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16349"
+            "as": "o5565"
           },
-          "bind": "s38374",
+          "bind": "s9419",
           "expect": {
             "$document": {
               "$id": "a",
@@ -636,15 +636,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16349"
+                "$obj": "o5565"
               }
             },
-            "as": "o16350"
+            "as": "o5566"
           },
           "expect": {
             "$document": {
@@ -717,9 +717,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16351"
+            "as": "o5567"
           },
-          "bind": "s38376",
+          "bind": "s9421",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -732,7 +732,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16351"
+                "$obj": "o5567"
               }
             }
           },
@@ -753,9 +753,9 @@
                 "score": 10
               }
             },
-            "as": "o16352"
+            "as": "o5568"
           },
-          "bind": "s38378",
+          "bind": "s9423",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -772,13 +772,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16352"
+                "$obj": "o5568"
               }
             }
           },
@@ -804,9 +804,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16353"
+            "as": "o5569"
           },
-          "bind": "s38380",
+          "bind": "s9425",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -819,7 +819,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16353"
+                "$obj": "o5569"
               }
             }
           },
@@ -840,9 +840,9 @@
                 "score": 20
               }
             },
-            "as": "o16354"
+            "as": "o5570"
           },
-          "bind": "s38382",
+          "bind": "s9427",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -859,13 +859,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16354"
+                "$obj": "o5570"
               }
             }
           },
@@ -891,9 +891,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16355"
+            "as": "o5571"
           },
-          "bind": "s38384",
+          "bind": "s9429",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -906,7 +906,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16355"
+                "$obj": "o5571"
               }
             }
           },
@@ -927,9 +927,9 @@
                 "score": 1
               }
             },
-            "as": "o16356"
+            "as": "o5572"
           },
-          "bind": "s38386",
+          "bind": "s9431",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -946,13 +946,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16356"
+                "$obj": "o5572"
               }
             }
           },
@@ -978,9 +978,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16357"
+            "as": "o5573"
           },
-          "bind": "s38388",
+          "bind": "s9433",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -993,7 +993,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16357"
+                "$obj": "o5573"
               }
             }
           },
@@ -1014,9 +1014,9 @@
                 "score": 3
               }
             },
-            "as": "o16358"
+            "as": "o5574"
           },
-          "bind": "s38390",
+          "bind": "s9435",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -1033,13 +1033,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16358"
+                "$obj": "o5574"
               }
             }
           },
@@ -1068,9 +1068,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16359"
+            "as": "o5575"
           },
-          "bind": "s38392",
+          "bind": "s9437",
           "expect": {
             "$query": {
               "method": "on",
@@ -1094,14 +1094,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16359"
+                  "$obj": "o5575"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16360"
+            "as": "o5576"
           },
-          "bind": "s38393",
+          "bind": "s9438",
           "expect": {
             "$query": {
               "method": "join",
@@ -1132,9 +1132,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16361"
+            "as": "o5577"
           },
-          "bind": "s38394",
+          "bind": "s9439",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1148,17 +1148,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16360"
+                  "$obj": "o5576"
                 },
                 {
-                  "$obj": "o16361"
+                  "$obj": "o5577"
                 }
               ]
             }
@@ -1178,9 +1178,9 @@
               "attribute": "score",
               "alias": "score"
             },
-            "as": "o16362"
+            "as": "o5578"
           },
-          "bind": "s38396",
+          "bind": "s9441",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1194,17 +1194,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16360"
+                  "$obj": "o5576"
                 },
                 {
-                  "$obj": "o16362"
+                  "$obj": "o5578"
                 }
               ]
             }
@@ -1224,9 +1224,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16363"
+            "as": "o5579"
           },
-          "bind": "s38398",
+          "bind": "s9443",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1245,9 +1245,9 @@
               "attribute": "*",
               "alias": "score"
             },
-            "as": "o16364"
+            "as": "o5580"
           },
-          "bind": "s38399",
+          "bind": "s9444",
           "expect": {
             "$query": {
               "method": "count",
@@ -1261,20 +1261,20 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16360"
+                  "$obj": "o5576"
                 },
                 {
-                  "$obj": "o16363"
+                  "$obj": "o5579"
                 },
                 {
-                  "$obj": "o16364"
+                  "$obj": "o5580"
                 }
               ]
             }
@@ -1295,9 +1295,9 @@
               "attribute": "a.score",
               "alias": "score"
             },
-            "as": "o16365"
+            "as": "o5581"
           },
-          "bind": "s38401",
+          "bind": "s9446",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1311,17 +1311,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16336"
+              "$obj": "o5552"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16360"
+                  "$obj": "o5576"
                 },
                 {
-                  "$obj": "o16365"
+                  "$obj": "o5581"
                 }
               ]
             }
@@ -1349,9 +1349,9 @@
                 }
               }
             },
-            "as": "o16366"
+            "as": "o5582"
           },
-          "bind": "s38403",
+          "bind": "s9448",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -1362,13 +1362,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16366"
+                "$obj": "o5582"
               },
               "cache": "none"
             },
-            "as": "o16367"
+            "as": "o5583"
           },
-          "bind": "s38404",
+          "bind": "s9449",
           "expect": {
             "$database": true
           }
@@ -1377,7 +1377,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "setDatabase",
             "args": {
@@ -1392,11 +1392,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000075"
+              "namespace": "aggregate_result_names_u000000000142"
             }
           },
           "expect": {
@@ -1408,9 +1408,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16368"
+            "as": "o5584"
           },
-          "bind": "s38407",
+          "bind": "s9452",
           "expect": {
             "$authorization": true
           }
@@ -1419,12 +1419,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16368"
+                "$obj": "o5584"
               }
             }
           },
@@ -1437,9 +1437,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16369"
+            "as": "o5585"
           },
-          "bind": "s38409",
+          "bind": "s9454",
           "expect": {
             "$hook": "Permissions"
           }
@@ -1448,12 +1448,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16369"
+                "$obj": "o5585"
               }
             }
           },
@@ -1465,7 +1465,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "create",
             "args": {}
@@ -1478,9 +1478,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16370"
+            "as": "o5586"
           },
-          "bind": "s38412",
+          "bind": "s9457",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1493,7 +1493,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16370"
+                "$obj": "o5586"
               }
             }
           },
@@ -1505,9 +1505,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16371"
+            "as": "o5587"
           },
-          "bind": "s38414",
+          "bind": "s9459",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1520,7 +1520,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16371"
+                "$obj": "o5587"
               }
             }
           },
@@ -1535,9 +1535,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16372"
+            "as": "o5588"
           },
-          "bind": "s38416",
+          "bind": "s9461",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1566,9 +1566,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16373"
+            "as": "o5589"
           },
-          "bind": "s38417",
+          "bind": "s9462",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1596,9 +1596,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16374"
+            "as": "o5590"
           },
-          "bind": "s38418",
+          "bind": "s9463",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1627,13 +1627,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16372"
+                  "$obj": "o5588"
                 },
                 {
-                  "$obj": "o16373"
+                  "$obj": "o5589"
                 },
                 {
-                  "$obj": "o16374"
+                  "$obj": "o5590"
                 }
               ],
               "permissions": [
@@ -1641,9 +1641,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16375"
+            "as": "o5591"
           },
-          "bind": "s38419",
+          "bind": "s9464",
           "expect": {
             "$document": {
               "$id": "main",
@@ -1709,15 +1709,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16375"
+                "$obj": "o5591"
               }
             },
-            "as": "o16376"
+            "as": "o5592"
           },
           "expect": {
             "$document": {
@@ -1793,9 +1793,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16377"
+            "as": "o5593"
           },
-          "bind": "s38421",
+          "bind": "s9466",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1824,9 +1824,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16378"
+            "as": "o5594"
           },
-          "bind": "s38422",
+          "bind": "s9467",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1854,9 +1854,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16379"
+            "as": "o5595"
           },
-          "bind": "s38423",
+          "bind": "s9468",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1885,13 +1885,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16377"
+                  "$obj": "o5593"
                 },
                 {
-                  "$obj": "o16378"
+                  "$obj": "o5594"
                 },
                 {
-                  "$obj": "o16379"
+                  "$obj": "o5595"
                 }
               ],
               "permissions": [
@@ -1899,9 +1899,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16380"
+            "as": "o5596"
           },
-          "bind": "s38424",
+          "bind": "s9469",
           "expect": {
             "$document": {
               "$id": "a",
@@ -1967,15 +1967,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16380"
+                "$obj": "o5596"
               }
             },
-            "as": "o16381"
+            "as": "o5597"
           },
           "expect": {
             "$document": {
@@ -2048,9 +2048,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16382"
+            "as": "o5598"
           },
-          "bind": "s38426",
+          "bind": "s9471",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2063,7 +2063,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16382"
+                "$obj": "o5598"
               }
             }
           },
@@ -2084,9 +2084,9 @@
                 "score": 10
               }
             },
-            "as": "o16383"
+            "as": "o5599"
           },
-          "bind": "s38428",
+          "bind": "s9473",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -2103,13 +2103,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16383"
+                "$obj": "o5599"
               }
             }
           },
@@ -2135,9 +2135,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16384"
+            "as": "o5600"
           },
-          "bind": "s38430",
+          "bind": "s9475",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2150,7 +2150,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16384"
+                "$obj": "o5600"
               }
             }
           },
@@ -2171,9 +2171,9 @@
                 "score": 20
               }
             },
-            "as": "o16385"
+            "as": "o5601"
           },
-          "bind": "s38432",
+          "bind": "s9477",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -2190,13 +2190,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16385"
+                "$obj": "o5601"
               }
             }
           },
@@ -2222,9 +2222,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16386"
+            "as": "o5602"
           },
-          "bind": "s38434",
+          "bind": "s9479",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2237,7 +2237,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16386"
+                "$obj": "o5602"
               }
             }
           },
@@ -2258,9 +2258,9 @@
                 "score": 1
               }
             },
-            "as": "o16387"
+            "as": "o5603"
           },
-          "bind": "s38436",
+          "bind": "s9481",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -2277,13 +2277,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16387"
+                "$obj": "o5603"
               }
             }
           },
@@ -2309,9 +2309,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16388"
+            "as": "o5604"
           },
-          "bind": "s38438",
+          "bind": "s9483",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2324,7 +2324,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16388"
+                "$obj": "o5604"
               }
             }
           },
@@ -2345,9 +2345,9 @@
                 "score": 3
               }
             },
-            "as": "o16389"
+            "as": "o5605"
           },
-          "bind": "s38440",
+          "bind": "s9485",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -2364,13 +2364,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16389"
+                "$obj": "o5605"
               }
             }
           },
@@ -2399,9 +2399,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16390"
+            "as": "o5606"
           },
-          "bind": "s38442",
+          "bind": "s9487",
           "expect": {
             "$query": {
               "method": "on",
@@ -2425,14 +2425,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16390"
+                  "$obj": "o5606"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16391"
+            "as": "o5607"
           },
-          "bind": "s38443",
+          "bind": "s9488",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2463,9 +2463,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16392"
+            "as": "o5608"
           },
-          "bind": "s38444",
+          "bind": "s9489",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2479,17 +2479,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16391"
+                  "$obj": "o5607"
                 },
                 {
-                  "$obj": "o16392"
+                  "$obj": "o5608"
                 }
               ]
             }
@@ -2509,9 +2509,9 @@
               "attribute": "score",
               "alias": "score"
             },
-            "as": "o16393"
+            "as": "o5609"
           },
-          "bind": "s38446",
+          "bind": "s9491",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2525,17 +2525,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16391"
+                  "$obj": "o5607"
                 },
                 {
-                  "$obj": "o16393"
+                  "$obj": "o5609"
                 }
               ]
             }
@@ -2555,9 +2555,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16394"
+            "as": "o5610"
           },
-          "bind": "s38448",
+          "bind": "s9493",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2576,9 +2576,9 @@
               "attribute": "*",
               "alias": "score"
             },
-            "as": "o16395"
+            "as": "o5611"
           },
-          "bind": "s38449",
+          "bind": "s9494",
           "expect": {
             "$query": {
               "method": "count",
@@ -2592,20 +2592,20 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16391"
+                  "$obj": "o5607"
                 },
                 {
-                  "$obj": "o16394"
+                  "$obj": "o5610"
                 },
                 {
-                  "$obj": "o16395"
+                  "$obj": "o5611"
                 }
               ]
             }
@@ -2626,9 +2626,9 @@
               "attribute": "a.score",
               "alias": "score"
             },
-            "as": "o16396"
+            "as": "o5612"
           },
-          "bind": "s38451",
+          "bind": "s9496",
           "expect": {
             "$query": {
               "method": "sum",
@@ -2642,17 +2642,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16367"
+              "$obj": "o5583"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16391"
+                  "$obj": "o5607"
                 },
                 {
-                  "$obj": "o16396"
+                  "$obj": "o5612"
                 }
               ]
             }
@@ -2680,9 +2680,9 @@
                 }
               }
             },
-            "as": "o16397"
+            "as": "o5613"
           },
-          "bind": "s38453",
+          "bind": "s9498",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -2693,13 +2693,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16397"
+                "$obj": "o5613"
               },
               "cache": "none"
             },
-            "as": "o16398"
+            "as": "o5614"
           },
-          "bind": "s38454",
+          "bind": "s9499",
           "expect": {
             "$database": true
           }
@@ -2708,7 +2708,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "setDatabase",
             "args": {
@@ -2723,11 +2723,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000076"
+              "namespace": "aggregate_result_names_u000000000143"
             }
           },
           "expect": {
@@ -2739,9 +2739,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16399"
+            "as": "o5615"
           },
-          "bind": "s38457",
+          "bind": "s9502",
           "expect": {
             "$authorization": true
           }
@@ -2750,12 +2750,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16399"
+                "$obj": "o5615"
               }
             }
           },
@@ -2768,9 +2768,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16400"
+            "as": "o5616"
           },
-          "bind": "s38459",
+          "bind": "s9504",
           "expect": {
             "$hook": "Permissions"
           }
@@ -2779,12 +2779,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16400"
+                "$obj": "o5616"
               }
             }
           },
@@ -2796,7 +2796,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "create",
             "args": {}
@@ -2809,9 +2809,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16401"
+            "as": "o5617"
           },
-          "bind": "s38462",
+          "bind": "s9507",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2824,7 +2824,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16401"
+                "$obj": "o5617"
               }
             }
           },
@@ -2836,9 +2836,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16402"
+            "as": "o5618"
           },
-          "bind": "s38464",
+          "bind": "s9509",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2851,7 +2851,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16402"
+                "$obj": "o5618"
               }
             }
           },
@@ -2866,9 +2866,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16403"
+            "as": "o5619"
           },
-          "bind": "s38466",
+          "bind": "s9511",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2897,9 +2897,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16404"
+            "as": "o5620"
           },
-          "bind": "s38467",
+          "bind": "s9512",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2927,9 +2927,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16405"
+            "as": "o5621"
           },
-          "bind": "s38468",
+          "bind": "s9513",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -2958,13 +2958,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16403"
+                  "$obj": "o5619"
                 },
                 {
-                  "$obj": "o16404"
+                  "$obj": "o5620"
                 },
                 {
-                  "$obj": "o16405"
+                  "$obj": "o5621"
                 }
               ],
               "permissions": [
@@ -2972,9 +2972,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16406"
+            "as": "o5622"
           },
-          "bind": "s38469",
+          "bind": "s9514",
           "expect": {
             "$document": {
               "$id": "main",
@@ -3040,15 +3040,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16406"
+                "$obj": "o5622"
               }
             },
-            "as": "o16407"
+            "as": "o5623"
           },
           "expect": {
             "$document": {
@@ -3124,9 +3124,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16408"
+            "as": "o5624"
           },
-          "bind": "s38471",
+          "bind": "s9516",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3155,9 +3155,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16409"
+            "as": "o5625"
           },
-          "bind": "s38472",
+          "bind": "s9517",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3185,9 +3185,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16410"
+            "as": "o5626"
           },
-          "bind": "s38473",
+          "bind": "s9518",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -3216,13 +3216,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16408"
+                  "$obj": "o5624"
                 },
                 {
-                  "$obj": "o16409"
+                  "$obj": "o5625"
                 },
                 {
-                  "$obj": "o16410"
+                  "$obj": "o5626"
                 }
               ],
               "permissions": [
@@ -3230,9 +3230,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16411"
+            "as": "o5627"
           },
-          "bind": "s38474",
+          "bind": "s9519",
           "expect": {
             "$document": {
               "$id": "a",
@@ -3298,15 +3298,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16411"
+                "$obj": "o5627"
               }
             },
-            "as": "o16412"
+            "as": "o5628"
           },
           "expect": {
             "$document": {
@@ -3379,9 +3379,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16413"
+            "as": "o5629"
           },
-          "bind": "s38476",
+          "bind": "s9521",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3394,7 +3394,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16413"
+                "$obj": "o5629"
               }
             }
           },
@@ -3415,9 +3415,9 @@
                 "score": 10
               }
             },
-            "as": "o16414"
+            "as": "o5630"
           },
-          "bind": "s38478",
+          "bind": "s9523",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -3434,13 +3434,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16414"
+                "$obj": "o5630"
               }
             }
           },
@@ -3466,9 +3466,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16415"
+            "as": "o5631"
           },
-          "bind": "s38480",
+          "bind": "s9525",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3481,7 +3481,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16415"
+                "$obj": "o5631"
               }
             }
           },
@@ -3502,9 +3502,9 @@
                 "score": 20
               }
             },
-            "as": "o16416"
+            "as": "o5632"
           },
-          "bind": "s38482",
+          "bind": "s9527",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -3521,13 +3521,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16416"
+                "$obj": "o5632"
               }
             }
           },
@@ -3553,9 +3553,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16417"
+            "as": "o5633"
           },
-          "bind": "s38484",
+          "bind": "s9529",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3568,7 +3568,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16417"
+                "$obj": "o5633"
               }
             }
           },
@@ -3589,9 +3589,9 @@
                 "score": 1
               }
             },
-            "as": "o16418"
+            "as": "o5634"
           },
-          "bind": "s38486",
+          "bind": "s9531",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -3608,13 +3608,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16418"
+                "$obj": "o5634"
               }
             }
           },
@@ -3640,9 +3640,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16419"
+            "as": "o5635"
           },
-          "bind": "s38488",
+          "bind": "s9533",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -3655,7 +3655,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16419"
+                "$obj": "o5635"
               }
             }
           },
@@ -3676,9 +3676,9 @@
                 "score": 3
               }
             },
-            "as": "o16420"
+            "as": "o5636"
           },
-          "bind": "s38490",
+          "bind": "s9535",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -3695,13 +3695,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16420"
+                "$obj": "o5636"
               }
             }
           },
@@ -3730,9 +3730,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16421"
+            "as": "o5637"
           },
-          "bind": "s38492",
+          "bind": "s9537",
           "expect": {
             "$query": {
               "method": "on",
@@ -3756,14 +3756,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16421"
+                  "$obj": "o5637"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16422"
+            "as": "o5638"
           },
-          "bind": "s38493",
+          "bind": "s9538",
           "expect": {
             "$query": {
               "method": "rightJoin",
@@ -3794,9 +3794,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16423"
+            "as": "o5639"
           },
-          "bind": "s38494",
+          "bind": "s9539",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3810,17 +3810,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16422"
+                  "$obj": "o5638"
                 },
                 {
-                  "$obj": "o16423"
+                  "$obj": "o5639"
                 }
               ]
             }
@@ -3840,9 +3840,9 @@
               "attribute": "score",
               "alias": "score"
             },
-            "as": "o16424"
+            "as": "o5640"
           },
-          "bind": "s38496",
+          "bind": "s9541",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3856,17 +3856,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16422"
+                  "$obj": "o5638"
                 },
                 {
-                  "$obj": "o16424"
+                  "$obj": "o5640"
                 }
               ]
             }
@@ -3886,9 +3886,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16425"
+            "as": "o5641"
           },
-          "bind": "s38498",
+          "bind": "s9543",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3907,9 +3907,9 @@
               "attribute": "*",
               "alias": "score"
             },
-            "as": "o16426"
+            "as": "o5642"
           },
-          "bind": "s38499",
+          "bind": "s9544",
           "expect": {
             "$query": {
               "method": "count",
@@ -3923,20 +3923,20 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16422"
+                  "$obj": "o5638"
                 },
                 {
-                  "$obj": "o16425"
+                  "$obj": "o5641"
                 },
                 {
-                  "$obj": "o16426"
+                  "$obj": "o5642"
                 }
               ]
             }
@@ -3957,9 +3957,9 @@
               "attribute": "a.score",
               "alias": "score"
             },
-            "as": "o16427"
+            "as": "o5643"
           },
-          "bind": "s38501",
+          "bind": "s9546",
           "expect": {
             "$query": {
               "method": "sum",
@@ -3973,17 +3973,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16398"
+              "$obj": "o5614"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16422"
+                  "$obj": "o5638"
                 },
                 {
-                  "$obj": "o16427"
+                  "$obj": "o5643"
                 }
               ]
             }
@@ -4011,9 +4011,9 @@
                 }
               }
             },
-            "as": "o16458"
+            "as": "o5674"
           },
-          "bind": "s38552",
+          "bind": "s9597",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -4024,13 +4024,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16458"
+                "$obj": "o5674"
               },
               "cache": "none"
             },
-            "as": "o16459"
+            "as": "o5675"
           },
-          "bind": "s38553",
+          "bind": "s9598",
           "expect": {
             "$database": true
           }
@@ -4039,7 +4039,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "setDatabase",
             "args": {
@@ -4054,11 +4054,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000078"
+              "namespace": "aggregate_result_names_u000000000145"
             }
           },
           "expect": {
@@ -4070,9 +4070,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16460"
+            "as": "o5676"
           },
-          "bind": "s38556",
+          "bind": "s9601",
           "expect": {
             "$authorization": true
           }
@@ -4081,12 +4081,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16460"
+                "$obj": "o5676"
               }
             }
           },
@@ -4099,9 +4099,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16461"
+            "as": "o5677"
           },
-          "bind": "s38558",
+          "bind": "s9603",
           "expect": {
             "$hook": "Permissions"
           }
@@ -4110,12 +4110,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16461"
+                "$obj": "o5677"
               }
             }
           },
@@ -4127,7 +4127,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "create",
             "args": {}
@@ -4140,9 +4140,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16462"
+            "as": "o5678"
           },
-          "bind": "s38561",
+          "bind": "s9606",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4155,7 +4155,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16462"
+                "$obj": "o5678"
               }
             }
           },
@@ -4167,9 +4167,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16463"
+            "as": "o5679"
           },
-          "bind": "s38563",
+          "bind": "s9608",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4182,7 +4182,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16463"
+                "$obj": "o5679"
               }
             }
           },
@@ -4197,9 +4197,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16464"
+            "as": "o5680"
           },
-          "bind": "s38565",
+          "bind": "s9610",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4228,9 +4228,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16465"
+            "as": "o5681"
           },
-          "bind": "s38566",
+          "bind": "s9611",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4258,9 +4258,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16466"
+            "as": "o5682"
           },
-          "bind": "s38567",
+          "bind": "s9612",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4289,13 +4289,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16464"
+                  "$obj": "o5680"
                 },
                 {
-                  "$obj": "o16465"
+                  "$obj": "o5681"
                 },
                 {
-                  "$obj": "o16466"
+                  "$obj": "o5682"
                 }
               ],
               "permissions": [
@@ -4303,9 +4303,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16467"
+            "as": "o5683"
           },
-          "bind": "s38568",
+          "bind": "s9613",
           "expect": {
             "$document": {
               "$id": "main",
@@ -4371,15 +4371,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16467"
+                "$obj": "o5683"
               }
             },
-            "as": "o16468"
+            "as": "o5684"
           },
           "expect": {
             "$document": {
@@ -4455,9 +4455,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16469"
+            "as": "o5685"
           },
-          "bind": "s38570",
+          "bind": "s9615",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4486,9 +4486,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16470"
+            "as": "o5686"
           },
-          "bind": "s38571",
+          "bind": "s9616",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4516,9 +4516,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16471"
+            "as": "o5687"
           },
-          "bind": "s38572",
+          "bind": "s9617",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4547,13 +4547,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16469"
+                  "$obj": "o5685"
                 },
                 {
-                  "$obj": "o16470"
+                  "$obj": "o5686"
                 },
                 {
-                  "$obj": "o16471"
+                  "$obj": "o5687"
                 }
               ],
               "permissions": [
@@ -4561,9 +4561,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16472"
+            "as": "o5688"
           },
-          "bind": "s38573",
+          "bind": "s9618",
           "expect": {
             "$document": {
               "$id": "a",
@@ -4629,15 +4629,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16472"
+                "$obj": "o5688"
               }
             },
-            "as": "o16473"
+            "as": "o5689"
           },
           "expect": {
             "$document": {
@@ -4710,9 +4710,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16474"
+            "as": "o5690"
           },
-          "bind": "s38575",
+          "bind": "s9620",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4725,7 +4725,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16474"
+                "$obj": "o5690"
               }
             }
           },
@@ -4746,9 +4746,9 @@
                 "score": 10
               }
             },
-            "as": "o16475"
+            "as": "o5691"
           },
-          "bind": "s38577",
+          "bind": "s9622",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -4765,13 +4765,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16475"
+                "$obj": "o5691"
               }
             }
           },
@@ -4797,9 +4797,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16476"
+            "as": "o5692"
           },
-          "bind": "s38579",
+          "bind": "s9624",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4812,7 +4812,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16476"
+                "$obj": "o5692"
               }
             }
           },
@@ -4833,9 +4833,9 @@
                 "score": 20
               }
             },
-            "as": "o16477"
+            "as": "o5693"
           },
-          "bind": "s38581",
+          "bind": "s9626",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -4852,13 +4852,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16477"
+                "$obj": "o5693"
               }
             }
           },
@@ -4884,9 +4884,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16478"
+            "as": "o5694"
           },
-          "bind": "s38583",
+          "bind": "s9628",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4899,7 +4899,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16478"
+                "$obj": "o5694"
               }
             }
           },
@@ -4920,9 +4920,9 @@
                 "score": 1
               }
             },
-            "as": "o16479"
+            "as": "o5695"
           },
-          "bind": "s38585",
+          "bind": "s9630",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -4939,13 +4939,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16479"
+                "$obj": "o5695"
               }
             }
           },
@@ -4971,9 +4971,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16480"
+            "as": "o5696"
           },
-          "bind": "s38587",
+          "bind": "s9632",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -4986,7 +4986,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16480"
+                "$obj": "o5696"
               }
             }
           },
@@ -5007,9 +5007,9 @@
                 "score": 3
               }
             },
-            "as": "o16481"
+            "as": "o5697"
           },
-          "bind": "s38589",
+          "bind": "s9634",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -5026,13 +5026,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16481"
+                "$obj": "o5697"
               }
             }
           },
@@ -5061,9 +5061,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16482"
+            "as": "o5698"
           },
-          "bind": "s38591",
+          "bind": "s9636",
           "expect": {
             "$query": {
               "method": "on",
@@ -5087,14 +5087,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16482"
+                  "$obj": "o5698"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16483"
+            "as": "o5699"
           },
-          "bind": "s38592",
+          "bind": "s9637",
           "expect": {
             "$query": {
               "method": "fullOuterJoin",
@@ -5125,9 +5125,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16484"
+            "as": "o5700"
           },
-          "bind": "s38593",
+          "bind": "s9638",
           "expect": {
             "$query": {
               "method": "sum",
@@ -5141,17 +5141,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16483"
+                  "$obj": "o5699"
                 },
                 {
-                  "$obj": "o16484"
+                  "$obj": "o5700"
                 }
               ]
             }
@@ -5171,9 +5171,9 @@
               "attribute": "score",
               "alias": "score"
             },
-            "as": "o16485"
+            "as": "o5701"
           },
-          "bind": "s38595",
+          "bind": "s9640",
           "expect": {
             "$query": {
               "method": "sum",
@@ -5187,17 +5187,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16483"
+                  "$obj": "o5699"
                 },
                 {
-                  "$obj": "o16485"
+                  "$obj": "o5701"
                 }
               ]
             }
@@ -5217,9 +5217,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16486"
+            "as": "o5702"
           },
-          "bind": "s38597",
+          "bind": "s9642",
           "expect": {
             "$query": {
               "method": "sum",
@@ -5238,9 +5238,9 @@
               "attribute": "*",
               "alias": "score"
             },
-            "as": "o16487"
+            "as": "o5703"
           },
-          "bind": "s38598",
+          "bind": "s9643",
           "expect": {
             "$query": {
               "method": "count",
@@ -5254,20 +5254,20 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16483"
+                  "$obj": "o5699"
                 },
                 {
-                  "$obj": "o16486"
+                  "$obj": "o5702"
                 },
                 {
-                  "$obj": "o16487"
+                  "$obj": "o5703"
                 }
               ]
             }
@@ -5288,9 +5288,9 @@
               "attribute": "a.score",
               "alias": "score"
             },
-            "as": "o16488"
+            "as": "o5704"
           },
-          "bind": "s38600",
+          "bind": "s9645",
           "expect": {
             "$query": {
               "method": "sum",
@@ -5304,17 +5304,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16459"
+              "$obj": "o5675"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16483"
+                  "$obj": "o5699"
                 },
                 {
-                  "$obj": "o16488"
+                  "$obj": "o5704"
                 }
               ]
             }
@@ -5342,9 +5342,9 @@
                 }
               }
             },
-            "as": "o16489"
+            "as": "o5705"
           },
-          "bind": "s38602",
+          "bind": "s9647",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -5355,13 +5355,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16489"
+                "$obj": "o5705"
               },
               "cache": "none"
             },
-            "as": "o16490"
+            "as": "o5706"
           },
-          "bind": "s38603",
+          "bind": "s9648",
           "expect": {
             "$database": true
           }
@@ -5370,7 +5370,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "setDatabase",
             "args": {
@@ -5385,11 +5385,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000079"
+              "namespace": "aggregate_result_names_u000000000146"
             }
           },
           "expect": {
@@ -5401,9 +5401,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16491"
+            "as": "o5707"
           },
-          "bind": "s38606",
+          "bind": "s9651",
           "expect": {
             "$authorization": true
           }
@@ -5412,12 +5412,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16491"
+                "$obj": "o5707"
               }
             }
           },
@@ -5430,9 +5430,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16492"
+            "as": "o5708"
           },
-          "bind": "s38608",
+          "bind": "s9653",
           "expect": {
             "$hook": "Permissions"
           }
@@ -5441,12 +5441,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16492"
+                "$obj": "o5708"
               }
             }
           },
@@ -5458,7 +5458,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "create",
             "args": {}
@@ -5471,9 +5471,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16493"
+            "as": "o5709"
           },
-          "bind": "s38611",
+          "bind": "s9656",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -5486,7 +5486,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16493"
+                "$obj": "o5709"
               }
             }
           },
@@ -5498,9 +5498,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16494"
+            "as": "o5710"
           },
-          "bind": "s38613",
+          "bind": "s9658",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -5513,7 +5513,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16494"
+                "$obj": "o5710"
               }
             }
           },
@@ -5528,9 +5528,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16495"
+            "as": "o5711"
           },
-          "bind": "s38615",
+          "bind": "s9660",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5559,9 +5559,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16496"
+            "as": "o5712"
           },
-          "bind": "s38616",
+          "bind": "s9661",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5589,9 +5589,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16497"
+            "as": "o5713"
           },
-          "bind": "s38617",
+          "bind": "s9662",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5620,13 +5620,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16495"
+                  "$obj": "o5711"
                 },
                 {
-                  "$obj": "o16496"
+                  "$obj": "o5712"
                 },
                 {
-                  "$obj": "o16497"
+                  "$obj": "o5713"
                 }
               ],
               "permissions": [
@@ -5634,9 +5634,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16498"
+            "as": "o5714"
           },
-          "bind": "s38618",
+          "bind": "s9663",
           "expect": {
             "$document": {
               "$id": "main",
@@ -5702,15 +5702,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16498"
+                "$obj": "o5714"
               }
             },
-            "as": "o16499"
+            "as": "o5715"
           },
           "expect": {
             "$document": {
@@ -5786,9 +5786,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16500"
+            "as": "o5716"
           },
-          "bind": "s38620",
+          "bind": "s9665",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5817,9 +5817,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16501"
+            "as": "o5717"
           },
-          "bind": "s38621",
+          "bind": "s9666",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5847,9 +5847,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16502"
+            "as": "o5718"
           },
-          "bind": "s38622",
+          "bind": "s9667",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5878,13 +5878,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16500"
+                  "$obj": "o5716"
                 },
                 {
-                  "$obj": "o16501"
+                  "$obj": "o5717"
                 },
                 {
-                  "$obj": "o16502"
+                  "$obj": "o5718"
                 }
               ],
               "permissions": [
@@ -5892,9 +5892,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16503"
+            "as": "o5719"
           },
-          "bind": "s38623",
+          "bind": "s9668",
           "expect": {
             "$document": {
               "$id": "a",
@@ -5960,15 +5960,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16503"
+                "$obj": "o5719"
               }
             },
-            "as": "o16504"
+            "as": "o5720"
           },
           "expect": {
             "$document": {
@@ -6041,9 +6041,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16505"
+            "as": "o5721"
           },
-          "bind": "s38625",
+          "bind": "s9670",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6056,7 +6056,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16505"
+                "$obj": "o5721"
               }
             }
           },
@@ -6077,9 +6077,9 @@
                 "score": 10
               }
             },
-            "as": "o16506"
+            "as": "o5722"
           },
-          "bind": "s38627",
+          "bind": "s9672",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -6096,13 +6096,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16506"
+                "$obj": "o5722"
               }
             }
           },
@@ -6128,9 +6128,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16507"
+            "as": "o5723"
           },
-          "bind": "s38629",
+          "bind": "s9674",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6143,7 +6143,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16507"
+                "$obj": "o5723"
               }
             }
           },
@@ -6164,9 +6164,9 @@
                 "score": 20
               }
             },
-            "as": "o16508"
+            "as": "o5724"
           },
-          "bind": "s38631",
+          "bind": "s9676",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -6183,13 +6183,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16508"
+                "$obj": "o5724"
               }
             }
           },
@@ -6215,9 +6215,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16509"
+            "as": "o5725"
           },
-          "bind": "s38633",
+          "bind": "s9678",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6230,7 +6230,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16509"
+                "$obj": "o5725"
               }
             }
           },
@@ -6251,9 +6251,9 @@
                 "score": 1
               }
             },
-            "as": "o16510"
+            "as": "o5726"
           },
-          "bind": "s38635",
+          "bind": "s9680",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -6270,13 +6270,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16510"
+                "$obj": "o5726"
               }
             }
           },
@@ -6302,9 +6302,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16511"
+            "as": "o5727"
           },
-          "bind": "s38637",
+          "bind": "s9682",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6317,7 +6317,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16511"
+                "$obj": "o5727"
               }
             }
           },
@@ -6338,9 +6338,9 @@
                 "score": 3
               }
             },
-            "as": "o16512"
+            "as": "o5728"
           },
-          "bind": "s38639",
+          "bind": "s9684",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -6357,13 +6357,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16512"
+                "$obj": "o5728"
               }
             }
           },
@@ -6392,9 +6392,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16513"
+            "as": "o5729"
           },
-          "bind": "s38641",
+          "bind": "s9686",
           "expect": {
             "$query": {
               "method": "on",
@@ -6418,14 +6418,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16513"
+                  "$obj": "o5729"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16514"
+            "as": "o5730"
           },
-          "bind": "s38642",
+          "bind": "s9687",
           "expect": {
             "$query": {
               "method": "join",
@@ -6453,9 +6453,9 @@
             "class": "Query",
             "method": "count",
             "args": {},
-            "as": "o16515"
+            "as": "o5731"
           },
-          "bind": "s38643",
+          "bind": "s9688",
           "expect": {
             "$query": {
               "method": "count",
@@ -6472,9 +6472,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o16516"
+            "as": "o5732"
           },
-          "bind": "s38644",
+          "bind": "s9689",
           "expect": {
             "$query": {
               "method": "sum",
@@ -6491,9 +6491,9 @@
             "args": {
               "attribute": "a.score"
             },
-            "as": "o16517"
+            "as": "o5733"
           },
-          "bind": "s38645",
+          "bind": "s9690",
           "expect": {
             "$query": {
               "method": "sum",
@@ -6506,23 +6506,23 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16490"
+              "$obj": "o5706"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16514"
+                  "$obj": "o5730"
                 },
                 {
-                  "$obj": "o16515"
+                  "$obj": "o5731"
                 },
                 {
-                  "$obj": "o16516"
+                  "$obj": "o5732"
                 },
                 {
-                  "$obj": "o16517"
+                  "$obj": "o5733"
                 }
               ]
             }
@@ -6552,9 +6552,9 @@
                 }
               }
             },
-            "as": "o16518"
+            "as": "o5734"
           },
-          "bind": "s38647",
+          "bind": "s9692",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -6565,13 +6565,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16518"
+                "$obj": "o5734"
               },
               "cache": "none"
             },
-            "as": "o16519"
+            "as": "o5735"
           },
-          "bind": "s38648",
+          "bind": "s9693",
           "expect": {
             "$database": true
           }
@@ -6580,7 +6580,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "setDatabase",
             "args": {
@@ -6595,11 +6595,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000080"
+              "namespace": "aggregate_result_names_u000000000147"
             }
           },
           "expect": {
@@ -6611,9 +6611,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16520"
+            "as": "o5736"
           },
-          "bind": "s38651",
+          "bind": "s9696",
           "expect": {
             "$authorization": true
           }
@@ -6622,12 +6622,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16520"
+                "$obj": "o5736"
               }
             }
           },
@@ -6640,9 +6640,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16521"
+            "as": "o5737"
           },
-          "bind": "s38653",
+          "bind": "s9698",
           "expect": {
             "$hook": "Permissions"
           }
@@ -6651,12 +6651,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16521"
+                "$obj": "o5737"
               }
             }
           },
@@ -6668,7 +6668,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "create",
             "args": {}
@@ -6681,9 +6681,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16522"
+            "as": "o5738"
           },
-          "bind": "s38656",
+          "bind": "s9701",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6696,7 +6696,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16522"
+                "$obj": "o5738"
               }
             }
           },
@@ -6708,9 +6708,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16523"
+            "as": "o5739"
           },
-          "bind": "s38658",
+          "bind": "s9703",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -6723,7 +6723,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16523"
+                "$obj": "o5739"
               }
             }
           },
@@ -6738,9 +6738,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16524"
+            "as": "o5740"
           },
-          "bind": "s38660",
+          "bind": "s9705",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -6769,9 +6769,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16525"
+            "as": "o5741"
           },
-          "bind": "s38661",
+          "bind": "s9706",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -6799,9 +6799,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16526"
+            "as": "o5742"
           },
-          "bind": "s38662",
+          "bind": "s9707",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -6830,13 +6830,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16524"
+                  "$obj": "o5740"
                 },
                 {
-                  "$obj": "o16525"
+                  "$obj": "o5741"
                 },
                 {
-                  "$obj": "o16526"
+                  "$obj": "o5742"
                 }
               ],
               "permissions": [
@@ -6844,9 +6844,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16527"
+            "as": "o5743"
           },
-          "bind": "s38663",
+          "bind": "s9708",
           "expect": {
             "$document": {
               "$id": "main",
@@ -6912,15 +6912,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16527"
+                "$obj": "o5743"
               }
             },
-            "as": "o16528"
+            "as": "o5744"
           },
           "expect": {
             "$document": {
@@ -6996,9 +6996,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16529"
+            "as": "o5745"
           },
-          "bind": "s38665",
+          "bind": "s9710",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -7027,9 +7027,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16530"
+            "as": "o5746"
           },
-          "bind": "s38666",
+          "bind": "s9711",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -7057,9 +7057,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16531"
+            "as": "o5747"
           },
-          "bind": "s38667",
+          "bind": "s9712",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -7088,13 +7088,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16529"
+                  "$obj": "o5745"
                 },
                 {
-                  "$obj": "o16530"
+                  "$obj": "o5746"
                 },
                 {
-                  "$obj": "o16531"
+                  "$obj": "o5747"
                 }
               ],
               "permissions": [
@@ -7102,9 +7102,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16532"
+            "as": "o5748"
           },
-          "bind": "s38668",
+          "bind": "s9713",
           "expect": {
             "$document": {
               "$id": "a",
@@ -7170,15 +7170,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16532"
+                "$obj": "o5748"
               }
             },
-            "as": "o16533"
+            "as": "o5749"
           },
           "expect": {
             "$document": {
@@ -7251,9 +7251,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16534"
+            "as": "o5750"
           },
-          "bind": "s38670",
+          "bind": "s9715",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7266,7 +7266,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16534"
+                "$obj": "o5750"
               }
             }
           },
@@ -7287,9 +7287,9 @@
                 "score": 10
               }
             },
-            "as": "o16535"
+            "as": "o5751"
           },
-          "bind": "s38672",
+          "bind": "s9717",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -7306,13 +7306,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16535"
+                "$obj": "o5751"
               }
             }
           },
@@ -7338,9 +7338,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16536"
+            "as": "o5752"
           },
-          "bind": "s38674",
+          "bind": "s9719",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7353,7 +7353,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16536"
+                "$obj": "o5752"
               }
             }
           },
@@ -7374,9 +7374,9 @@
                 "score": 20
               }
             },
-            "as": "o16537"
+            "as": "o5753"
           },
-          "bind": "s38676",
+          "bind": "s9721",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -7393,13 +7393,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16537"
+                "$obj": "o5753"
               }
             }
           },
@@ -7425,9 +7425,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16538"
+            "as": "o5754"
           },
-          "bind": "s38678",
+          "bind": "s9723",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7440,7 +7440,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16538"
+                "$obj": "o5754"
               }
             }
           },
@@ -7461,9 +7461,9 @@
                 "score": 1
               }
             },
-            "as": "o16539"
+            "as": "o5755"
           },
-          "bind": "s38680",
+          "bind": "s9725",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -7480,13 +7480,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16539"
+                "$obj": "o5755"
               }
             }
           },
@@ -7512,9 +7512,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16540"
+            "as": "o5756"
           },
-          "bind": "s38682",
+          "bind": "s9727",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7527,7 +7527,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16540"
+                "$obj": "o5756"
               }
             }
           },
@@ -7548,9 +7548,9 @@
                 "score": 3
               }
             },
-            "as": "o16541"
+            "as": "o5757"
           },
-          "bind": "s38684",
+          "bind": "s9729",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -7567,13 +7567,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16541"
+                "$obj": "o5757"
               }
             }
           },
@@ -7602,9 +7602,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16542"
+            "as": "o5758"
           },
-          "bind": "s38686",
+          "bind": "s9731",
           "expect": {
             "$query": {
               "method": "on",
@@ -7628,14 +7628,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16542"
+                  "$obj": "o5758"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16543"
+            "as": "o5759"
           },
-          "bind": "s38687",
+          "bind": "s9732",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -7663,9 +7663,9 @@
             "class": "Query",
             "method": "count",
             "args": {},
-            "as": "o16544"
+            "as": "o5760"
           },
-          "bind": "s38688",
+          "bind": "s9733",
           "expect": {
             "$query": {
               "method": "count",
@@ -7682,9 +7682,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o16545"
+            "as": "o5761"
           },
-          "bind": "s38689",
+          "bind": "s9734",
           "expect": {
             "$query": {
               "method": "sum",
@@ -7701,9 +7701,9 @@
             "args": {
               "attribute": "a.score"
             },
-            "as": "o16546"
+            "as": "o5762"
           },
-          "bind": "s38690",
+          "bind": "s9735",
           "expect": {
             "$query": {
               "method": "sum",
@@ -7716,23 +7716,23 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16519"
+              "$obj": "o5735"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16543"
+                  "$obj": "o5759"
                 },
                 {
-                  "$obj": "o16544"
+                  "$obj": "o5760"
                 },
                 {
-                  "$obj": "o16545"
+                  "$obj": "o5761"
                 },
                 {
-                  "$obj": "o16546"
+                  "$obj": "o5762"
                 }
               ]
             }
@@ -7762,9 +7762,9 @@
                 }
               }
             },
-            "as": "o16547"
+            "as": "o5763"
           },
-          "bind": "s38692",
+          "bind": "s9737",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -7775,13 +7775,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16547"
+                "$obj": "o5763"
               },
               "cache": "none"
             },
-            "as": "o16548"
+            "as": "o5764"
           },
-          "bind": "s38693",
+          "bind": "s9738",
           "expect": {
             "$database": true
           }
@@ -7790,7 +7790,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "setDatabase",
             "args": {
@@ -7805,11 +7805,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000081"
+              "namespace": "aggregate_result_names_u000000000148"
             }
           },
           "expect": {
@@ -7821,9 +7821,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16549"
+            "as": "o5765"
           },
-          "bind": "s38696",
+          "bind": "s9741",
           "expect": {
             "$authorization": true
           }
@@ -7832,12 +7832,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16549"
+                "$obj": "o5765"
               }
             }
           },
@@ -7850,9 +7850,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16550"
+            "as": "o5766"
           },
-          "bind": "s38698",
+          "bind": "s9743",
           "expect": {
             "$hook": "Permissions"
           }
@@ -7861,12 +7861,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16550"
+                "$obj": "o5766"
               }
             }
           },
@@ -7878,7 +7878,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "create",
             "args": {}
@@ -7891,9 +7891,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16551"
+            "as": "o5767"
           },
-          "bind": "s38701",
+          "bind": "s9746",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7906,7 +7906,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16551"
+                "$obj": "o5767"
               }
             }
           },
@@ -7918,9 +7918,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16552"
+            "as": "o5768"
           },
-          "bind": "s38703",
+          "bind": "s9748",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -7933,7 +7933,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16552"
+                "$obj": "o5768"
               }
             }
           },
@@ -7948,9 +7948,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16553"
+            "as": "o5769"
           },
-          "bind": "s38705",
+          "bind": "s9750",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -7979,9 +7979,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16554"
+            "as": "o5770"
           },
-          "bind": "s38706",
+          "bind": "s9751",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -8009,9 +8009,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16555"
+            "as": "o5771"
           },
-          "bind": "s38707",
+          "bind": "s9752",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -8040,13 +8040,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16553"
+                  "$obj": "o5769"
                 },
                 {
-                  "$obj": "o16554"
+                  "$obj": "o5770"
                 },
                 {
-                  "$obj": "o16555"
+                  "$obj": "o5771"
                 }
               ],
               "permissions": [
@@ -8054,9 +8054,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16556"
+            "as": "o5772"
           },
-          "bind": "s38708",
+          "bind": "s9753",
           "expect": {
             "$document": {
               "$id": "main",
@@ -8122,15 +8122,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16556"
+                "$obj": "o5772"
               }
             },
-            "as": "o16557"
+            "as": "o5773"
           },
           "expect": {
             "$document": {
@@ -8206,9 +8206,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16558"
+            "as": "o5774"
           },
-          "bind": "s38710",
+          "bind": "s9755",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -8237,9 +8237,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16559"
+            "as": "o5775"
           },
-          "bind": "s38711",
+          "bind": "s9756",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -8267,9 +8267,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16560"
+            "as": "o5776"
           },
-          "bind": "s38712",
+          "bind": "s9757",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -8298,13 +8298,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16558"
+                  "$obj": "o5774"
                 },
                 {
-                  "$obj": "o16559"
+                  "$obj": "o5775"
                 },
                 {
-                  "$obj": "o16560"
+                  "$obj": "o5776"
                 }
               ],
               "permissions": [
@@ -8312,9 +8312,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16561"
+            "as": "o5777"
           },
-          "bind": "s38713",
+          "bind": "s9758",
           "expect": {
             "$document": {
               "$id": "a",
@@ -8380,15 +8380,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16561"
+                "$obj": "o5777"
               }
             },
-            "as": "o16562"
+            "as": "o5778"
           },
           "expect": {
             "$document": {
@@ -8461,9 +8461,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16563"
+            "as": "o5779"
           },
-          "bind": "s38715",
+          "bind": "s9760",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -8476,7 +8476,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16563"
+                "$obj": "o5779"
               }
             }
           },
@@ -8497,9 +8497,9 @@
                 "score": 10
               }
             },
-            "as": "o16564"
+            "as": "o5780"
           },
-          "bind": "s38717",
+          "bind": "s9762",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -8516,13 +8516,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16564"
+                "$obj": "o5780"
               }
             }
           },
@@ -8548,9 +8548,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16565"
+            "as": "o5781"
           },
-          "bind": "s38719",
+          "bind": "s9764",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -8563,7 +8563,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16565"
+                "$obj": "o5781"
               }
             }
           },
@@ -8584,9 +8584,9 @@
                 "score": 20
               }
             },
-            "as": "o16566"
+            "as": "o5782"
           },
-          "bind": "s38721",
+          "bind": "s9766",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -8603,13 +8603,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16566"
+                "$obj": "o5782"
               }
             }
           },
@@ -8635,9 +8635,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16567"
+            "as": "o5783"
           },
-          "bind": "s38723",
+          "bind": "s9768",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -8650,7 +8650,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16567"
+                "$obj": "o5783"
               }
             }
           },
@@ -8671,9 +8671,9 @@
                 "score": 1
               }
             },
-            "as": "o16568"
+            "as": "o5784"
           },
-          "bind": "s38725",
+          "bind": "s9770",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -8690,13 +8690,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16568"
+                "$obj": "o5784"
               }
             }
           },
@@ -8722,9 +8722,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16569"
+            "as": "o5785"
           },
-          "bind": "s38727",
+          "bind": "s9772",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -8737,7 +8737,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16569"
+                "$obj": "o5785"
               }
             }
           },
@@ -8758,9 +8758,9 @@
                 "score": 3
               }
             },
-            "as": "o16570"
+            "as": "o5786"
           },
-          "bind": "s38729",
+          "bind": "s9774",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -8777,13 +8777,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16570"
+                "$obj": "o5786"
               }
             }
           },
@@ -8812,9 +8812,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16571"
+            "as": "o5787"
           },
-          "bind": "s38731",
+          "bind": "s9776",
           "expect": {
             "$query": {
               "method": "on",
@@ -8838,14 +8838,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16571"
+                  "$obj": "o5787"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16572"
+            "as": "o5788"
           },
-          "bind": "s38732",
+          "bind": "s9777",
           "expect": {
             "$query": {
               "method": "rightJoin",
@@ -8873,9 +8873,9 @@
             "class": "Query",
             "method": "count",
             "args": {},
-            "as": "o16573"
+            "as": "o5789"
           },
-          "bind": "s38733",
+          "bind": "s9778",
           "expect": {
             "$query": {
               "method": "count",
@@ -8892,9 +8892,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o16574"
+            "as": "o5790"
           },
-          "bind": "s38734",
+          "bind": "s9779",
           "expect": {
             "$query": {
               "method": "sum",
@@ -8911,9 +8911,9 @@
             "args": {
               "attribute": "a.score"
             },
-            "as": "o16575"
+            "as": "o5791"
           },
-          "bind": "s38735",
+          "bind": "s9780",
           "expect": {
             "$query": {
               "method": "sum",
@@ -8926,23 +8926,23 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16548"
+              "$obj": "o5764"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16572"
+                  "$obj": "o5788"
                 },
                 {
-                  "$obj": "o16573"
+                  "$obj": "o5789"
                 },
                 {
-                  "$obj": "o16574"
+                  "$obj": "o5790"
                 },
                 {
-                  "$obj": "o16575"
+                  "$obj": "o5791"
                 }
               ]
             }
@@ -8972,9 +8972,9 @@
                 }
               }
             },
-            "as": "o16604"
+            "as": "o5820"
           },
-          "bind": "s38781",
+          "bind": "s9826",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -8985,13 +8985,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16604"
+                "$obj": "o5820"
               },
               "cache": "none"
             },
-            "as": "o16605"
+            "as": "o5821"
           },
-          "bind": "s38782",
+          "bind": "s9827",
           "expect": {
             "$database": true
           }
@@ -9000,7 +9000,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "setDatabase",
             "args": {
@@ -9015,11 +9015,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000083"
+              "namespace": "aggregate_result_names_u000000000150"
             }
           },
           "expect": {
@@ -9031,9 +9031,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16606"
+            "as": "o5822"
           },
-          "bind": "s38785",
+          "bind": "s9830",
           "expect": {
             "$authorization": true
           }
@@ -9042,12 +9042,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16606"
+                "$obj": "o5822"
               }
             }
           },
@@ -9060,9 +9060,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16607"
+            "as": "o5823"
           },
-          "bind": "s38787",
+          "bind": "s9832",
           "expect": {
             "$hook": "Permissions"
           }
@@ -9071,12 +9071,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16607"
+                "$obj": "o5823"
               }
             }
           },
@@ -9088,7 +9088,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "create",
             "args": {}
@@ -9101,9 +9101,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16608"
+            "as": "o5824"
           },
-          "bind": "s38790",
+          "bind": "s9835",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9116,7 +9116,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16608"
+                "$obj": "o5824"
               }
             }
           },
@@ -9128,9 +9128,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16609"
+            "as": "o5825"
           },
-          "bind": "s38792",
+          "bind": "s9837",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9143,7 +9143,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16609"
+                "$obj": "o5825"
               }
             }
           },
@@ -9158,9 +9158,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16610"
+            "as": "o5826"
           },
-          "bind": "s38794",
+          "bind": "s9839",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9189,9 +9189,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16611"
+            "as": "o5827"
           },
-          "bind": "s38795",
+          "bind": "s9840",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9219,9 +9219,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16612"
+            "as": "o5828"
           },
-          "bind": "s38796",
+          "bind": "s9841",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9250,13 +9250,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16610"
+                  "$obj": "o5826"
                 },
                 {
-                  "$obj": "o16611"
+                  "$obj": "o5827"
                 },
                 {
-                  "$obj": "o16612"
+                  "$obj": "o5828"
                 }
               ],
               "permissions": [
@@ -9264,9 +9264,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16613"
+            "as": "o5829"
           },
-          "bind": "s38797",
+          "bind": "s9842",
           "expect": {
             "$document": {
               "$id": "main",
@@ -9332,15 +9332,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16613"
+                "$obj": "o5829"
               }
             },
-            "as": "o16614"
+            "as": "o5830"
           },
           "expect": {
             "$document": {
@@ -9416,9 +9416,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16615"
+            "as": "o5831"
           },
-          "bind": "s38799",
+          "bind": "s9844",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9447,9 +9447,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16616"
+            "as": "o5832"
           },
-          "bind": "s38800",
+          "bind": "s9845",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9477,9 +9477,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16617"
+            "as": "o5833"
           },
-          "bind": "s38801",
+          "bind": "s9846",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -9508,13 +9508,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16615"
+                  "$obj": "o5831"
                 },
                 {
-                  "$obj": "o16616"
+                  "$obj": "o5832"
                 },
                 {
-                  "$obj": "o16617"
+                  "$obj": "o5833"
                 }
               ],
               "permissions": [
@@ -9522,9 +9522,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16618"
+            "as": "o5834"
           },
-          "bind": "s38802",
+          "bind": "s9847",
           "expect": {
             "$document": {
               "$id": "a",
@@ -9590,15 +9590,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16618"
+                "$obj": "o5834"
               }
             },
-            "as": "o16619"
+            "as": "o5835"
           },
           "expect": {
             "$document": {
@@ -9671,9 +9671,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16620"
+            "as": "o5836"
           },
-          "bind": "s38804",
+          "bind": "s9849",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9686,7 +9686,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16620"
+                "$obj": "o5836"
               }
             }
           },
@@ -9707,9 +9707,9 @@
                 "score": 10
               }
             },
-            "as": "o16621"
+            "as": "o5837"
           },
-          "bind": "s38806",
+          "bind": "s9851",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -9726,13 +9726,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16621"
+                "$obj": "o5837"
               }
             }
           },
@@ -9758,9 +9758,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16622"
+            "as": "o5838"
           },
-          "bind": "s38808",
+          "bind": "s9853",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9773,7 +9773,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16622"
+                "$obj": "o5838"
               }
             }
           },
@@ -9794,9 +9794,9 @@
                 "score": 20
               }
             },
-            "as": "o16623"
+            "as": "o5839"
           },
-          "bind": "s38810",
+          "bind": "s9855",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -9813,13 +9813,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16623"
+                "$obj": "o5839"
               }
             }
           },
@@ -9845,9 +9845,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16624"
+            "as": "o5840"
           },
-          "bind": "s38812",
+          "bind": "s9857",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9860,7 +9860,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16624"
+                "$obj": "o5840"
               }
             }
           },
@@ -9881,9 +9881,9 @@
                 "score": 1
               }
             },
-            "as": "o16625"
+            "as": "o5841"
           },
-          "bind": "s38814",
+          "bind": "s9859",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -9900,13 +9900,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16625"
+                "$obj": "o5841"
               }
             }
           },
@@ -9932,9 +9932,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16626"
+            "as": "o5842"
           },
-          "bind": "s38816",
+          "bind": "s9861",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -9947,7 +9947,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16626"
+                "$obj": "o5842"
               }
             }
           },
@@ -9968,9 +9968,9 @@
                 "score": 3
               }
             },
-            "as": "o16627"
+            "as": "o5843"
           },
-          "bind": "s38818",
+          "bind": "s9863",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -9987,13 +9987,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16627"
+                "$obj": "o5843"
               }
             }
           },
@@ -10022,9 +10022,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16628"
+            "as": "o5844"
           },
-          "bind": "s38820",
+          "bind": "s9865",
           "expect": {
             "$query": {
               "method": "on",
@@ -10048,14 +10048,14 @@
               "attribute": "a",
               "values": [
                 {
-                  "$obj": "o16628"
+                  "$obj": "o5844"
                 }
               ],
               "alias": "a"
             },
-            "as": "o16629"
+            "as": "o5845"
           },
-          "bind": "s38821",
+          "bind": "s9866",
           "expect": {
             "$query": {
               "method": "fullOuterJoin",
@@ -10083,9 +10083,9 @@
             "class": "Query",
             "method": "count",
             "args": {},
-            "as": "o16630"
+            "as": "o5846"
           },
-          "bind": "s38822",
+          "bind": "s9867",
           "expect": {
             "$query": {
               "method": "count",
@@ -10102,9 +10102,9 @@
             "args": {
               "attribute": "score"
             },
-            "as": "o16631"
+            "as": "o5847"
           },
-          "bind": "s38823",
+          "bind": "s9868",
           "expect": {
             "$query": {
               "method": "sum",
@@ -10121,9 +10121,9 @@
             "args": {
               "attribute": "a.score"
             },
-            "as": "o16632"
+            "as": "o5848"
           },
-          "bind": "s38824",
+          "bind": "s9869",
           "expect": {
             "$query": {
               "method": "sum",
@@ -10136,23 +10136,23 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16605"
+              "$obj": "o5821"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16629"
+                  "$obj": "o5845"
                 },
                 {
-                  "$obj": "o16630"
+                  "$obj": "o5846"
                 },
                 {
-                  "$obj": "o16631"
+                  "$obj": "o5847"
                 },
                 {
-                  "$obj": "o16632"
+                  "$obj": "o5848"
                 }
               ]
             }
@@ -10182,9 +10182,9 @@
                 }
               }
             },
-            "as": "o16951"
+            "as": "o6167"
           },
-          "bind": "s39336",
+          "bind": "s10381",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -10195,13 +10195,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o16951"
+                "$obj": "o6167"
               },
               "cache": "none"
             },
-            "as": "o16952"
+            "as": "o6168"
           },
-          "bind": "s39337",
+          "bind": "s10382",
           "expect": {
             "$database": true
           }
@@ -10210,7 +10210,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "setDatabase",
             "args": {
@@ -10225,11 +10225,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "aggregate_result_names_u000000000096"
+              "namespace": "aggregate_result_names_u000000000163"
             }
           },
           "expect": {
@@ -10241,9 +10241,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o16953"
+            "as": "o6169"
           },
-          "bind": "s39340",
+          "bind": "s10385",
           "expect": {
             "$authorization": true
           }
@@ -10252,12 +10252,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o16953"
+                "$obj": "o6169"
               }
             }
           },
@@ -10270,9 +10270,9 @@
           "args": {
             "class": "Hook\\Permissions",
             "args": {},
-            "as": "o16954"
+            "as": "o6170"
           },
-          "bind": "s39342",
+          "bind": "s10387",
           "expect": {
             "$hook": "Permissions"
           }
@@ -10281,12 +10281,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "addHook",
             "args": {
               "hook": {
-                "$obj": "o16954"
+                "$obj": "o6170"
               }
             }
           },
@@ -10298,7 +10298,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "create",
             "args": {}
@@ -10311,9 +10311,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16955"
+            "as": "o6171"
           },
-          "bind": "s39345",
+          "bind": "s10390",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -10326,7 +10326,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o16955"
+                "$obj": "o6171"
               }
             }
           },
@@ -10338,9 +10338,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16956"
+            "as": "o6172"
           },
-          "bind": "s39347",
+          "bind": "s10392",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -10353,7 +10353,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16956"
+                "$obj": "o6172"
               }
             }
           },
@@ -10368,9 +10368,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16957"
+            "as": "o6173"
           },
-          "bind": "s39349",
+          "bind": "s10394",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10399,9 +10399,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16958"
+            "as": "o6174"
           },
-          "bind": "s39350",
+          "bind": "s10395",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10429,9 +10429,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16959"
+            "as": "o6175"
           },
-          "bind": "s39351",
+          "bind": "s10396",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10460,13 +10460,13 @@
               "id": "main",
               "attributes": [
                 {
-                  "$obj": "o16957"
+                  "$obj": "o6173"
                 },
                 {
-                  "$obj": "o16958"
+                  "$obj": "o6174"
                 },
                 {
-                  "$obj": "o16959"
+                  "$obj": "o6175"
                 }
               ],
               "permissions": [
@@ -10474,9 +10474,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16960"
+            "as": "o6176"
           },
-          "bind": "s39352",
+          "bind": "s10397",
           "expect": {
             "$document": {
               "$id": "main",
@@ -10542,15 +10542,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16960"
+                "$obj": "o6176"
               }
             },
-            "as": "o16961"
+            "as": "o6177"
           },
           "expect": {
             "$document": {
@@ -10626,9 +10626,9 @@
               "key": "link",
               "size": 64
             },
-            "as": "o16962"
+            "as": "o6178"
           },
-          "bind": "s39354",
+          "bind": "s10399",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10657,9 +10657,9 @@
               "key": "label",
               "size": 64
             },
-            "as": "o16963"
+            "as": "o6179"
           },
-          "bind": "s39355",
+          "bind": "s10400",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10687,9 +10687,9 @@
             "args": {
               "key": "score"
             },
-            "as": "o16964"
+            "as": "o6180"
           },
-          "bind": "s39356",
+          "bind": "s10401",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -10718,13 +10718,13 @@
               "id": "a",
               "attributes": [
                 {
-                  "$obj": "o16962"
+                  "$obj": "o6178"
                 },
                 {
-                  "$obj": "o16963"
+                  "$obj": "o6179"
                 },
                 {
-                  "$obj": "o16964"
+                  "$obj": "o6180"
                 }
               ],
               "permissions": [
@@ -10732,9 +10732,9 @@
                 "read(\"any\")"
               ]
             },
-            "as": "o16965"
+            "as": "o6181"
           },
-          "bind": "s39357",
+          "bind": "s10402",
           "expect": {
             "$document": {
               "$id": "a",
@@ -10800,15 +10800,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o16965"
+                "$obj": "o6181"
               }
             },
-            "as": "o16966"
+            "as": "o6182"
           },
           "expect": {
             "$document": {
@@ -10881,9 +10881,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16967"
+            "as": "o6183"
           },
-          "bind": "s39359",
+          "bind": "s10404",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -10896,7 +10896,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16967"
+                "$obj": "o6183"
               }
             }
           },
@@ -10917,9 +10917,9 @@
                 "score": 10
               }
             },
-            "as": "o16968"
+            "as": "o6184"
           },
-          "bind": "s39361",
+          "bind": "s10406",
           "expect": {
             "$document": {
               "$id": "m1",
@@ -10936,13 +10936,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16968"
+                "$obj": "o6184"
               }
             }
           },
@@ -10968,9 +10968,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16969"
+            "as": "o6185"
           },
-          "bind": "s39363",
+          "bind": "s10408",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -10983,7 +10983,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16969"
+                "$obj": "o6185"
               }
             }
           },
@@ -11004,9 +11004,9 @@
                 "score": 20
               }
             },
-            "as": "o16970"
+            "as": "o6186"
           },
-          "bind": "s39365",
+          "bind": "s10410",
           "expect": {
             "$document": {
               "$id": "m2",
@@ -11023,13 +11023,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createDocument",
             "args": {
               "collection": "main",
               "document": {
-                "$obj": "o16970"
+                "$obj": "o6186"
               }
             }
           },
@@ -11055,9 +11055,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16971"
+            "as": "o6187"
           },
-          "bind": "s39367",
+          "bind": "s10412",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -11070,7 +11070,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16971"
+                "$obj": "o6187"
               }
             }
           },
@@ -11091,9 +11091,9 @@
                 "score": 1
               }
             },
-            "as": "o16972"
+            "as": "o6188"
           },
-          "bind": "s39369",
+          "bind": "s10414",
           "expect": {
             "$document": {
               "$id": "a1",
@@ -11110,13 +11110,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16972"
+                "$obj": "o6188"
               }
             }
           },
@@ -11142,9 +11142,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o16973"
+            "as": "o6189"
           },
-          "bind": "s39371",
+          "bind": "s10416",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -11157,7 +11157,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o16973"
+                "$obj": "o6189"
               }
             }
           },
@@ -11178,9 +11178,9 @@
                 "score": 3
               }
             },
-            "as": "o16974"
+            "as": "o6190"
           },
-          "bind": "s39373",
+          "bind": "s10418",
           "expect": {
             "$document": {
               "$id": "a3",
@@ -11197,13 +11197,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "createDocument",
             "args": {
               "collection": "a",
               "document": {
-                "$obj": "o16974"
+                "$obj": "o6190"
               }
             }
           },
@@ -11232,9 +11232,9 @@
               "attribute": "*",
               "alias": "links"
             },
-            "as": "o16975"
+            "as": "o6191"
           },
-          "bind": "s39375",
+          "bind": "s10420",
           "expect": {
             "$query": {
               "method": "count",
@@ -11253,9 +11253,9 @@
               "attribute": "score",
               "alias": "total"
             },
-            "as": "o16976"
+            "as": "o6192"
           },
-          "bind": "s39376",
+          "bind": "s10421",
           "expect": {
             "$query": {
               "method": "sum",
@@ -11275,9 +11275,9 @@
                 "link"
               ]
             },
-            "as": "o16977"
+            "as": "o6193"
           },
-          "bind": "s39377",
+          "bind": "s10422",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -11296,9 +11296,9 @@
             "args": {
               "attribute": "link"
             },
-            "as": "o16978"
+            "as": "o6194"
           },
-          "bind": "s39378",
+          "bind": "s10423",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -11311,23 +11311,23 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16975"
+                  "$obj": "o6191"
                 },
                 {
-                  "$obj": "o16976"
+                  "$obj": "o6192"
                 },
                 {
-                  "$obj": "o16977"
+                  "$obj": "o6193"
                 },
                 {
-                  "$obj": "o16978"
+                  "$obj": "o6194"
                 }
               ]
             }
@@ -11354,9 +11354,9 @@
               "left": "link",
               "right": "link"
             },
-            "as": "o16979"
+            "as": "o6195"
           },
-          "bind": "s39380",
+          "bind": "s10425",
           "expect": {
             "$query": {
               "method": "on",
@@ -11379,13 +11379,13 @@
               "alias": "a",
               "on": [
                 {
-                  "$obj": "o16979"
+                  "$obj": "o6195"
                 }
               ]
             },
-            "as": "o16980"
+            "as": "o6196"
           },
-          "bind": "s39381",
+          "bind": "s10426",
           "expect": {
             "$query": {
               "method": "join",
@@ -11416,9 +11416,9 @@
               "attribute": "score",
               "alias": "score"
             },
-            "as": "o16981"
+            "as": "o6197"
           },
-          "bind": "s39382",
+          "bind": "s10427",
           "expect": {
             "$query": {
               "method": "sum",
@@ -11438,9 +11438,9 @@
                 "a.label"
               ]
             },
-            "as": "o16982"
+            "as": "o6198"
           },
-          "bind": "s39383",
+          "bind": "s10428",
           "expect": {
             "$query": {
               "method": "groupBy",
@@ -11455,20 +11455,20 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o16952"
+              "$obj": "o6168"
             },
             "method": "aggregate",
             "args": {
               "collection": "main",
               "queries": [
                 {
-                  "$obj": "o16980"
+                  "$obj": "o6196"
                 },
                 {
-                  "$obj": "o16981"
+                  "$obj": "o6197"
                 },
                 {
-                  "$obj": "o16982"
+                  "$obj": "o6198"
                 }
               ]
             }
@@ -11476,7 +11476,7 @@
           "expect": [
             {
               "score": 10,
-              "label": "first"
+              "a.label": "first"
             }
           ]
         }

@@ -1465,6 +1465,7 @@ async fn query_builder(b: &BuilderObj, this: &Obj, method: &str, a: &Args, calls
         "isScoped" => x.is_scoped().into_obj(),
         "getBindings" => Obj::Value(Value::Array(x.bindings().iter().map(value::from_query).collect())),
         "compileFilters" => object(ConditionObj(x.compile_filters(&a.queries("filters")?).map_err(query_fail)?)),
+        "compileAggregate" => x.compile_aggregate(&a.query("query")?).map_err(query_fail)?.into_obj(),
         "join" | "leftJoin" | "rightJoin" => {
             let (table, left, right, op, alias) = (s("table")?, s("left")?, s("right")?, operator()?, alias()?);
             match method {

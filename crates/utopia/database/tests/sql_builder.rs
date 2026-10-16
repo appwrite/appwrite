@@ -570,3 +570,36 @@ mod scopes {
         assert_eq!(b.from("users", "").build().unwrap().query, "SELECT * FROM `db`.`ns_users`");
     }
 }
+
+// PHP: tests/unit/Builder/FloatOverflowTest.php (8.3.0): MySQL and MariaDB compile each floating aggregate through
+// the engine's range check (`RaisesFloatOverflow`), PostgreSQL leaves them as they are.
+mod float_overflow {
+    use utopia_database::Query;
+    use utopia_database::builder::{self, SqlBuilder};
+
+    fn compiled(mut builder: SqlBuilder, query: Query) -> String {
+        builder.compile_aggregate(&query).unwrap()
+    }
+
+    // `testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck`.
+    #[test]
+    fn a_floating_aggregate_is_compiled_through_the_engine_range_check() {
+        for make in [|| SqlBuilder::MariaDb(builder::mariadb()), || SqlBuilder::MySql(builder::mysql())] {
+            assert_eq!(compiled(make(), Query::sum("reading", "total")), "SUM(`reading`) + 0 AS `total`");
+            assert_eq!(compiled(make(), Query::avg("reading", "")), "AVG(`reading`) + 0 AS `AVG(``reading``)`");
+            assert_eq!(
+                compiled(make(), Query::stddev_pop("reading", "spread")),
+                "SQRT(VAR_POP(`reading`) + 0) AS `spread`"
+            );
+            assert_eq!(compiled(make(), Query::count("reading", "n")), "COUNT(`reading`) AS `n`");
+        }
+    }
+
+    // `testPostgresRaisesAnOverflowItselfSoItsAggregatesAreLeftAsTheyAre`.
+    #[test]
+    fn postgres_aggregates_are_left_as_they_are() {
+        let postgres = || SqlBuilder::PostgreSql(builder::postgres());
+        assert_eq!(compiled(postgres(), Query::sum("reading", "total")), r#"SUM("reading") AS "total""#);
+        assert_eq!(compiled(postgres(), Query::stddev_pop("reading", "total")), r#"STDDEV_POP("reading") AS "total""#);
+    }
+}

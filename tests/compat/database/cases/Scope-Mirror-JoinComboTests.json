@@ -7260,8 +7260,8 @@
           },
           "expect": [
             {
-              "total": "323",
-              "cnt": "2",
+              "total": 323,
+              "cnt": 2,
               "name": "Main"
             }
           ]
@@ -52260,7 +52260,7 @@
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "2"
+              "$sequence": "3"
             },
             "$class": "Collection"
           }

@@ -1032,6 +1032,23 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
         delegate!(self, "deleteDocuments", |a| a.delete_documents(collection, sequences, permission_ids).await)
     }
 
+    /// Hands the pooled adapter the filters through its own
+    /// `deleteDocumentsMatching()`.
+    async fn delete_documents_matching(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        permission_ids: Vec<String>,
+        queries: Vec<Query>,
+    ) -> Result<i64> {
+        if queries.is_empty() {
+            return self.delete_documents(collection, sequences, permission_ids).await;
+        }
+        delegate!(self, "deleteDocumentsMatching", |a| a
+            .delete_documents_matching(collection, sequences, permission_ids, queries)
+            .await)
+    }
+
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
         let decides_write = options.for_permission != PermissionType::Read;
         delegate!(self, "find", write: decides_write, |a| a.find(collection, queries, options).await)

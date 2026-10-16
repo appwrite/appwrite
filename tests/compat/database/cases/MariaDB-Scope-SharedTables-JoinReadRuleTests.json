@@ -546,7 +546,7 @@
           "expect": {
             "result": [
               {
-                "rows": "2"
+                "rows": 2
               }
             ],
             "calls": {
@@ -556,7 +556,7 @@
                   "steps": [
                     [
                       {
-                        "rows": "2"
+                        "rows": 2
                       }
                     ]
                   ]
@@ -1047,8 +1047,8 @@
           },
           "expect": [
             {
-              "rows": "1",
-              "total": "5"
+              "rows": 1,
+              "total": 5
             }
           ]
         },
@@ -1097,8 +1097,8 @@
           },
           "expect": [
             {
-              "rows": "1",
-              "total": "5"
+              "rows": 1,
+              "total": 5
             }
           ]
         },

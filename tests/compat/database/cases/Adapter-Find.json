@@ -3529,7 +3529,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4017"
+              "message": "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4171"
             }
           }
         },
@@ -16800,7 +16800,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5469"
+              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5737"
             }
           }
         },
@@ -17007,7 +17007,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5469"
+              "message": "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5737"
             }
           }
         },

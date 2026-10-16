@@ -169,6 +169,69 @@
           }
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -566,17 +629,17 @@
                           "op": "database.get_document",
                           "args": {
                             "collection": "_metadata",
-                            "id": "_1682_1683"
+                            "id": "_1803_1804"
                           }
                         },
                         {
                           "op": "database.update_document",
                           "args": {
                             "collection": "_metadata",
-                            "id": "_1682_1683",
+                            "id": "_1803_1804",
                             "document": {
                               "$document": {
-                                "name": "_1682_1683",
+                                "name": "_1803_1804",
                                 "attributes": [
                                   {
                                     "$id": "tags",
@@ -628,8 +691,8 @@
                                   }
                                 ],
                                 "documentSecurity": true,
-                                "$sequence": "1684",
-                                "$id": "_1682_1683",
+                                "$sequence": "1805",
+                                "$id": "_1803_1804",
                                 "$tenant": "999",
                                 "$createdAt": {
                                   "$now": 0,
@@ -665,7 +728,7 @@
         {
           "op": "database.purge_cached_collection",
           "args": {
-            "collection": "_1682_1683"
+            "collection": "_1803_1804"
           },
           "expect": null
         },
@@ -703,7 +766,7 @@
         {
           "op": "database.get_collection",
           "args": {
-            "collection": "_1682_1683"
+            "collection": "_1803_1804"
           },
           "expect": {
             "$error": {
@@ -827,6 +890,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -2774,6 +2900,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -5615,6 +5804,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -6315,6 +6567,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -6967,6 +7282,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -7677,6 +8055,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -8333,6 +8774,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -8668,6 +9172,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -8983,6 +9550,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -9306,6 +9936,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -9625,6 +10318,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -9940,6 +10696,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -10453,6 +11272,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -11124,6 +12006,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -11627,6 +12572,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -12146,6 +13154,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -12572,6 +13643,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -13242,6 +14376,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -13997,6 +15194,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -15227,6 +16487,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -16092,38 +17415,6 @@
                         }
                       ]
                     }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
                   }
                 ],
                 "$collection": "brands"
@@ -16179,53 +17470,6 @@
                             "label": "Eco-Friendly",
                             "$id": "tag_eco",
                             "$sequence": "1",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
-                            "label": "Premium",
-                            "$id": "tag_premium",
-                            "$sequence": "2",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
                             "$tenant": "999",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
@@ -16324,53 +17568,6 @@
                 "products": [
                   {
                     "$document": {
-                      "title": "Product A",
-                      "$id": "prod_a",
-                      "$sequence": "1",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Eco-Friendly",
-                            "$id": "tag_eco",
-                            "$sequence": "1",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
-                            "label": "Premium",
-                            "$id": "tag_premium",
-                            "$sequence": "2",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
                       "title": "Product B",
                       "$id": "prod_b",
                       "$sequence": "2",
@@ -16452,56 +17649,9 @@
                       "tags": [
                         {
                           "$document": {
-                            "label": "Eco-Friendly",
-                            "$id": "tag_eco",
-                            "$sequence": "1",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        },
-                        {
-                          "$document": {
                             "label": "Premium",
                             "$id": "tag_premium",
                             "$sequence": "2",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")",
-                              "update(\"any\")"
-                            ],
-                            "$collection": "tags"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product B",
-                      "$id": "prod_b",
-                      "$sequence": "2",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "tags": [
-                        {
-                          "$document": {
-                            "label": "Sale",
-                            "$id": "tag_sale",
-                            "$sequence": "3",
                             "$tenant": "999",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
@@ -16551,37 +17701,6 @@
                   "update(\"any\")"
                 ],
                 "products": [
-                  {
-                    "$document": {
-                      "title": "Product A",
-                      "$id": "prod_a",
-                      "$sequence": "1",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "brands": [
-                        {
-                          "$document": {
-                            "name": "BrandX",
-                            "$id": "brand_x",
-                            "$sequence": "1",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "brands"
-                          }
-                        }
-                      ]
-                    }
-                  },
                   {
                     "$document": {
                       "title": "Product C",
@@ -16668,37 +17787,6 @@
                             "name": "BrandX",
                             "$id": "brand_x",
                             "$sequence": "1",
-                            "$tenant": "999",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [
-                              "read(\"any\")"
-                            ],
-                            "$collection": "brands"
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Product C",
-                      "$id": "prod_c",
-                      "$sequence": "3",
-                      "$tenant": "999",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "products",
-                      "brands": [
-                        {
-                          "$document": {
-                            "name": "BrandY",
-                            "$id": "brand_y",
-                            "$sequence": "2",
                             "$tenant": "999",
                             "$createdAt": "<now>",
                             "$updatedAt": "<now>",
@@ -16920,6 +18008,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -17413,6 +18564,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -17961,6 +19175,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -18663,6 +19940,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -19209,6 +20549,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -19724,6 +21127,69 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
             "method": "hasFeature",
@@ -20077,6 +21543,3132 @@
           "op": "database.delete_collection",
           "args": {
             "collection": "u0000000000000000239"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderDescending",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderDesc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderAscending",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderAsc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderPerParentWithOverlap",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "orderAsc",
+                        "attribute": "name",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            },
+            {
+              "$document": {
+                "title": "Album Two",
+                "$id": "m2mno_album2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ManyToManyTests::testM2mNestedOrderJunctionOrderPreservedWithoutOrder",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_tracks",
+                "name": "m2mno_tracks",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_tracks",
+              "name": "m2mno_tracks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "m2mno_albums",
+                "name": "m2mno_albums",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_albums",
+              "name": "m2mno_albums",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "m2mno_albums",
+            "relationship": {
+              "$value": "Relationship",
+              "fields": {
+                "relatedCollection": "m2mno_tracks",
+                "type": {
+                  "$enum": "RelationshipType::ManyToMany"
+                },
+                "twoWay": true,
+                "key": "tracks",
+                "twoWayKey": "albums",
+                "onDelete": {
+                  "$enum": "RelationshipDeleteAction::Restrict"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2mno_tracks",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tracks",
+              "twoWayKey": "albums",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_b",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Beta"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_b",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Beta",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_a",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Alpha"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_a",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Alpha",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_tracks",
+            "document": {
+              "$document": {
+                "$id": "m2mno_track_c",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "name": "Gamma"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_track_c",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Gamma",
+              "$collection": "m2mno_tracks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "albums": []
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album1",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album One",
+                "tracks": [
+                  "m2mno_track_b",
+                  "m2mno_track_a",
+                  "m2mno_track_c"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album1",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album One",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Beta",
+                    "$id": "m2mno_track_b",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "m2mno_albums",
+            "document": {
+              "$document": {
+                "$id": "m2mno_album2",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Album Two",
+                "tracks": [
+                  "m2mno_track_c",
+                  "m2mno_track_a"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2mno_album2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Album Two",
+              "$collection": "m2mno_albums",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "tracks": [
+                {
+                  "$document": {
+                    "name": "Gamma",
+                    "$id": "m2mno_track_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "Alpha",
+                    "$id": "m2mno_track_a",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "create(\"any\")",
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "m2mno_tracks"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "m2mno_albums",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "m2mno_album1"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "relationship",
+                  "attribute": "tracks",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "select",
+                        "attribute": "",
+                        "values": [
+                          "name"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "Album One",
+                "$id": "m2mno_album1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tracks": [
+                  {
+                    "$document": {
+                      "name": "Beta",
+                      "$id": "m2mno_track_b",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Alpha",
+                      "$id": "m2mno_track_a",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "name": "Gamma",
+                      "$id": "m2mno_track_c",
+                      "$sequence": "3",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "create(\"any\")",
+                        "read(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "m2mno_tracks"
+                    }
+                  }
+                ],
+                "$collection": "m2mno_albums"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_albums"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "m2mno_tracks"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "m2mno_tracks"
           },
           "expect": null
         }

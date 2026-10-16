@@ -198,6 +198,16 @@ fn contains(value: &Value, values: &[Value]) -> bool {
     }
 }
 
+/// Whether the row matches every one of the queries (`matchesAll()`).
+pub(crate) fn matches_all(row: &Array, queries: &[crate::query::Query]) -> Result<bool> {
+    for query in queries {
+        if !matches(row, query)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
 /// `matches($row, $query)`.
 fn matches(row: &Array, query: &utopia_query::Query) -> Result<bool> {
     let method = query.method();

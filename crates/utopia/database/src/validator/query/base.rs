@@ -37,6 +37,8 @@ pub enum MethodType {
     Having,
     /// `distinct`
     Distinct,
+    /// `relationship`
+    Relationship,
 }
 
 impl MethodType {
@@ -54,6 +56,7 @@ impl MethodType {
             MethodType::GroupBy => "groupBy",
             MethodType::Having => "having",
             MethodType::Distinct => "distinct",
+            MethodType::Relationship => "relationship",
         }
     }
 }
