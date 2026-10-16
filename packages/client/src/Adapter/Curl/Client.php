@@ -369,6 +369,9 @@ class Client implements Adapter
             if ($size !== null) {
                 $options[\CURLOPT_INFILESIZE] = $size;
             }
+        } elseif ($size === 0 && !\in_array($request->getMethod(), [Method::GET, Method::HEAD, Method::OPTIONS], true)) {
+            // Google and other strict origins answer POST without Content-Length with 411.
+            $options[\CURLOPT_POSTFIELDS] = '';
         }
 
         // '' advertises every codec cURL was built with and decodes the response.
