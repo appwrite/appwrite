@@ -240,6 +240,7 @@ class Update extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
+                'documentUpdatedAt' => $document->getUpdatedAt(),
                 'action' => 'update',
                 'data' => $data,
             ]);

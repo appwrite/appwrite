@@ -390,6 +390,7 @@ return [
             Attribute::string(key: 'databaseInternalId', required: true),
             Attribute::string(key: 'collectionInternalId', required: true),
             Attribute::string(key: 'documentId'),
+            Attribute::datetime(key: 'documentUpdatedAt'),
             // create | update | upsert | increment | decrement | delete | bulkCreate | bulkUpdate | bulkUpsert | bulkDelete
             Attribute::string(key: 'action', size: 32, required: true),
             // Allow large payloads for bulk operations

@@ -430,6 +430,15 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'transactionLogs':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'documentUpdatedAt');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"documentUpdatedAt\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'topics':
                     // Added in 2.3.0 for the push broker, which increments sequence on publish.
                     $attributes = [
