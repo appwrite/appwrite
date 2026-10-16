@@ -52,6 +52,30 @@ trait KeysBase
         $this->assertSame(200, $list['headers']['status-code']);
         $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
 
+        // A key that can only read keys does not see their secrets
+        $reader = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
+            'scopes' => ['keys.read'],
+            'duration' => 900,
+        ]);
+
+        $this->assertSame(201, $reader['headers']['status-code']);
+
+        $readerHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $reader['body']['secret'],
+        ];
+
+        $get = $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $readerHeaders);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['secret']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/project/keys', $readerHeaders);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
+
         $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $projectHeaders, [
             'name' => 'Legacy Key Updated',
             'scopes' => ['users.read', 'users.write'],

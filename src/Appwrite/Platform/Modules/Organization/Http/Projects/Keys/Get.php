@@ -73,6 +73,11 @@ class Get extends Action
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
+        // Secrets are only for callers that could replace the key anyway
+        if ($apiKey !== null && \array_intersect(['organization.projects.keys.write', 'keys.write'], $apiKey->getScopes()) === []) {
+            $key->setAttribute('secret', '');
+        }
+
         $response->dynamic($key, Response::MODEL_KEY);
     }
 }

@@ -125,6 +125,13 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
+        // Secrets are only for callers that could replace the keys anyway
+        if ($apiKey !== null && \array_intersect(['organization.projects.keys.write', 'keys.write'], $apiKey->getScopes()) === []) {
+            foreach ($keys as $key) {
+                $key->setAttribute('secret', '');
+            }
+        }
+
         $response->dynamic(new Document([
             'keys' => $keys,
             'total' => $total,

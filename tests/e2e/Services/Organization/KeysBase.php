@@ -788,6 +788,50 @@ trait KeysBase
         $this->assertSame(400, $list['headers']['status-code']);
     }
 
+    public function testGetKeySecretRequiresWriteScope(): void
+    {
+        $key = $this->createKey(Id::unique(), 'Secret Test Key', ['users.read']);
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $reader = $this->createEphemeralKey(['keys.read'], 900);
+        $this->assertSame(201, $reader['headers']['status-code']);
+
+        $writer = $this->createEphemeralKey(['keys.read', 'keys.write'], 900);
+        $this->assertSame(201, $writer['headers']['status-code']);
+
+        $headers = fn (string $secret) => [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $secret,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers($writer['body']['secret']));
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
+
+        /**
+         * Test for FAILURE
+         */
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers($reader['body']['secret']));
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['secret']);
+
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers($reader['body']['secret']));
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertNotEmpty($list['body']['keys']);
+        $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
     // =========================================================================
     // Delete key tests
     // =========================================================================
