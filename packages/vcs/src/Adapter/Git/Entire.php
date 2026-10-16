@@ -64,6 +64,20 @@ class Entire extends Git
     public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write'];
 
     /**
+     * Check run status and conclusion for each state updateCheck() takes.
+     * Entire files a cancelled run as neutral.
+     */
+    private const array CHECK_STATES = [
+        'queued' => ['queued', null],
+        'pending' => ['in_progress', null],
+        'in_progress' => ['in_progress', null],
+        'success' => ['completed', 'success'],
+        'failure' => ['completed', 'failure'],
+        'error' => ['completed', 'failure'],
+        'cancelled' => ['completed', 'cancelled'],
+    ];
+
+    /**
      * Entire's cores. A receipt is accepted from these only, and any of them
      * serves any installation.
      */
@@ -1934,62 +1948,77 @@ class Entire extends Git
     /**
      * Updates status check of each commit
      * state can be one of: error, failure, pending, success
-     *
-     * Entire models CI feedback as check runs on a branch, so this rides the
-     * check run upsert with the status context as the stable key - repeated
-     * updates for one context land on one run.
      */
     public function updateCommitStatus(string $repositoryName, string $SHA, string $owner, string $state, string $description = '', string $target_url = '', string $context = ''): void
     {
+        $this->updateCheck($owner, $repositoryName, $SHA, $state, $context, $description, '', $target_url);
+    }
+
+    /**
+     * Entire models CI feedback as check runs on a branch, so a check rides
+     * the check run upsert with its name as the stable key - repeated reports
+     * for one name land on one run, in a suite of the same name.
+     */
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
-        $context = $context === '' || $context === '0' ? 'default' : $context;
-        $now = $this->rfc3339Now();
-
-        $checkRun = [
-            'key' => $context,
-            'name' => $context,
-            'status' => $state === 'pending' ? 'in_progress' : 'completed',
-            // The context is the run's identity, so its attempt id can stay stable too
-            'external_id' => $context,
-            'external_updated_at' => $now,
-        ];
-
-        if ($state !== 'pending') {
-            $checkRun['conclusion'] = $state === 'success' ? 'success' : 'failure';
-            $checkRun['completed_at'] = gmdate('Y-m-d\TH:i:s\Z');
-        }
-
-        if ($description !== '' && $description !== '0') {
-            $checkRun['output'] = ['title' => mb_strimwidth($description, 0, 255), 'summary' => $description];
-        }
-
-        // Entire takes only an https details URL without credentials; a
-        // plain-http one (a local console) is left off rather than refused
-        if (str_starts_with($target_url, 'https://') && !str_contains(substr($target_url, 8), '@')) {
-            $checkRun['details_url'] = $target_url;
-        }
 
         $response = $this->dataCall(
             $repositoryId,
             self::METHOD_POST,
             '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
-            [
-                'branch' => $this->branchContaining($repositoryId, $SHA),
-                // A suite reports status and external_updated_at together or
-                // not at all; the runs carry the state
-                'check_suite' => [
-                    'key' => $context,
-                    'name' => $context,
-                    'external_id' => $context,
-                ],
-                'check_runs' => [$checkRun],
-            ],
+            $this->checkRuns($this->branchContaining($repositoryId, $SHA), $state, $name, $title, $summary, $detailsUrl),
         );
 
         $statusCode = $this->status($response);
         if ($statusCode >= 400) {
             throw $this->requestFailed('Failed to update commit status', $response);
         }
+    }
+
+    /**
+     * The check run write for one report: a suite and its single run, keyed
+     * by the check's name and both carrying the state.
+     *
+     * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
+     */
+    protected function checkRuns(string $branch, string $state, string $name, string $title, string $summary, string $detailsUrl): array
+    {
+        $key = $name === '' || $name === '0' ? 'default' : $name;
+        $now = $this->rfc3339Now();
+        [$status, $conclusion] = self::CHECK_STATES[$state] ?? ['completed', 'failure'];
+
+        $run = [
+            'key' => $key,
+            'name' => $key,
+            'status' => $status,
+            // The name is the run's identity, so its attempt id can stay stable too
+            'external_id' => $key,
+            'external_updated_at' => $now,
+        ];
+        // A suite reports status and external_updated_at together or not at all
+        $suite = $run;
+
+        if ($conclusion !== null) {
+            $run['conclusion'] = $suite['conclusion'] = $conclusion;
+            $run['completed_at'] = $suite['completed_at'] = $now;
+        }
+
+        if ($title !== '') {
+            $run['output'] = ['title' => mb_strimwidth($title, 0, 255), 'summary' => $summary === '' ? $title : $summary];
+        }
+
+        // Entire takes only an https details URL without credentials; a
+        // plain-http one (a local console) is left off rather than refused
+        if (str_starts_with($detailsUrl, 'https://') && !str_contains(substr($detailsUrl, 8), '@')) {
+            $run['details_url'] = $suite['details_url'] = $detailsUrl;
+        }
+
+        return [
+            'branch' => $branch,
+            'check_suite' => $suite,
+            'check_runs' => [$run],
+        ];
     }
 
     /**

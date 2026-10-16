@@ -26,6 +26,21 @@ class FixtureKeysEntire extends Entire
 }
 
 /**
+ * Entire whose check run write is handed back instead of sent, so a report's
+ * mapping onto a suite and its run can be read.
+ */
+class CheckRunsEntire extends Entire
+{
+    /**
+     * @return array{branch: string, check_suite: array<string, mixed>, check_runs: list<array<string, mixed>>}
+     */
+    public function write(string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): array
+    {
+        return $this->checkRuns('main', $state, $name, $title, $summary, $detailsUrl);
+    }
+}
+
+/**
  * Exercises everything Entire can prove without credentials: delivery token
  * verification and delivery parsing, which never touch the network. The
  * live half of the shared adapter suite cannot run at all - see
@@ -497,6 +512,59 @@ final class EntireTest extends TestCase
 
         // Without a token, a push is a plain push
         $this->assertSame("'git' '-C' '/tmp/clone' 'push' 'origin' 'main'", $this->adapter->generatePushCommand('acme', 'api', '/tmp/clone', 'main')->toString());
+    }
+
+    public function testCheckRunsStates(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        $queued = $adapter->write('queued', 'Site (Project)', 'Starting...');
+        $this->assertSame('main', $queued['branch']);
+        $run = $queued['check_runs'][0];
+        $this->assertSame('queued', $run['status']);
+        $this->assertArrayNotHasKey('conclusion', $run);
+        $this->assertArrayNotHasKey('completed_at', $run);
+        $this->assertSame('Site (Project)', $run['key']);
+        $this->assertSame('Site (Project)', $run['name']);
+        $this->assertSame('Site (Project)', $run['external_id']);
+        $this->assertSame(['title' => 'Starting...', 'summary' => 'Starting...'], $run['output']);
+        // The suite reports the same state next to its timestamp, and no output
+        $this->assertSame('queued', $queued['check_suite']['status']);
+        $this->assertSame($run['external_updated_at'], $queued['check_suite']['external_updated_at']);
+        $this->assertArrayNotHasKey('output', $queued['check_suite']);
+
+        $this->assertSame('in_progress', $adapter->write('pending', 'check', 'Building...')['check_runs'][0]['status']);
+        $this->assertSame('in_progress', $adapter->write('in_progress', 'check', 'Building...')['check_runs'][0]['status']);
+
+        foreach (['success' => 'success', 'failure' => 'failure', 'error' => 'failure', 'cancelled' => 'cancelled'] as $state => $conclusion) {
+            $body = $adapter->write($state, 'check', 'Done.');
+            $run = $body['check_runs'][0];
+            $this->assertSame('completed', $run['status'], $state);
+            $this->assertSame($conclusion, $run['conclusion'], $state);
+            $this->assertArrayHasKey('completed_at', $run, $state);
+            $this->assertSame($conclusion, $body['check_suite']['conclusion'], $state);
+        }
+    }
+
+    public function testCheckRunsOutputAndDetails(): void
+    {
+        $adapter = new CheckRunsEntire(new Cache(new None()));
+
+        $summary = "- Site best in project QA\n- Preview: https://x.example.com";
+        $body = $adapter->write('success', 'check', 'Build succeeded.', $summary, 'https://x.example.com');
+        $run = $body['check_runs'][0];
+        $this->assertSame(['title' => 'Build succeeded.', 'summary' => $summary], $run['output']);
+        $this->assertSame('https://x.example.com', $run['details_url']);
+        $this->assertSame('https://x.example.com', $body['check_suite']['details_url']);
+
+        // Only an https URL without credentials reaches Entire
+        $this->assertArrayNotHasKey('details_url', $adapter->write('success', 'check', 'Done.', '', 'http://localhost/console')['check_runs'][0]);
+        $this->assertArrayNotHasKey('details_url', $adapter->write('success', 'check', 'Done.', '', 'https://user:secret@example.com')['check_runs'][0]);
+
+        // No name falls to the default key; no title means no output
+        $plain = $adapter->write('pending', '', '');
+        $this->assertSame('default', $plain['check_runs'][0]['key']);
+        $this->assertArrayNotHasKey('output', $plain['check_runs'][0]);
     }
 
     public function testCreateFileRejectsEscapingPath(): void

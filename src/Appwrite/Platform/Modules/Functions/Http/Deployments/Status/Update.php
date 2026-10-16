@@ -3,16 +3,19 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Deployments\Status;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
@@ -62,6 +65,11 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('deployments')
             ->inject('locks')
+            ->inject('project')
+            ->inject('dbForPlatform')
+            ->inject('vcsFactory')
+            ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -73,6 +81,11 @@ class Update extends Action
         Event $queueForEvents,
         Deployments $deployments,
         callable $locks,
+        Document $project,
+        Database $dbForPlatform,
+        VcsFactory $vcsFactory,
+        array $platform,
+        Authorization $authorization,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -137,6 +150,9 @@ class Update extends Action
             $deployments->cancel($deploymentId);
         } catch (\Throwable) {
         }
+
+        // Also best-effort: the provider's check would otherwise wait on a build that never finishes.
+        $authorization->skip(fn () => GitAction::report('canceled', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

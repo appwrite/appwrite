@@ -26,7 +26,6 @@ use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ErrorCode;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Cache;
-use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -266,7 +265,7 @@ class Jobs extends Action
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
-            $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -784,7 +783,7 @@ class Jobs extends Action
 
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $resource->isEmpty()) {
-            $this->gitAction($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -836,42 +835,6 @@ class Jobs extends Action
     protected function buildTimeout(Database $dbForPlatform, Document $project): int
     {
         return (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-    }
-
-    /**
-     * Report a build state to the VCS provider for a VCS deployment
-     * (best-effort; no-op for non-VCS builds).
-     */
-    protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
-    {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
-        try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
-        } catch (\Throwable $error) {
-            // Best-effort — never fails the build, but the provider report is
-            // what a reviewer sees, so a refused one is worth a line.
-            Console::warning("Failed to report deployment '{$deployment->getId()}' as {$status}: " . $error->getMessage());
-        }
     }
 
     /**
