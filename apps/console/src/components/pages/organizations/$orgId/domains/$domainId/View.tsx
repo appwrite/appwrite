@@ -115,7 +115,7 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  usePresetRecords,
+  useCreatePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -165,15 +165,6 @@ export function View({ initialData }: ViewProps = {}) {
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
   )
-  const [selectedPreset, setSelectedPreset] = useState<
-    | 'zoho'
-    | 'mailgun'
-    | 'outlook'
-    | 'protonmail'
-    | 'icloud'
-    | 'google-workspace'
-    | null
-  >(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState('')
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -366,7 +357,7 @@ export function View({ initialData }: ViewProps = {}) {
   const createRecordMutation = useCreateDnsRecord(domainId)
 
   // Preset records
-  usePresetRecords(domainId, selectedPreset)
+  const createPresetMutation = useCreatePresetRecords(domainId)
 
   const handleCreateRecord = (data: {
     type: string
@@ -548,32 +539,6 @@ export function View({ initialData }: ViewProps = {}) {
       | 'icloud'
       | 'google-workspace',
   ) => {
-    setSelectedPreset(preset)
-
-    // Fetch preset records and create them
-    try {
-      const { fetchPresetRecords } = await import('@/lib/react-query/hooks')
-      const data = await fetchPresetRecords(domainId!, preset)
-
-      if (data?.dnsRecords) {
-        await handleCreatePresetRecords(data.dnsRecords, preset)
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
-    }
-  }
-
-  const handleCreatePresetRecords = async (
-    records: Models.DnsRecord[],
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
     const presetLabels: Record<string, string> = {
       'google-workspace': 'Google Workspace',
       outlook: 'Outlook',
@@ -583,35 +548,23 @@ export function View({ initialData }: ViewProps = {}) {
       icloud: 'iCloud',
     }
 
+    // The preset endpoint adds only the records the domain does not have yet,
+    // so applying a preset again, or over matching records, is not an error.
+    // It returns all of the preset's records, so count those the domain lacked.
+    const existing = new Set(
+      (domain?.dnsRecords ?? []).map((record) => record.$id),
+    )
     try {
-      // Create all records from the preset
-      await Promise.all(
-        records.map((record) =>
-          createRecordMutation.mutateAsync({
-            type: record.type,
-            data: {
-              name: record.name || '@',
-              value: record.value,
-              ttl: record.ttl,
-              priority: record.priority,
-              weight: record.weight,
-              port: record.port,
-              comment: record.comment,
-            },
-          }),
-        ),
-      )
+      const result = await createPresetMutation.mutateAsync(preset)
+      const added = result.dnsRecords.filter(
+        (record) => !existing.has(record.$id),
+      ).length
 
       toast.success(
-        `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${added} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
-      queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
-      setSelectedPreset(null)
     } catch (error) {
       toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
     }
   }
 
@@ -1247,37 +1200,37 @@ export function View({ initialData }: ViewProps = {}) {
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('google-workspace')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Google Workspace
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('outlook')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Outlook
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('mailgun')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Mailgun
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('zoho')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         Zoho
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('protonmail')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         ProtonMail
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePresetSelect('icloud')}
-                        disabled={createRecordMutation.isPending}
+                        disabled={createPresetMutation.isPending}
                       >
                         iCloud
                       </DropdownMenuItem>
@@ -1316,37 +1269,37 @@ export function View({ initialData }: ViewProps = {}) {
                       <DropdownMenuSubContent className="w-52">
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('google-workspace')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Google Workspace
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('outlook')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Outlook
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('mailgun')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Mailgun
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('zoho')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           Zoho
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('protonmail')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           ProtonMail
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handlePresetSelect('icloud')}
-                          disabled={createRecordMutation.isPending}
+                          disabled={createPresetMutation.isPending}
                         >
                           iCloud
                         </DropdownMenuItem>
