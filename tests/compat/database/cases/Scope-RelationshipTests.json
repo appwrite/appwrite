@@ -33094,7 +33094,12 @@
               }
             ]
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid geometry: a polygon ring must have at least 4 points"
+            }
+          }
         },
         {
           "op": "database.find",
@@ -33123,7 +33128,12 @@
               }
             ]
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid geometry: a polygon ring must have at least 4 points"
+            }
+          }
         },
         {
           "op": "database.find",
