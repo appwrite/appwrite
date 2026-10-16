@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Services\Databases\Queries\AggregateShape;
 use Tests\E2E\Services\Databases\Queries\DottedPaths;
+use Tests\E2E\Services\Databases\Queries\JoinAliasDefault;
 use Tests\E2E\Services\Databases\Queries\JoinCombos;
 use Tests\E2E\Services\Databases\Queries\JoinOperators;
 use Tests\E2E\Services\Databases\Queries\JoinPermissions;
@@ -36,6 +37,7 @@ trait DatabasesBase
     use DatabasesUrlHelpers;
     use SchemaPolling;
     use AggregateShape;
+    use JoinAliasDefault;
     use JoinTypes;
     use JoinOperators;
     use JoinPermissions;
