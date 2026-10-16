@@ -90,24 +90,34 @@ class Presence extends Action
 
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+        if ($presenceId !== 'unique()') {
+            $presenceDocument->setAttribute('$id', $presenceId);
+        }
 
-        $presence = $presenceState->upsertForUser(
-            $database,
-            $presenceDocument,
-            $presenceId,
-            (string) $user->getSequence(),
-            function () use ($presenceState, $publisherForUsage, $project): void {
-                $presenceState->triggerUsage($publisherForUsage, $project, 1);
-            },
-        );
+        $projectId = $project->getId();
+
+        // Track this connection as a holder on this worker; bump the row's worker count only on
+        // this worker's first hold for the user (0->1). Later messages just refresh the value.
+        $firstWorkerHold = false;
+        if (!isset($realtime->connections[$connectionId]['presence'])) {
+            $firstWorkerHold = empty($realtime->presenceHolders[$projectId][$userId] ?? []);
+            $realtime->presenceHolders[$projectId][$userId][$connectionId] = true;
+            $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId];
+        }
+
+        $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold);
+
+        // connections == 1 means the row was just created: the user came online.
+        if ((int) $presence->getAttribute('connections', 0) === 1) {
+            $presenceState->triggerUsage($publisherForUsage, $project, 1);
+        }
 
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
-
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+        $presence->removeAttribute('connections');
 
         $presenceState->triggerEvent(
             $queueForEvents,

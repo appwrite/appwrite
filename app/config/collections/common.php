@@ -521,6 +521,9 @@ return [
         'attributes' => [
             Attribute::id(key: 'userInternalId', required: true),
             Attribute::string(key: 'userId'),
+            // Number of realtime workers currently holding this user's presence; the row is
+            // deleted when it reaches zero.
+            Attribute::integer(key: 'connections', default: 0, signed: false),
             Attribute::datetime(key: 'expiresAt'),
             Attribute::string(key: 'status'),
             Attribute::string(key: 'source', required: true),

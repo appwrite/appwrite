@@ -94,6 +94,18 @@ class Realtime extends MessagingAdapter
     public array $connections = [];
 
     /**
+     * This worker's presence holders, for the worker-level `connections` counter.
+     *
+     * [PROJECT_ID] -> [USER_ID] -> [CONNECTION_ID -> true]
+     *
+     * The worker holds a user's presence while this set is non-empty; it bumps the row's
+     * `connections` on its 0->1 transition and decrements it on 1->0.
+     *
+     * @var array<string, array<string, array<int, true>>>
+     */
+    public array $presenceHolders = [];
+
+    /**
      * Subscription Tree
      *
      * [PROJECT_ID] ->

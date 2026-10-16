@@ -225,6 +225,15 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'presenceLogs':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"connections\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {
