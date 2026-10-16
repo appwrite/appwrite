@@ -1955,7 +1955,9 @@ class Entire extends Git
             $checkRun['output'] = ['title' => mb_strimwidth($description, 0, 255), 'summary' => $description];
         }
 
-        if ($target_url !== '' && $target_url !== '0') {
+        // Entire takes only an https details URL without credentials; a
+        // plain-http one (a local console) is left off rather than refused
+        if (str_starts_with($target_url, 'https://') && !str_contains(substr($target_url, 8), '@')) {
             $checkRun['details_url'] = $target_url;
         }
 

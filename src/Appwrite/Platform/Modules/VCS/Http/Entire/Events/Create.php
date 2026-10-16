@@ -36,6 +36,13 @@ class Create extends Action
      */
     protected static array $signingKeys = [];
 
+    /**
+     * Whether the delivery being handled has started creating deployments.
+     * A failure before that is safe to retry; one after it would deploy the
+     * same commit again, so the delivery stays claimed.
+     */
+    private bool $deploying = false;
+
     public static function getName()
     {
         return 'createVCSEntireEvent';
@@ -152,6 +159,8 @@ class Create extends Action
             }
         }
 
+        $this->deploying = false;
+
         try {
             foreach ($parsedPayloads as $parsedPayload) {
                 match (true) {
@@ -162,9 +171,11 @@ class Create extends Action
             }
         } catch (\Throwable $error) {
             // A delivery that failed is answered with an error, which Entire
-            // retries; the claim is released so the retry is not taken for a
-            // duplicate of work that never finished.
-            if (!empty($deliveryId)) {
+            // retries. One that failed before any deployment was created is
+            // released so the retry is not taken for a duplicate; one that
+            // failed after stays claimed, or the retry would deploy the
+            // commit again.
+            if (!empty($deliveryId) && !$this->isDeploying()) {
                 $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
             }
 
@@ -172,6 +183,11 @@ class Create extends Action
         }
 
         $response->json(['events' => $parsedPayloads]);
+    }
+
+    private function isDeploying(): bool
+    {
+        return $this->deploying;
     }
 
     /**
@@ -406,6 +422,7 @@ class Create extends Action
             Console::warning("Failed to look up the trail of branch '{$providerBranch}': " . $e->getMessage());
         }
 
+        $this->deploying = true;
         $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
     }
 }
