@@ -151,4 +151,19 @@ final class NatsBrokerConfigTest extends TestCase
         );
         $this->assertInstanceOf(Nats::class, $broker);
     }
+
+    public function testDelayedRetriesRequireABackoff(): void
+    {
+        // Without one a reject is redelivered at once: nothing to wait out on the delay
+        // stream, so the flag would provision a stream that never holds anything.
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('delayedRetries requires a backoff');
+        new Nats($this->neverConnect(), delayedRetries: true);
+    }
+
+    public function testDelayedRetriesConstructWithABackoff(): void
+    {
+        $broker = new Nats($this->neverConnect(), ackWait: 30.0, maxDeliver: 5, backoff: [30.0, 60.0], delayedRetries: true);
+        $this->assertInstanceOf(Nats::class, $broker);
+    }
 }

@@ -104,6 +104,25 @@ Beyond redelivery, the constructor carries what a queue holds and how much of it
 
 Size `maxAckPending` above the worker's concurrency, with room to spare. The ceiling is per consumer, so replicas of a worker share one, and it counts messages parked in `backoff` as well as messages being worked — those are asleep waiting for the next attempt, and each holds a slot for the whole of it. A ceiling sized at the handler count is therefore filled by exactly as many failures as there are handlers, after which the consumer has no slot to deliver into and the queue stops moving behind workers that look idle. `Server::start()` refuses a coroutine cap at or above the ceiling for that reason, the way it refuses concurrency on a `Consumer\Exclusive` consumer.
 
+### Delayed retries
+
+A NAK with a delay keeps the message in the consumer's pending set until it is redelivered, so during an outage of something every job needs, the retries waiting out their backoff fill `maxAckPending` and nothing new is delivered. `delayedRetries: true` waits out the backoff somewhere else. `reject()` publishes the message to the queue's delay stream, `Q_<NAME>_DELAY`, with a `Nats-Schedule: @at …` header for the time the NAK would have redelivered it, and acknowledges the original once the schedule is stored. When the schedule fires, the server writes the message to `q.<name>.due`, and the work stream sources it back onto `q.<name>.normal` through a durable flow-control consumer (`source`) on the delay stream. The message comes back as a new stored message, so the deliveries it already had are carried in a `Utopia-Queue-Attempts` header, and `getAttempts()` and the `maxDeliver` check both count them.
+
+```php
+$broker = new Nats(
+    fn (): Connection => Connection::connect('nats://127.0.0.1:4222'),
+    ackWait: 30.0,
+    maxDeliver: 5,
+    backoff: [30.0, 120.0, 600.0],
+    maxAckPending: 600,
+    delayedRetries: true,
+);
+```
+
+This needs a NATS server of 2.14 or later. Message schedules arrived in 2.12, and the flow-control consumer a durable source reads through arrived in 2.14. It also needs a `backoff`. The delay stream uses limits retention and discard old, because the server refuses schedules on a discard-new stream. Its replicas, storage and `maxMsgSize` match the work stream, and its `max_age` is the longest backoff entry plus 24 hours, which is how long a fired retry can wait for a full work stream to accept it. Each schedule is keyed on the original's work-stream sequence, in its subject and in its message id. If the ack is lost after the schedule is stored, the original comes back after `ackWait`, and its second `reject()` collapses into the retry that already exists. If the schedule cannot be stored, `reject()` falls back to the NAK.
+
+Set the flag on every broker that provisions the queue, publishers included. A broker without it still keeps a delay source it finds on the work stream, so retries already waiting come back while a fleet is part-way through enabling or disabling the flag. A broker under `Provisioning::Require` uses delayed retries only if the owner provisioned them, and otherwise NAKs and reports through `onError`. A release of this package from before delayed retries rewrites the work stream without the source, which strands whatever is waiting on the delay stream until a broker with the flag provisions the queue again. `allow_msg_schedules` cannot be turned off once a stream has it, but only the delay stream has it.
+
 ### Permanent failures
 
 Redelivery is the right answer to a timeout, a leader election or a restart. It is the wrong answer to a credential the server rejected or a payload naming a resource that does not exist: every attempt fails the same way, and on JetStream each attempt holds one of the consumer's `maxAckPending` slots for the whole of its backoff. Enough of those and one bad payload takes the queue down with it.
