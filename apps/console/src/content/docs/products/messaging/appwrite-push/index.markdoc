@@ -437,7 +437,7 @@ const news = await push.subscribe(['news'], (message) => {
 
 Topic names are exact. Wildcards like `+` and `#` are refused, and a user can only subscribe to their own `users/<USER_ID>` topic. When the user is no longer a subscriber of the topic through any of their targets, Appwrite drops the device's live subscription to it.
 
-Topics take quality of service and message expiry settings too, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription. A topic without an expiry uses the lowest expiry of your Appwrite providers. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
+Topics take quality of service and message expiry settings too, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription. A topic without an expiry uses the lowest expiry of your enabled Appwrite providers, or 7 days if none sets one. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
 
 # Subscription options {% #subscription-options %}
 
