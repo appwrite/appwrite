@@ -7,18 +7,32 @@ import type { Index } from '@/lib/docs'
 
 // The first example of the HTTP guide, as it compiles and runs in CI. The home page shows the
 // example alone: the runtime that runs it stays under the hood (the guide has the full program).
-const EXAMPLE = `use utopia_http::{Bytes, Http, Request, Response};
+const EXAMPLE = `use serde_json::json;
+use utopia_http::{Bytes, Cookie, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/hello")?.inject("response").action(async |scope| {
-    scope.response.text("Hello, World!");
+http.get("/session")?.inject("request").inject("response").action(async |scope| {
+    let agent = scope.request.header_line_or("user-agent", "unknown");
+    scope.response.add_header("Cache-Control", "no-store");
+    scope.response.add_header("X-Request-Id", "req_01");
+    scope.response.add_cookie(Cookie {
+        name: "session".into(),
+        value: Some("abc123".into()),
+        http_only: Some(true),
+        ..Cookie::default()
+    });
+    scope.response.json(&json!({ "agent": agent }))?;
+    Ok(())
 });
 
-let request = Request::new("GET", "/hello", [], Bytes::new());
+let request = Request::new("GET", "/session", [("User-Agent", "utopia")], Bytes::new());
 let mut response = Response::new();
 http.run(&request, &mut response, &http.context()).await?;
 
-assert_eq!(response.status_code(), 200);`
+assert_eq!(response.status_code(), 200);
+assert_eq!(response.header_line("cache-control").as_deref(), Some("no-store"));
+assert_eq!(response.cookies()[0].1.name, "session");
+assert_eq!(response.wire().body, br#"{"agent":"utopia"}"#);`
 
 /** What the libraries give you, each a claim the site and the repository back up. */
 const VALUES = [
@@ -91,7 +105,7 @@ export function Hero({ index, factory }: { index: Index; factory: Plan | null })
       <figure className="m-0 grid min-w-0 gap-3">
         <CodeBlock code={EXAMPLE} lang="rust" title="main.rs" />
         <figcaption className="font-mono text-[11px] text-muted-foreground">
-          A route, a request and its response. Compiled and run in CI, like every example in the guides.
+          Reads a request header, sets headers and a cookie, and returns JSON. Compiled and run in CI, like every example in the guides.
         </figcaption>
       </figure>
 

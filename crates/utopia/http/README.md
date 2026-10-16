@@ -20,23 +20,37 @@ Utopia HTTP is a small web framework: you declare routes with typed, validated p
 
 ## Define a route
 
-Register a route for a method and a path, and give it an action that writes the response. `run` dispatches a request through the application.
+Register a route for a method and a path, and give it an action that writes the response. The action reads a request header, adds response headers and a cookie, and sends a JSON payload. `run` dispatches a request through the application.
 
 ```rust
-use utopia_http::{Bytes, Http, Request, Response};
+use serde_json::json;
+use utopia_http::{Bytes, Cookie, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/hello")?.inject("response").action(async |scope| {
-    scope.response.text("Hello, World!");
+http.get("/session")?.inject("request").inject("response").action(async |scope| {
+    let agent = scope.request.header_line_or("user-agent", "unknown");
+    scope.response.add_header("Cache-Control", "no-store");
+    scope.response.add_header("X-Request-Id", "req_01");
+    scope.response.add_cookie(Cookie {
+        name: "session".into(),
+        value: Some("abc123".into()),
+        http_only: Some(true),
+        ..Cookie::default()
+    });
+    scope.response.json(&json!({ "agent": agent }))?;
+    Ok(())
 });
 
-let request = Request::new("GET", "/hello", [], Bytes::new());
+let request = Request::new("GET", "/session", [("User-Agent", "utopia")], Bytes::new());
 let mut response = Response::new();
 http.run(&request, &mut response, &http.context()).await?;
 
 assert_eq!(response.status_code(), 200);
-assert_eq!(response.content_type(), "text/plain; charset=UTF-8");
-assert_eq!(response.wire().body, b"Hello, World!");
+assert_eq!(response.content_type(), "application/json; charset=UTF-8");
+assert_eq!(response.header_line("cache-control").as_deref(), Some("no-store"));
+assert_eq!(response.header_line("x-request-id").as_deref(), Some("req_01"));
+assert_eq!(response.cookies()[0].1.name, "session");
+assert_eq!(response.wire().body, br#"{"agent":"utopia"}"#);
 ```
 
 ## Read path and query parameters
