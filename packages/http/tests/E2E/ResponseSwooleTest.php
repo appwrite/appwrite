@@ -34,4 +34,21 @@ final class ResponseSwooleTest extends TestCase
         $response = $this->client->call(Client::METHOD_DELETE, '/swoole-test');
         $this->assertSame('DELETE', $response['body']);
     }
+    public function testAbortedStreamIsReportedAsIncomplete(): void
+    {
+        $received = '';
+        $curl = curl_init((getenv('HTTP_E2E_SWOOLE_URL') ?: 'http://localhost:19501') . '/aborted');
+        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
+        curl_setopt($curl, CURLOPT_WRITEFUNCTION, static function ($handle, string $chunk) use (&$received): int {
+            $received .= $chunk;
+            return \strlen($chunk);
+        });
+
+        $result = curl_exec($curl);
+        $error = curl_errno($curl);
+        $this->assertFalse($result);
+        $this->assertContains($error, [CURLE_PARTIAL_FILE, CURLE_RECV_ERROR]);
+        $this->assertSame('prefix', $received);
+    }
+
 }
