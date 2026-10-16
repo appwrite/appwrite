@@ -6,10 +6,12 @@ namespace Utopia\Storage\Device;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Decorator\Retry;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request;
@@ -342,6 +344,65 @@ class S3 extends Device
         rewind($handle);
 
         return Stream::fromResource($handle);
+    }
+
+    /**
+     * One backend GET pins the object representation for the whole transfer,
+     * including when its path is deleted or overwritten after the GET opens.
+     * Legacy clients without early response headers retain the buffered path.
+     *
+     * @param callable(string): void $sink
+     */
+    public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void
+    {
+        if (!$this->client instanceof ResponseStreamingClientInterface) {
+            parent::stream($path, $sink, $offset, $length, $etag);
+            return;
+        }
+        if ($length === 0) {
+            return;
+        }
+        $uri = $path !== '' ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
+        $headers = [];
+        if ($length !== null) {
+            $headers['range'] = 'bytes=' . $offset . '-' . ($offset + $length - 1);
+        } elseif ($offset > 0) {
+            $headers['range'] = "bytes=$offset-";
+        }
+        if ($etag !== null) {
+            $headers['if-match'] = $this->quote($etag);
+        }
+        // Preserve the stored representation even if the backend has Content-Encoding.
+        $headers['accept-encoding'] = 'identity';
+        $status = new class () {
+            public bool $success = false;
+        };
+        $this->call(
+            Method::GET,
+            $uri,
+            headers: $headers,
+            decode: false,
+            sink: static function (string $chunk) use ($sink, $status): void {
+                if ($status->success) {
+                    $sink($chunk);
+                }
+            },
+            onResponse: static function (ResponseInterface $response) use ($status, $offset, $length): void {
+                $code = $response->getStatusCode();
+                $status->success = $code >= 200 && $code < 300;
+                if (!$status->success) {
+                    return;
+                }
+                if ($length !== null || $offset > 0) {
+                    if ($code !== 206 || !preg_match('/^bytes (\\d+)-(\\d+)\\/(\\d+)$/', $response->getHeaderLine('content-range'), $matches)
+                        || (int) $matches[1] !== $offset || ($length !== null && (int) $matches[2] !== $offset + $length - 1)) {
+                        throw new RemoteException('Backend did not honor the requested byte range.');
+                    }
+                } elseif ($code !== 200) {
+                    throw new RemoteException('Backend returned an unexpected object response.');
+                }
+            }
+        );
     }
 
     /**
@@ -888,7 +949,7 @@ class S3 extends Device
      *
      * @throws StorageException
      */
-    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null): S3\Response
+    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null, ?callable $onResponse = null): S3\Response
     {
         $uri = $this->path . $this->getAbsolutePath($uri);
         $url = $this->fqdn . $uri . '?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
@@ -938,7 +999,11 @@ class S3 extends Device
                     }
                     $sink($chunk);
                 };
-                $response = $this->client->stream($request, $tee);
+                if ($onResponse !== null && $this->client instanceof ResponseStreamingClientInterface) {
+                    $response = $this->client->stream($request, $tee, $onResponse);
+                } else {
+                    $response = $this->client->stream($request, $tee);
+                }
                 $responseBody = $head;
             }
         } catch (ClientExceptionInterface $e) {

@@ -9,11 +9,13 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
+use Utopia\Client\Exception\AdapterPreconditionException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Uri;
 use Utopia\Span\Span;
 
-final class Client implements Adapter
+final class Client implements Adapter, ResponseStreamingClientInterface
 {
     /**
      * @var array<string, array{name: string, values: array<int, string>}>
@@ -181,9 +183,17 @@ final class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        return $this->adapter->stream($this->prepare($request), $sink);
+        if ($onResponse === null) {
+            return $this->adapter->stream($this->prepare($request), $sink);
+        }
+
+        if (!$this->adapter instanceof ResponseStreamingClientInterface) {
+            throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+        }
+
+        return $this->adapter->stream($this->prepare($request), $sink, $onResponse);
     }
 
     private function prepare(RequestInterface $request): RequestInterface

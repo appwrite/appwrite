@@ -12,6 +12,8 @@ use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
 use Utopia\Client\Decorator\Retry\Backoff;
 use Utopia\Client\Decorator\Retry\Strategy;
+use Utopia\Client\Exception\AdapterPreconditionException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 
 /**
  * An adapter that decorates another adapter and retries it according to a
@@ -19,7 +21,7 @@ use Utopia\Client\Decorator\Retry\Strategy;
  * long to wait, when to stop); this decorator only loops and sleeps. Configuration
  * forwarding is inherited from Decorator.
  */
-final class Retry extends Decorator
+final class Retry extends Decorator implements ResponseStreamingClientInterface
 {
     private readonly Closure $sleep;
 
@@ -62,7 +64,7 @@ final class Retry extends Decorator
     }
 
     #[\Override]
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
         for ($attempt = 1; ; $attempt++) {
             $delivered = 0;
@@ -72,7 +74,15 @@ final class Retry extends Decorator
             };
 
             try {
-                $response = $this->adapter->stream($request, $countingSink);
+                if ($onResponse === null) {
+                    $response = $this->adapter->stream($request, $countingSink);
+                } else {
+                    if (!$this->adapter instanceof ResponseStreamingClientInterface) {
+                        throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+                    }
+
+                    $response = $this->adapter->stream($request, $countingSink, $onResponse);
+                }
 
                 // Once bytes have reached the sink, replaying would duplicate them.
                 if ($delivered > 0) {

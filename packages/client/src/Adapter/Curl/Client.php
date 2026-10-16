@@ -26,6 +26,7 @@ use Utopia\Client\Exception\ProtocolException;
 use Utopia\Client\Exception\ProxyException;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Redirect;
 use Utopia\Client\Response\Builder as ResponseBuilder;
 use Utopia\Client\Tls;
@@ -35,7 +36,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use ValueError;
 
-class Client implements Adapter
+class Client implements Adapter, ResponseStreamingClientInterface
 {
     private const float DEFAULT_CONNECT_TIMEOUT = 5.0;
 
@@ -193,9 +194,9 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        $parsed = $this->transfer($request, $sink);
+        $parsed = $this->transfer($request, $sink, $onResponse);
 
         return $this->responseBuilder->build(
             $parsed['status'],
@@ -218,7 +219,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function transfer(RequestInterface $request, callable $sink): array
+    private function transfer(RequestInterface $request, callable $sink, ?callable $onResponse = null): array
     {
         if (!\extension_loaded('curl')) {
             throw new AdapterPreconditionException($request, 'The curl extension is required.');
@@ -236,7 +237,28 @@ class Client implements Adapter
         $headers = '';
         $refused = null;
         $handle = $this->handle($request);
-        $options = $this->options($request, $headers, $refused, $sink, $decompress);
+        $notified = false;
+        $notify = function () use (&$notified, &$headers, $onResponse, $decompress, $request): void {
+            if ($notified || $onResponse === null) {
+                return;
+            }
+
+            $parsed = $this->parseHeaderBlock($headers);
+            if ($parsed['status'] < 200 || $parsed['status'] > 599) {
+                throw new InvalidResponseException($request, 'Received an invalid final HTTP response.');
+            }
+
+            if ($decompress) {
+                $parsed['headers'] = $this->decoded($parsed['headers']);
+            }
+
+            $notified = true;
+            $onResponse($this->responseBuilder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
+        };
+        $options = $this->options($request, $headers, $refused, static function (string $chunk) use ($sink, $notify): void {
+            $notify();
+            $sink($chunk);
+        }, $decompress);
 
         try {
             if (curl_setopt_array($handle, $options) === false) {
@@ -272,6 +294,8 @@ class Client implements Adapter
         if ($decompress) {
             $parsed['headers'] = $this->decoded($parsed['headers']);
         }
+
+        $notify();
 
         return $parsed;
     }
