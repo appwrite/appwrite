@@ -889,6 +889,9 @@ abstract class Base extends Action
 
             try {
                 $upload['metadata']['device'] = $upload['metadata']['device'] ?? [];
+                // S3 may complete with fewer parts than were uploaded; the device
+                // assembles every part it holds, so keep only the selected ones.
+                $upload['metadata']['device']['parts'] = \array_intersect_key($upload['metadata']['device']['parts'] ?? [], $selected);
                 // A single part finalizes as one chunk: S3 backends reject any
                 // non-final part under 5 MiB, so padding it with an empty part
                 // would fail every small single-part upload.
