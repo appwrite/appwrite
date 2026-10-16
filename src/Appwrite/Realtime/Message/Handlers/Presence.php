@@ -90,24 +90,103 @@ class Presence extends Action
 
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+        if ($presenceId !== 'unique()') {
+            $presenceDocument->setAttribute('$id', $presenceId);
+        }
 
-        $presence = $presenceState->upsertForUser(
-            $database,
-            $presenceDocument,
-            $presenceId,
-            (string) $user->getSequence(),
-            function () use ($presenceState, $publisherForUsage, $project): void {
+        $projectId = $project->getId();
+
+        // Bump the row's worker count only on this worker's first hold for the user (0->1).
+        $alreadyHeld = isset($realtime->connections[$connectionId]['presence']);
+        $firstWorkerHold = !$alreadyHeld && empty($realtime->presenceHolders[$projectId][$userId] ?? []);
+
+        // Reserve the hold synchronously (no coroutine yield between the check and this set) so a
+        // concurrent first message on this worker sees it and does not also count as firstWorkerHold.
+        if (!$alreadyHeld) {
+            $realtime->presenceHolders[$projectId][$userId][$connectionId] = true;
+        }
+
+        $created = false;
+        try {
+            $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold, $created);
+        } catch (\Throwable $th) {
+            // Roll back only our own reservation (still `true`); a concurrent message on this
+            // connection that already succeeded has overwritten it with a row id -- leave that.
+            if (!$alreadyHeld && ($realtime->presenceHolders[$projectId][$userId][$connectionId] ?? null) === true) {
+                unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
+                if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
+                    unset($realtime->presenceHolders[$projectId][$userId]);
+                }
+            }
+            throw $th;
+        }
+
+        // The socket can close during the write; onClose then runs before the hold is tagged and
+        // can't release it. Undo our worker count, and if that deleted the row (last holder),
+        // announce offline instead of the online upsert below -- never resurrect a dead hold.
+        if (!isset($realtime->connections[$connectionId])) {
+            $deleted = ($created || $firstWorkerHold)
+                ? $presenceState->releaseHolder($database, $userId, $presence->getId())
+                : null;
+
+            if (!$alreadyHeld) {
+                unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
+                if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
+                    unset($realtime->presenceHolders[$projectId][$userId]);
+                }
+            }
+
+            if ($deleted !== null) {
+                $presenceState->purgeListCache($database);
+                // A row this message created and then deleted nets zero usage; otherwise undo the
+                // +1 its original creator counted for the now-offline user.
+                if (!$created) {
+                    $presenceState->triggerUsage($publisherForUsage, $project, -1);
+                }
+                foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                    $deleted->removeAttribute($attribute);
+                }
+                $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $user, 'presences.[presenceId].delete', $deleted);
+            } elseif ($created) {
+                // The row this message created survives under another worker's hold: still count
+                // the user coming online, since no one else will.
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
-            },
-        );
+            }
+
+            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                $presence->removeAttribute($attribute);
+            }
+
+            return [
+                'type' => 'response',
+                'data' => [
+                    'to' => 'presence',
+                    'presence' => $presence->getArrayCopy(),
+                ],
+            ];
+        }
+
+        // Tag the hold with the row id, so a delete event for a superseded row only clears holds
+        // on that row, not a recreated one.
+        $realtime->presenceHolders[$projectId][$userId][$connectionId] = $presence->getId();
+        $realtime->connections[$connectionId]['presence'] = [
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'presenceId' => $presence->getId(),
+        ];
+
+        // Count usage only on the actual row creation (the user came online), never on an
+        // increment of a row an HTTP upsert already counted.
+        if ($created) {
+            $presenceState->triggerUsage($publisherForUsage, $project, 1);
+        }
 
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
-
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+        $presence->removeAttribute('connections');
 
         $presenceState->triggerEvent(
             $queueForEvents,

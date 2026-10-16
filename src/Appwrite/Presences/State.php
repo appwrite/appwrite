@@ -123,6 +123,133 @@ class State
         return $value;
     }
 
+    /**
+     * Persist a presence message, keeping the worker-holder counter correct.
+     *
+     * One row per user holds a `connections` count = how many realtime workers currently hold
+     * the user. `$firstWorkerHold` is true only on a worker's 0->1 transition (its first live
+     * connection for this user), when the count is bumped; every other message just refreshes
+     * the value. Runs in a transaction so the read-modify-write of `connections` is serialized
+     * against another worker's increment or the decrement-to-zero delete.
+     */
+    public function recordPresence(
+        Database $dbForProject,
+        Document $presenceDocument,
+        string $userId,
+        bool $firstWorkerHold,
+        ?bool &$created = null,
+    ): Document {
+        $created = false;
+        try {
+            // Not this worker's first hold: the counter is already correct, so just refresh the
+            // value with a sparse update (connections is not in the document, so it is left as is).
+            // No transaction -- nothing reads-then-writes the counter here.
+            if (!$firstWorkerHold) {
+                $existing = $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
+                );
+                if (!$existing->isEmpty()) {
+                    $presenceDocument->setAttribute('$id', $existing->getId());
+
+                    return $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
+                }
+                // The row is gone (e.g. a REST delete) -- fall through to recreate it.
+            }
+
+            // First hold for this worker (or the row vanished): create with connections = 1 or +1,
+            // in a transaction so the counter read-modify-write is serialized against another
+            // worker's increment or the decrement-to-zero delete. If a concurrent create wins the
+            // unique-userId race, retry once: the row now exists, so the retry increments it.
+            for ($attempt = 1; ; $attempt++) {
+                try {
+                    return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created) {
+                        $existing = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
+                        );
+
+                        if ($existing->isEmpty()) {
+                            if (!\is_string($presenceDocument->getId()) || $presenceDocument->getId() === '') {
+                                $presenceDocument->setAttribute('$id', Id::unique());
+                            }
+                            $presenceDocument->setAttribute('connections', 1);
+                            $created = true;
+
+                            return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
+                        }
+
+                        $created = false;
+
+                        $current = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
+                        );
+                        if ($current->isEmpty()) {
+                            throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
+                        }
+
+                        $presenceDocument->setAttribute('$id', $current->getId());
+                        $presenceDocument->setAttribute('connections', (int) $current->getAttribute('connections', 0) + 1);
+
+                        return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
+                    });
+                } catch (DuplicateException $e) {
+                    if ($attempt >= 2) {
+                        throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$userId], previous: $e);
+                    }
+                }
+            }
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
+        } catch (ConflictException $e) {
+            throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
+        }
+    }
+
+    /**
+     * Drop one worker's hold on a user. Decrements `connections` and, when it reaches zero,
+     * deletes the row and returns the deleted document so the caller can emit the offline
+     * event. Returns null when holders remain or the row is already gone. Transactional, so a
+     * concurrent increment-and-recreate cannot be deleted out from under itself.
+     */
+    public function releaseHolder(Database $dbForProject, string $userId, string $presenceId): ?Document
+    {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $userId, $presenceId): ?Document {
+            $existing = $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
+            );
+            if ($existing->isEmpty()) {
+                return null;
+            }
+
+            $current = $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
+            );
+            if ($current->isEmpty()) {
+                return null;
+            }
+
+            // The row was deleted and recreated since this worker incremented it, so its +1 is
+            // already gone -- do not decrement a row this worker never counted.
+            if ($current->getId() !== $presenceId) {
+                return null;
+            }
+
+            $remaining = (int) $current->getAttribute('connections', 0) - 1;
+            if ($remaining > 0) {
+                $dbForProject->getAuthorization()->skip(
+                    fn () => $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), new Document(['connections' => $remaining]))
+                );
+
+                return null;
+            }
+
+            $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->deleteDocument(self::COLLECTION_ID, $current->getId())
+            );
+
+            return $current;
+        });
+    }
+
     public function upsertForUser(
         Database $dbForProject,
         Document $presenceDocument,

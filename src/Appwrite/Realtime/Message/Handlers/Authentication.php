@@ -2,8 +2,12 @@
 
 namespace Appwrite\Realtime\Message\Handlers;
 
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -11,6 +15,7 @@ use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -30,6 +35,11 @@ class Authentication extends Action
             ->inject('database')
             ->inject('register')
             ->inject('response')
+            ->inject('presenceState')
+            ->inject('project')
+            ->inject('publisherForUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
@@ -43,6 +53,11 @@ class Authentication extends Action
         Database $database,
         Registry $register,
         Response $response,
+        PresenceState $presenceState,
+        ?Document $project,
+        UsagePublisher $publisherForUsage,
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
     ): array {
         $store = new Store();
         $store->decode($session);
@@ -74,9 +89,10 @@ class Authentication extends Action
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
-        // Capture the pre-auth userId before unsubscribe() clears the connection entry,
-        // so we can rebind any account channels that were stored under it.
+        // Capture the pre-auth userId and presence hold before unsubscribe() clears the
+        // connection entry, so we can rebind account channels and carry or release the hold.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
+        $presenceHold = $realtime->connections[$connectionId]['presence'] ?? null;
 
         $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
@@ -113,6 +129,23 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['jwtExpire'] = null;
         }
 
+        // Carry the presence hold across a re-auth to the same user whose connection entry was
+        // restored. Otherwise -- a user change, or the connection entry could not be restored --
+        // give up this connection's hold on the previous user, releasing the worker count at 1->0,
+        // so the holder index never outlives a hold that onClose can no longer release.
+        if ($presenceHold !== null && !empty($projectId) && $projectId !== 'console') {
+            if ($previousUserId === $user->getId() && isset($realtime->connections[$connectionId])) {
+                $realtime->connections[$connectionId]['presence'] = $presenceHold;
+                $realtime->presenceHolders[$projectId][$previousUserId][$connectionId] = (string) ($presenceHold['presenceId'] ?? '');
+            } else {
+                unset($realtime->presenceHolders[$projectId][$previousUserId][$connectionId]);
+                if (empty($realtime->presenceHolders[$projectId][$previousUserId] ?? [])) {
+                    unset($realtime->presenceHolders[$projectId][$previousUserId]);
+                    $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId, (string) ($presenceHold['presenceId'] ?? ''));
+                }
+            }
+        }
+
         $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         if ($subscriptionDelta !== 0) {
@@ -130,5 +163,38 @@ class Authentication extends Action
                 'user' => $response->output($user, Response::MODEL_ACCOUNT),
             ],
         ];
+    }
+
+    private function releasePreviousHold(
+        PresenceState $presenceState,
+        Database $database,
+        UsagePublisher $publisherForUsage,
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
+        ?Document $project,
+        string $previousUserId,
+        string $presenceId,
+    ): void {
+        if ($project === null || $project->isEmpty() || $previousUserId === '' || $presenceId === '') {
+            return;
+        }
+
+        $deleted = $presenceState->releaseHolder($database, $previousUserId, $presenceId);
+        if ($deleted === null) {
+            return;
+        }
+
+        $presenceState->purgeListCache($database);
+        $presenceState->triggerUsage($publisherForUsage, $project, -1);
+
+        $previousUser = new User($database->getAuthorization()->skip(
+            fn () => $database->getDocument('users', $previousUserId)
+        )->getArrayCopy());
+
+        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+            $deleted->removeAttribute($attribute);
+        }
+
+        $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $previousUser, 'presences.[presenceId].delete', $deleted);
     }
 }

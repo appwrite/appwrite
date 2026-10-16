@@ -413,8 +413,16 @@ class V25 extends Migration
                     break;
 
                 case 'presenceLogs':
-                    // Added in 1.9.5 and created only by V24, which an install that ran
-                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran.
+                    // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
+                    // migration or upgraded straight from 1.8.x never ran. createCollection() is a
+                    // no-op when it already exists and creates it with connections when it doesn't;
+                    // the attribute-add covers installs that have it from V24 without the column.
+                    // Failures propagate so the version is not recorded with a missing attribute.
+                    $this->createCollection($id);
+                    $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.

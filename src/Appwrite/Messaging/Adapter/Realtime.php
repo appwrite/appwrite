@@ -94,6 +94,18 @@ class Realtime extends MessagingAdapter
     public array $connections = [];
 
     /**
+     * This worker's presence holders, for the worker-level `connections` counter.
+     *
+     * [PROJECT_ID] -> [USER_ID] -> [CONNECTION_ID -> true]
+     *
+     * The worker holds a user's presence while this set is non-empty; it bumps the row's
+     * `connections` on its 0->1 transition and decrements it on 1->0.
+     *
+     * @var array<string, array<string, array<int, true>>>
+     */
+    public array $presenceHolders = [];
+
+    /**
      * Subscription Tree
      *
      * [PROJECT_ID] ->
@@ -195,8 +207,9 @@ class Realtime extends MessagingAdapter
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
-        // Recorded once by the connection handler; every later (re)subscribe keeps it.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
+        // Recorded once by the connection handler or a presence write; every later (re)subscribe
+        // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -261,6 +274,27 @@ class Realtime extends MessagingAdapter
      * @param string $presenceId
      * @return int Number of connections whose presences map was updated.
      */
+    /**
+     * Forget this worker's holds on a deleted presence row, so a later close does not decrement a
+     * worker count the row no longer carries. Only holds tagged with the deleted row id are
+     * cleared, so a hold on a row recreated after the delete is left intact. Live connections
+     * re-register on their next presence message.
+     */
+    public function clearPresenceHolders(string $projectId, string $userId, string $presenceId): void
+    {
+        foreach (($this->presenceHolders[$projectId][$userId] ?? []) as $connectionId => $heldPresenceId) {
+            if ($heldPresenceId !== $presenceId) {
+                continue;
+            }
+
+            unset($this->connections[$connectionId]['presence'], $this->presenceHolders[$projectId][$userId][$connectionId]);
+        }
+
+        if (empty($this->presenceHolders[$projectId][$userId] ?? [])) {
+            unset($this->presenceHolders[$projectId][$userId]);
+        }
+    }
+
     public function removePresenceFromConnections(string $projectId, string $presenceId): int
     {
         if ($projectId === '' || $presenceId === '') {
