@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-push",
+    "href": "/blog/post/announcing-appwrite-push",
+    "title": "Announcing Appwrite Push: push notifications without Firebase",
+    "description": "Appwrite Push delivers push notifications from Appwrite straight to your Android, iOS, web, Flutter, and React Native apps, with no Firebase project, service account, or device token to manage.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 7,
+    "author": "arnab-chatterjee",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-push/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-apns-one-click-setup",
     "href": "/blog/post/announcing-apns-one-click-setup",
     "title": "Announcing one-click APNs setup with the Appwrite CLI",

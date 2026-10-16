@@ -313,6 +313,22 @@ Learn more about the CLI topics commands
 {% /tabsitem %}
 {% /tabs %}
 
+# Delivery settings for Appwrite Push {% #appwrite-push %}
+Topics delivered through [Appwrite Push](/docs/products/messaging/appwrite-push) take two optional settings, the `qos` and `expiry` parameters of `createTopic` and `updateTopic` in the [Server SDKs](/docs/sdks#server).
+
+{% table %}
+* Setting
+* Description
+---
+* **Quality of service** (`qos`)
+* `0` delivers only to devices connected when the message is sent. `1` stores each message and replays it to devices that reconnect. Leave it empty to let each subscriber choose. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription.
+---
+* **Message expiry** (`expiry`)
+* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Leave it empty to use the lowest expiry set on your enabled Appwrite Push providers, or 7 days.
+{% /table %}
+
+Devices receive a topic's messages through their [Appwrite push target](/docs/products/messaging/appwrite-push#push-target), so subscribe that target to the topic.
+
 # Permissions {% #permissions %}
 Before you can subscribe to a topic, a user needs the appropriate permission.
 You can set permission by navigating to **Messaging** > **Topics** > select a topic to configure > **Subscription access**.

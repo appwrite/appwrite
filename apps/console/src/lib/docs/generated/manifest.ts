@@ -1551,7 +1551,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 1
   },
   {
     "slug": "products/avatars/flags",
@@ -2951,7 +2951,14 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.",
+    "layout": "article",
+    "readingTimeMinutes": 14
   },
   {
     "slug": "products/messaging/fcm",
@@ -3007,7 +3014,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "products/messaging/send-sms-messages",
@@ -3063,7 +3070,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Topics",
     "description": "Allow groups of users to subscribe to a common topic and receive the same notifications.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "products/messaging/twilio",
@@ -4106,7 +4113,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Commands",
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "tooling/command-line/functions",

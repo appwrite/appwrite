@@ -51,6 +51,10 @@ Verified phone numbers for users that signed up with [Phone OTP](/docs/products/
 ## Add push notification target {% #add-push-notification-target%}
 Push notifications require configuration on both the Appwrite platform and your client app's code.
 
+{% info title="Appwrite Push" %}
+With [Appwrite Push](/docs/products/messaging/appwrite-push), a signed-in user receives messages sent to them without a target. Register an [Appwrite push target](/docs/products/messaging/appwrite-push#push-target) only to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs.
+{% /info %}
+
 
 {% tabs %}
 {% tabsitem #fcm-ios title="iOS with FCM" %}

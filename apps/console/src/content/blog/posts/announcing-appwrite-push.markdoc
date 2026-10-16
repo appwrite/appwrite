@@ -1,0 +1,154 @@
+---
+layout: post
+title: "Announcing Appwrite Push: push notifications without Firebase"
+description: Appwrite Push delivers push notifications from Appwrite straight to your Android, iOS, web, Flutter, and React Native apps, with no Firebase project, service account, or device token to manage.
+date: 2026-10-16
+cover: /images/blog/announcing-appwrite-push/cover.avif
+timeToRead: 7
+author: arnab-chatterjee
+category: announcements
+featured: false
+faqs:
+  - question: "What is Appwrite Push?"
+    answer: "Appwrite Push is a push notification provider built into Appwrite Messaging. Your app connects to Appwrite's push broker with the Appwrite SDK, and messages you send with `createPush` or from the Console arrive over that connection. It needs no Firebase project, no service account, and no device token. See the [Appwrite Push docs](/docs/products/messaging/appwrite-push)."
+  - question: "Which SDKs support Appwrite Push?"
+    answer: "Web `appwrite` 29.0.0, Flutter `appwrite` 28.0.0, React Native `react-native-appwrite` 2.0.0, Android `io.appwrite:sdk-for-android` 30.0.0, and Apple `sdk-for-apple` 21.0.0, and later versions."
+  - question: "Do I need a push target to send a message to a user?"
+    answer: "Not when the user has no other push targets. A signed-in user subscribes to their own topic, and a message sent with `users: ['<USER_ID>']` reaches all their connected devices. Register an Appwrite push target to use topics or iOS background delivery, or when any of the user's devices also has an FCM or APNs target. See [Appwrite push target](/docs/products/messaging/appwrite-push#push-target)."
+  - question: "Does Appwrite Push work when the app is closed?"
+    answer: "On Android, yes: the SDK wakes the app on a schedule to reconnect, and with a foreground service it delivers immediately, even in Doze. On iOS, the Apple SDK uses an APNs wake-up and a Notification Service Extension to show the real message while the app is suspended. On the web, messages arrive while the tab is open, and with a stable client ID, missed ones are replayed when the page opens again."
+  - question: "What happens to messages sent while a device is offline?"
+    answer: "With at-least-once delivery, the default, Appwrite keeps each message for up to 7 days and replays the newest messages a device missed, oldest first, when it reconnects. You can shorten how long messages are kept on the provider or on each topic."
+  - question: "Can I keep using FCM and APNs?"
+    answer: "Yes. Appwrite Push is another provider next to FCM and APNs, and you can enable them together. A user with FCM or APNs targets gets the FCM or APNs notification. Register an Appwrite push target for them to also receive messages over Appwrite Push. On iOS, APNs then only wakes the app, so each message shows once. FCM still sends the full notification, so an Android app that registers both should skip duplicates by `messageId`."
+  - question: "Can I use Appwrite Push when self-hosting?"
+    answer: "Yes. Self-hosted Appwrite runs the broker in the `appwrite-mqtt` container, with MQTT over TLS on port 8883 and secure WebSocket on port 8084. Point a `push.` DNS record at your server, or set the broker address with `client.setPushEndpoint()`."
+---
+
+Push notifications are usually the part of a mobile app that needs the most setup outside the app itself. Create a Firebase project, generate a service account key, upload it, add `google-services.json`, wire up a messaging service, collect device tokens, keep them fresh when they rotate, and do it all again for APNs on iOS. Only then can you send your first message.
+
+Today we are announcing **Appwrite Push**, a push provider built into [Appwrite Messaging](/docs/products/messaging). Your app connects to Appwrite with the SDK it already uses, and messages you send from the Console or a Server SDK arrive on the device. No Firebase project, no service account, no device token.
+
+```ts
+const push = new Push(client);
+
+await push.subscribe((message) => {
+    const { notification, data } = JSON.parse(message.data);
+});
+```
+
+# What Appwrite Push gives you
+
+- **Nothing to configure.** The provider takes no credentials. Create it in the Console and you can send.
+- **Every user has their own topic.** A signed-in user subscribes to their own topic with one call. Send to `users: ['<USER_ID>']` and the message reaches all of their devices. If they don't use FCM or APNs too, there's no target to register first.
+- **Five SDKs, one API.** `Push` works the same way in the Web, Flutter, React Native, Android, and Apple SDKs.
+- **Delivery while the app is closed.** On Android, the SDK wakes the app to reconnect, or keeps a foreground service running for immediate delivery. On iOS, it works together with APNs to show the real message while the app is suspended.
+- **Missed messages are replayed.** Messages are kept for up to 7 days and replayed when a device reconnects, so a phone that was offline for the night still gets the evening's messages.
+- **Notifications and taps handled.** The SDK posts a notification with the title, body, and image you sent, and tells your app which notification the user tapped and the `data` it carried.
+- **Secure by default.** Devices connect with the user's session, can only subscribe to their own topic and topics they are subscribed to, and never publish. Blocking or deleting a user closes their connections immediately.
+
+# Send your first push in three steps
+
+## 1. Add the provider
+
+In the Console, go to **Messaging** > **Providers** > **Create provider** > **Push notification**, choose **Appwrite**, and name it. That's all the configuration there is.
+
+## 2. Subscribe in your app
+
+Sign the user in, create `Push` from the same client, and subscribe. Without a topic, `subscribe` listens on the signed-in user's own topic.
+
+```ts
+import { Account, Client, Push } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+await new Account(client).createEmailPasswordSession({ email, password });
+
+const push = new Push(client);
+
+await push.subscribe((message) => {
+    const { notification, data } = JSON.parse(message.data);
+    console.log(notification?.title, data);
+});
+```
+
+## 3. Send a message
+
+From your server, send to the user like you would with any push provider:
+
+```js
+await messaging.createPush({
+    messageId: ID.unique(),
+    title: 'Your order has shipped',
+    body: 'Track it from the Orders tab.',
+    users: ['<USER_ID>'],
+    data: { orderId: '<ORDER_ID>' }
+});
+```
+
+The message arrives in your callback while the app is open, and as a notification when it isn't.
+
+# Open the right screen on tap
+
+The `data` you send comes back when the user taps the notification:
+
+```ts
+const opened = await push.getInitialNotification();
+if (opened) openOrder(opened.data.orderId);
+
+push.onNotificationOpened(({ data }) => openOrder(data.orderId));
+```
+
+# Delivery while the app is closed
+
+Mobile operating systems are strict about background work, so Appwrite Push uses what each platform allows.
+
+**On Android**, background subscriptions are saved, and the SDK wakes your app on a schedule to reconnect. With exact alarms allowed, messages arrive within about a minute, and in Doze about every nine minutes. For immediate delivery, even in Doze, `push.setForeground(true)` keeps a foreground service running with a quiet notification. `Push.backgroundStatus()` tells you which of these your app can rely on.
+
+**On iOS**, a backgrounded app is suspended within seconds, so the Apple SDK uses APNs to reach it. Appwrite sends the device a short APNs wake-up, and a Notification Service Extension fetches the real message and replaces the wake-up before iOS shows it. Setting up APNs takes one command with [one-click APNs setup](/blog/post/announcing-apns-one-click-setup):
+
+```bash
+appwrite init apns
+```
+
+Then add an extension with one line of code:
+
+```swift
+import Appwrite
+
+class NotificationService: AppwriteNotificationService {}
+```
+
+The [iOS background delivery guide](/docs/products/messaging/appwrite-push#background-ios) covers the App Group and the Appwrite push target the extension needs.
+
+**On the web**, messages arrive while the tab is open. Give each browser a stable client ID with `client.setPushClientId()`, and the ones sent while it was closed are replayed when the page opens again.
+
+# Topics, delivery guarantees, and expiry
+
+Appwrite Push works with [Messaging topics](/docs/products/messaging/topics). Register an Appwrite push target for the device, subscribe it to the topic, and listen in the app:
+
+```ts
+await push.subscribe(['news'], onNews, { background: true, title: 'News' });
+```
+
+Each provider and topic chooses its delivery guarantee. **At least once** (QoS 1, the default) stores every message and replays it to devices that reconnect. **At most once** (QoS 0) delivers only to devices connected right now, which suits live scores or typing indicators. **Message expiry** sets how long messages are kept for offline devices, up to 7 days.
+
+# When to reach for Appwrite Push
+
+- **You are adding push to a new app.** Skip the Firebase project and the device token plumbing, and send your first message in minutes.
+- **You ship on several platforms.** One provider and one API cover Android, iOS, web, Flutter, and React Native.
+- **You self-host.** Messages go from your Appwrite server to your users' devices without passing through a third-party push service on Android and the web.
+- **You need messages to survive flaky networks.** Offline replay delivers what a device missed when it comes back.
+
+FCM and APNs are still there. Use them when you need the operating system's own push channel, such as reaching a suspended iOS app built with Flutter or React Native. You can enable them next to Appwrite Push.
+
+# Get started with Appwrite Push
+
+Update to the latest Appwrite SDK for your platform, add an Appwrite provider in your [Appwrite Cloud](https://cloud.appwrite.io) project, and follow the guide.
+
+- [Appwrite Push docs](/docs/products/messaging/appwrite-push)
+- [Send push notifications](/docs/products/messaging/send-push-notifications)
+- [One-click APNs setup](/docs/products/messaging/apns#one-click-setup)
+- [Messaging topics](/docs/products/messaging/topics)

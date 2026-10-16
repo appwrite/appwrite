@@ -1,0 +1,674 @@
+---
+layout: article
+title: Appwrite Push
+description: Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.
+back: /docs/
+---
+Appwrite Push is Appwrite's own push provider. Your app opens a connection to Appwrite's push broker with the Appwrite SDK, and messages you send with Appwrite Messaging arrive over that connection. There is no Firebase project to set up, no service account to upload, and no device token to register before you can reach a signed-in user.
+
+Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs. On Android it keeps delivering while the app is closed, and on iOS it works together with [APNs](/docs/products/messaging/apns) to show messages while the app is suspended.
+
+# How it works {% #how-it-works %}
+
+- **Every user has their own topic.** A signed-in user can subscribe to `users/<USER_ID>` without creating a topic first. A message sent with `users: ['<USER_ID>']` reaches all of that user's connected devices.
+- **Targets only when you need them.** Sending to a user with no push targets needs no setup. Register an [Appwrite push target](#push-target) to use topics, iOS background delivery, or Appwrite Push alongside FCM or APNs.
+- **The SDK holds the connection.** `Push` connects with the session the app signed in with, so there is no extra token to manage. When the user is blocked or deleted, Appwrite closes their connections. Signing out doesn't close connections on the user's other devices.
+- **Missed messages are replayed.** With the default delivery guarantee, Appwrite keeps each message for up to 7 days and replays the ones a device missed when it reconnects.
+- **Clients only receive.** Devices can't publish messages. Everything is sent from your server or the Console through [Messaging](/docs/products/messaging/messages).
+
+{% section #add-provider step=1 title="Add provider" %}
+
+Appwrite Push needs no credentials. To add it, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**, choose **Appwrite**, give the provider a name, and click **Create**.
+
+The provider has two optional settings:
+
+{% table %}
+* Setting
+* Description
+---
+* **Quality of service**
+* The delivery guarantee messages are sent with. **At most once (QoS 0)** delivers only to devices connected when the message is sent. **At least once (QoS 1)** stores each message and replays it to devices that reconnect. **Let the subscriber choose** sends at least once, and each subscription can lower it with `retry`.
+---
+* **Message expiry**
+* How long, in seconds, messages are kept for offline devices, up to 7 days (`604800`). Topics without their own expiry use the lowest expiry across your enabled Appwrite providers, or 7 days if none sets one. `0` keeps nothing for replay.
+{% /table %}
+
+You can also create the provider with a [Server SDK](/docs/sdks#server).
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>')                           // Your project ID
+    .setKey('<API_KEY>');                                 // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const provider = await messaging.createAppwriteProvider({
+    providerId: sdk.ID.unique(),
+    name: 'Appwrite Push',
+    qos: 1,          // optional
+    expiry: 86400    // optional
+});
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+from appwrite.id import ID
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>')                           # Your project ID
+client.set_key('<API_KEY>')                                  # Your secret API key
+
+messaging = Messaging(client)
+
+provider = messaging.create_appwrite_provider(
+    provider_id = ID.unique(),
+    name = 'Appwrite Push',
+    qos = 1,         # optional
+    expiry = 86400   # optional
+)
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\ID;
+use Appwrite\Services\Messaging;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                           // Your project ID
+    ->setKey('<API_KEY>');                                 // Your secret API key
+
+$messaging = new Messaging($client);
+
+$provider = $messaging->createAppwriteProvider(
+    providerId: ID::unique(),
+    name: 'Appwrite Push',
+    qos: 1,         // optional
+    expiry: 86400   // optional
+);
+```
+{% /multicode %}
+{% /section %}
+
+{% section #install-sdk step=2 title="Install the SDK" %}
+
+Push ships in these versions of the client SDKs and later:
+
+{% table %}
+* SDK
+* Version
+* Platforms
+---
+* [Web](https://github.com/appwrite/sdk-for-web/releases/tag/29.0.0) `appwrite`
+* `29.0.0`
+* Browsers
+---
+* [Flutter](https://github.com/appwrite/sdk-for-flutter/releases/tag/28.0.0) `appwrite`
+* `28.0.0`
+* Android, iOS, web
+---
+* [React Native](https://github.com/appwrite/sdk-for-react-native/releases/tag/2.0.0) `react-native-appwrite`
+* `2.0.0`
+* Android, iOS
+---
+* [Android](https://github.com/appwrite/sdk-for-android/releases/tag/30.0.0) `io.appwrite:sdk-for-android`
+* `30.0.0`
+* Android 7.0 (API 24) and later
+---
+* [Apple](https://github.com/appwrite/sdk-for-apple/releases/tag/21.0.0) `sdk-for-apple`
+* `21.0.0`
+* iOS 15, macOS 12, tvOS 15, watchOS 8 and later
+{% /table %}
+
+Some platforms need extra setup for background notifications:
+
+{% tabs %}
+{% tabsitem #setup-flutter title="Flutter" %}
+On Android, Push needs Android 7.0 (API 24) or later and core library desugaring. Add both to `android/app/build.gradle.kts`:
+
+```kotlin
+android {
+    defaultConfig {
+        minSdk = 24
+    }
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+The `appwrite` 28.0.0 package needs Dart 3.10 and Flutter 3.38.1 or later.
+{% /tabsitem %}
+
+{% tabsitem #setup-react-native title="React Native" %}
+Install the SDK with its peer dependencies. Push needs native modules, so use a development or standalone build. It does not run in Expo Go.
+
+```bash
+npx expo install react-native-appwrite react-native-url-polyfill react-native-tcp-socket
+# For background delivery and notification taps on iOS
+npx expo install expo-notifications react-native-background-actions
+```
+
+Import the URL polyfill once, before the SDK:
+
+```ts
+import 'react-native-url-polyfill/auto';
+```
+
+On Expo SDK 52 and older, set `config.resolver.unstable_enablePackageExports = true` in `metro.config.js`. There is no config plugin: if you added `react-native-appwrite` to `plugins` in `app.json` while trying a release candidate, remove it and rebuild.
+{% /tabsitem %}
+
+{% tabsitem #setup-android title="Android" %}
+```kotlin
+dependencies {
+    implementation("io.appwrite:sdk-for-android:30.0.0")
+}
+```
+
+The SDK's manifest declares the services, receivers, and permissions background delivery needs. The two permissions for punctual delivery are optional and yours to declare, see [Delivery while the app is closed](#background-android).
+{% /tabsitem %}
+
+{% tabsitem #setup-apple title="Apple" %}
+Add the package in Xcode under **File** > **Add Package Dependencies**, or in `Package.swift`:
+
+```swift
+.package(url: "https://github.com/appwrite/sdk-for-apple", from: "21.0.0")
+```
+
+The `Appwrite` module has its own `App` type, so write `SwiftUI.App` for your app struct. For delivery while the app is suspended, also follow [Background delivery on iOS](#background-ios).
+{% /tabsitem %}
+{% /tabs %}
+{% /section %}
+
+{% section #subscribe step=3 title="Subscribe" %}
+
+Sign the user in, create a `Push` instance from the same client, and call `subscribe`. Without a topic, `subscribe` listens on the signed-in user's own topic, `users/<USER_ID>`, which is what a message sent to that user reaches.
+
+{% multicode %}
+```client-web
+import { Account, Client, Push } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+await new Account(client).createEmailPasswordSession({ email, password });
+
+const push = new Push(client);
+
+const subscription = await push.subscribe((message) => {
+    const { notification, data } = JSON.parse(message.data);
+    console.log(notification?.title, notification?.body, data);
+});
+```
+```client-flutter
+import 'dart:convert';
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+await Account(client).createEmailPasswordSession(email: email, password: password);
+
+final push = Push(client);
+
+final subscription = await push.subscribe(null, (message) {
+  final body = jsonDecode(message.data) as Map<String, dynamic>;
+  print('${body['notification']?['title']} ${body['data']}');
+});
+```
+```client-react-native
+import { Account, Client, Push } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+await new Account(client).createEmailPasswordSession({ email, password });
+
+const push = new Push(client);
+
+const subscription = await push.subscribe((message) => {
+    const { notification, data } = JSON.parse(message.data);
+    console.log(notification?.title, notification?.body, data);
+});
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+import io.appwrite.services.Push
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+Account(client).createEmailPasswordSession(email, password)
+
+// Pass an Activity so Push can ask for the notification permission
+val push = Push(client, activity)
+
+// subscribe can block, so call it off the main thread
+val subscription = push.subscribe { message ->
+    Log.d("push", message.data)
+}
+```
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+_ = try await Account(client).createEmailPasswordSession(email: email, password: password)
+
+let push = Push(client)
+
+let subscription = try await push.subscribe { message in
+    print(message.data)
+}
+```
+{% /multicode %}
+
+`subscribe` returns once the broker has accepted the subscription. On Android, a background subscription returns once the SDK's background service has taken it. Each message has `topic`, `data` (the payload as text), `payload` (the raw bytes), and `qos`.
+
+`Push` connects with the session the app signed in with through this client, or a JWT or session you set on the client. Background delivery reconnects with the same credential, so prefer a session over a short-lived JWT.
+
+To follow the connection, register callbacks. Each holds one callback, and a later call replaces it.
+
+```ts
+push
+    .onOpen(() => console.log('connected'))
+    .onClose(() => console.log('disconnected'))
+    .onError((error) => console.warn(error.message));
+```
+
+To change a subscription's options later, call `subscription.update(...)`. To stop it, call `subscription.unsubscribe()`.
+{% /section %}
+
+{% section #send-message step=4 title="Send a message" %}
+
+Send a push notification to the user from the Console or a Server SDK, exactly as you would with FCM or APNs. Navigate to **Messaging** > **Messages** > {% icon icon="plus" size="m" /%} **Create message** > **Push notification**, add a title and body, and pick the user as the target.
+
+{% multicode %}
+```server-nodejs
+const message = await messaging.createPush({
+    messageId: sdk.ID.unique(),
+    title: 'Your order has shipped',
+    body: 'Track it from the Orders tab.',
+    users: ['<USER_ID>'],
+    data: { orderId: '<ORDER_ID>' }
+});
+```
+```server-python
+message = messaging.create_push(
+    message_id = ID.unique(),
+    title = 'Your order has shipped',
+    body = 'Track it from the Orders tab.',
+    users = ['<USER_ID>'],
+    data = { 'orderId': '<ORDER_ID>' }
+)
+```
+```server-php
+$message = $messaging->createPush(
+    messageId: ID::unique(),
+    title: 'Your order has shipped',
+    body: 'Track it from the Orders tab.',
+    users: ['<USER_ID>'],
+    data: ['orderId' => '<ORDER_ID>']
+);
+```
+{% /multicode %}
+
+A message to a user needs no target or topic. Appwrite creates the user's topic the first time you send to it.
+
+This works per user, not per device. Once any of the user's devices registers an FCM or APNs target, for example when the Apple SDK subscribes with `background: true`, messages to that user go to FCM or APNs only, and none of their devices receive them over Appwrite Push, web included. Registering an [Appwrite push target](#push-target) on any of their devices brings Appwrite Push back for all of them.
+{% /section %}
+
+# Appwrite push target {% #push-target %}
+
+A push target on the Appwrite provider tells Appwrite that a device listens over Appwrite Push. You need one to:
+
+- Receive messages sent to [topics](#topics).
+- Show messages while an iOS app is suspended, see [Background delivery on iOS](#background-ios).
+- Receive messages over Appwrite Push when the user also has FCM or APNs targets. FCM still gets the full notification, so an Android app that registers both can show a message twice. Skip duplicates by `messageId`, or register only one of them.
+
+Create it once after the user signs in. The identifier is a placeholder, so pass a unique value, and always pass the ID of your Appwrite provider. A target without a provider ID follows the project's default push provider.
+
+{% multicode %}
+```client-web
+import { ID } from 'appwrite';
+
+const target = await account.createPushTarget({
+    targetId: ID.unique(),
+    identifier: ID.unique(),
+    providerId: '<APPWRITE_PROVIDER_ID>'
+});
+```
+```client-flutter
+final target = await account.createPushTarget(
+  targetId: ID.unique(),
+  identifier: ID.unique(),
+  providerId: '<APPWRITE_PROVIDER_ID>',
+);
+```
+```client-react-native
+import { ID } from 'react-native-appwrite';
+
+const target = await account.createPushTarget({
+    targetId: ID.unique(),
+    identifier: ID.unique(),
+    providerId: '<APPWRITE_PROVIDER_ID>'
+});
+```
+```client-android-kotlin
+val target = account.createPushTarget(
+    targetId = ID.unique(),
+    identifier = ID.unique(),
+    providerId = "<APPWRITE_PROVIDER_ID>",
+)
+```
+```client-apple
+let target = try await account.createPushTarget(
+    targetId: ID.unique(),
+    identifier: ID.unique(),
+    providerId: "<APPWRITE_PROVIDER_ID>"
+)
+```
+{% /multicode %}
+
+Targets belong to the session that created them. When the user signs out with `deleteSession`, Appwrite deletes that session's targets for you.
+
+# Message format {% #message-format %}
+
+Your callback receives the message as JSON in `message.data`. It contains only the fields you set when you sent it:
+
+```json
+{
+    "messageId": "6720c5e7...",
+    "notification": {
+        "title": "Your order has shipped",
+        "body": "Track it from the Orders tab.",
+        "image": "https://example.com/parcel.png"
+    },
+    "data": {
+        "orderId": "<ORDER_ID>"
+    },
+    "priority": "high"
+}
+```
+
+`notification` can also carry `icon`, `color`, `sound`, `tag`, `channelId`, `badge`, `action`, `contentAvailable`, and `critical`, mirroring the fields of [`createPush`](/docs/references/cloud/server-nodejs/messaging#createPush). With the default delivery guarantee a message can arrive twice, for example when it is replayed after a reconnect, so use `messageId` to skip duplicates.
+
+# Topics {% #topics %}
+
+To send the same message to many users, subscribe their devices to a [Messaging topic](/docs/products/messaging/topics) by its ID.
+
+Topic messages are delivered through [Appwrite push targets](#push-target). Add the device's Appwrite push target as a [subscriber of the topic](/docs/products/messaging/topics#subscribe-targets-to-topics), from your server or from the app when the topic's permissions allow it:
+
+```ts
+await messaging.createSubscriber({
+    topicId: 'news',
+    subscriberId: ID.unique(),
+    targetId: target.$id
+});
+```
+
+Then subscribe to the topic in the app:
+
+```ts
+const news = await push.subscribe(['news'], (message) => {
+    showNews(JSON.parse(message.data));
+}, {
+    background: true, // also notify when the app isn't on screen
+    title: 'News'     // notification title when a message has none
+});
+```
+
+Topic names are exact. Wildcards like `+` and `#` are refused, and a user can only subscribe to their own `users/<USER_ID>` topic. When the user is no longer a subscriber of the topic through any of their targets, Appwrite drops the device's live subscription to it.
+
+Topics take quality of service and message expiry settings too, as the `qos` and `expiry` parameters of `createTopic` and `updateTopic`. A message is delivered at the lowest quality of service set by the provider, the topic, and the subscription. A topic without an expiry uses the lowest expiry of your enabled Appwrite providers, or 7 days if none sets one. See [delivery settings](/docs/products/messaging/topics#appwrite-push).
+
+# Subscription options {% #subscription-options %}
+
+{% table %}
+* Option
+* Description
+* Default
+---
+* `background`
+* Show a notification for each message while the app isn't on screen, and keep delivering in the background where the platform allows.
+* `true` for the user's topic, `false` for other topics
+---
+* `title`
+* Notification title to use when a message has none.
+* The topic name
+---
+* `retry`
+* Ask for at-least-once delivery (QoS 1), so messages missed while offline are replayed.
+* `true`
+---
+* `notifyInForeground`
+* Also show a notification while the app is on screen. Android, Flutter, and React Native only.
+* `false`
+{% /table %}
+
+# Notifications and taps {% #notifications %}
+
+A subscription with `background` posts a notification for each message while the app isn't on screen, using the `title`, `body`, and `image` you sent. A message with only `data` posts no notification and only reaches your callback.
+
+- **Android 13 and later**: the first background subscription asks for the notification permission. If the user declines, messages still reach your callback.
+- **Android icon**: add a `meta-data` entry to your `<application>` with your icon. The key is `io.appwrite.push.notification_icon` for the Android SDK, `io.appwrite.flutter.push.notification_icon` for Flutter, and `io.appwrite.reactnative.push.notification_icon` for React Native.
+- **Web**: notifications show while the tab is open, once the user allows them.
+
+To open the right screen when the user taps a notification, read the tap that launched the app at startup and listen for later taps. `data` is the `data` you sent with the message.
+
+```ts
+// The tap that launched the app, reported once
+const opened = await push.getInitialNotification();
+if (opened) openOrder(opened.data.orderId);
+
+// Taps while the app is running
+const stop = push.onNotificationOpened(({ topic, data }) => openOrder(data.orderId));
+```
+
+# Delivery while the app is closed {% #background %}
+
+How long a device keeps receiving messages after the user leaves your app depends on the platform.
+
+## Android {% #background-android %}
+
+On Android, Flutter, and React Native apps, the SDK saves background subscriptions and wakes the app on a schedule to reconnect. The broker replays what was sent in between, and a notification is posted.
+
+{% table %}
+* Device state
+* When a message arrives
+---
+* Awake, exact alarms allowed
+* Within about 60 seconds
+---
+* Awake, no exact alarms
+* About every 15 seconds, but inexact, so battery saver can defer it
+---
+* Doze (screen off, idle)
+* About every 9 minutes
+---
+* Foreground service on
+* Immediately, also in Doze
+---
+* Force-stopped
+* When the app is opened again
+{% /table %}
+
+For punctual wake-ups, declare these permissions in your manifest. On Android 13 and later, the user allows exact alarms under **Settings** > **Apps** > **Special app access** > **Alarms & reminders**. Google Play asks you to declare `SCHEDULE_EXACT_ALARM`.
+
+```xml
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+```
+
+Background delivery is on for every subscription with `background` set, with nothing else to configure. `Push.backgroundStatus()` reports how punctual it can be. Its `bestEffort` flag is read-only and is `true` when messages can arrive late, or only once the app is opened:
+
+- Exact alarms aren't allowed, and no foreground service is running. A foreground service doesn't count while background usage is restricted.
+- The user restricted the app's background usage, and the app isn't exempt from battery optimization.
+
+To improve it, explain why to the user, then ask from a button press:
+
+```kotlin
+val status = Push.backgroundStatus(context)
+if (status.bestEffort) {
+    if (!status.exactAlarms) {
+        Push.requestExactAlarms(context)
+    }
+    if (status.backgroundRestricted && !status.ignoringBatteryOptimizations) {
+        Push.requestIgnoreBatteryOptimizations(context)
+    }
+}
+```
+
+Both helpers return `false` when there is nothing to ask, or when the matching permission isn't declared in your manifest. Flutter and React Native have the same methods on `push`, without the `context` argument. They're async, `backgroundStatus()` returns `null` outside Android, and both requests resolve to `false` outside Android.
+
+For immediate delivery, `push.setForeground(true)` runs a foreground service with a quiet ongoing notification. Call it while the app is on screen. The setting is saved across restarts. It uses a `remoteMessaging` foreground service, which Google Play asks you to declare. If you never use it, remove the push service (`io.appwrite.services.PushService` on Android, `io.appwrite.flutter.services.PushService` on Flutter, `io.appwrite.reactnative.services.PushService` on React Native) and the `FOREGROUND_SERVICE_REMOTE_MESSAGING` permission from your merged manifest with `tools:node="remove"`.
+
+## iOS {% #background-ios %}
+
+iOS suspends a backgrounded app within seconds, so the connection can't stay open. With the Apple SDK, Appwrite Push uses APNs to reach a suspended app:
+
+1. When you send to a user who has an Appwrite push target, Appwrite sends their iOS devices a short APNs wake-up instead of the full notification.
+1. A Notification Service Extension in your app opens its own connection, fetches the real message, and replaces the wake-up with its title, body, and image before iOS shows it.
+
+To set it up:
+
+1. Add an [APNs provider](/docs/products/messaging/apns) and the Push Notifications capability. The quickest way is [one-click APNs setup](/docs/products/messaging/apns#one-click-setup): run `appwrite init apns` in your iOS project and the CLI creates the providers, configures Xcode, and adds the Apple platform.
+1. Add a **Notification Service Extension** target to your app, with this class:
+
+    ```swift
+    import Appwrite
+
+    class NotificationService: AppwriteNotificationService {}
+    ```
+
+1. Give the app and the extension the **App Groups** and **Keychain Sharing** capabilities with the same group ID, and set that group ID as `AppwritePushAppGroup` in the `Info.plist` of both targets.
+1. Register an [Appwrite push target](#push-target) after sign-in. Without it, Appwrite sends the full APNs notification instead of the wake-up.
+1. Subscribe with `background: true`. The SDK registers the device with APNs and creates its APNs push target for you.
+
+The SDK registers for remote notifications on its own. To handle registration yourself, set `AppwritePushAutoRegistration` to `NO` in `Info.plist`, call `UIApplication.shared.registerForRemoteNotifications()`, and pass the device token to `Push.setDeviceToken(_:)` from your app delegate. `Push.handleRemoteNotification(_:)` and `Push.isDelivered(_:)` are optional helpers.
+
+Flutter and React Native apps on iOS deliver while the app runs and for a short time after it is backgrounded. Once iOS suspends the app, messages wait until it is opened again, and the broker then replays what was missed.
+
+## Web {% #background-web %}
+
+Messages arrive while the page is open. To replay messages sent while the tab was closed, give each browser a stable client ID, see [Offline replay](#offline-replay).
+
+# Offline replay {% #offline-replay %}
+
+With at-least-once delivery, Appwrite stores each message and replays the newest ones a device missed, oldest first, when it subscribes again. Replay sends up to 5 messages per topic, and only messages younger than the topic's expiry. Replay needs at-least-once delivery on both the topic and the subscription.
+
+Replay is tracked per client ID, and a client ID the broker hasn't seen before gets no backlog.
+
+- **Android**: the SDK derives a stable ID per user and install, so leave `setPushClientId` unset. This includes Flutter and React Native apps on Android.
+- **iOS and the web**: the default ID is shared by all of the user's iOS devices and Flutter web sessions, or, with the Web SDK, tied to one browser tab. If missed messages must be replayed, set a client ID you persist per device, for example in the Keychain or `localStorage`.
+
+```ts
+let clientId = localStorage.getItem('pushClientId');
+if (!clientId) {
+    clientId = crypto.randomUUID();
+    localStorage.setItem('pushClientId', clientId);
+}
+client.setPushClientId(clientId);
+```
+
+All tabs of the browser share this ID, so a missed message is replayed to the first tab that reconnects.
+
+A random client ID on every launch loses the backlog.
+
+# Sign out {% #sign-out %}
+
+Close `Push` when the user signs out. It closes the connection and stops background delivery, saved subscriptions included. Deleting the session doesn't close a connection that is already open.
+
+```ts
+push.close();
+await account.deleteSession({ sessionId: 'current' });
+```
+
+# Self-hosting {% #self-hosting %}
+
+A self-hosted Appwrite runs the broker in the `appwrite-mqtt` container. Traefik serves MQTT over TLS on port `8883` and MQTT over secure WebSocket on port `8084`. See the [MQTT environment variables](/docs/advanced/self-hosting/configuration/environment-variables#mqtt) to change the ports, the replay depth, and the maximum packet size.
+
+The SDKs connect to `push.<YOUR_API_HOST>` by default. Either point a `push.` DNS record at your server, or set the broker address on the client:
+
+```ts
+client.setPushEndpoint('mqtts://appwrite.example.com:8883'); // Android, Apple, React Native, Flutter on mobile
+client.setPushEndpoint('wss://appwrite.example.com:8084');   // Web, Flutter on the web
+```
+
+A Flutter app that runs on both picks the endpoint with `kIsWeb`.
+
+# Limits {% #limits %}
+
+{% table %}
+* Limit
+* Value
+---
+* Message retention
+* Up to 7 days
+---
+* Replay per topic
+* Newest 5 missed messages
+---
+* Message size
+* 64,000 bytes per MQTT packet, including the topic and headers
+---
+* Connections
+* 128 new connections per user per minute. On self-hosted Appwrite, this applies when `_APP_OPTIONS_ABUSE` is enabled.
+{% /table %}
+
+# Troubleshooting {% #troubleshooting %}
+
+{% table %}
+* Symptom
+* Likely cause
+---
+* `subscribe()` throws "needs a signed-in user"
+* The user isn't signed in through this client, and no JWT or session is set on it.
+---
+* A topic subscription is refused
+* The user isn't a subscriber of the topic, or the topic name has a wildcard.
+---
+* Topic messages never arrive
+* The device has no Appwrite push target subscribed to the topic.
+---
+* A user with FCM or APNs targets gets nothing over Appwrite Push
+* Register an Appwrite push target for the device.
+---
+* Messages sent while offline never arrive
+* A client ID that changes between launches, such as the default on iOS and the web, `retry` set to `false`, or the message expired. See [Offline replay](#offline-replay).
+---
+* No notification while the app is open
+* Expected. Set `notifyInForeground` to `true` on Android, Flutter, or React Native.
+---
+* Nothing arrives while the Android app is closed
+* Notification permission declined, the app was force-stopped, or exact alarms aren't allowed. Check `backgroundStatus().bestEffort`.
+---
+* iOS devices get no APNs notifications, or debug builds use the production provider
+* No enabled APNs provider matches the app's bundle ID and build: sandbox for debug and Simulator builds, production for TestFlight and App Store builds. Rerun `appwrite init apns` to create both, or set the bundle ID on the provider in the Console. Devices pick up the change the next time the app launches.
+---
+* iOS shows "New message" instead of the real message
+* The Notification Service Extension is missing, or `AppwritePushAppGroup` isn't set in both `Info.plist` files.
+---
+* The UI freezes or the app stops responding on Android
+* Call `subscribe` off the main thread.
+---
+* React Native fails with "background delivery needs the SDK's native Android module"
+* The app runs in Expo Go, or wasn't rebuilt after installing.
+{% /table %}

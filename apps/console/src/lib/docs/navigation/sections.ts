@@ -2031,6 +2031,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
         label: 'Providers',
         items: [
           {
+            label: 'Push with Appwrite',
+            href: '/docs/products/messaging/appwrite-push',
+          },
+          {
             label: 'Push with APNs',
             href: '/docs/products/messaging/apns',
           },

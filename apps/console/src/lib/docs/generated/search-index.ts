@@ -2399,7 +2399,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | Favicon retrieval…",
     "breadcrumbs": [
       "Avatars",
       "Concepts",
@@ -4596,11 +4596,22 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/apns",
     "title": "Apple Push Notification service",
     "description": "Send push notifications to apps on Apple devices through Apple Push Notification service (APNs) using Appwrite Messaging.",
-    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. To add APNs as a provider, navigate to **Messaging** > **Providers** > **Create provider** > **Push notification**. Give your…",
+    "excerpt": "Apple Push Notification service (APNs) lets you send push notifications to Apple devices like macOS, iOS, tvOS, iPadOS, and watchOS devices. APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again. APNs will save the last message for 30 days or less and attempt delivery as soon as it's online. One-click setup with the CLI The Appwrite CLI sets up APNs for an iOS app in one command, from…",
     "breadcrumbs": [
       "Messaging",
       "Providers",
       "Push with APNs"
+    ]
+  },
+  {
+    "slug": "products/messaging/appwrite-push",
+    "title": "Appwrite Push",
+    "description": "Deliver push notifications to Android, iOS, web, Flutter, and React Native apps straight from Appwrite, without Firebase or device tokens.",
+    "excerpt": "Appwrite Push is Appwrite's own push provider. Your app opens a connection to Appwrite's push broker with the Appwrite SDK, and messages you send with Appwrite Messaging arrive over that connection. There is no Firebase project to set up, no service account to upload, and no device token to register before you can reach a signed-in user. Appwrite Push works with the Web, Flutter, React Native, Android, and Apple SDKs. On Android it keeps delivering while the app is closed,…",
+    "breadcrumbs": [
+      "Messaging",
+      "Providers",
+      "Push with Appwrite"
     ]
   },
   {
@@ -4651,7 +4662,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/providers",
     "title": "Providers",
     "description": "Learn the different providers that you can use to send messages with Appwrite.",
-    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Send push notifications to apps on Apple devices through Apple…",
+    "excerpt": "Appwrite allows you to connect to a variety of third-party messaging providers to deliver push notifications, emails, and SMS messages to your users. Before you can deliver messages, you must connect to a messaging provider. Push notifications Send push notifications, which are little notification messages that appear on a user's browser or device to alert them of events or updates. Configure one of the following providers to send push notifications. Deliver push notifications to Android, iOS, web, Flutter, and React…",
     "breadcrumbs": [
       "Messaging",
       "Concepts",
@@ -4684,7 +4695,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/messaging/send-push-notifications",
     "title": "Send push notification",
     "description": "Send push notification to your users using Appwrite Messaging.",
-    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging. The push notification APIs for Apple and Android devices can only be accessed through these services. You must configure these services before you can send your first…",
+    "excerpt": "You can send, schedule, and manage push notifications to your apps using Appwrite Messaging. Push notifications can be used to deliver new message notifications, app updates, promotional offers, and other messages straight to your user's devices. Push notifications are sent through a provider. Appwrite Push delivers messages straight from Appwrite to apps built with the Appwrite SDKs, with no credentials to configure. Apple Push Notification service and Firebase Cloud Messaging deliver through Apple's and Google's push services. You must configure…",
     "breadcrumbs": [
       "Messaging",
       "Guides",

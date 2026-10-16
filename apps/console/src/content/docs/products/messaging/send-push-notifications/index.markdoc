@@ -8,12 +8,15 @@ Push notifications can be used to deliver new message notifications, app updates
 and other messages straight to your user's devices.
 
 {% section #add-provider step=1 title="Add provider" %}
-Push notifications must be sent through third-party providers, like Apple Push Notification service and Firebase Cloud Messaging.
-The push notification APIs for Apple and Android devices can only be accessed through these services.
+Push notifications are sent through a provider. Appwrite Push delivers messages straight from Appwrite to apps built with the Appwrite SDKs, with no credentials to configure.
+Apple Push Notification service and Firebase Cloud Messaging deliver through Apple's and Google's push services.
 
-You must configure these services before you can send your first push notification.
+You must configure a provider before you can send your first push notification.
 
 {% cards %}
+{% cards_item href="/docs/products/messaging/appwrite-push" title="Appwrite Push" icon="icon-device-mobile" %}
+Deliver push notifications from Appwrite to Android, iOS, web, Flutter, and React Native apps.
+{% /cards_item %}
 {% cards_item href="/docs/products/messaging/apns" title="APNS" icon="icon-apple" %}
 Configure APNs for push notification to Apple devices.
 {% /cards_item %}
@@ -24,6 +27,10 @@ Configure FCM for push notification to Android and Apple devices.
 
 {% /section %}
 {% section #add-targets step=2 title="Add targets" %}
+{% info title="Using Appwrite Push?" %}
+Appwrite Push reaches a signed-in user without a device token. Follow the [Appwrite Push guide](/docs/products/messaging/appwrite-push) to subscribe from your app instead of the steps below.
+{% /info %}
+
 Before sending your first push notification, your application must register itself for push notification,
 then provide the device token to Appwrite.
 

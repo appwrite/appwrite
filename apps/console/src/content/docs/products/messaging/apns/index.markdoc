@@ -103,7 +103,7 @@ appwrite init apns --create-key --provider fastlane
 
 ## What the CLI leaves to you {% #after-cli %}
 
-To deliver messages while the app is in the background or swiped away, add a Notification Service Extension whose class extends `AppwriteNotificationService`, and put the app and the extension in one App Group, named by `AppwritePushAppGroup` in both `Info.plist` files. The CLI prints this as a hint when it finishes.
+To deliver messages while the app is in the background or swiped away, add a Notification Service Extension whose class extends `AppwriteNotificationService`, and put the app and the extension in one App Group, named by `AppwritePushAppGroup` in both `Info.plist` files. The CLI prints this as a hint when it finishes. See [Appwrite Push background delivery on iOS](/docs/products/messaging/appwrite-push#background-ios) for the full steps.
 
 To set up APNs from the Console instead, follow the steps below.
 
