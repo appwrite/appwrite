@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\SMTP\Breaker;
+use Appwrite\SMTP\Refusal;
 use Appwrite\Template\Template;
 use Exception;
 use Utopia\Console\Console;
@@ -255,8 +256,7 @@ class Mails extends Action
         if (($result['deliveredTo'] ?? 0) === 0) {
             $failure = $result['results'][0] ?? [];
 
-            // A project's own server that refused for good answers every retry the same way; Appwrite's own keeps its retries.
-            if ($type === 'smtp' && ($failure['permanent'] ?? false) === true) {
+            if (Refusal::isFinal($type === 'smtp', $failure)) {
                 $code = (int) ($failure['code'] ?? 0);
                 $tripped = $breaker?->record($code) === true;
 
