@@ -66,6 +66,9 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('userId', $user->getId())
+            // Emit the full user object in the event payload so that
+            // users.[userId].update.prefs listeners receive a consistent payload
+            // matching all other users.[userId].update.* events (issue #7234).
             ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
