@@ -68,6 +68,18 @@ final class ConnectionOptions
         // Transport: fn(string $scheme): Transport. Defaults to the stream-based
         // Tcp/Tls transports; inject to use a coroutine-native transport (e.g. Swoole).
         public readonly ?\Closure $transportFactory = null,
+        // Initial connect: passes over the server pool connect() makes before it
+        // gives up (1 = a single pass), with $connectRetryWait plus up to
+        // $connectRetryJitter of random extra between passes. A server in
+        // lame-duck mode refuses new connections while its address still routes,
+        // and each new connection to a load-balanced address picks a backend
+        // afresh, so another pass usually lands on a live server. Only failures
+        // a fresh connection can fix are retried, and no pass starts once
+        // connectTimeout has elapsed since the first: a refusal is retried, a
+        // server that is timing out is not waited on again.
+        public readonly int $connectAttempts = 3,
+        public readonly float $connectRetryWait = 0.1,
+        public readonly float $connectRetryJitter = 0.1,
     ) {
         $this->servers = \is_string($servers) ? [$servers] : $servers;
     }

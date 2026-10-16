@@ -62,6 +62,15 @@ $conn = Connection::connect(new ConnectionOptions(
 $conn = Connection::connect('nats://user:pass@127.0.0.1:4222');
 ```
 
+`connect()` makes up to `connectAttempts` passes over the server pool (default 3), pausing
+`connectRetryWait` plus up to `connectRetryJitter` seconds between them (defaults 0.1 and 0.1).
+Behind a load-balanced address such as a Kubernetes Service, a server in lame-duck mode refuses
+new connections while it still receives them, and the next connection usually reaches a live
+one. Only failures a new connection can fix are retried: an authorization violation, a failed
+TLS handshake or a server at its connection limit fails on the first pass. No pass starts once
+`connectTimeout` has elapsed since the first, so a server that is timing out is not waited on
+again. Set `connectAttempts: 1` for a single pass.
+
 ### Publishing
 
 ```php
