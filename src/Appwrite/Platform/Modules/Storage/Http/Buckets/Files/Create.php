@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\Limit;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Folder;
@@ -42,7 +43,6 @@ use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Validator\FileExt;
-use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
@@ -114,6 +114,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -132,7 +133,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        array $plan
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -188,9 +190,7 @@ class Create extends Action
         }
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
-        if ($maximumFileSize > (int) System::getEnv('_APP_STORAGE_LIMIT', 0)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Maximum bucket file size is larger than _APP_STORAGE_LIMIT');
-        }
+        $limit = new Limit((int) System::getEnv('_APP_STORAGE_LIMIT', '0'), (int) (($plan['fileSize'] ?? 0) * 1000 * 1000));
 
         $file = $request->getFiles('file');
 
@@ -244,8 +244,7 @@ class Create extends Action
         }
 
         // Check if file size is exceeding allowed limit
-        $fileSizeValidator = new FileSize($maximumFileSize);
-        if (!$fileSizeValidator->isValid($fileSize)) {
+        if (!$limit->allows($fileSize, $maximumFileSize)) {
             throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
         }
 

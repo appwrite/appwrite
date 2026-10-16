@@ -967,7 +967,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_STORAGE_LIMIT',
-                'description' => 'Maximum file size allowed for file upload. The default value is 30MB. You should pass your size limit value in bytes.',
+                'description' => 'Maximum file size allowed for file upload, in bytes. The default value is 30MB. Set to 0 to disable the server file size limit; positive bucket and plan limits still apply.',
                 'introduction' => '0.7.0',
                 'default' => '30000000',
                 'required' => false,

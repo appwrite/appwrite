@@ -10,6 +10,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\S3\Requests\CompleteMultipartUpload;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
+use Appwrite\Storage\Limit;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -32,7 +33,7 @@ class Create extends Base
         $this->setHttpMethods([Action::HTTP_REQUEST_METHOD_PUT, Action::HTTP_REQUEST_METHOD_POST]);
     }
 
-    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
+    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, Limit $limit): void
     {
         [$bucketId, $key] = $this->parts($request);
         if ($bucketId === '') {
@@ -101,7 +102,7 @@ class Create extends Base
             }
             $bucket = $this->bucket($dbForProject, $bucketId);
             $uploadId = \bin2hex(\random_bytes(16));
-            $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+            $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request), $limit);
             $this->sendXml($response, S3Xml::initiateMultipart($bucketId, $key, $uploadId));
             return;
         }
@@ -121,7 +122,6 @@ class Create extends Base
                 [$sourceBucketId, $sourceKey] = \array_pad(\explode('/', $copySource, 2), 2, '');
                 $sourceBucket = $this->bucket($dbForProject, $sourceBucketId);
                 $sourceFile = $this->getObject($dbForProject, $sourceBucket, $sourceKey);
-                $this->validateCopySize($bucket, $sourceFile);
                 if (\preg_match('/^bytes=(\d+)-(\d+)$/', $request->getHeaderLine('x-amz-copy-source-range'), $matches) === 1) {
                     $start = (int) $matches[1];
                     $end = (int) $matches[2];
@@ -130,8 +130,10 @@ class Create extends Base
                         throw new AppwriteException(AppwriteException::STORAGE_INVALID_RANGE);
                     }
                     $end = \min($end, $sourceSize - 1);
+                    $this->validateCopySize($bucket, $end - $start + 1, $limit);
                     $body = (string) $deviceForFiles->read($sourceFile->getAttribute('path', ''), $start, $end - $start + 1);
                 } else {
+                    $this->validateCopySize($bucket, (int) $sourceFile->getAttribute('sizeOriginal', 0), $limit);
                     $body = (string) $deviceForFiles->read($sourceFile->getAttribute('path', ''));
                 }
             }
@@ -166,7 +168,7 @@ class Create extends Base
             // connections from the fail-fast lock pool at once.
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
-            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $upload, $selected);
+            [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $upload, $selected, $limit);
             if ($event !== null) {
                 $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
                 $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
@@ -205,19 +207,19 @@ class Create extends Base
             [$sourceBucketId, $sourceKey] = \array_pad(\explode('/', $copySource, 2), 2, '');
             $sourceBucket = $this->bucket($dbForProject, $sourceBucketId);
             $sourceFile = $this->getObject($dbForProject, $sourceBucket, $sourceKey);
-            $this->validateCopySize($bucket, $sourceFile);
+            $this->validateCopySize($bucket, (int) $sourceFile->getAttribute('sizeOriginal', 0), $limit);
             $metadata = $sourceFile->getAttribute('metadata', []);
             if (\strtoupper($request->getHeaderLine('x-amz-metadata-directive')) === 'REPLACE') {
                 $metadata = $this->requestObjectMetadata($request);
             }
-            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
+            [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $limit, $metadata);
             $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
             $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             $this->sendXml($response, S3Xml::copyObject($file->getAttribute('signature', ''), $file->getUpdatedAt() ?: $file->getCreatedAt()));
             return;
         }
 
-        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+        [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $limit, $this->requestObjectMetadata($request));
         $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response

@@ -14,6 +14,7 @@ use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\S3\Auth\SignatureV4;
 use Appwrite\Platform\Modules\S3\Requests\AwsChunked;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
+use Appwrite\Storage\Limit;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
@@ -31,6 +32,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
@@ -68,6 +70,7 @@ abstract class Base extends Action
             ->inject('publisherForFunctions')
             ->inject('queueForWebhooks')
             ->inject('eventProcessor')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -88,9 +91,11 @@ abstract class Base extends Action
         FunctionPublisher $publisherForFunctions,
         Event $queueForWebhooks,
         EventProcessor $eventProcessor,
+        array $plan,
     ): void {
         try {
-            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor);
+            $limit = new Limit((int) System::getEnv('_APP_STORAGE_LIMIT', '0'), (int) (($plan['fileSize'] ?? 0) * 1000 * 1000));
+            $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor, $limit);
         } catch (AppwriteException $error) {
             $this->sendError($response, $this->mapError($error), $error->getMessage(), $request->getURI(), $this->mapStatus($error));
         } catch (\Throwable $error) {
@@ -98,7 +103,7 @@ abstract class Base extends Action
         }
     }
 
-    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void;
+    abstract protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, Limit $limit): void;
 
     protected function authorize(Request $request, Document $project, Document $team, User $user, array $scopes): void
     {
@@ -184,7 +189,7 @@ abstract class Base extends Action
         return 's3.multipart.index.' . $project->getId() . '.' . $bucket->getId();
     }
 
-    protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
+    protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata, Limit $limit): array
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
@@ -194,7 +199,7 @@ abstract class Base extends Action
         // Stage each upload independently; destination identity is chosen only at locked completion.
         $fileId = Id::unique();
         $name = $object['name'];
-        $this->validateFileConstraints($bucket, $name, 0);
+        $this->validateFileConstraints($bucket, $name, 0, $limit);
         $path = $this->path($deviceForFiles, $bucket, $fileId, $name);
         $contentType = $this->contentType($name, $contentType);
         $deviceMetadata = [];
@@ -378,10 +383,10 @@ abstract class Base extends Action
         return $format ?? 'application/octet-stream';
     }
 
-    protected function validateFileConstraints(Document $bucket, string $name, int $size): void
+    protected function validateFileConstraints(Document $bucket, string $name, int $size, Limit $limit): void
     {
         $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
-        if ($maximumFileSize > 0 && $size > $maximumFileSize) {
+        if (!$limit->allows($size, $maximumFileSize)) {
             throw new AppwriteException(AppwriteException::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
         }
 
@@ -395,12 +400,11 @@ abstract class Base extends Action
         }
     }
 
-    protected function validateCopySize(Document $bucket, Document $sourceFile): void
+    protected function validateCopySize(Document $bucket, int $size, Limit $limit): void
     {
         $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
-        $sourceSize = (int) $sourceFile->getAttribute('sizeOriginal', 0);
 
-        if ($maximumFileSize > 0 && $sourceSize > $maximumFileSize) {
+        if (!$limit->allows($size, $maximumFileSize)) {
             throw new AppwriteException(AppwriteException::STORAGE_INVALID_FILE_SIZE, 'Copied file size not allowed');
         }
     }
@@ -532,7 +536,7 @@ abstract class Base extends Action
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $bucketId,
-                'maximumFileSize' => (int) \Utopia\System\System::getEnv('_APP_STORAGE_LIMIT', 0),
+                'maximumFileSize' => (int) \Utopia\System\System::getEnv('_APP_STORAGE_LIMIT', '0'),
                 'allowedFileExtensions' => [],
                 'fileSecurity' => false,
                 'enabled' => true,
@@ -563,7 +567,7 @@ abstract class Base extends Action
         }
     }
 
-    protected function putObject(Database $dbForProject, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
+    protected function putObject(Database $dbForProject, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, Limit $limit, array $metadata = []): Document
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
@@ -573,7 +577,7 @@ abstract class Base extends Action
         $fileId = $existing?->getId() ?: Id::unique();
         $folder = $object['folder'];
         $name = $object['name'];
-        $this->validateFileConstraints($bucket, $name, \strlen($body));
+        $this->validateFileConstraints($bucket, $name, \strlen($body), $limit);
         $previousPath = $existing?->getAttribute('path', '') ?? '';
         $path = $existing === null
             ? $this->path($deviceForFiles, $bucket, $fileId, $name)
@@ -635,12 +639,12 @@ abstract class Base extends Action
     /**
      * @return array{0: Document, 1: string}
      */
-    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
+    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, Limit $limit, array $metadata = []): array
     {
         // Storage permits duplicate names, so lookup and write must share one key-scoped critical section.
-        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
+        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $limit, $metadata): array {
             $existing = $this->findObject($dbForProject, $bucket, $key);
-            $file = $this->putObject($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata);
+            $file = $this->putObject($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $limit, $metadata);
 
             return [$file, $existing === null ? 'create' : 'update'];
         }, timeout: 120.0);
@@ -845,7 +849,7 @@ abstract class Base extends Action
     /**
      * @return array{0: Document, 1: string|null}
      */
-    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array
+    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, array $selected, Limit $limit): array
     {
         $parts = $this->getMultipartParts($upload);
         $partsByNumber = [];
@@ -873,7 +877,7 @@ abstract class Base extends Action
             $expected++;
         }
 
-        $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key']), $size);
+        $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key']), $size, $limit);
 
         $etag = \md5($etagBytes) . '-' . \count($selected);
         $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');

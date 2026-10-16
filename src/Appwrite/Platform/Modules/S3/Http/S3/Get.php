@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
+use Appwrite\Storage\Limit;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -30,7 +31,7 @@ class Get extends Base
         parent::__construct(Action::HTTP_REQUEST_METHOD_GET);
     }
 
-    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
+    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor, Limit $limit): void
     {
         $isHead = $request->getMethod() === Action::HTTP_REQUEST_METHOD_HEAD
             || \in_array($this->query($request, 'x-id'), ['HeadObject', 'HeadBucket'], true);
