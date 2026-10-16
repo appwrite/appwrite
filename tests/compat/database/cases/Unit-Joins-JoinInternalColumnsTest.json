@@ -6961,20 +6961,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -9286,20 +9279,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -18588,24 +18574,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$createdAt": null
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -20917,24 +20892,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$updatedAt": null
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -30227,24 +30191,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -32556,24 +32509,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -41870,28 +41812,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$createdAt": null
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$createdAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
@@ -44203,28 +44130,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 1,
-              "note.$updatedAt": null
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            },
-            {
-              "rows": 1,
-              "note.$updatedAt": "<now>"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         }
       ]
     },
