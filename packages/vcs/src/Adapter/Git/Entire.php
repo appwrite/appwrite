@@ -201,8 +201,17 @@ class Entire extends Git
      */
     public function initializeVariables(string $installationId, string $privateKey, ?string $appId = null, ?string $accessToken = null, ?string $refreshToken = null): void
     {
+        if (\in_array($appId, [null, '', '0'], true)) {
+            throw new Exception('Entire requires the plugin slug to sign the plugin JWT.');
+        }
+
         $this->installationId = $installationId;
-        $this->plugin = \strval($appId);
+        $this->plugin = $appId;
+
+        // A plugin JWT lives five minutes and costs one signature, so every
+        // instance signs its own; only the minted access token is worth
+        // keeping across requests.
+        $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
 
         $response = $this->cache->load('entire-' . $installationId, self::TOKEN_CACHE_TTL);
         $parsed = \is_string($response) ? json_decode($response, true) : null;
@@ -210,13 +219,13 @@ class Entire extends Git
 
         // The token is dropped five minutes before its own expiry
         $expiresAt = $this->number($parsed, 'expiresAt');
-        if ($parsed === [] || ($expiresAt > 0 && $expiresAt - 5 * self::LEEWAY <= time())) {
+        $accessToken = $this->text($parsed, 'accessToken');
+        if ($accessToken === '' || ($expiresAt > 0 && $expiresAt - 5 * self::LEEWAY <= time())) {
             $this->generateAccessToken($privateKey, $appId);
             return;
         }
 
-        $this->jwtToken = $this->text($parsed, 'jwtToken');
-        $this->accessToken = $this->text($parsed, 'accessToken');
+        $this->accessToken = $accessToken;
     }
 
     /**
@@ -255,7 +264,6 @@ class Entire extends Git
         $expiresAt = strtotime($this->text($responseBody, 'expires_at'));
 
         $this->cache->save('entire-' . $this->installationId, json_encode([
-            'jwtToken' => $this->jwtToken,
             'accessToken' => $this->accessToken,
             'expiresAt' => $expiresAt === false ? 0 : $expiresAt,
         ]) ?: '{}');

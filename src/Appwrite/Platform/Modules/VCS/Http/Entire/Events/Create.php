@@ -141,24 +141,34 @@ class Create extends Action
         // retry of a delivery already being processed must not deploy again.
         // TODO: acknowledge first and process asynchronously instead.
         $deliveryId = \strval($parsedPayloads[0]['deliveryId'] ?? '');
+        // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+        $claim = 'entire-' . \substr(\hash('sha256', $deliveryId), 0, 29);
         if (!empty($deliveryId)) {
             try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                    // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
-                    '$id' => 'entire-' . \substr(\hash('sha256', $deliveryId), 0, 29),
-                ])));
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $claim])));
             } catch (Duplicate) {
                 $response->json(['events' => [], 'duplicate' => true]);
                 return;
             }
         }
 
-        foreach ($parsedPayloads as $parsedPayload) {
-            match (true) {
-                \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                default => null,
-            };
+        try {
+            foreach ($parsedPayloads as $parsedPayload) {
+                match (true) {
+                    \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                    default => null,
+                };
+            }
+        } catch (\Throwable $error) {
+            // A delivery that failed is answered with an error, which Entire
+            // retries; the claim is released so the retry is not taken for a
+            // duplicate of work that never finished.
+            if (!empty($deliveryId)) {
+                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
+            }
+
+            throw $error;
         }
 
         $response->json(['events' => $parsedPayloads]);
