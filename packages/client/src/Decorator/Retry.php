@@ -71,8 +71,13 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
     #[\Override]
     public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        if ($onResponse !== null && (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming())) {
-            throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+        $stream = $this->adapter->stream(...);
+        if ($onResponse !== null) {
+            if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
+                throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+            }
+            $adapter = $this->adapter;
+            $stream = static fn (RequestInterface $request, callable $sink): ResponseInterface => $adapter->stream($request, $sink, $onResponse);
         }
 
         for ($attempt = 1; ; $attempt++) {
@@ -83,11 +88,7 @@ final class Retry extends Decorator implements ResponseStreamingClientInterface
             };
 
             try {
-                if ($onResponse === null) {
-                    $response = $this->adapter->stream($request, $countingSink);
-                } else {
-                    $response = $this->adapter->stream($request, $countingSink, $onResponse);
-                }
+                $response = $stream($request, $countingSink);
 
                 // Once bytes have reached the sink, replaying would duplicate them.
                 if ($delivered > 0) {
