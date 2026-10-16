@@ -23,6 +23,7 @@ use Utopia\Platform\Enum;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -84,6 +85,7 @@ class Create extends Action
                 RelationshipDeleteAction::Restrict->value,
                 RelationshipDeleteAction::SetNull->value
             ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
+            ->param('description', '', new Text(1024, 0), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -93,7 +95,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $key ??= $relatedCollectionId;
         $twoWayKeyWasProvided = $twoWayKey !== null;
@@ -154,6 +156,7 @@ class Create extends Action
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
+            'description' => $description,
             'type' => ColumnType::Relationship->value,
             'size' => 0,
             'required' => false,
