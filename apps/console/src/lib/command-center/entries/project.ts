@@ -32,7 +32,6 @@ import {
   canSeeActivityNav,
   canSeeProjectNavItem,
 } from '@/lib/console-access-checks'
-import { loadDebugOverrides } from '@/lib/debug-overrides'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { registerCommands } from '../registry'
@@ -79,9 +78,7 @@ const PROJECT_NAV: CommandEntry[] = [
       'vscode',
       'connect',
     ],
-    available: (ctx) =>
-      loadDebugOverrides().showProjectAgents &&
-      canShowAgentMcpConnectCta(ctx.access, ctx.features),
+    available: (ctx) => canShowAgentMcpConnectCta(ctx.access, ctx.features),
     to: (ctx) => `/projects/${ctx.projectId}/agents`,
   },
   {

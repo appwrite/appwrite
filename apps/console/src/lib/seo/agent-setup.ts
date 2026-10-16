@@ -81,7 +81,7 @@ export function generateAgentSetupMarkdown(): string {
 
 These are official instructions from Appwrite. Fetch this page yourself and follow it end to end.
 
-The goal: when you finish, the user can build with Appwrite in this project. Appwrite MCP is connected, the Appwrite skills are installed, the latest Appwrite CLI is installed and signed in, and the official SDK that matches the project is installed with a client module. The user prompt includes a project ID, a project name, and an API endpoint. Use them throughout.
+The goal: when you finish, the user can build with Appwrite. Appwrite MCP is connected, the Appwrite skills are installed, the latest Appwrite CLI is installed and signed in, and either the official SDK is installed in their existing project or you have started a new local app linked to their Appwrite project. The user prompt includes a project ID, a project name, and an API endpoint. Use those values throughout. Never ask the user to send them again.
 
 How to work:
 
@@ -309,7 +309,9 @@ If \`appwrite\` is already installed, still run the upgrade so the user is not o
 
 ## 5. Install the matching official Appwrite SDK
 
-Detect the project's language and runtime from the repo. Prefer an obvious stack (web/React vs Node backend). If it is ambiguous, inspect manifests and lockfiles: \`package.json\`, \`pubspec.yaml\`, \`requirements.txt\`, \`pyproject.toml\`, \`go.mod\`, \`composer.json\`, \`Gemfile\`, \`Package.swift\`, \`*.csproj\`, \`Cargo.toml\`, Gradle files. If the repo is empty, ask the user which stack they want before installing anything.
+Detect the project's language and runtime from the repo. Prefer an obvious stack (web/React vs Node backend). If it is ambiguous, inspect manifests and lockfiles: \`package.json\`, \`pubspec.yaml\`, \`requirements.txt\`, \`pyproject.toml\`, \`go.mod\`, \`composer.json\`, \`Gemfile\`, \`Package.swift\`, \`*.csproj\`, \`Cargo.toml\`, Gradle files.
+
+If there is no local project (empty folder, no manifest, or you cannot see a workspace), skip the SDK install for now. Do not ask for a folder, a stack, or the Appwrite project ID. Finish CLI sign-in, then in step 7 start a new local app from an idea and install the SDK there.
 
 Install or upgrade the matching official SDK to the latest published version. Use the project's package manager. Do not overwrite unrelated dependencies. If the correct SDK is already at latest, skip the install. Do not pin an old major.
 
@@ -380,9 +382,10 @@ MCP servers usually load only after a reload or a new session. If the tools are 
 
 Finish with one message to the user:
 
-- **Ready**: what you installed and configured, and the project you used.
+- **Ready**: what you installed and configured, and the Appwrite project you used.
 - **Your turn**: a short numbered list of every remaining action, in order (approvals they declined, plugin clicks, sign-ins, reload or restart). Put the sign-ins together so they can approve them in one go. Leave the list out if nothing is left.
-- **After that**: tell them to come back to this conversation and say "continue". Then you verify MCP as above.
+- **What next**: do not ask for a local folder, the Appwrite project name or ID, or the API endpoint. Those are already in the user prompt. If a local project is already open, ask them to describe the idea and you will scaffold the Appwrite pieces it needs (auth, tables, storage, functions, sites, messaging) in that repo, linked to this Appwrite project. If you cannot see a local project, ask for an idea the same way, or offer two or three small starters they can pick (for example a notes app with Auth and a database, a file locker with Auth and Storage, a waitlist with Sites, a database, and Messaging). Then create the app in the current working directory, or in a new sibling folder if this directory is not a good place, install the matching SDK, write the client module, and point the CLI at the Appwrite project from the user prompt.
+- **What Appwrite can do**: close with a short pitch so they know what is possible from this conversation: Auth (email, OAuth, MFA, teams), Databases, Storage, Functions, Sites, Messaging, and realtime. You can add those through Appwrite MCP without leaving the editor.
 
 If a sign-in or listing fails, say so plainly and point the user at the Appwrite MCP sign-in or \`appwrite login\`, not at creating an API key.
 
