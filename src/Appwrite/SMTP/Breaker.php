@@ -7,6 +7,7 @@ use Utopia\Span\Span;
 
 /**
  * Stops dialling a project's own SMTP host after repeated refused logins from our shared egress IPs.
+ * Counts need a cache that keeps fields under a key (Redis); any other keeps the breaker closed.
  */
 final class Breaker
 {
@@ -45,18 +46,12 @@ final class Breaker
             return false;
         }
 
-        $failures = $this->load($this->key . ':failures', self::WINDOW);
-        $failures = \array_values(\array_filter(
-            \is_array($failures) ? $failures : [],
-            fn (mixed $at): bool => (int) $at > $this->now - self::WINDOW,
-        ));
-        $failures[] = $this->now;
-
-        // The open key is written apart from the tally so a stale tally write cannot close it.
-        $open = \count($failures) >= self::THRESHOLD;
+        // One field per refusal in a fixed window, so concurrent workers never overwrite each other's count.
+        $failures = $this->key . ':failures:' . \intdiv($this->now, self::WINDOW);
 
         try {
-            $this->cache->save($this->key . ':failures', $failures, ttl: self::WINDOW);
+            $this->cache->save($failures, (string) $this->now, \bin2hex(\random_bytes(8)), self::WINDOW);
+            $open = \count($this->cache->list($failures)) >= self::THRESHOLD;
 
             if ($open) {
                 $this->cache->save($this->key . ':open', (string) ($this->now + self::COOLDOWN), ttl: self::COOLDOWN);
