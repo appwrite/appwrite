@@ -126,7 +126,7 @@ Push ships in these versions of the client SDKs and later:
 * iOS 15, macOS 12, tvOS 15, watchOS 8 and later
 {% /table %}
 
-Some platforms need extra setup:
+Some platforms need extra setup for background notifications:
 
 {% tabs %}
 {% tabsitem #setup-flutter title="Flutter" %}
