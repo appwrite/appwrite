@@ -74,9 +74,10 @@ final class ConnectionOptions
         // lame-duck mode refuses new connections while its address still routes,
         // and each new connection to a load-balanced address picks a backend
         // afresh, so another pass usually lands on a live server. Only failures
-        // a fresh connection can fix are retried, and no pass starts once
-        // connectTimeout has elapsed since the first: a refusal is retried, a
-        // server that is timing out is not waited on again.
+        // a fresh connection can fix are retried, and no pass starts after
+        // connectTimeout has elapsed since the call: a refusal is retried, a
+        // server that is timing out is not waited on again, and a pause that
+        // would end past connectTimeout is not taken.
         public readonly int $connectAttempts = 3,
         public readonly float $connectRetryWait = 0.1,
         public readonly float $connectRetryJitter = 0.1,

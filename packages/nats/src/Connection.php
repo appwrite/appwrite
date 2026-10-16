@@ -622,7 +622,7 @@ final class Connection
     {
         $this->status = self::STATUS_CONNECTING;
         $lastError = null;
-        $started = microtime(true);
+        $deadline = microtime(true) + $this->options->connectTimeout;
 
         for ($attempt = 1; ; $attempt++) {
             $retryable = true;
@@ -638,13 +638,20 @@ final class Connection
                 }
             }
 
-            if (!$retryable
-                || $attempt >= $this->options->connectAttempts
-                || microtime(true) - $started >= $this->options->connectTimeout) {
+            if (!$retryable || $attempt >= $this->options->connectAttempts) {
                 break;
             }
 
-            self::pause($this->options->connectRetryWait + mt_rand() / mt_getrandmax() * $this->options->connectRetryJitter);
+            // A pause that ends at or past the deadline is not taken, since the
+            // pass after it would start outside connectTimeout. Shortening it to
+            // fit would start that pass at once, before the backend had the wait
+            // to drain, so the connect gives up instead.
+            $pause = $this->options->connectRetryWait + mt_rand() / mt_getrandmax() * $this->options->connectRetryJitter;
+            if (microtime(true) + $pause >= $deadline) {
+                break;
+            }
+
+            self::pause($pause);
         }
 
         $this->status = self::STATUS_DISCONNECTED;

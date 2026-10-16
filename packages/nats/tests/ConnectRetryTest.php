@@ -220,6 +220,50 @@ final class ConnectRetryTest extends TestCase
         $this->assertGreaterThanOrEqual(0.05, $connects[2] - $connects[1]);
     }
 
+    /**
+     * Refusals that come back at once, well inside connectTimeout, with a wait
+     * between passes that does not fit what is left of it.
+     *
+     * @return \Iterator<string, array{float, float, int}>
+     */
+    public static function pauseOverrunsDeadlineProvider(): \Iterator
+    {
+        // The first pause already ends past the deadline.
+        yield 'wait longer than the window' => [0.1, 1.0, 1];
+        // The first pause fits, the second would end past the deadline.
+        yield 'second wait overruns' => [0.25, 0.15, 2];
+    }
+
+    #[DataProvider('pauseOverrunsDeadlineProvider')]
+    public function testNoPassStartsAfterAPauseThatOverrunsTheDeadline(float $connectTimeout, float $wait, int $passes): void
+    {
+        /** @var list<float> $starts */
+        $starts = [];
+        $factory = static function () use (&$starts): FakeTransport {
+            $starts[] = hrtime(true) / 1e9;
+            $transport = new FakeTransport();
+            $transport->refuse = self::refusal();
+
+            return $transport;
+        };
+
+        $called = hrtime(true) / 1e9;
+        try {
+            Connection::connect(self::options($factory, 1000, wait: $wait, connectTimeout: $connectTimeout));
+            $this->fail('connect() must give up');
+        } catch (ConnectionException $error) {
+            $this->assertStringContainsString('Connection refused', $error->getPrevious()?->getMessage() ?? '');
+        }
+        $returned = hrtime(true) / 1e9;
+
+        $this->assertCount($passes, $starts);
+        foreach ($starts as $start) {
+            $this->assertLessThan($connectTimeout, $start - $called, 'a pass started after connectTimeout');
+        }
+        // Nor does it sleep past the deadline only to give up afterwards.
+        $this->assertLessThan($connectTimeout, $returned - $called);
+    }
+
     public function testNoPassStartsOnceConnectTimeoutHasElapsed(): void
     {
         $connects = 0;
