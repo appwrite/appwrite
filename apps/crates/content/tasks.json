@@ -1,13 +1,21 @@
 {
-  "updated": "2026-10-16T12:07:00Z",
+  "updated": "2026-10-16T14:03:00Z",
   "tasks": [
     {
-      "id": "query-sync",
-      "title": "Sync utopia-query with main",
+      "id": "db-last",
+      "title": "Database: the last replay case and the postgres byte case",
+      "area": "Database 8",
+      "status": "todo",
+      "updated": "2026-10-16T14:03:00Z",
+      "note": "Scope-Memory-PermissionTests#testNoChangeUpdateDocumentWithoutPermission fails without services; postgres Adapter-Find \"contains\" with a \\xff byte returns [] in PHP and a 42883 error in Rust."
+    },
+    {
+      "id": "query-join-alias",
+      "title": "Query: joins without an alias, from main",
       "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-16T12:07:00Z",
-      "note": "The last cause of database compat differences: spatial validation (NaN or infinite distances refused), distinct with an attribute refused, stricter limit and offset parsing. Fixes the remaining PostgresDistance and spatial relationship cases."
+      "status": "todo",
+      "updated": "2026-10-16T14:03:00Z",
+      "note": "main changed packages/query to allow joins without an alias after the last merge from main; port it once main is merged again."
     },
     {
       "id": "async-compat",
@@ -16,6 +24,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "query-sync",
+      "title": "Sync utopia-query with main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-16T14:03:00Z",
+      "note": "Spatial validation (malformed shapes, open rings, NaN or infinite distances refused), distinct with an attribute refused, limit and offset parsed as PHP's toInteger. 5,896 cases and 26,000 fuzz inputs, 0 differences; the spatial database cases pass. The database replay without services is down to 1 case."
     },
     {
       "id": "db83",
@@ -110,8 +126,8 @@
       "title": "Database lanes and the Rust unit tests green in CI",
       "area": "Database 8",
       "status": "blocked",
-      "note": "The Rust unit tests replay every recorded case; database has 401 differences left (the three tasks above), so Checks / Rust and the database-* lanes stay red until they land.",
-      "updated": "2026-10-15T17:16:00Z"
+      "note": "The database replay is down to 1 case without services; the lanes in CI decide the rest.",
+      "updated": "2026-10-16T14:03:00Z"
     },
     {
       "id": "filters-mutate",
