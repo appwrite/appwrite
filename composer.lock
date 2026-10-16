@@ -4426,16 +4426,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.3.2",
+            "version": "8.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b969d6961f93288aae2c9c1d77a4e4401b5682d6"
+                "reference": "71540530f91d4932ece91ee87c5d1869205dde7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b969d6961f93288aae2c9c1d77a4e4401b5682d6",
-                "reference": "b969d6961f93288aae2c9c1d77a4e4401b5682d6",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/71540530f91d4932ece91ee87c5d1869205dde7a",
+                "reference": "71540530f91d4932ece91ee87c5d1869205dde7a",
                 "shasum": ""
             },
             "require": {
@@ -4493,9 +4493,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.3.2"
+                "source": "https://github.com/utopia-php/database/tree/8.3.4"
             },
-            "time": "2026-10-16T04:36:37+00:00"
+            "time": "2026-10-16T05:50:10+00:00"
         },
         {
             "name": "utopia-php/mongo",
