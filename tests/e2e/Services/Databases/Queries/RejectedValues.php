@@ -342,4 +342,48 @@ trait RejectedValues
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
     }
+
+    public function testBulkUpdateIntoAUniqueIndexIsAConflict(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collectionId = $this->createRejectedValuesCollection($databaseId, 'bulkUnique');
+
+        $created = $this->createAttribute($databaseId, $collectionId, 'string', [
+            'key' => 'handle',
+            'size' => 64,
+            'required' => true,
+        ]);
+        $this->assertSame(202, $created['headers']['status-code'], $created['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'handle');
+
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $this->getRejectedValuesKeyHeaders(), [
+            'key' => 'uniqueHandle',
+            'type' => 'unique',
+            $this->getIndexAttributesParam() => ['handle'],
+        ]);
+        $this->assertSame(202, $index['headers']['status-code'], $index['body']['message'] ?? '');
+        $this->waitForIndex($databaseId, $collectionId, 'uniqueHandle');
+
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['handle' => 'first']);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['handle' => 'second']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $this->getRejectedValuesKeyHeaders(), [
+            'data' => ['handle' => 'same'],
+            'queries' => [Query::equal('handle', ['first', 'second'])->toString()],
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code'], $response['body']['message'] ?? '');
+        $this->assertSame(
+            $this->getRecordResource() === 'rows' ? Exception::ROW_UNIQUE_CONSTRAINT_VIOLATION : Exception::DOCUMENT_UNIQUE_CONSTRAINT_VIOLATION,
+            $response['body']['type'],
+        );
+
+        $unchanged = $this->listRejectedValues($databaseId, $collectionId, [Query::equal('handle', ['first', 'second'])->toString()]);
+        $this->assertSame(200, $unchanged['headers']['status-code']);
+        $this->assertSame(2, $unchanged['body']['total'], 'A rejected bulk update must not change any record');
+    }
 }
