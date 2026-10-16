@@ -566,7 +566,7 @@ With at-least-once delivery, Appwrite stores each message and replays the newest
 Replay is tracked per client ID, and a client ID the broker hasn't seen before gets no backlog.
 
 - **Android**: the SDK derives a stable ID per user and install, so leave `setPushClientId` unset. This includes Flutter and React Native apps on Android.
-- **iOS and the web**: the SDK's default ID is shared by all of the user's iOS devices, or tied to one browser tab. If missed messages must be replayed, set a client ID you persist per device, for example in the Keychain or `localStorage`.
+- **iOS and the web**: the default ID is shared by all of the user's iOS devices and Flutter web sessions, or, with the Web SDK, tied to one browser tab. If missed messages must be replayed, set a client ID you persist per device, for example in the Keychain or `localStorage`.
 
 ```ts
 let clientId = localStorage.getItem('pushClientId');
@@ -576,6 +576,8 @@ if (!clientId) {
 }
 client.setPushClientId(clientId);
 ```
+
+All tabs of the browser share this ID, so a missed message is replayed to the first tab that reconnects.
 
 A random client ID on every launch loses the backlog.
 
