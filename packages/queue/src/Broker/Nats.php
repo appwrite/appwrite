@@ -100,11 +100,13 @@ class Nats implements Synchronous, Consumer, Bounded
 
     /**
      * Work streams this process has seen owned by the queue publishing to them, as
-     * stream => identity. Static, not per instance: a pool builds a broker per
-     * connection and a recycled worker rebuilds the pool, and the point is one
-     * identity read per queue per process rather than per connection.
+     * account => stream => identity. Static, not per instance: a pool builds a broker
+     * per connection and a recycled worker rebuilds the pool, and the point is one
+     * identity read per queue per process rather than per connection. Keyed by
+     * account (see account()), because a stream name means a different stream on
+     * another cluster or account, and a confirmation there says nothing here.
      *
-     * @var array<string, string>
+     * @var array<string, array<string, string>>
      */
     private static array $ownedStreams = [];
 
@@ -647,15 +649,41 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     private function guardOnce(Queue $queue): void
     {
+        $account = $this->account();
         $stream = $this->workStream($queue);
         $identity = $this->identity($queue);
-        if ((self::$ownedStreams[$stream] ?? null) === $identity) {
+        if ((self::$ownedStreams[$account][$stream] ?? null) === $identity) {
             return;
         }
 
         if ($this->guardStreamName($queue, $identity) === $identity) {
-            self::$ownedStreams[$stream] = $identity;
+            self::$ownedStreams[$account][$stream] = $identity;
         }
+    }
+
+    /**
+     * Which JetStream a stream name refers to, as far as the connection can say: the
+     * servers it was opened against and the credentials it authenticates with. The
+     * server does not name the account a connection lands in, and asking JetStream
+     * costs the very request the ownership cache exists to save. Over-splitting is
+     * cheap (two spellings of one cluster read the owner twice); merging two accounts
+     * is the bug, so every server and credential option is in the key, and a token
+     * or JWT provider, being a closure, is told apart by object. Hashed so no
+     * credential sits in the map as a key.
+     */
+    private function account(): string
+    {
+        $options = $this->connection()->getOptions();
+
+        return hash('xxh128', serialize([
+            $options->servers,
+            $options->user,
+            $options->token,
+            $options->nkey,
+            $options->credentialsFile,
+            $options->tokenProvider instanceof \Closure ? spl_object_id($options->tokenProvider) : null,
+            $options->jwtProvider instanceof \Closure ? spl_object_id($options->jwtProvider) : null,
+        ]));
     }
 
     /**

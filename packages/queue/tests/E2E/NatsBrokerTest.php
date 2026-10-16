@@ -698,6 +698,47 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    /**
+     * A stream's owner confirmed on one account is not trusted on another, where the
+     * same stream name is a different stream. The test server has no authorization,
+     * so it accepts any credentials, and a second account is stood in for by a
+     * connection with other credentials; the stream is replaced between the two by
+     * the colliding queue's, as the other account would hold it.
+     */
+    public function testAnOwnerConfirmedOnOneAccountIsNotTrustedOnAnother(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $suffix = substr(md5(uniqid('', true)), 0, 6);
+        $mine = new Queue("o.{$suffix}");
+        $colliding = new Queue("o_{$suffix}");
+        $stream = 'Q_O_' . strtoupper($suffix);
+        $js = Connection::connect($url)->jetStream();
+
+        $here = new Nats(Connection::connect($url));
+        $here->provision($mine);
+        $this->assertTrue($here->publish($mine, ['task' => 'here']), 'confirms the owner on this account');
+        $here->close();
+
+        $js->deleteStream($stream);
+        $js->deleteStream($stream . '_DEAD');
+        $owner = new Nats(Connection::connect($url));
+        $owner->provision($colliding);
+
+        $there = new Nats(Connection::connect(new ConnectionOptions(servers: $url, user: 'other-account', pass: 'secret')));
+        $refusal = null;
+        try {
+            $there->publish($mine, ['task' => 'there']);
+        } catch (\RuntimeException $e) {
+            $refusal = $e->getMessage();
+        } finally {
+            $there->close();
+            $owner->close();
+        }
+
+        $this->assertStringContainsString('already belongs', (string) $refusal, 'the publish is refused on the other account');
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, "nothing reached the colliding queue's stream");
+    }
+
     public function testCollidingQueueNamesFailAcrossInstances(): void
     {
         // The guard reads the owning identity from the stream's metadata, so it holds
