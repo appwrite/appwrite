@@ -4,6 +4,7 @@ use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -179,9 +180,9 @@ return function (Container $container): void {
 
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
-    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new Deployments($jobs, $dbForProject, $project, $platform);
-    }, ['jobs', 'dbForProject', 'project', 'platform']);
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform, BuildPublisher $publisherForBuilds) {
+        return new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
+    }, ['jobs', 'dbForProject', 'project', 'platform', 'publisherForBuilds']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {

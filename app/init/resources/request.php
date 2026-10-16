@@ -12,6 +12,7 @@ use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -216,9 +217,9 @@ return function (Container $context): void {
     ), ['publisher']);
     // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
-        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
-    }, ['jobs', 'platform']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform, BuildPublisher $publisherForBuilds) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
+    }, ['jobs', 'platform', 'publisherForBuilds']);
     $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);

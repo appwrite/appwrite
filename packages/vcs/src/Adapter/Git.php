@@ -12,6 +12,7 @@ use Utopia\VCS\Adapter;
 
 abstract class Git extends Adapter
 {
+    #[\Override]
     protected string $endpoint;
 
     protected string $accessToken;
@@ -21,6 +22,7 @@ abstract class Git extends Adapter
      *
      * @var array<string, string>
      */
+    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)
@@ -145,6 +147,26 @@ abstract class Git extends Adapter
     public function getRepositoryCloneHeaders(): array
     {
         return [];
+    }
+
+    /**
+     * Whether any git client can fetch getRepositoryCloneUrl() with
+     * getRepositoryCloneHeaders(). False when fetching takes the provider's
+     * own tooling (Entire's git-remote-entire), so a consumer that cannot
+     * install it must clone with generateCloneCommand() itself.
+     */
+    public function supportsRepositoryCloneUrl(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Pushes $branch of a clone made by generateCloneCommand() back to its
+     * origin, carrying whatever credential the provider's remote needs.
+     */
+    public function generatePushCommand(string $owner, string $repositoryName, string $directory, string $branch): Command
+    {
+        return $this->git($directory)->argument('push')->argument('origin')->argument($branch);
     }
 
     /**

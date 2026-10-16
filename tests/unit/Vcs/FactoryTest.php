@@ -15,6 +15,7 @@ use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Adapter\Git\Entire;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
@@ -59,6 +60,24 @@ final class FactoryTest extends TestCase
         $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('origin');
+    }
+
+    public function testEntireRegistersNoOAuth2(): void
+    {
+        // Entire installs are approved on entire.io and confirmed by a signed
+        // receipt, like Origin's, so there is no OAuth2 client to build.
+        $registry = Config::getParam('vcs', []);
+        $this->assertArrayHasKey('entire', $registry);
+        $this->assertArrayNotHasKey('oauth2', $registry['entire']);
+        $this->assertSame('https://us.auth.entire.io', $registry['entire']['endpoint']);
+        $this->assertSame('_APP_VCS_ENTIRE_ISSUER', $registry['entire']['variables']['issuer']['envVariable']);
+
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
+        $this->assertInstanceOf(Entire::class, $factory->fromProvider('entire'));
+        $this->assertSame('https://entire.io/et/acme', $factory->fromProvider('entire')->getOrganizationUrl('acme'));
+
+        $this->expectException(Exception::class);
+        $factory->oauth2FromProvider('entire');
     }
 
     public function testOauth2FromProviderUnknownThrows(): void

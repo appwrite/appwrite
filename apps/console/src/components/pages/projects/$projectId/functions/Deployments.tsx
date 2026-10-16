@@ -176,6 +176,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (url.includes('entire.io')) {
+      const { label, Icon } = getVcsProvider('entire')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
 
   // Check for vcsProvider field (if available)
@@ -195,6 +199,10 @@ function detectVcsProvider(
     }
     if (provider === 'origin') {
       const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (provider === 'entire') {
+      const { label, Icon } = getVcsProvider('entire')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }

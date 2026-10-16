@@ -310,6 +310,19 @@ abstract class Adapter
     abstract public function updateCommitStatus(string $repositoryName, string $SHA, string $owner, string $state, string $description = '', string $target_url = '', string $context = ''): void;
 
     /**
+     * Reports a build check on a commit
+     * state can be one of: queued, pending, success, failure, error, cancelled
+     *
+     * A provider with plain commit statuses carries the title as the status
+     * description and drops the summary; queued is pending there. A provider
+     * with check runs overrides this to carry the summary and a conclusion.
+     */
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    {
+        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $name);
+    }
+
+    /**
      * Creates a check run for a commit.
      * status can be one of: queued, in_progress
      * Use updateCheckRun() to set conclusion and mark the run as completed.
