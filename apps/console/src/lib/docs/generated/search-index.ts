@@ -2231,6 +2231,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "excerpt": "A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Passkeys"
+    ]
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
