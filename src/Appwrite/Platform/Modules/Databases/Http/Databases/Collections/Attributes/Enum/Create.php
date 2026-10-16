@@ -82,9 +82,8 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        $description ??= '';
         if (!is_null($default) && !\in_array($default, $elements, true)) {
             throw new Exception($this->getInvalidValueException(), 'Default value not found in elements');
         }

@@ -94,14 +94,13 @@ class Create extends Action
         string $authUsername,
         string $authPassword,
         ?string $secret,
-        ?string $description,
+        string $description,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
         Authorization $authorization
     ) {
-        $description ??= '';
         $webhookId = ($webhookId == 'unique()') ? Id::unique() : $webhookId;
 
         $webhook = new Document([

@@ -87,7 +87,7 @@ class Create extends Base
         string $name,
         array $scopes,
         ?string $expire,
-        ?string $description,
+        string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -95,7 +95,6 @@ class Create extends Base
         Authorization $authorization,
         ?Key $apiKey,
     ) {
-        $description ??= '';
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);

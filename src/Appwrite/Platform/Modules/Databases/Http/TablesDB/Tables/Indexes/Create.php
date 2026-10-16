@@ -80,9 +80,8 @@ class Create extends IndexCreate
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        $description ??= '';
         parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $lengths, $description, $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
     }
 }

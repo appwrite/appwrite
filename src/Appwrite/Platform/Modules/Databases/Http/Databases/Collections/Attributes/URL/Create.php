@@ -87,7 +87,7 @@ class Create extends Action
         ?bool          $required,
         ?string        $default,
         bool           $array,
-        ?string        $description,
+        string         $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -95,7 +95,6 @@ class Create extends Action
         Event          $queueForEvents,
         Authorization $authorization
     ): void {
-        $description ??= '';
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'description' => $description,

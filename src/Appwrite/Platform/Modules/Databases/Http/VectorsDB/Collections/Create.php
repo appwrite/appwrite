@@ -86,9 +86,8 @@ class Create extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
-        $description ??= '';
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {

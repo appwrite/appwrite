@@ -91,9 +91,8 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, ?string $description, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, string $description, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
-        $description ??= '';
         $databaseId = $databaseId == 'unique()' ? Id::unique() : $databaseId;
 
         try {
