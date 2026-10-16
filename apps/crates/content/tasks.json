@@ -1,13 +1,13 @@
 {
-  "updated": "2026-10-15T22:19:00Z",
+  "updated": "2026-10-15T22:43:00Z",
   "tasks": [
     {
       "id": "db83",
       "title": "Database: follow PHP from 8.1.3 to 8.3.0",
       "area": "Database 8",
       "status": "progress",
-      "updated": "2026-10-15T21:11:00Z",
-      "note": "main bumped utopia-php/database to 8.3.0 on 2026-10-16. Port the 8.1.3→8.3.0 changes to Rust, move the PHP harness and its recordings to 8.3.0, and update every crate that uses it."
+      "updated": "2026-10-15T22:25:00Z",
+      "note": "main bumped utopia-php/database to 8.3.0 on 2026-10-16. Port the 8.1.3→8.3.0 changes to Rust, move the PHP harness and its recordings to 8.3.0, and update every crate that uses it. Also: aggregate group naming and casts, relationship population with queries, the ParsedQuery relationships field, and PHP line numbers in messages."
     },
     {
       "id": "async-compat",
@@ -18,12 +18,20 @@
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
     },
     {
+      "id": "db8-mirror",
+      "title": "Database 8: Mirror in Rust",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Mirror is a Database over its source, dispatching every method PHP's Mirror overrides; filters, onError and PHP's aliasing of bulk-write inputs reproduced. Unit-Mirror, MirrorTest and core-Mirror: 0 differences; 1,276 Scope-Mirror cases pass when each runs alone.",
+      "updated": "2026-10-15T22:43:00Z"
+    },
+    {
       "id": "db-lanes-ci",
       "title": "Database lanes as CI runs them",
       "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-15T20:02:00Z",
-      "note": "CI's Postgres lane: 786 differences. About 178 are aggregate values typed as strings in Rust where PHP returns numbers; about 25 cases cascade from PHP 8.1.3 losing a transaction under load, which the runner will retry once and log."
+      "status": "done",
+      "updated": "2026-10-15T22:25:00Z",
+      "note": "Aggregates typed as PHP 8.3.0's Aggregation class types them (int, float, or cast as the attribute), and the runner retries a case once, logged, when PHP loses a transaction under load. Lands with the 8.3.0 re-record, since the 8.1.3 recordings hold strings."
     },
     {
       "id": "db8-recordings",
@@ -96,14 +104,6 @@
       "status": "progress",
       "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
       "updated": "2026-10-15T19:17:00Z"
-    },
-    {
-      "id": "db8-mirror",
-      "title": "Database 8: Mirror in Rust",
-      "area": "Database 8",
-      "status": "progress",
-      "note": "Mirror and Mirroring filters, the last unported part of the library: 55 sqlite Unit faults and every Mirror case on the redis shard.",
-      "updated": "2026-10-15T17:16:00Z"
     },
     {
       "id": "db8-green",

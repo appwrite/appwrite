@@ -302,9 +302,6 @@ pub async fn open(a: &Args) -> R<Obj> {
     }
     let cx = &a.cx;
     fixtures::register_canonical();
-    if a.given("mirror") {
-        return fault("db.open: `mirror`: Mirror is not ported to the Rust database 8 crate (src/legacy)");
-    }
     let mut sql = None;
     let mut pool_fixture = None;
     let adapter: Arc<dyn Adapter> = if let Some(peer) = a.raw("adapter").filter(|j| !j.is_null()) {
@@ -360,8 +357,17 @@ pub async fn open(a: &Args) -> R<Obj> {
             .map(|c| fixtures::make_codec(c).map(|c| c.0))
             .collect::<R<Vec<_>>>()?,
     };
-    let db =
-        if codecs.is_empty() { Database::new(adapter, cache) } else { Database::with_filters(adapter, cache, codecs)? };
+    let mut mirror = None;
+    let db = if let Some(spec) = a.raw("mirror").filter(|j| !j.is_null()) {
+        let spec = Args::new(cx, spec)?;
+        let (db, parts) = super::mirror::open(cx, &spec, adapter, cache, sql.clone()).await?;
+        mirror = Some(Arc::new(parts));
+        db
+    } else if codecs.is_empty() {
+        Database::new(adapter, cache)
+    } else {
+        Database::with_filters(adapter, cache, codecs)?
+    };
     let authorization = Authorization::new(true);
     for role in a.opt_strings("roles")?.unwrap_or_else(|| vec!["any".to_owned()]) {
         authorization.add_role(&role);
@@ -392,7 +398,7 @@ pub async fn open(a: &Args) -> R<Obj> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?);
     }
-    let handle = Db { database: db.clone(), sql, pool: pool_fixture };
+    let handle = Db { database: db.clone(), sql, pool: pool_fixture, mirror };
     if !peer {
         cx.set_current(handle.clone());
     }

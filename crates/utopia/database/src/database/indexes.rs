@@ -30,6 +30,9 @@ impl Database {
     /// index, and ([`crate::Kind::Refused`]) when the adapter does not
     /// create it.
     pub async fn create_index(&self, collection: &str, index: Index) -> Result<Index> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_index(collection, index)).await;
+        }
         let mut stored = self.store_indexes(collection, vec![index]).await?;
         Ok(stored.remove(0))
     }
@@ -41,6 +44,9 @@ impl Database {
     ///
     /// Fails as [`Database::create_index`] does.
     pub async fn create_indexes(&self, collection: &str, indexes: Vec<Index>) -> Result<Vec<Index>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_indexes(collection, indexes)).await;
+        }
         if indexes.is_empty() {
             return Ok(Vec::new());
         }
@@ -63,6 +69,9 @@ impl Database {
     /// ([`crate::Kind::Database`]) when the adapter fails, and
     /// ([`crate::Kind::Refused`]) when it does not rename the index.
     pub async fn rename_index(&self, collection: &str, old: &str, new: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "renameIndex", |db| db.rename_index(collection, old, new));
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let id = definition.id().to_owned();
         let mut indexes = definition.indexes()?.to_vec();
@@ -117,6 +126,9 @@ impl Database {
     /// Fails ([`crate::Kind::NotFound`]) for a missing index, and
     /// ([`crate::Kind::Refused`]) when the adapter does not drop it.
     pub async fn delete_index(&self, collection: &str, key: &str) -> Result<()> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.delete_index(collection, key)).await;
+        }
         let mut definition = self.silent(self.get_collection(collection)).await?;
         let id = definition.id().to_owned();
         let mut indexes = definition.indexes()?.to_vec();

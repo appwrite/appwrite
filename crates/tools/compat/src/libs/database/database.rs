@@ -210,6 +210,9 @@ async fn call(db: &Database, method: &str, a: &Args, calls: &Calls) -> R<Obj> {
     if let Some(obj) = section_raw_statements(db, method, a, calls).await? {
         return Ok(obj);
     }
+    if let Some(obj) = super::mirror::invoke(db, method, a).await? {
+        return Ok(obj);
+    }
     fault(format!("Database has no method `{method}`"))
 }
 

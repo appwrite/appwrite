@@ -20,6 +20,9 @@ impl Database {
     /// Fails ([`crate::Kind::Refused`]) when the adapter does not create it
     /// (`Failed to create database`).
     pub async fn create(&self, name: Option<&str>) -> Result<bool> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create(name)).await;
+        }
         let database = name.map_or_else(|| self.inner.adapter.database(), str::to_owned);
         if !self.inner.adapter.create(&database).await? {
             return Err(Error::refused("Failed to create database"));
@@ -31,6 +34,9 @@ impl Database {
 
     /// Whether the database exists (`exists()`).
     pub async fn exists(&self, name: Option<&str>) -> Result<bool> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "exists", |db| db.exists(name));
+        }
         let database = name.map_or_else(|| self.inner.adapter.database(), str::to_owned);
         self.inner.adapter.exists(&database).await
     }
@@ -38,6 +44,10 @@ impl Database {
     /// Whether a collection's storage exists in the database
     /// (`collectionExists()`).
     pub async fn collection_exists(&self, collection: &str, database: Option<&str>) -> Result<bool> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "collectionExists", |db| db
+                .collection_exists(collection, database));
+        }
         let database = database.map_or_else(|| self.inner.adapter.database(), str::to_owned);
         self.inner.adapter.collection_exists(&database, collection).await
     }
@@ -61,6 +71,9 @@ impl Database {
     /// ([`crate::Kind::Duplicate`], [`crate::Kind::NotFound`]), and
     /// ([`crate::Kind::Refused`]) when the adapter does not rename it.
     pub async fn update(&self, database: &str, new: &str) -> Result<bool> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "update", |db| db.update(database, new));
+        }
         let adapter = &self.inner.adapter;
         if adapter.shared_tables() {
             return Err(Error::database("Cannot rename a database while shared tables are enabled"));
@@ -93,6 +106,9 @@ impl Database {
     /// Fails ([`crate::Kind::Refused`]) when the adapter does not drop it
     /// (`Failed to delete database`).
     pub async fn delete(&self, name: Option<&str>) -> Result<bool> {
+        if let Some(parts) = self.mirror_parts() {
+            return crate::mirror::in_order!(&*parts, "delete", |db| db.delete(name));
+        }
         let database = name.map_or_else(|| self.inner.adapter.database(), str::to_owned);
         if !self.inner.adapter.delete(&database).await? {
             return Err(Error::refused("Failed to delete database"));

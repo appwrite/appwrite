@@ -32,6 +32,9 @@ impl Database {
     /// ([`crate::Kind::Structure`]) for an invalid document,
     /// ([`crate::Kind::Duplicate`]) for an existing id.
     pub fn create_document<'a>(&'a self, collection: &'a str, document: Document) -> BoxFuture<'a, Result<Document>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(async move { parts.create_document(self, collection, document).await });
+        }
         Box::pin(async move {
             self.assert_create_tenancy(collection)?;
 
@@ -115,6 +118,23 @@ impl Database {
         batch_size: i64,
         on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
     ) -> Result<i64> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.create_documents(self, collection, documents, batch_size, on_next)).await;
+        }
+        self.create_documents_tracked(collection, documents, batch_size, on_next, None).await
+    }
+
+    /// [`Database::create_documents`], leaving in `tracked` (the documents
+    /// given) each document as PHP leaves the object it was given: the
+    /// document as written and, once its batch is written, as decoded.
+    pub(crate) async fn create_documents_tracked(
+        &self,
+        collection: &str,
+        documents: Vec<Document>,
+        batch_size: i64,
+        on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
+        mut tracked: Option<&mut Vec<Document>>,
+    ) -> Result<i64> {
         let mut on_next = on_next;
         let batch_size = super::joins::batch_size(batch_size)?;
 
@@ -156,7 +176,7 @@ impl Database {
 
         let preserve_dates = self.is_preserving_dates();
         let mut ready = Vec::with_capacity(documents.len());
-        for mut document in documents {
+        for (index, mut document) in documents.into_iter().enumerate() {
             let created_at = document.created_at().map(str::to_owned);
             let updated_at = document.updated_at().map(str::to_owned);
             let id = if empty(document.id()) { crate::id::unique()? } else { document.id().to_owned() };
@@ -195,11 +215,21 @@ impl Database {
                 document = self.silent(hook.after_document_create(&collection, document)).await?;
             }
 
-            ready.push(self.cast_before(&collection, document)?);
+            let document = self.cast_before(&collection, document)?;
+            if let Some(slot) = tracked.as_deref_mut().and_then(|t| t.get_mut(index)) {
+                *slot = document.clone();
+            }
+            ready.push(document);
         }
 
         let chunks: Vec<Vec<Document>> = ready.chunks(batch_size as usize).map(<[Document]>::to_vec).collect();
+        let mut offset = 0;
         for chunk in chunks {
+            let start = offset;
+            offset += chunk.len();
+            // The adapter writes the documents it is given, unless it skips
+            // duplicates, which writes copies.
+            let aliased = !self.is_ignoring_duplicates();
             let target: Vec<Target> = chunk.iter().cloned().map(Target::Document).collect();
             let insert = self.with_mutation(Event::DocumentsCreate, &target, || {
                 let (collection, chunk) = (&collection, chunk.clone());
@@ -239,6 +269,17 @@ impl Database {
             for document in self.cast_after(&collection, batch)? {
                 let document = self.casting(&collection, document)?;
                 decoded.push(self.decode(&collection, document, &[]).await?);
+            }
+
+            if aliased
+                && decoded.len() == offset - start
+                && let Some(tracked) = tracked.as_deref_mut()
+            {
+                for (k, document) in decoded.iter().enumerate() {
+                    if let Some(slot) = tracked.get_mut(start + k) {
+                        *slot = document.clone();
+                    }
+                }
             }
 
             let batch = self.decorate_documents(Event::DocumentsCreate, &collection, decoded).await?;

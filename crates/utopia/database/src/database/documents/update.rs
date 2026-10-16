@@ -38,6 +38,9 @@ impl Database {
         id: &'a str,
         document: Document,
     ) -> BoxFuture<'a, Result<Document>> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(async move { parts.update_document(self, collection, id, document).await });
+        }
         Box::pin(async move {
             if empty(id) {
                 return Err(Error::database("Must define $id attribute"));
@@ -370,6 +373,24 @@ impl Database {
         batch_size: i64,
         on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
     ) -> Result<i64> {
+        if let Some(parts) = self.mirror_parts() {
+            return Box::pin(parts.update_documents(self, collection, updates, queries, batch_size, on_next)).await;
+        }
+        self.update_documents_tracked(collection, updates, queries, batch_size, on_next, None).await
+    }
+
+    /// [`Database::update_documents`], leaving in `tracked` the updates as
+    /// PHP leaves the object it was given: without the keys it drops, with
+    /// the ones it sets, encoded.
+    pub(crate) async fn update_documents_tracked(
+        &self,
+        collection: &str,
+        updates: Document,
+        queries: Vec<Query>,
+        batch_size: i64,
+        on_next: Option<&mut dyn Callback<(Document, Option<Document>)>>,
+        mut tracked: Option<&mut Document>,
+    ) -> Result<i64> {
         let mut on_next = on_next;
         let mut batch_size = super::joins::batch_size(batch_size)?;
 
@@ -384,6 +405,9 @@ impl Database {
         let mut updates = updates;
         for key in self.round_operators(&collection, &mut updates)? {
             updates.remove(&key);
+        }
+        if let Some(tracked) = tracked.as_deref_mut() {
+            *tracked = updates.clone();
         }
         if updates.is_empty() {
             return Ok(0);
@@ -457,6 +481,9 @@ impl Database {
             if !validator.validate(&mut updates)? {
                 return Err(Error::structure(validator.description()));
             }
+        }
+        if let Some(tracked) = tracked {
+            *tracked = updates.clone();
         }
 
         let has_operators = updates.iter().any(|(_, v)| Operator::is_operator(v));

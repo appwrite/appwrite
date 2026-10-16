@@ -87,6 +87,9 @@ pub async fn construct(class: &str, a: &Args) -> R<Obj> {
     if class == "Database" {
         return new_database(a).await;
     }
+    if class == "Mirror" {
+        return super::mirror::construct(a);
+    }
     if class.starts_with("Adapter\\")
         && !class.starts_with("Adapter\\SQL\\")
         && class != "Adapter\\Limits"
