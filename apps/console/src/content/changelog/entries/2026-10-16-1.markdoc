@@ -1,0 +1,29 @@
+---
+layout: changelog
+title: Send push notifications without Firebase with Appwrite Push
+date: 2026-10-16
+cover: /images/blog/announcing-appwrite-push/cover.avif
+tags: messaging, sdk
+---
+
+[Appwrite Push](/docs/products/messaging/appwrite-push) is a new push provider in Appwrite Messaging. Your app subscribes with the Appwrite SDK, and messages you send from the Console or a Server SDK arrive on the device, with no Firebase project, service account, or device token.
+
+Messages sent to a user reach all their devices, and missed messages are replayed for up to 7 days. On Android the SDK keeps delivering while the app is closed, and on iOS it works with APNs and a Notification Service Extension to show messages while the app is suspended.
+
+```ts
+const push = new Push(client);
+
+await push.subscribe((message) => {
+    console.log(JSON.parse(message.data));
+});
+```
+
+Push ships in Web 29.0.0, Flutter 28.0.0, React Native 2.0.0, Android 30.0.0, and Apple 21.0.0.
+
+{% arrow_link href="/blog/post/announcing-appwrite-push" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/messaging/appwrite-push" %}
+Set up Appwrite Push
+{% /arrow_link %}
