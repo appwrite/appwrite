@@ -479,6 +479,14 @@ fn refs_of(cx: &Ctx, json: &Json, refs: &mut Vec<Value>) -> R<Json> {
                 refs.push(v);
                 serde_json::json!({ "$ref": refs.len() - 1 })
             }
+            // An attribute inside a value (a collection document's
+            // `attributes`) is read by the library as the attribute it is
+            // (`$attribute instanceof Attribute`): its document here.
+            Obj::Object(o) if o.downcast_ref::<utopia_database::attribute::Attribute>().is_some() => {
+                let attribute = o.downcast_ref::<utopia_database::attribute::Attribute>().expect("an attribute");
+                refs.push(Value::from(attribute.to_document()?));
+                serde_json::json!({ "$ref": refs.len() - 1 })
+            }
             other => other.encode(),
         });
     }
