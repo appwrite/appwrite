@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -8312,5 +8313,136 @@ final class AccountCustomClientTest extends Scope
         $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
 
         return $claims;
+    }
+
+    public function testListAccountMemberships(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $team1 = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Account Memberships Team A',
+        ]);
+        $this->assertEquals(201, $team1['headers']['status-code']);
+
+        $team2 = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Account Memberships Team B',
+        ]);
+        $this->assertEquals(201, $team2['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['memberships']);
+        $this->assertEquals($team1['body']['$id'], $response['body']['memberships'][0]['teamId']);
+        $this->assertEquals('Account Memberships Team A', $response['body']['memberships'][0]['teamName']);
+        $this->assertEquals($data['id'], $response['body']['memberships'][0]['userId']);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+
+        $firstMembershipId = $response['body']['memberships'][0]['$id'];
+        $secondMembershipId = $response['body']['memberships'][1]['$id'];
+
+        $filtered = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('teamId', [$team1['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $filtered['headers']['status-code']);
+        $this->assertEquals(1, $filtered['body']['total']);
+        $this->assertCount(1, $filtered['body']['memberships']);
+        $this->assertEquals($team1['body']['$id'], $filtered['body']['memberships'][0]['teamId']);
+
+        $sorted = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderDesc('$createdAt')->toString()],
+        ]);
+        $this->assertEquals(200, $sorted['headers']['status-code']);
+        $this->assertEquals(2, $sorted['body']['total']);
+        $this->assertEquals($secondMembershipId, $sorted['body']['memberships'][0]['$id']);
+        $this->assertEquals($firstMembershipId, $sorted['body']['memberships'][1]['$id']);
+
+        $limited = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::limit(1)->toString()],
+        ]);
+        $this->assertEquals(200, $limited['headers']['status-code']);
+        $this->assertEquals(2, $limited['body']['total']);
+        $this->assertCount(1, $limited['body']['memberships']);
+        $this->assertEquals($firstMembershipId, $limited['body']['memberships'][0]['$id']);
+
+        $offset = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::offset(1)->toString()],
+        ]);
+        $this->assertEquals(200, $offset['headers']['status-code']);
+        $this->assertEquals(2, $offset['body']['total']);
+        $this->assertCount(1, $offset['body']['memberships']);
+        $this->assertEquals($secondMembershipId, $offset['body']['memberships'][0]['$id']);
+
+        $cursored = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [
+                Query::orderAsc('$createdAt')->toString(),
+                Query::cursorAfter(new Document(['$id' => $firstMembershipId]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $cursored['headers']['status-code']);
+        $this->assertEquals(2, $cursored['body']['total']);
+        $this->assertCount(1, $cursored['body']['memberships']);
+        $this->assertEquals($secondMembershipId, $cursored['body']['memberships'][0]['$id']);
+
+        $noTotal = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, ['total' => false]);
+        $this->assertEquals(200, $noTotal['headers']['status-code']);
+        $this->assertEquals(0, $noTotal['body']['total']);
+        $this->assertCount(2, $noTotal['body']['memberships']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('roles', ['owner'])->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => 'nonexistent-membership']))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+
+        $otherData = $this->createFreshAccountWithSession();
+        $otherHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $otherData['session'],
+        ];
+        $otherTeam = $this->client->call(Client::METHOD_POST, '/teams', $otherHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Other Team',
+        ]);
+        $this->assertEquals(201, $otherTeam['headers']['status-code']);
+        $otherMemberships = $this->client->call(Client::METHOD_GET, '/account/memberships', $otherHeaders);
+        $otherMembershipId = $otherMemberships['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherMembershipId]))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
     }
 }
