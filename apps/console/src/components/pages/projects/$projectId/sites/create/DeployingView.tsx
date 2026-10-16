@@ -60,6 +60,7 @@ import { getVcsProvider } from '@/lib/vcs/providers'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -79,6 +80,7 @@ interface DeployingViewProps {
 
 export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const t = useT()
+  const visitUrl = useDomainUrl()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -249,7 +251,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     if (domains.length > 0) return domains[0].domain
     return null
   }, [domains])
-  const siteUrl = primaryDomain ? domainUrl(primaryDomain) : null
+  const siteUrl = primaryDomain ? visitUrl(primaryDomain) : null
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {
@@ -604,8 +606,8 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (siteUrl) {
-                        navigator.clipboard.writeText(siteUrl)
+                      if (primaryDomain) {
+                        navigator.clipboard.writeText(domainUrl(primaryDomain))
                         toast.success(t('URL copied to clipboard'))
                       }
                     }}

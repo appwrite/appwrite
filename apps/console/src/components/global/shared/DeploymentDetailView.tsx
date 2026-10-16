@@ -100,6 +100,7 @@ import {
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -369,6 +370,7 @@ export function DeploymentDetailView({
   fallbackPath,
 }: DeploymentDetailViewConfig) {
   const t = useT()
+  const visitUrl = useDomainUrl()
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -747,7 +749,7 @@ export function DeploymentDetailView({
                       }}
                     >
                       <a
-                        href={domainUrl(domain)}
+                        href={visitUrl(domain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={`Open ${domain} in new tab`}
@@ -1082,6 +1084,7 @@ export function DeploymentDetailView({
     parentResource?.framework,
     parentResource?.runtime,
     visitEntries,
+    visitUrl,
     vcsProvider,
     repositoryUrl,
     resolvedCommitUrl,

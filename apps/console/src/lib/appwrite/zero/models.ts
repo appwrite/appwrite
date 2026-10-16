@@ -57,4 +57,9 @@ export type ZeroProject = {
    * URL a person opens to claim the project. Only returned on create.
    */
   claimUrl?: string
+  /**
+   * Token that opens the project's site and function domains for its owner
+   * until the project is claimed.
+   */
+  accessToken?: string
 }

@@ -42,12 +42,13 @@ import { queryParamToMap } from '@/lib/table-filters'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { SmtpDomainsSection } from './domains/SmtpDomainsSection'
 
 export function View() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { features } = useConsoleProfile()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()

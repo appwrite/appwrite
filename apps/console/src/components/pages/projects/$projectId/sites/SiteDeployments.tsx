@@ -120,7 +120,7 @@ import { useT } from '@/lib/i18n/translate'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -171,6 +171,7 @@ function detectVcsProvider(
 
 export function SiteDeploymentsView() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()

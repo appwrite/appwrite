@@ -42,7 +42,7 @@ import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 interface DomainsProps {
   projectId: string
@@ -60,6 +60,7 @@ export function Domains({
   createDisabledTooltip,
 }: DomainsProps) {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region

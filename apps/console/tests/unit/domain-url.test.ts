@@ -23,4 +23,14 @@ describe('domainUrl', () => {
       'https://localhost.example.com',
     )
   })
+
+  test('opens the owner link when given an access token', () => {
+    expect(domainUrl('blog.appwrite.network', 'a b&c')).toBe(
+      'https://blog.appwrite.network/__appwrite/zero?token=a%20b%26c',
+    )
+    expect(domainUrl('blog.sites.localhost', 'token')).toBe(
+      'http://blog.sites.localhost/__appwrite/zero?token=token',
+    )
+    expect(domainUrl('example.com', '')).toBe('https://example.com')
+  })
 })

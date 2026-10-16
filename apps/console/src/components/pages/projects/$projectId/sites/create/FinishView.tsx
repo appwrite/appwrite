@@ -49,6 +49,7 @@ import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 interface FinishViewProps {
   siteId?: string
@@ -57,6 +58,7 @@ interface FinishViewProps {
 
 export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   const t = useT()
+  const visitUrl = useDomainUrl()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -140,7 +142,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     return null
   }, [domains])
 
-  const siteUrl = primaryDomain ? domainUrl(primaryDomain) : null
+  const siteUrl = primaryDomain ? visitUrl(primaryDomain) : null
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {
@@ -334,8 +336,8 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           {/* Copy site URL */}
           <button
             onClick={() => {
-              if (siteUrl) {
-                navigator.clipboard.writeText(siteUrl)
+              if (primaryDomain) {
+                navigator.clipboard.writeText(domainUrl(primaryDomain))
               }
             }}
             className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-start"

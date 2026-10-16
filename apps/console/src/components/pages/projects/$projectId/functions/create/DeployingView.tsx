@@ -33,7 +33,7 @@ import { useFunctionWizard } from './WizardContext'
 import { ExternalLink, Play, GitBranch } from 'lucide-react'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -52,6 +52,7 @@ export function DeployingView({
   deploymentId,
 }: DeployingViewProps) {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { formData, resetFormData, generateDomain, baseDomain } =

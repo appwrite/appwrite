@@ -139,7 +139,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap, getPage } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -213,6 +213,7 @@ function detectVcsProvider(
 
 export function View() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
