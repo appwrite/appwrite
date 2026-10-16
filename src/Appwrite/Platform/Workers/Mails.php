@@ -22,7 +22,9 @@ class Mails extends Action
 {
     protected int $previewMaxLen = 150;
 
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
 
     public static function getName(): string
@@ -123,9 +125,10 @@ class Mails extends Action
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = strlen($preview);
+            // Pad up to previewMaxLen characters; each padding unit is two characters
+            $previewLen = \mb_strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = \str_repeat($this->whitespaceCodes, \intdiv($this->previewMaxLen - $previewLen, 2));
             }
         }
 
