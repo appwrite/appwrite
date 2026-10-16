@@ -1658,6 +1658,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -5263,6 +5266,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -6327,6 +6333,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -7350,6 +7359,9 @@
           },
           {
             "$enum": "Method::ElemMatch"
+          },
+          {
+            "$enum": "Method::Relationship"
           },
           {
             "$enum": "Method::Count"
@@ -8527,6 +8539,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -9637,6 +9652,9 @@
           },
           {
             "$enum": "Method::ElemMatch"
+          },
+          {
+            "$enum": "Method::Relationship"
           },
           {
             "$enum": "Method::Count"

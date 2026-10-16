@@ -9935,6 +9935,137 @@
       ]
     },
     {
+      "name": "testFilterRelationshipThrowsException",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "attr",
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "attr",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Unsupported filter type for MongoDB: relationship"
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
       "name": "testWindowFunctionUnsupportedThrows",
       "op": "builder",
       "args": {

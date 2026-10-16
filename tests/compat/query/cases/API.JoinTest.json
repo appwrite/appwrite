@@ -55302,6 +55302,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {

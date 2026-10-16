@@ -502,6 +502,961 @@
       ]
     },
     {
+      "name": "testRelationship",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "limit",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Limit"
+                  },
+                  "attribute": "",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Relationship"
+        },
+        "comments",
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "approved",
+              "values": [
+                true
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testRelationshipIsNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testRelationshipParsesItsQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "orderDesc",
+            "class": "Query",
+            "args": [
+              "$createdAt"
+            ]
+          },
+          {
+            "static": "limit",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[{\"method\":\"equal\",\"attribute\":\"approved\",\"values\":[true]},{\"method\":\"orderDesc\",\"attribute\":\"$createdAt\",\"values\":[]},{\"method\":\"limit\",\"values\":[5]}]}"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::OrderDesc"
+            },
+            "attribute": "$createdAt",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 6,
+                "props": {
+                  "method": {
+                    "$enum": "Method::OrderDesc"
+                  },
+                  "attribute": "$createdAt",
+                  "values": [],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Limit"
+                  },
+                  "attribute": "",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"relationship\",\"attribute\":\"comments\",\"values\":[{\"method\":\"equal\",\"attribute\":\"approved\",\"values\":[true]},{\"method\":\"orderDesc\",\"attribute\":\"$createdAt\",\"values\":[]},{\"method\":\"limit\",\"values\":[5]}]}",
+        {
+          "$value": "Query",
+          "id": 8,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 9,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 10,
+                "props": {
+                  "method": {
+                    "$enum": "Method::OrderDesc"
+                  },
+                  "attribute": "$createdAt",
+                  "values": [],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 11,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Limit"
+                  },
+                  "attribute": "",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Relationship"
+        },
+        "comments",
+        [
+          {
+            "$value": "Query",
+            "id": 12,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "approved",
+              "values": [
+                true
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 13,
+            "props": {
+              "method": {
+                "$enum": "Method::OrderDesc"
+              },
+              "attribute": "$createdAt",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 14,
+            "props": {
+              "method": {
+                "$enum": "Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 15,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "approved",
+              "values": [
+                true
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 16,
+            "props": {
+              "method": {
+                "$enum": "Method::OrderDesc"
+              },
+              "attribute": "$createdAt",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 17,
+            "props": {
+              "method": {
+                "$enum": "Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Query",
+            "id": 18,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "approved",
+              "values": [
+                true
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 19,
+            "props": {
+              "method": {
+                "$enum": "Method::OrderDesc"
+              },
+              "attribute": "$createdAt",
+              "values": [],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 20,
+            "props": {
+              "method": {
+                "$enum": "Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                5
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testRelationshipShapeIncludesItsQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "static": "limit",
+            "class": "Query",
+            "args": [
+              5
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "authors",
+              [
+                {
+                  "$o": 7
+                }
+              ]
+            ]
+          },
+          {
+            "call": "shape",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 5
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "fingerprint",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 8
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 6,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Limit"
+                  },
+                  "attribute": "",
+                  "values": [
+                    5
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 7,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 8,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "authors",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 9,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "relationship:comments(equal:approved)",
+        "54e7d3a9173f67eaf679cd1e912e8d11",
+        "32563f79c7118320cfb220d0f942fb4e",
+        "54e7d3a9173f67eaf679cd1e912e8d11",
+        "e7fdb344c1b04cffe8aa875b227af501"
+      ]
+    },
+    {
       "name": "testOrIsNested",
       "op": "query",
       "args": {

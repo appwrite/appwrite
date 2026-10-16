@@ -2997,6 +2997,1124 @@
       ]
     },
     {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"integer\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                25
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                25
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              25
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              25
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": 25,
+            "offset": 25,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        25,
+        25
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"integral float\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                25.0
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                25.0
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              25.0
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              25.0
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": 25,
+            "offset": 25,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        25,
+        25
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"numeric string\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                "25"
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                "25"
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              "25"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              "25"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": 25,
+            "offset": 25,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        25,
+        25
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"fractional float\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                25.9
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                25.9
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              25.9
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              25.9
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": 25,
+            "offset": 25,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        25,
+        25
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"float beyond int range\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                1e+308
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                1e+308
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              1e+308
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              1e+308
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"string beyond int range\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                "1e400"
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                "1e400"
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              "1e400"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              "1e400"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"negative float beyond int range\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                -1e+300
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                -1e+300
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              -1e+300
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              -1e+300
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"boolean\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                true
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                true
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"array\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                [
+                  1
+                ]
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              [
+                1
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              [
+                1
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
+      "name": "testGroupByTypeReadsLimitAndOffsetWithoutWarnings with data set \"non-numeric string\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Limit"
+              },
+              "values": [
+                "ten"
+              ]
+            }
+          },
+          {
+            "new": "Query",
+            "args": {
+              "0": {
+                "$enum": "Method::Offset"
+              },
+              "values": [
+                "ten"
+              ]
+            }
+          },
+          {
+            "static": "groupByType",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "get": "limit",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "offset",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Limit"
+            },
+            "attribute": "",
+            "values": [
+              "ten"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Offset"
+            },
+            "attribute": "",
+            "values": [
+              "ten"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Builder\\ParsedQuery",
+          "id": 3,
+          "props": {
+            "filters": [],
+            "selections": [],
+            "aggregations": [],
+            "groupBy": [],
+            "having": [],
+            "distinct": false,
+            "joins": [],
+            "unions": [],
+            "limit": null,
+            "offset": null,
+            "cursor": null,
+            "cursorDirection": null,
+            "timeBuckets": []
+          }
+        },
+        null,
+        null
+      ]
+    },
+    {
       "name": "testGroupByTypeFirstCursorWins",
       "op": "query",
       "args": {
@@ -6250,6 +7368,129 @@
             },
             "attribute": "",
             "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "testValidateSkipsRelationshipQueries",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "approved",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "comments",
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "validate",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 3
+                }
+              ],
+              [
+                "name"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "approved",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "comments",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "approved",
+                  "values": [
+                    true
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
             "alias": "",
             "onArray": false,
             "attributeType": ""
@@ -11565,6 +12806,13 @@
           {
             "call": "isAggregate",
             "on": {
+              "$enum": "Method::Relationship"
+            },
+            "args": []
+          },
+          {
+            "call": "isAggregate",
+            "on": {
               "$enum": "Method::Count"
             },
             "args": []
@@ -12249,6 +13497,13 @@
           {
             "call": "isJoin",
             "on": {
+              "$enum": "Method::Relationship"
+            },
+            "args": []
+          },
+          {
+            "call": "isJoin",
+            "on": {
               "$enum": "Method::Count"
             },
             "args": []
@@ -12844,6 +14099,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -12958,6 +14216,7 @@
             "$enum": "Method::Raw"
           }
         ],
+        false,
         false,
         false,
         false,
@@ -13224,6 +14483,9 @@
             "$enum": "Method::ElemMatch"
           },
           {
+            "$enum": "Method::Relationship"
+          },
+          {
             "$enum": "Method::Count"
           },
           {
@@ -13338,6 +14600,7 @@
             "$enum": "Method::Raw"
           }
         ],
+        false,
         false,
         false,
         false,

@@ -209,6 +209,359 @@
         50.0,
         false
       ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"empty\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the geometry must be a WKT string or a coordinate array"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the geometry must be a WKT string or a coordinate array"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"numeric geometry\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                5,
+                1.0,
+                false
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the geometry must be a WKT string or a coordinate array"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the geometry must be a WKT string or a coordinate array"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"missing distance\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the distance must be a finite number"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the distance must be a finite number"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"non-numeric distance\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                "far",
+                false
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the distance must be a finite number"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the distance must be a finite number"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"infinite distance\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                "1e999",
+                false
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the distance must be a finite number"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the distance must be a finite number"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"array distance\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                [
+                  1
+                ],
+                false
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: the distance must be a finite number"
+          },
+          "id": 1
+        },
+        "Invalid distance query: the distance must be a finite number"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"non-boolean meters\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                1.0,
+                "sometimes"
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: meters must be a boolean"
+          },
+          "id": 1
+        },
+        "Invalid distance query: meters must be a boolean"
+      ]
+    },
+    {
+      "name": "testFromTupleRejectsMalformedTuples with data set \"array meters\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                1.0,
+                [
+                  true
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid distance query: meters must be a boolean"
+          },
+          "id": 1
+        },
+        "Invalid distance query: meters must be a boolean"
+      ]
+    },
+    {
+      "name": "testFromTupleDefaultsMissingMetersToFalse",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "fromTuple",
+            "class": "Builder\\SpatialDistanceFilter",
+            "args": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                "7"
+              ]
+            ]
+          },
+          {
+            "get": "distance",
+            "on": {
+              "$o": 1
+            }
+          },
+          {
+            "get": "meters",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\SpatialDistanceFilter",
+          "id": 1,
+          "props": {
+            "geometry": [
+              1.0,
+              2.0
+            ],
+            "distance": 7.0,
+            "meters": false
+          }
+        },
+        7.0,
+        false
+      ]
     }
   ]
 }

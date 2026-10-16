@@ -74,6 +74,7 @@
         "symbols": [
             "Utopia\\Query\\Method::isAggregate",
             "Utopia\\Query\\Method::isJoin",
+            "Utopia\\Query\\Query::__construct",
             "Utopia\\Query\\Query::and",
             "Utopia\\Query\\Query::avg",
             "Utopia\\Query\\Query::containsString",
@@ -127,6 +128,7 @@
             "Utopia\\Query\\Query::page",
             "Utopia\\Query\\Query::parseQuery",
             "Utopia\\Query\\Query::raw",
+            "Utopia\\Query\\Query::relationship",
             "Utopia\\Query\\Query::select",
             "Utopia\\Query\\Query::sum",
             "Utopia\\Query\\Query::touches",
@@ -204,13 +206,20 @@
             "Utopia\\Query\\Query::containsAll",
             "Utopia\\Query\\Query::elemMatch",
             "Utopia\\Query\\Query::equal",
+            "Utopia\\Query\\Query::fingerprint",
             "Utopia\\Query\\Query::getAttribute",
             "Utopia\\Query\\Query::getMethod",
             "Utopia\\Query\\Query::getValues",
             "Utopia\\Query\\Query::greaterThan",
             "Utopia\\Query\\Query::isNested",
             "Utopia\\Query\\Query::lessThan",
-            "Utopia\\Query\\Query::or"
+            "Utopia\\Query\\Query::limit",
+            "Utopia\\Query\\Query::or",
+            "Utopia\\Query\\Query::orderDesc",
+            "Utopia\\Query\\Query::parse",
+            "Utopia\\Query\\Query::relationship",
+            "Utopia\\Query\\Query::shape",
+            "Utopia\\Query\\Query::toString"
         ]
     },
     "API/ParseTest.php": {
@@ -817,6 +826,7 @@
             "Utopia\\Query\\Query::overlaps",
             "Utopia\\Query\\Query::raw",
             "Utopia\\Query\\Query::regex",
+            "Utopia\\Query\\Query::relationship",
             "Utopia\\Query\\Query::search",
             "Utopia\\Query\\Query::select",
             "Utopia\\Query\\Query::startsWith",
@@ -1312,6 +1322,7 @@
     "Builder/Feature/SpatialTest.php": {
         "op": "builder",
         "symbols": [
+            "Utopia\\Query\\Builder::filter",
             "Utopia\\Query\\Builder::from",
             "Utopia\\Query\\Builder\\MySQL::build",
             "Utopia\\Query\\Builder\\MySQL::filterCrosses",
@@ -1325,6 +1336,7 @@
             "Utopia\\Query\\Builder\\PostgreSQL::build",
             "Utopia\\Query\\Builder\\PostgreSQL::filterCovers",
             "Utopia\\Query\\Builder\\PostgreSQL::filterIntersects",
+            "Utopia\\Query\\Builder\\Trait\\Selects::filter",
             "Utopia\\Query\\Builder\\Trait\\Selects::from",
             "Utopia\\Query\\Builder\\Trait\\Spatial::filterCovers",
             "Utopia\\Query\\Builder\\Trait\\Spatial::filterCrosses",
@@ -1334,7 +1346,9 @@
             "Utopia\\Query\\Builder\\Trait\\Spatial::filterNotOverlaps",
             "Utopia\\Query\\Builder\\Trait\\Spatial::filterOverlaps",
             "Utopia\\Query\\Builder\\Trait\\Spatial::filterSpatialEquals",
-            "Utopia\\Query\\Builder\\Trait\\Spatial::filterTouches"
+            "Utopia\\Query\\Builder\\Trait\\Spatial::filterTouches",
+            "Utopia\\Query\\Query::distanceLessThan",
+            "Utopia\\Query\\Query::intersects"
         ]
     },
     "Builder/Feature/StatisticalAggregatesTest.php": {
@@ -1703,6 +1717,7 @@
             "Utopia\\Query\\Query::on",
             "Utopia\\Query\\Query::or",
             "Utopia\\Query\\Query::regex",
+            "Utopia\\Query\\Query::relationship",
             "Utopia\\Query\\Query::setOnArray",
             "Utopia\\Query\\Query::startsWith"
         ]
@@ -2027,6 +2042,7 @@
             "Utopia\\Query\\Query::parseQuery",
             "Utopia\\Query\\Query::raw",
             "Utopia\\Query\\Query::regex",
+            "Utopia\\Query\\Query::relationship",
             "Utopia\\Query\\Query::rightJoin",
             "Utopia\\Query\\Query::search",
             "Utopia\\Query\\Query::select",

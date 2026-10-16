@@ -1995,6 +1995,54 @@
       ]
     },
     {
+      "name": "testParseDistinctWithValuesThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"distinct\",\"values\":[\"status\"]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testParseDistinctWithAttributeThrows",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"distinct\",\"attribute\":\"status\",\"values\":[]}"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception",
+            "message": "Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
       "name": "testRoundTripJoin",
       "op": "query",
       "args": {

@@ -1022,6 +1022,5821 @@
           "POINT(2 2)"
         ]
       ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"empty\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              []
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              []
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"single coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                1.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                1.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"flat point with a z ordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0,
+                3.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                1.0,
+                2.0,
+                3.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"keyed point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              {
+                "x": 1.0,
+                "y": 2.0
+              }
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              {
+                "x": 1.0,
+                "y": 2.0
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"non-numeric point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                "a",
+                "b"
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"infinite coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                "1e999",
+                1.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                "1e999",
+                1.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"wrapped point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  1.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  1.0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"line point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"line point that is not a pair\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                5
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                5
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"polygon point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"polygon ring that is not a list\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "ring"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "ring"
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"empty polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                []
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                []
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"one-point polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"closed polygon ring of three points\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"open polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testMySQLRejectsMalformedGeometryWithoutWarnings with data set \"open polygon hole\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    4.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    4.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"empty\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              []
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              []
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"single coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                1.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                1.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"flat point with a z ordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0,
+                3.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                1.0,
+                2.0,
+                3.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"keyed point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              {
+                "x": 1.0,
+                "y": 2.0
+              }
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              {
+                "x": 1.0,
+                "y": 2.0
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"non-numeric point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                "a",
+                "b"
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"infinite coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                "1e999",
+                1.0
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                "1e999",
+                1.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"wrapped point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  1.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  1.0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"line point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"line point that is not a pair\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                5
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                5
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"polygon point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"polygon ring that is not a list\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "ring"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "ring"
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"empty polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                []
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                []
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"one-point polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"closed polygon ring of three points\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"open polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testPostgreSQLRejectsMalformedGeometryWithoutWarnings with data set \"open polygon hole\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    4.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "area",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    4.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"empty\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"single coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                1.0
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  1.0
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"flat point with a z ordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                1.0,
+                2.0,
+                3.0
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"keyed point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              {
+                "x": 1.0,
+                "y": 2.0
+              },
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                {
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"non-numeric point\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                "a",
+                "b"
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  "a",
+                  "b"
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"infinite coordinate\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                "1e999",
+                1.0
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  "1e999",
+                  1.0
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 3
+        },
+        "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"wrapped point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  1.0
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    1.0
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"line point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"line point that is not a pair\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                5
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  5
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"polygon point missing y\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 3
+        },
+        "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"polygon ring that is not a list\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                "ring"
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ],
+                  "ring"
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"empty polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                []
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ],
+                  []
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be a list of points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be a list of points"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"one-point polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      1.0,
+                      2.0
+                    ]
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"closed polygon ring of three points\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must have at least 4 points"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must have at least 4 points"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"open polygon ring\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ]
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ]
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testDistanceRejectsMalformedGeometryWithoutWarnings with data set \"open polygon hole\"",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "coords",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    0.0
+                  ],
+                  [
+                    4.0,
+                    4.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    1.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ]
+                ]
+              ],
+              10
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getMessage",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "coords",
+            "values": [
+              [
+                [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      0.0
+                    ],
+                    [
+                      4.0,
+                      4.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ],
+                  [
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      2.0,
+                      1.0
+                    ],
+                    [
+                      2.0,
+                      2.0
+                    ],
+                    [
+                      1.0,
+                      2.0
+                    ]
+                  ]
+                ],
+                10,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+          },
+          "id": 3
+        },
+        "Invalid geometry: a polygon ring must be closed, with its first point equal to its last"
+      ]
+    },
+    {
+      "name": "testFilterDistanceRejectsAPointMissingItsY",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "filterDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "coords",
+              [
+                10.5
+              ],
+              "<",
+              100.0
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: every point must be an [x, y] pair of finite numbers"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPolygonWithAClosedRingCompiles",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POLYGON((0 0, 1 0, 1 1, 0 0))"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        [
+          "POLYGON((0 0, 1 0, 1 1, 0 0))"
+        ]
+      ]
+    },
+    {
+      "name": "testSingleWrappedPointCompilesToPoint",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                [
+                  3,
+                  "4.5"
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"zones\" WHERE ST_Intersects(\"area\", ST_GeomFromText(?, 4326))",
+            "bindings": [
+              "POINT(3 4.5)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        [
+          "POINT(3 4.5)"
+        ]
+      ]
     }
   ]
 }

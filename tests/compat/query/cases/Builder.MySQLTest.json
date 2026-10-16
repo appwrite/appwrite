@@ -58818,6 +58818,137 @@
       ]
     },
     {
+      "name": "testUnsupportedFilterTypeRelationship",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "relationship",
+            "class": "Query",
+            "args": [
+              "attr",
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Relationship"
+            },
+            "attribute": "attr",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Unsupported filter type: relationship"
+          },
+          "id": 5
+        }
+      ]
+    },
+    {
       "name": "testToRawSqlWithBoolFalse",
       "op": "builder",
       "args": {
@@ -128720,7 +128851,7 @@
       ]
     },
     {
-      "name": "testGeometryToWktFallbackPoint",
+      "name": "testGeometryToWktRejectsAPointWithExtraOrdinates",
       "op": "builder",
       "args": {
         "program": [
@@ -128757,36 +128888,6 @@
               "$o": 1
             },
             "args": []
-          },
-          {
-            "get": "query",
-            "on": {
-              "$o": 2
-            }
-          },
-          {
-            "get": "bindings",
-            "on": {
-              "$o": 2
-            }
-          },
-          {
-            "get": "bindings",
-            "on": {
-              "$o": 2
-            }
-          },
-          {
-            "get": "query",
-            "on": {
-              "$o": 2
-            }
-          },
-          {
-            "get": "bindings",
-            "on": {
-              "$o": 2
-            }
           }
         ]
       },
@@ -128804,28 +128905,12 @@
           "id": 1
         },
         {
-          "$value": "Builder\\Statement",
-          "id": 2,
-          "props": {
-            "query": "SELECT * FROM `locations` WHERE ST_Intersects(`geom`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
-            "bindings": [
-              "POINT(10 20)"
-            ],
-            "readOnly": true,
-            "namedBindings": null
-          }
-        },
-        "SELECT * FROM `locations` WHERE ST_Intersects(`geom`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
-        [
-          "POINT(10 20)"
-        ],
-        [
-          "POINT(10 20)"
-        ],
-        "SELECT * FROM `locations` WHERE ST_Intersects(`geom`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
-        [
-          "POINT(10 20)"
-        ]
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid geometry: expected an [x, y] point, a list of points or a list of rings"
+          },
+          "id": 2
+        }
       ]
     },
     {
