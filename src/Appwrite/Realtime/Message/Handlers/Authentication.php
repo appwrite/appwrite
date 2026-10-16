@@ -140,7 +140,7 @@ class Authentication extends Action
                 unset($realtime->presenceHolders[$projectId][$previousUserId][$connectionId]);
                 if (empty($realtime->presenceHolders[$projectId][$previousUserId] ?? [])) {
                     unset($realtime->presenceHolders[$projectId][$previousUserId]);
-                    $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId);
+                    $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId, (string) ($presenceHold['presenceId'] ?? ''));
                 }
             }
         }
@@ -172,12 +172,13 @@ class Authentication extends Action
         QueueRealtime $queueForRealtime,
         ?Document $project,
         string $previousUserId,
+        string $presenceId,
     ): void {
-        if ($project === null || $project->isEmpty() || $previousUserId === '') {
+        if ($project === null || $project->isEmpty() || $previousUserId === '' || $presenceId === '') {
             return;
         }
 
-        $deleted = $presenceState->releaseHolder($database, $previousUserId);
+        $deleted = $presenceState->releaseHolder($database, $previousUserId, $presenceId);
         if ($deleted === null) {
             return;
         }

@@ -205,9 +205,9 @@ class State
      * event. Returns null when holders remain or the row is already gone. Transactional, so a
      * concurrent increment-and-recreate cannot be deleted out from under itself.
      */
-    public function releaseHolder(Database $dbForProject, string $userId): ?Document
+    public function releaseHolder(Database $dbForProject, string $userId, string $presenceId): ?Document
     {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $userId): ?Document {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $userId, $presenceId): ?Document {
             $existing = $dbForProject->getAuthorization()->skip(
                 fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
             );
@@ -219,6 +219,12 @@ class State
                 fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
             );
             if ($current->isEmpty()) {
+                return null;
+            }
+
+            // The row was deleted and recreated since this worker incremented it, so its +1 is
+            // already gone -- do not decrement a row this worker never counted.
+            if ($current->getId() !== $presenceId) {
                 return null;
             }
 
