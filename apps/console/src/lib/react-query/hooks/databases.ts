@@ -546,6 +546,12 @@ function buildProjectDatabaseDetail(db: Models.Database) {
     name: db.name || 'Unnamed Database',
     // Read off the raw model: the pinned SDK's `Models.Database` predates
     // `description`, and the settings card needs it to load the saved value.
+    // `fetchProjectDatabase` casts this object to a fixed intersection that
+    // leaves `description` out, so consumers go back through
+    // `readDescription`, which takes `unknown` and owns the field's type.
+    // Listing it on that intersection instead would reprint it inside four
+    // already-baselined error messages, and a reworded key reads as a brand
+    // new allowance to `lint:types --against`.
     description: readDescription(db),
     tables: 0,
     rows: 0,
@@ -1096,7 +1102,6 @@ export async function fetchProjectDatabase(
     }
 
     return buildProjectDatabaseDetail(db) as Database & {
-      description: string
       enabled: boolean
       createdAt: string
       updatedAt: string

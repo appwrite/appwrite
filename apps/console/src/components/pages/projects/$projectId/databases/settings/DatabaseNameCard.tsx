@@ -35,6 +35,8 @@ export function DatabaseNameCard({
 }: DatabaseNameCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
+  // Not `database.description`: `ProjectDatabaseDetail` does not declare the
+  // field, because the hook's cast does not advertise what it puts there.
   const savedDescription = readDescription(database)
   const [name, setName] = useSyncStateFromServer(database.name)
   const [description, setDescription] = useSyncStateFromServer(savedDescription)
