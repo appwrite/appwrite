@@ -45025,9 +45025,43 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "56000",
+              "$sequence": "56000",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "id": null
             }
           }
         },
@@ -111863,9 +111897,38 @@
           },
           "bind": "s10350",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen II",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2019,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000053",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "nullable": null
             }
           }
         },
@@ -112578,6 +112641,41 @@
             },
             {
               "$document": {
+                "name": "Frozen II",
+                "director": "Chris Buck & Jennifer Lee",
+                "year": 2019,
+                "price": 39.5,
+                "active": true,
+                "genres": [
+                  "animation",
+                  "kids"
+                ],
+                "with-dash": "Works",
+                "nullable": null,
+                "$id": "<uniqid>",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "read(\"user:1\")",
+                  "read(\"user:2\")",
+                  "create(\"any\")",
+                  "create(\"user:1x\")",
+                  "create(\"user:2x\")",
+                  "update(\"any\")",
+                  "update(\"user:1x\")",
+                  "update(\"user:2x\")",
+                  "delete(\"any\")",
+                  "delete(\"user:1x\")",
+                  "delete(\"user:2x\")"
+                ],
+                "$collection": "movies_u000000000053"
+              }
+            },
+            {
+              "$document": {
                 "name": "Captain Marvel",
                 "director": "Anna Boden & Ryan Fleck",
                 "year": 2019,
@@ -112932,21 +113030,23 @@
           "expect": [
             {
               "$document": {
-                "name": "Work in Progress 2",
+                "name": "Work in Progress",
                 "director": "TBD",
-                "year": 2026,
+                "year": 2025,
                 "price": 0.0,
                 "active": false,
                 "genres": [],
                 "with-dash": "Works3",
-                "nullable": "Not null",
+                "nullable": null,
                 "$id": "<uniqid>",
-                "$sequence": "6",
+                "$sequence": "5",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
-                  "read(\"user:x\")",
+                  "read(\"any\")",
+                  "read(\"user:1\")",
+                  "read(\"user:2\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -112962,16 +113062,19 @@
             },
             {
               "$document": {
-                "name": "Work in Progress",
-                "director": "TBD",
-                "year": 2025,
-                "price": 0.0,
-                "active": false,
-                "genres": [],
-                "with-dash": "Works3",
+                "name": "Frozen II",
+                "director": "Chris Buck & Jennifer Lee",
+                "year": 2019,
+                "price": 39.5,
+                "active": true,
+                "genres": [
+                  "animation",
+                  "kids"
+                ],
+                "with-dash": "Works",
                 "nullable": null,
                 "$id": "<uniqid>",
-                "$sequence": "5",
+                "$sequence": "2",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",

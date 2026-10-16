@@ -13760,9 +13760,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -13987,9 +13999,33 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "library1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Library 1",
+              "$collection": "operator_library",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
             }
           }
         },
@@ -14013,7 +14049,48 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14023,7 +14100,48 @@
             "id": "library1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14047,7 +14165,76 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 3",
+                    "$id": "book3",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 4",
+                    "$id": "book4",
+                    "$sequence": "4",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14057,7 +14244,76 @@
             "id": "library1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 3",
+                    "$id": "book3",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 4",
+                    "$id": "book4",
+                    "$sequence": "4",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14080,7 +14336,62 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 3",
+                    "$id": "book3",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 4",
+                    "$id": "book4",
+                    "$sequence": "4",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14090,7 +14401,62 @@
             "id": "library1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 3",
+                    "$id": "book3",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 4",
+                    "$id": "book4",
+                    "$sequence": "4",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14116,7 +14482,34 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14126,7 +14519,34 @@
             "id": "library1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14193,7 +14613,48 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14203,7 +14664,48 @@
             "id": "library1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Library 1",
+              "$sequence": "1",
+              "$id": "library1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_library",
+              "books": [
+                {
+                  "$document": {
+                    "title": "Book 1",
+                    "$id": "book1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                },
+                {
+                  "$document": {
+                    "title": "Book 2",
+                    "$id": "book2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_book"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -14224,7 +14726,22 @@
                 "update(\"any\")"
               ],
               "$collection": "operator_book",
-              "libraries": []
+              "libraries": [
+                {
+                  "$document": {
+                    "name": "Library 1",
+                    "$id": "library1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "operator_library"
+                  }
+                }
+              ]
             }
           }
         },

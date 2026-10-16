@@ -60849,9 +60849,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'embedding': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "embedding",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -60873,9 +60887,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "embedding": [
+                0.123456789012345,
+                0.987654321098765,
+                0.555555555555555
+              ],
+              "$id": "<uniqid>",
+              "$collection": "vectorPrecision",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },

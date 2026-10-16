@@ -7461,9 +7461,124 @@
             "onNext": true
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "result": 3,
+            "calls": {
+              "onNext": [
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "president": "Joe biden",
+                        "$id": "<uniqid>",
+                        "$sequence": "1",
+                        "$tenant": 999,
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "president": "George Washington",
+                        "$id": "<uniqid>",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "president": "Joe biden",
+                        "$id": "<uniqid>",
+                        "$sequence": "2",
+                        "$tenant": 999,
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "president": "George Washington",
+                        "$id": "<uniqid>",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    }
+                  ],
+                  "steps": []
+                },
+                {
+                  "args": [
+                    {
+                      "$document": {
+                        "president": "Joe biden",
+                        "$id": "<uniqid>",
+                        "$sequence": "3",
+                        "$tenant": 999,
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "president": "George Washington",
+                        "$id": "<uniqid>",
+                        "$sequence": "3",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "create(\"any\")",
+                          "update(\"any\")",
+                          "delete(\"any\")"
+                        ],
+                        "$collection": "testUnsetPermissions"
+                      }
+                    }
+                  ],
+                  "steps": []
+                }
+              ]
             }
           }
         },
@@ -7475,7 +7590,7 @@
           "expect": [
             {
               "$document": {
-                "president": "George Washington",
+                "president": "Joe biden",
                 "$id": "<uniqid>",
                 "$sequence": "1",
                 "$tenant": "999",
@@ -7484,15 +7599,14 @@
                 "$permissions": [
                   "read(\"any\")",
                   "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
+                  "update(\"any\")"
                 ],
                 "$collection": "testUnsetPermissions"
               }
             },
             {
               "$document": {
-                "president": "George Washington",
+                "president": "Joe biden",
                 "$id": "<uniqid>",
                 "$sequence": "2",
                 "$tenant": "999",
@@ -7501,15 +7615,14 @@
                 "$permissions": [
                   "read(\"any\")",
                   "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
+                  "update(\"any\")"
                 ],
                 "$collection": "testUnsetPermissions"
               }
             },
             {
               "$document": {
-                "president": "George Washington",
+                "president": "Joe biden",
                 "$id": "<uniqid>",
                 "$sequence": "3",
                 "$tenant": "999",
@@ -7518,8 +7631,7 @@
                 "$permissions": [
                   "read(\"any\")",
                   "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
+                  "update(\"any\")"
                 ],
                 "$collection": "testUnsetPermissions"
               }
@@ -7558,7 +7670,7 @@
                     },
                     {
                       "$document": {
-                        "president": "George Washington",
+                        "president": "Joe biden",
                         "$id": "<uniqid>",
                         "$sequence": "1",
                         "$tenant": "999",
@@ -7567,8 +7679,7 @@
                         "$permissions": [
                           "read(\"any\")",
                           "create(\"any\")",
-                          "update(\"any\")",
-                          "delete(\"any\")"
+                          "update(\"any\")"
                         ],
                         "$collection": "testUnsetPermissions"
                       }
@@ -7592,7 +7703,7 @@
                     },
                     {
                       "$document": {
-                        "president": "George Washington",
+                        "president": "Joe biden",
                         "$id": "<uniqid>",
                         "$sequence": "2",
                         "$tenant": "999",
@@ -7601,8 +7712,7 @@
                         "$permissions": [
                           "read(\"any\")",
                           "create(\"any\")",
-                          "update(\"any\")",
-                          "delete(\"any\")"
+                          "update(\"any\")"
                         ],
                         "$collection": "testUnsetPermissions"
                       }
@@ -7626,7 +7736,7 @@
                     },
                     {
                       "$document": {
-                        "president": "George Washington",
+                        "president": "Joe biden",
                         "$id": "<uniqid>",
                         "$sequence": "3",
                         "$tenant": "999",
@@ -7635,8 +7745,7 @@
                         "$permissions": [
                           "read(\"any\")",
                           "create(\"any\")",
-                          "update(\"any\")",
-                          "delete(\"any\")"
+                          "update(\"any\")"
                         ],
                         "$collection": "testUnsetPermissions"
                       }

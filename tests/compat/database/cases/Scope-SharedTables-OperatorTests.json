@@ -98409,10 +98409,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'test_zero_values': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "test_zero_values",
+              "name": "test_zero_values",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -98439,9 +98451,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -98461,9 +98485,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "zero_doc",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 0.0,
+              "$collection": "test_zero_values",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -98487,9 +98520,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "value": 5.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
             }
           }
         },
@@ -98513,9 +98555,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "value": 0.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
             }
           }
         },
@@ -98539,9 +98590,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "value": 0.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
             }
           }
         },
@@ -98557,9 +98617,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "value": 99.0,
+              "$sequence": "1",
+              "$id": "zero_doc",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
             }
           }
         },
@@ -98583,9 +98652,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "value": 1.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
             }
           }
         },
@@ -98594,12 +98672,7 @@
           "args": {
             "collection": "test_zero_values"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         }
       ]
     },

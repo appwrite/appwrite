@@ -41770,9 +41770,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'threshold': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "threshold",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -41874,9 +41886,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"threshold\""
+            "$document": {
+              "threshold": 15,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "t8_jgt_r",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -41894,9 +41914,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"threshold\""
+            "$document": {
+              "threshold": 25,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "t8_jgt_r",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -41927,12 +41955,56 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: threshold"
+          "expect": [
+            {
+              "$document": {
+                "value": 20,
+                "j0.threshold": 15,
+                "j0.$id": "<uniqid>",
+                "$id": "<uniqid>",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "t8_jgt_l"
+              }
+            },
+            {
+              "$document": {
+                "value": 30,
+                "j0.threshold": 15,
+                "j0.$id": "<uniqid>",
+                "$id": "<uniqid>",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "t8_jgt_l"
+              }
+            },
+            {
+              "$document": {
+                "value": 30,
+                "j0.threshold": 25,
+                "j0.$id": "<uniqid>",
+                "$id": "<uniqid>",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "t8_jgt_l"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",
@@ -110177,9 +110249,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -110696,9 +110780,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "first",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "First",
+              "$collection": "jcnd_c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -110717,9 +110809,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "second",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Second",
+              "$collection": "jcnd_c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -111330,12 +111430,46 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "First",
+                "purchase.$id": "open",
+                "purchase.$permissions": [
+                  "read(\"any\")"
+                ],
+                "purchase.$createdAt": "<now>",
+                "purchase.$sequence": "2",
+                "$id": "first",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcnd_c"
+              }
+            },
+            {
+              "$document": {
+                "name": "First",
+                "purchase.$id": "paid",
+                "purchase.$permissions": [
+                  "read(\"any\")"
+                ],
+                "purchase.$createdAt": "<now>",
+                "purchase.$sequence": "1",
+                "$id": "first",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcnd_c"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

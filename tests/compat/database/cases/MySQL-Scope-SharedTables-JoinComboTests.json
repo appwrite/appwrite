@@ -18629,9 +18629,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'mainId': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "mainId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -19195,9 +19207,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "j-pub-auth",
+              "mainId": "m1",
+              "score": 313,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jc_pub",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -19217,9 +19238,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "j-pub-sib",
+              "mainId": "m1",
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jc_pub",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -19239,9 +19269,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"mainId\""
+            "$document": {
+              "$id": "j-pub-orphan",
+              "mainId": "missing",
+              "score": 4242,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jc_pub",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
             }
           }
         },
@@ -19721,12 +19760,50 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: mainId"
+          "expect": [
+            {
+              "$document": {
+                "name": "Unmatched",
+                "$id": "m2",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "rev.score": "22",
+                "$collection": "jc_m"
+              }
+            },
+            {
+              "$document": {
+                "name": "Main",
+                "$id": "m1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "rev.score": "21",
+                "$collection": "jc_m"
+              }
+            },
+            {
+              "$document": {
+                "name": "Main",
+                "$id": "m1",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "rev.score": "21",
+                "$collection": "jc_m"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -19764,12 +19841,44 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: mainId"
+          "expect": [
+            {
+              "$document": {
+                "name": "Main",
+                "pub.mainId": "m1",
+                "pub.score": 313,
+                "pub.$id": "j-pub-auth",
+                "$id": "m1",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "rev.score": "21",
+                "$collection": "jc_m"
+              }
+            },
+            {
+              "$document": {
+                "name": "Main",
+                "pub.mainId": "m1",
+                "pub.score": 10,
+                "pub.$id": "j-pub-sib",
+                "$id": "m1",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "rev.score": "21",
+                "$collection": "jc_m"
+              }
             }
-          }
+          ]
         },
         {
           "op": "db.authorization.clean_roles",

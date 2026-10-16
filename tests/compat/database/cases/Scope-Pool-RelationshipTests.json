@@ -36424,9 +36424,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_company': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "employeesNested",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "employees",
+              "twoWayKey": "company",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -36632,7 +36641,8 @@
               "$collection": "companiesNested",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "1"
+              "$sequence": "1",
+              "employees": []
             }
           }
         },
@@ -36664,7 +36674,8 @@
               "$collection": "companiesNested",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "2"
+              "$sequence": "2",
+              "employees": []
             }
           }
         },
@@ -36687,9 +36698,49 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"company\""
+            "$document": {
+              "$id": "emp1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Alice Johnson",
+              "role": "Developer",
+              "$collection": "employeesNested",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "company": {
+                "$document": {
+                  "name": "TechCorp",
+                  "industry": "Technology",
+                  "$id": "company1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "companiesNested"
+                }
+              },
+              "department": {
+                "$document": {
+                  "name": "Engineering",
+                  "budget": 100000,
+                  "$id": "dept1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "departmentsNested"
+                }
+              },
+              "projects": []
             }
           }
         },
@@ -36712,9 +36763,49 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"company\""
+            "$document": {
+              "$id": "emp2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Bob Smith",
+              "role": "Marketer",
+              "$collection": "employeesNested",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "company": {
+                "$document": {
+                  "name": "MarketCo",
+                  "industry": "Marketing",
+                  "$id": "company2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "companiesNested"
+                }
+              },
+              "department": {
+                "$document": {
+                  "name": "Marketing",
+                  "budget": 50000,
+                  "$id": "dept2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "departmentsNested"
+                }
+              },
+              "projects": []
             }
           }
         },
@@ -36749,7 +36840,49 @@
               "$updatedAt": "<now>",
               "$sequence": "1",
               "employee": {
-                "$document": {}
+                "$document": {
+                  "name": "Alice Johnson",
+                  "role": "Developer",
+                  "$id": "emp1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "company": {
+                    "$document": {
+                      "name": "TechCorp",
+                      "industry": "Technology",
+                      "$id": "company1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "companiesNested"
+                    }
+                  },
+                  "department": {
+                    "$document": {
+                      "name": "Engineering",
+                      "budget": 100000,
+                      "$id": "dept1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "departmentsNested"
+                    }
+                  },
+                  "$collection": "employeesNested"
+                }
               },
               "tasks": []
             }
@@ -36786,7 +36919,49 @@
               "$updatedAt": "<now>",
               "$sequence": "2",
               "employee": {
-                "$document": {}
+                "$document": {
+                  "name": "Bob Smith",
+                  "role": "Marketer",
+                  "$id": "emp2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "company": {
+                    "$document": {
+                      "name": "MarketCo",
+                      "industry": "Marketing",
+                      "$id": "company2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "companiesNested"
+                    }
+                  },
+                  "department": {
+                    "$document": {
+                      "name": "Marketing",
+                      "budget": 50000,
+                      "$id": "dept2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "departmentsNested"
+                    }
+                  },
+                  "$collection": "employeesNested"
+                }
               },
               "tasks": []
             }
@@ -36837,7 +37012,19 @@
                     "update(\"any\")"
                   ],
                   "employee": {
-                    "$document": {}
+                    "$document": {
+                      "name": "Alice Johnson",
+                      "role": "Developer",
+                      "$id": "emp1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "employeesNested"
+                    }
                   },
                   "$collection": "projectsNested"
                 }
@@ -36890,7 +37077,19 @@
                     "update(\"any\")"
                   ],
                   "employee": {
-                    "$document": {}
+                    "$document": {
+                      "name": "Bob Smith",
+                      "role": "Marketer",
+                      "$id": "emp2",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "employeesNested"
+                    }
                   },
                   "$collection": "projectsNested"
                 }
@@ -36943,7 +37142,19 @@
                     "update(\"any\")"
                   ],
                   "employee": {
-                    "$document": {}
+                    "$document": {
+                      "name": "Alice Johnson",
+                      "role": "Developer",
+                      "$id": "emp1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "employeesNested"
+                    }
                   },
                   "$collection": "projectsNested"
                 }
@@ -36967,12 +37178,104 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: company"
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice Johnson",
+                "role": "Developer",
+                "$id": "emp1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "company": {
+                  "$document": {
+                    "name": "TechCorp",
+                    "industry": "Technology",
+                    "$id": "company1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "companiesNested"
+                  }
+                },
+                "department": {
+                  "$document": {
+                    "name": "Engineering",
+                    "budget": 100000,
+                    "$id": "dept1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "departmentsNested"
+                  }
+                },
+                "projects": [
+                  {
+                    "$document": {
+                      "title": "Website Redesign",
+                      "status": "active",
+                      "$id": "proj1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "projectsNested",
+                      "tasks": [
+                        {
+                          "$document": {
+                            "description": "Design homepage",
+                            "priority": "high",
+                            "completed": false,
+                            "$id": "task1",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [
+                              "read(\"any\")",
+                              "update(\"any\")"
+                            ],
+                            "$collection": "tasksNested"
+                          }
+                        },
+                        {
+                          "$document": {
+                            "description": "Implement backend",
+                            "priority": "high",
+                            "completed": false,
+                            "$id": "task3",
+                            "$sequence": "3",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [
+                              "read(\"any\")",
+                              "update(\"any\")"
+                            ],
+                            "$collection": "tasksNested"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "$collection": "employeesNested"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -36990,7 +37293,104 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice Johnson",
+                "role": "Developer",
+                "$id": "emp1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "company": {
+                  "$document": {
+                    "name": "TechCorp",
+                    "industry": "Technology",
+                    "$id": "company1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "companiesNested"
+                  }
+                },
+                "department": {
+                  "$document": {
+                    "name": "Engineering",
+                    "budget": 100000,
+                    "$id": "dept1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "departmentsNested"
+                  }
+                },
+                "projects": [
+                  {
+                    "$document": {
+                      "title": "Website Redesign",
+                      "status": "active",
+                      "$id": "proj1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "projectsNested",
+                      "tasks": [
+                        {
+                          "$document": {
+                            "description": "Design homepage",
+                            "priority": "high",
+                            "completed": false,
+                            "$id": "task1",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [
+                              "read(\"any\")",
+                              "update(\"any\")"
+                            ],
+                            "$collection": "tasksNested"
+                          }
+                        },
+                        {
+                          "$document": {
+                            "description": "Implement backend",
+                            "priority": "high",
+                            "completed": false,
+                            "$id": "task3",
+                            "$sequence": "3",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [
+                              "read(\"any\")",
+                              "update(\"any\")"
+                            ],
+                            "$collection": "tasksNested"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "$collection": "employeesNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37008,7 +37408,102 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Website Redesign",
+                "status": "active",
+                "$id": "proj1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "employee": {
+                  "$document": {
+                    "name": "Alice Johnson",
+                    "role": "Developer",
+                    "$id": "emp1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "company": {
+                      "$document": {
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "$id": "company1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "companiesNested"
+                      }
+                    },
+                    "department": {
+                      "$document": {
+                        "name": "Engineering",
+                        "budget": 100000,
+                        "$id": "dept1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "departmentsNested"
+                      }
+                    },
+                    "$collection": "employeesNested"
+                  }
+                },
+                "tasks": [
+                  {
+                    "$document": {
+                      "description": "Design homepage",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "description": "Implement backend",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task3",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  }
+                ],
+                "$collection": "projectsNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37026,7 +37521,102 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Website Redesign",
+                "status": "active",
+                "$id": "proj1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "employee": {
+                  "$document": {
+                    "name": "Alice Johnson",
+                    "role": "Developer",
+                    "$id": "emp1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "company": {
+                      "$document": {
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "$id": "company1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "companiesNested"
+                      }
+                    },
+                    "department": {
+                      "$document": {
+                        "name": "Engineering",
+                        "budget": 100000,
+                        "$id": "dept1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "departmentsNested"
+                      }
+                    },
+                    "$collection": "employeesNested"
+                  }
+                },
+                "tasks": [
+                  {
+                    "$document": {
+                      "description": "Design homepage",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "description": "Implement backend",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task3",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  }
+                ],
+                "$collection": "projectsNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37044,7 +37634,102 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Website Redesign",
+                "status": "active",
+                "$id": "proj1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "employee": {
+                  "$document": {
+                    "name": "Alice Johnson",
+                    "role": "Developer",
+                    "$id": "emp1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "company": {
+                      "$document": {
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "$id": "company1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "companiesNested"
+                      }
+                    },
+                    "department": {
+                      "$document": {
+                        "name": "Engineering",
+                        "budget": 100000,
+                        "$id": "dept1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "departmentsNested"
+                      }
+                    },
+                    "$collection": "employeesNested"
+                  }
+                },
+                "tasks": [
+                  {
+                    "$document": {
+                      "description": "Design homepage",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "description": "Implement backend",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task3",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  }
+                ],
+                "$collection": "projectsNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37062,7 +37747,100 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "description": "Design homepage",
+                "priority": "high",
+                "completed": false,
+                "$id": "task1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            },
+            {
+              "$document": {
+                "description": "Implement backend",
+                "priority": "high",
+                "completed": false,
+                "$id": "task3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37080,7 +37858,100 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "description": "Design homepage",
+                "priority": "high",
+                "completed": false,
+                "$id": "task1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            },
+            {
+              "$document": {
+                "description": "Implement backend",
+                "priority": "high",
+                "completed": false,
+                "$id": "task3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37098,7 +37969,100 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "description": "Design homepage",
+                "priority": "high",
+                "completed": false,
+                "$id": "task1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            },
+            {
+              "$document": {
+                "description": "Implement backend",
+                "priority": "high",
+                "completed": false,
+                "$id": "task3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37116,7 +38080,54 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "description": "Write copy",
+                "priority": "medium",
+                "completed": true,
+                "$id": "task2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Campaign Launch",
+                    "status": "planning",
+                    "$id": "proj2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Bob Smith",
+                        "role": "Marketer",
+                        "$id": "emp2",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37143,7 +38154,100 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "description": "Design homepage",
+                "priority": "high",
+                "completed": false,
+                "$id": "task1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            },
+            {
+              "$document": {
+                "description": "Implement backend",
+                "priority": "high",
+                "completed": false,
+                "$id": "task3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "project": {
+                  "$document": {
+                    "title": "Website Redesign",
+                    "status": "active",
+                    "$id": "proj1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "employee": {
+                      "$document": {
+                        "name": "Alice Johnson",
+                        "role": "Developer",
+                        "$id": "emp1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "employeesNested"
+                      }
+                    },
+                    "$collection": "projectsNested"
+                  }
+                },
+                "$collection": "tasksNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -37170,7 +38274,102 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "title": "Website Redesign",
+                "status": "active",
+                "$id": "proj1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "employee": {
+                  "$document": {
+                    "name": "Alice Johnson",
+                    "role": "Developer",
+                    "$id": "emp1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "company": {
+                      "$document": {
+                        "name": "TechCorp",
+                        "industry": "Technology",
+                        "$id": "company1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "companiesNested"
+                      }
+                    },
+                    "department": {
+                      "$document": {
+                        "name": "Engineering",
+                        "budget": 100000,
+                        "$id": "dept1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "departmentsNested"
+                      }
+                    },
+                    "$collection": "employeesNested"
+                  }
+                },
+                "tasks": [
+                  {
+                    "$document": {
+                      "description": "Design homepage",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "description": "Implement backend",
+                      "priority": "high",
+                      "completed": false,
+                      "$id": "task3",
+                      "$sequence": "3",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "update(\"any\")"
+                      ],
+                      "$collection": "tasksNested"
+                    }
+                  }
+                ],
+                "$collection": "projectsNested"
+              }
+            }
+          ]
         },
         {
           "op": "database.delete_collection",

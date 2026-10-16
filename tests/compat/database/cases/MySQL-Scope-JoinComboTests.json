@@ -36633,9 +36633,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "hm-meta-313",
+              "mainId": "hm1",
+              "score": 313,
+              "secret": "visible-313",
+              "label": "visible-high",
+              "body": "other text",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_meta",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },

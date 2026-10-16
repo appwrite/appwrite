@@ -12981,9 +12981,65 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "u0000000000000000092",
+              "$permissions": [
+                "read(\"user:random\")",
+                "update(\"user:random\")",
+                "delete(\"user:random\")"
+              ],
+              "test": "lorem",
+              "$collection": "csParent_u000000000082",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "oneToOne": {
+                "$document": {
+                  "test": "lorem ipsum",
+                  "$id": "u0000000000000000093",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:random\")",
+                    "update(\"user:random\")",
+                    "delete(\"user:random\")"
+                  ],
+                  "$collection": "csO2O_u000000000083"
+                }
+              },
+              "oneToMany": [
+                {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000094",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000084"
+                  }
+                },
+                {
+                  "$document": {
+                    "test": "dolor",
+                    "$id": "u0000000000000000095",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:torsten\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000084"
+                  }
+                }
+              ]
             }
           }
         },
@@ -13008,7 +13064,7 @@
           "args": {
             "collection": "csParent_u000000000082"
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "db.authorization.clean_roles",
@@ -13031,7 +13087,7 @@
           "args": {
             "collection": "csParent_u000000000082"
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "db.authorization.clean_roles",

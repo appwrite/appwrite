@@ -41700,9 +41700,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -41963,9 +41975,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "c1",
+              "name": "Customer 1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "t8_jch_c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -42086,12 +42105,23 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "Customer 1",
+                "ord.amount": 150,
+                "itm.sku": "widget",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "t8_jch_c"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

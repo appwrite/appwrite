@@ -134831,9 +134831,38 @@
           },
           "bind": "s10103",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen II",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2019,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000053",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "nullable": null
             }
           }
         },

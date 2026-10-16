@@ -70586,9 +70586,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "nf_profiles",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "profile",
+              "twoWayKey": "user",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -70681,9 +70690,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"user\""
+            "$document": {
+              "$id": "nf_user1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "nf_user1",
+              "$collection": "nf_users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "profile": {
+                "$document": {
+                  "verified": true,
+                  "$id": "nf_profile1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "nf_profiles"
+                }
+              }
             }
           }
         },
@@ -70706,9 +70743,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"user\""
+            "$document": {
+              "$id": "nf_user2",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "nf_user2",
+              "$collection": "nf_users",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "profile": {
+                "$document": {
+                  "verified": false,
+                  "$id": "nf_profile2",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "nf_profiles"
+                }
+              }
             }
           }
         },
@@ -70735,12 +70800,42 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "nf_user1",
+                "$id": "nf_user1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "profile": {
+                  "$document": {
+                    "verified": true,
+                    "$id": "nf_profile1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "nf_profiles"
+                  }
+                },
+                "$collection": "nf_users"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",
@@ -70754,12 +70849,7 @@
           "args": {
             "collection": "nf_users"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.collection_exists",

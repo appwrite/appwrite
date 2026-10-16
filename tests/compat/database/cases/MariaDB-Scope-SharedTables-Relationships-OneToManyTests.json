@@ -15684,9 +15684,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "two_u000000000290",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "two_u000000000290",
+              "twoWayKey": "one_u000000000289",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -15696,12 +15705,7 @@
             "collection": "one_u000000000289",
             "key": "two_u000000000290"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.create_relationship",
@@ -15724,9 +15728,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Attribute already exists"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "two_u000000000290",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "two_u000000000290",
+              "twoWayKey": "one_u000000000289",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -15735,12 +15748,7 @@
           "args": {
             "collection": "one_u000000000289"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.delete_collection",

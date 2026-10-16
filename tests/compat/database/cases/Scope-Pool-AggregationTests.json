@@ -39094,9 +39094,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -39289,9 +39301,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "laptop",
+              "name": "Laptop",
+              "category": "electronics",
+              "price": 1200,
+              "stock": 50,
+              "rating": 4.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -39316,9 +39341,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "phone",
+              "name": "Phone",
+              "category": "electronics",
+              "price": 800,
+              "stock": 100,
+              "rating": 4.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -39343,9 +39381,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "tablet",
+              "name": "Tablet",
+              "category": "electronics",
+              "price": 500,
+              "stock": 75,
+              "rating": 3.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
             }
           }
         },
@@ -39370,9 +39421,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "shirt",
+              "name": "Shirt",
+              "category": "clothing",
+              "price": 30,
+              "stock": 200,
+              "rating": 4.0,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
             }
           }
         },
@@ -39397,9 +39461,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "pants",
+              "name": "Pants",
+              "category": "clothing",
+              "price": 50,
+              "stock": 150,
+              "rating": 3.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5"
             }
           }
         },
@@ -39424,9 +39501,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "jacket",
+              "name": "Jacket",
+              "category": "clothing",
+              "price": 120,
+              "stock": 80,
+              "rating": 4.7,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
             }
           }
         },
@@ -39451,9 +39541,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "novel",
+              "name": "Novel",
+              "category": "books",
+              "price": 15,
+              "stock": 300,
+              "rating": 4.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "7"
             }
           }
         },
@@ -39478,9 +39581,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "textbook",
+              "name": "Textbook",
+              "category": "books",
+              "price": 60,
+              "stock": 40,
+              "rating": 3.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "8"
             }
           }
         },
@@ -39505,9 +39621,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "comic",
+              "name": "Comic",
+              "category": "books",
+              "price": 10,
+              "stock": 500,
+              "rating": 4.1,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_sum_41c393",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "9"
             }
           }
         },
@@ -39549,7 +39678,7 @@
           },
           "expect": [
             {
-              "total": null
+              "total": 85
             }
           ]
         }
@@ -97588,24 +97717,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "category": "toys"
-            },
-            {
-              "n": 3,
-              "category": "clothing"
-            },
-            {
-              "n": 3,
-              "category": "electronics"
-            },
-            {
-              "n": 3,
-              "category": "books"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -97766,20 +97884,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 3,
-              "category": "clothing"
-            },
-            {
-              "n": 3,
-              "category": "electronics"
-            },
-            {
-              "n": 3,
-              "category": "books"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -97983,20 +98094,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "category": "toys"
-            },
-            {
-              "n": 2,
-              "category": "clothing"
-            },
-            {
-              "n": 3,
-              "category": "books"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -98166,48 +98270,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "category": "toys",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -98600,24 +98669,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "category": "toys"
-            },
-            {
-              "n": 3,
-              "category": "clothing"
-            },
-            {
-              "n": 4,
-              "category": "electronics"
-            },
-            {
-              "n": 3,
-              "category": "books"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -98853,24 +98911,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "category": "toys"
-            },
-            {
-              "n": 1,
-              "category": "clothing"
-            },
-            {
-              "n": 3,
-              "category": "electronics"
-            },
-            {
-              "n": 1,
-              "category": "books"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -99590,106 +99637,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "category": "electronics",
-                "price": 1200,
-                "r.product": "p1",
-                "r.score": 4,
-                "r.$id": "r2",
-                "$id": "p1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "books",
-                "price": 15,
-                "r.product": "p7",
-                "r.score": 5,
-                "r.$id": "r4",
-                "$id": "p7",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "electronics",
-                "price": 500,
-                "r.product": "p3",
-                "r.score": 2,
-                "r.$id": "r5",
-                "$id": "p3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "clothing",
-                "price": 30,
-                "r.product": "p4",
-                "r.score": 3,
-                "r.$id": "r3",
-                "$id": "p4",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "toys",
-                "price": 25,
-                "r.product": "p10",
-                "r.score": 1,
-                "r.$id": "r6",
-                "$id": "p10",
-                "$sequence": "10",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "electronics",
-                "price": 1200,
-                "r.product": "p1",
-                "r.score": 5,
-                "r.$id": "r1",
-                "$id": "p1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -99895,32 +99849,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 5,
-              "r.score": null
-            },
-            {
-              "n": 1,
-              "r.score": 4
-            },
-            {
-              "n": 1,
-              "r.score": 2
-            },
-            {
-              "n": 1,
-              "r.score": 3
-            },
-            {
-              "n": 1,
-              "r.score": 1
-            },
-            {
-              "n": 2,
-              "r.score": 5
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -100701,20 +100636,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 2,
-              "category": "books"
-            },
-            {
-              "n": 1,
-              "category": "clothing"
-            },
-            {
-              "n": 2,
-              "category": "electronics"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -100875,16 +100803,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 2,
-              "category": "books"
-            },
-            {
-              "n": 2,
-              "category": "electronics"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -101088,16 +101013,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 2,
-              "category": "books"
-            },
-            {
-              "n": 1,
-              "category": "clothing"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -101267,38 +101189,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "counted_rows_products",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -101691,20 +101588,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 2,
-              "category": "books"
-            },
-            {
-              "n": 1,
-              "category": "clothing"
-            },
-            {
-              "n": 3,
-              "category": "electronics"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -101940,16 +101830,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "category": "books"
-            },
-            {
-              "n": 2,
-              "category": "electronics"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -102659,59 +102546,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "category": "electronics",
-                "price": 1200,
-                "r.product": "p1",
-                "r.score": 5,
-                "r.$id": "r1",
-                "$id": "p1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "electronics",
-                "price": 1200,
-                "r.product": "p1",
-                "r.score": 4,
-                "r.$id": "r2",
-                "$id": "p1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            },
-            {
-              "$document": {
-                "category": "books",
-                "price": 15,
-                "r.product": "p7",
-                "r.score": 5,
-                "r.$id": "r4",
-                "$id": "p7",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"user:viewer\")"
-                ],
-                "$collection": "counted_rows_products"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",
@@ -102917,28 +102758,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "n": 1,
-              "r.score": 1
-            },
-            {
-              "n": 1,
-              "r.score": 2
-            },
-            {
-              "n": 1,
-              "r.score": 4
-            },
-            {
-              "n": 2,
-              "r.score": 5
-            },
-            {
-              "n": 3,
-              "r.score": null
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a distinct or grouped read without an order, whose rows the test only counts: the server's plan orders them"
+          }
         },
         {
           "op": "database.count",

@@ -32273,9 +32273,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -32904,9 +32916,79 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "rest1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "NYC Diner",
+              "location": [
+                -74.006,
+                40.7128
+              ],
+              "$collection": "restaurantsSpatial",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "supplier": {
+                "$document": {
+                  "company": "Fresh Foods Inc",
+                  "warehouseLocation": [
+                    -74.006,
+                    40.7128
+                  ],
+                  "deliveryArea": [
+                    [
+                      [
+                        -74.1,
+                        40.7
+                      ],
+                      [
+                        -73.9,
+                        40.7
+                      ],
+                      [
+                        -73.9,
+                        40.8
+                      ],
+                      [
+                        -74.1,
+                        40.8
+                      ],
+                      [
+                        -74.1,
+                        40.7
+                      ]
+                    ]
+                  ],
+                  "deliveryRoute": [
+                    [
+                      -74.006,
+                      40.7128
+                    ],
+                    [
+                      -73.9851,
+                      40.7589
+                    ],
+                    [
+                      -73.9857,
+                      40.7484
+                    ]
+                  ],
+                  "$id": "supplier1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "suppliersSpatial"
+                }
+              }
             }
           }
         },
@@ -32931,9 +33013,79 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "rest2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "LA Bistro",
+              "location": [
+                -118.2437,
+                34.0522
+              ],
+              "$collection": "restaurantsSpatial",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "supplier": {
+                "$document": {
+                  "company": "Ocean Seafood",
+                  "warehouseLocation": [
+                    -118.2437,
+                    34.0522
+                  ],
+                  "deliveryArea": [
+                    [
+                      [
+                        -118.3,
+                        34.0
+                      ],
+                      [
+                        -118.1,
+                        34.0
+                      ],
+                      [
+                        -118.1,
+                        34.1
+                      ],
+                      [
+                        -118.3,
+                        34.1
+                      ],
+                      [
+                        -118.3,
+                        34.0
+                      ]
+                    ]
+                  ],
+                  "deliveryRoute": [
+                    [
+                      -118.2437,
+                      34.0522
+                    ],
+                    [
+                      -118.2468,
+                      34.0407
+                    ],
+                    [
+                      -118.2456,
+                      34.0336
+                    ]
+                  ],
+                  "$id": "supplier2",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "suppliersSpatial"
+                }
+              }
             }
           }
         },
@@ -32958,9 +33110,79 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "rest3",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "name": "Denver Steakhouse",
+              "location": [
+                -104.9903,
+                39.7392
+              ],
+              "$collection": "restaurantsSpatial",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "supplier": {
+                "$document": {
+                  "company": "Mountain Meats",
+                  "warehouseLocation": [
+                    -104.9903,
+                    39.7392
+                  ],
+                  "deliveryArea": [
+                    [
+                      [
+                        -105.1,
+                        39.7
+                      ],
+                      [
+                        -104.8,
+                        39.7
+                      ],
+                      [
+                        -104.8,
+                        39.8
+                      ],
+                      [
+                        -105.1,
+                        39.8
+                      ],
+                      [
+                        -105.1,
+                        39.7
+                      ]
+                    ]
+                  ],
+                  "deliveryRoute": [
+                    [
+                      -104.9903,
+                      39.7392
+                    ],
+                    [
+                      -104.9847,
+                      39.7294
+                    ],
+                    [
+                      -104.9708,
+                      39.7197
+                    ]
+                  ],
+                  "$id": "supplier3",
+                  "$sequence": "3",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "suppliersSpatial"
+                }
+              }
             }
           }
         },
@@ -32987,7 +33209,84 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "NYC Diner",
+                "location": [
+                  -74.006,
+                  40.7128
+                ],
+                "$id": "rest1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Fresh Foods Inc",
+                    "warehouseLocation": [
+                      -74.006,
+                      40.7128
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -74.1,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -74.006,
+                        40.7128
+                      ],
+                      [
+                        -73.9851,
+                        40.7589
+                      ],
+                      [
+                        -73.9857,
+                        40.7484
+                      ]
+                    ],
+                    "$id": "supplier1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -33012,7 +33311,84 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "NYC Diner",
+                "location": [
+                  -74.006,
+                  40.7128
+                ],
+                "$id": "rest1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Fresh Foods Inc",
+                    "warehouseLocation": [
+                      -74.006,
+                      40.7128
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -74.1,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -74.006,
+                        40.7128
+                      ],
+                      [
+                        -73.9851,
+                        40.7589
+                      ],
+                      [
+                        -73.9857,
+                        40.7484
+                      ]
+                    ],
+                    "$id": "supplier1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -33037,7 +33413,160 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "LA Bistro",
+                "location": [
+                  -118.2437,
+                  34.0522
+                ],
+                "$id": "rest2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Ocean Seafood",
+                    "warehouseLocation": [
+                      -118.2437,
+                      34.0522
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -118.3,
+                          34.0
+                        ],
+                        [
+                          -118.1,
+                          34.0
+                        ],
+                        [
+                          -118.1,
+                          34.1
+                        ],
+                        [
+                          -118.3,
+                          34.1
+                        ],
+                        [
+                          -118.3,
+                          34.0
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -118.2437,
+                        34.0522
+                      ],
+                      [
+                        -118.2468,
+                        34.0407
+                      ],
+                      [
+                        -118.2456,
+                        34.0336
+                      ]
+                    ],
+                    "$id": "supplier2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            },
+            {
+              "$document": {
+                "name": "Denver Steakhouse",
+                "location": [
+                  -104.9903,
+                  39.7392
+                ],
+                "$id": "rest3",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Mountain Meats",
+                    "warehouseLocation": [
+                      -104.9903,
+                      39.7392
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -105.1,
+                          39.7
+                        ],
+                        [
+                          -104.8,
+                          39.7
+                        ],
+                        [
+                          -104.8,
+                          39.8
+                        ],
+                        [
+                          -105.1,
+                          39.8
+                        ],
+                        [
+                          -105.1,
+                          39.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -104.9903,
+                        39.7392
+                      ],
+                      [
+                        -104.9847,
+                        39.7294
+                      ],
+                      [
+                        -104.9708,
+                        39.7197
+                      ]
+                    ],
+                    "$id": "supplier3",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -33062,7 +33591,160 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "LA Bistro",
+                "location": [
+                  -118.2437,
+                  34.0522
+                ],
+                "$id": "rest2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Ocean Seafood",
+                    "warehouseLocation": [
+                      -118.2437,
+                      34.0522
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -118.3,
+                          34.0
+                        ],
+                        [
+                          -118.1,
+                          34.0
+                        ],
+                        [
+                          -118.1,
+                          34.1
+                        ],
+                        [
+                          -118.3,
+                          34.1
+                        ],
+                        [
+                          -118.3,
+                          34.0
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -118.2437,
+                        34.0522
+                      ],
+                      [
+                        -118.2468,
+                        34.0407
+                      ],
+                      [
+                        -118.2456,
+                        34.0336
+                      ]
+                    ],
+                    "$id": "supplier2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            },
+            {
+              "$document": {
+                "name": "Denver Steakhouse",
+                "location": [
+                  -104.9903,
+                  39.7392
+                ],
+                "$id": "rest3",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Mountain Meats",
+                    "warehouseLocation": [
+                      -104.9903,
+                      39.7392
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -105.1,
+                          39.7
+                        ],
+                        [
+                          -104.8,
+                          39.7
+                        ],
+                        [
+                          -104.8,
+                          39.8
+                        ],
+                        [
+                          -105.1,
+                          39.8
+                        ],
+                        [
+                          -105.1,
+                          39.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -104.9903,
+                        39.7392
+                      ],
+                      [
+                        -104.9847,
+                        39.7294
+                      ],
+                      [
+                        -104.9708,
+                        39.7197
+                      ]
+                    ],
+                    "$id": "supplier3",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -33083,7 +33765,84 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "NYC Diner",
+                "location": [
+                  -74.006,
+                  40.7128
+                ],
+                "$id": "rest1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Fresh Foods Inc",
+                    "warehouseLocation": [
+                      -74.006,
+                      40.7128
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -74.1,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -74.006,
+                        40.7128
+                      ],
+                      [
+                        -73.9851,
+                        40.7589
+                      ],
+                      [
+                        -73.9857,
+                        40.7484
+                      ]
+                    ],
+                    "$id": "supplier1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -33145,7 +33904,84 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "NYC Diner",
+                "location": [
+                  -74.006,
+                  40.7128
+                ],
+                "$id": "rest1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "supplier": {
+                  "$document": {
+                    "company": "Fresh Foods Inc",
+                    "warehouseLocation": [
+                      -74.006,
+                      40.7128
+                    ],
+                    "deliveryArea": [
+                      [
+                        [
+                          -74.1,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.7
+                        ],
+                        [
+                          -73.9,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.8
+                        ],
+                        [
+                          -74.1,
+                          40.7
+                        ]
+                      ]
+                    ],
+                    "deliveryRoute": [
+                      [
+                        -74.006,
+                        40.7128
+                      ],
+                      [
+                        -73.9851,
+                        40.7589
+                      ],
+                      [
+                        -73.9857,
+                        40.7484
+                      ]
+                    ],
+                    "$id": "supplier1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")"
+                    ],
+                    "$collection": "suppliersSpatial"
+                  }
+                },
+                "$collection": "restaurantsSpatial"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",

@@ -10227,9 +10227,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'profile': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "profile",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -10308,9 +10322,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$value": "Index",
+            "fields": {
+              "key": "idx_profile_email_unique",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "profile.user.email"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
             }
           }
         },
@@ -10336,9 +10359,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "nest1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "profile": {
+                "user": {
+                  "email": "a@example.com",
+                  "info": {
+                    "country": "IN"
+                  }
+                }
+              },
+              "$collection": "u0000000000000000090",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "name": null
             }
           }
         },
@@ -10365,8 +10403,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
             }
           }
         },

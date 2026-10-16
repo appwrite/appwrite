@@ -61782,9 +61782,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'ALL': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "ALL",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -61806,9 +61818,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"ALL\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "ALL": "Reserved:ALL",
+              "$collection": "rkALL",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -61819,7 +61842,21 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "ALL": "Reserved:ALL",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkALL"
+            }
           }
         },
         {
@@ -61827,7 +61864,25 @@
           "args": {
             "collection": "rkALL"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "ALL": "Reserved:ALL",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkALL"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -61845,12 +61900,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: ALL"
+          "expect": [
+            {
+              "$document": {
+                "ALL": "Reserved:ALL",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkALL"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -61866,12 +61934,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: ALL"
+          "expect": [
+            {
+              "$document": {
+                "ALL": "Reserved:ALL",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkALL"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",
@@ -110988,10 +111069,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'rkSQL_BIG_RESULT': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "rkSQL_BIG_RESULT",
+              "name": "rkSQL_BIG_RESULT",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "480"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -111018,9 +111111,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "SQL_BIG_RESULT",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -111042,9 +111147,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "SQL_BIG_RESULT": "Reserved:SQL_BIG_RESULT",
+              "$collection": "rkSQL_BIG_RESULT",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -111055,9 +111171,20 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "SQL_BIG_RESULT": "Reserved:SQL_BIG_RESULT",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkSQL_BIG_RESULT"
             }
           }
         },
@@ -111066,12 +111193,25 @@
           "args": {
             "collection": "rkSQL_BIG_RESULT"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$document": {
+                "SQL_BIG_RESULT": "Reserved:SQL_BIG_RESULT",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSQL_BIG_RESULT"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -111089,12 +111229,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$document": {
+                "SQL_BIG_RESULT": "Reserved:SQL_BIG_RESULT",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSQL_BIG_RESULT"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -111110,24 +111263,32 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$document": {
+                "SQL_BIG_RESULT": "Reserved:SQL_BIG_RESULT",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSQL_BIG_RESULT"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",
           "args": {
             "collection": "rkSQL_BIG_RESULT"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.find_collection",

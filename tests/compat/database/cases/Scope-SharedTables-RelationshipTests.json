@@ -96676,9 +96676,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "ns_tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "articles",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -96713,7 +96722,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "1"
+              "$sequence": "1",
+              "articles": []
             }
           }
         },
@@ -96748,7 +96758,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "2"
+              "$sequence": "2",
+              "articles": []
             }
           }
         },
@@ -96783,7 +96794,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$tenant": "999",
-              "$sequence": "3"
+              "$sequence": "3",
+              "articles": []
             }
           }
         },
@@ -96809,9 +96821,56 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+            "$document": {
+              "$id": "ns_article1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Article One",
+              "$collection": "ns_articles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "tags": [
+                {
+                  "$document": {
+                    "name": "ns_tag_a",
+                    "$id": "ns_tag_a",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "ns_tags"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "ns_tag_b",
+                    "$id": "ns_tag_b",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "ns_tags"
+                  }
+                }
+              ]
             }
           }
         },
@@ -96837,9 +96896,56 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"tags\""
+            "$document": {
+              "$id": "ns_article2",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Article Two",
+              "$collection": "ns_articles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "tags": [
+                {
+                  "$document": {
+                    "name": "ns_tag_b",
+                    "$id": "ns_tag_b",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "ns_tags"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "ns_tag_c",
+                    "$id": "ns_tag_c",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "ns_tags"
+                  }
+                }
+              ]
             }
           }
         },
@@ -96881,12 +96987,80 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Relationship queries can only be used on relationship attributes: tags"
+          "expect": [
+            {
+              "$document": {
+                "title": "Article One",
+                "$id": "ns_article1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tags": [
+                  {
+                    "$document": {
+                      "name": "ns_tag_a",
+                      "$id": "ns_tag_a",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "create(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "ns_tags"
+                    }
+                  }
+                ],
+                "$collection": "ns_articles"
+              }
+            },
+            {
+              "$document": {
+                "title": "Article Two",
+                "$id": "ns_article2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "tags": [
+                  {
+                    "$document": {
+                      "name": "ns_tag_b",
+                      "$id": "ns_tag_b",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"any\")",
+                        "create(\"any\")",
+                        "update(\"any\")",
+                        "delete(\"any\")"
+                      ],
+                      "$collection": "ns_tags"
+                    }
+                  }
+                ],
+                "$collection": "ns_articles"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

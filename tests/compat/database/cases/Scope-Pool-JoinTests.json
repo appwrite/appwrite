@@ -37356,9 +37356,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'amount': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "amount",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -37406,9 +37418,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"amount\""
+            "$document": {
+              "cust_uid": "c1",
+              "tag": "order_express",
+              "amount": 100,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jew_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -37428,9 +37449,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"amount\""
+            "$document": {
+              "cust_uid": "c1",
+              "tag": "order_express",
+              "amount": 200,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jew_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -37450,9 +37480,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"amount\""
+            "$document": {
+              "cust_uid": "c1",
+              "tag": "order_standard",
+              "amount": 50,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jew_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
             }
           }
         },
@@ -37508,12 +37547,12 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: amount"
+          "expect": [
+            {
+              "cnt": 2,
+              "total": 300
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

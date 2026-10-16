@@ -82663,10 +82663,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'operator_filter_all_conditions': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "operator_filter_all_conditions",
+              "name": "operator_filter_all_conditions",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -82693,9 +82704,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -82721,9 +82744,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "doc",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$collection": "operator_filter_all_conditions",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -82745,9 +82782,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82772,9 +82823,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                3
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82796,9 +82857,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82823,9 +82898,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                4,
+                5
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82847,9 +82935,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82874,9 +82976,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                4,
+                5
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82898,9 +83011,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82925,9 +83052,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                3,
+                4,
+                5
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82949,9 +83088,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -82976,9 +83129,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83000,9 +83164,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83027,9 +83205,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83051,9 +83241,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83078,9 +83282,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83102,9 +83320,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "$sequence": "1",
+              "$id": "doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83129,9 +83361,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "numbers": [],
+              "$id": "doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "operator_filter_all_conditions"
             }
           }
         },
@@ -83140,12 +83380,7 @@
           "args": {
             "collection": "operator_filter_all_conditions"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         }
       ]
     },

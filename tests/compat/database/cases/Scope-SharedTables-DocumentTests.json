@@ -53784,9 +53784,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'integer_signed': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "integer_signed",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -54251,9 +54263,43 @@
           },
           "bind": "s9848",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -54298,9 +54344,43 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+            "$document": {
+              "$id": "56000",
+              "$sequence": "56000",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "id": null
             }
           }
         },
@@ -54326,7 +54406,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+              "message": "Invalid document structure: Attribute \"float_unsigned\" has invalid type. Value must be a valid range between 0 and 179,769,313,486,231,570,814,527,423,731,704,356,798,070,567,525,844,996,598,917,476,803,157,260,780,028,538,760,589,558,632,766,878,171,540,458,953,514,382,464,234,321,326,889,464,182,768,467,546,703,537,516,986,049,910,576,551,282,076,245,490,090,389,328,944,075,868,508,455,133,942,304,583,236,903,222,948,165,808,559,332,123,348,274,797,826,204,144,723,168,738,177,180,919,299,881,250,404,026,184,124,858,368"
             }
           }
         },
@@ -54352,7 +54432,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+              "message": "Invalid document structure: Attribute \"bigint_unsigned\" has invalid type. Value must be a valid range between 0 and 9,223,372,036,854,775,807"
             }
           }
         },
@@ -54381,7 +54461,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+              "message": "Invalid document structure: Attribute \"$sequence\" has invalid type. Invalid sequence value"
             }
           }
         },
@@ -54411,9 +54491,28 @@
           },
           "bind": "s9859",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+            "$document": {
+              "id": null,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "string": "",
+              "integer_signed": 1,
+              "integer_unsigned": 1,
+              "bigint_signed": 1,
+              "bigint_unsigned": 1,
+              "float_signed": 1.0,
+              "float_unsigned": 1.0,
+              "boolean": true,
+              "colors": [],
+              "empty": [],
+              "with-dash": "",
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -54443,9 +54542,28 @@
           },
           "bind": "s9863",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"integer_signed\""
+            "$document": {
+              "id": "0",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "string": "",
+              "integer_signed": 1,
+              "integer_unsigned": 1,
+              "bigint_signed": 1,
+              "bigint_unsigned": 1,
+              "float_signed": 1.0,
+              "float_unsigned": 1.0,
+              "boolean": true,
+              "colors": [],
+              "empty": [],
+              "with-dash": "",
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
             }
           }
         },
@@ -54506,6 +54624,47 @@
                 ],
                 "$collection": "documents_u000000000052"
               }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000052"
             }
           }
         },
@@ -54571,6 +54730,51 @@
                 "$collection": "documents_u000000000052"
               }
             }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")",
+                "read(\"guests\")",
+                "create(\"guests\")",
+                "update(\"guests\")",
+                "delete(\"guests\")"
+              ],
+              "$collection": "documents_u000000000052"
+            }
           }
         },
         {
@@ -54630,6 +54834,47 @@
                 ],
                 "$collection": "documents_u000000000052"
               }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000052"
             }
           }
         },
@@ -54688,6 +54933,47 @@
                 "$collection": "documents_u000000000052"
               }
             }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "new-id",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000052"
+            }
           }
         },
         {
@@ -54745,6 +55031,47 @@
                 "$collection": "documents_u000000000052"
               }
             }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000052"
+            }
           }
         },
         {
@@ -54755,7 +55082,8 @@
               "$ref": "s9848",
               "path": "/$document/$id"
             }
-          }
+          },
+          "expect": true
         },
         {
           "op": "database.create_document",
@@ -54810,6 +55138,46 @@
                 "$sequence": "1"
               }
             }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
           }
         },
         {
@@ -54840,7 +55208,39 @@
               }
             }
           },
-          "bind": "s10748"
+          "bind": "s10748",
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4",
+              "empty": [],
+              "with-dash": null,
+              "id": null
+            }
+          }
         },
         {
           "op": "database.create_document",
@@ -54869,16 +55269,54 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5",
+              "empty": [],
+              "with-dash": null,
+              "id": null
+            }
           }
         },
         {
           "op": "db.authorization.clean_roles",
-          "args": {}
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
+          },
+          "expect": {
+            "$authorization": true
           }
         },
         {
@@ -54909,11 +55347,46 @@
               }
             }
           },
-          "bind": "s10768"
+          "bind": "s10768",
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "documents_u000000000052",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6",
+              "empty": [],
+              "with-dash": null,
+              "id": null
+            }
+          }
         },
         {
           "op": "db.authorization.clean_roles",
-          "args": {}
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "database.update_document",
@@ -54947,6 +55420,12 @@
                   "blue"
                 ]
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Missing \"update\" permission for role \"any\". Only \"[]\" scopes are allowed and \"[\"any\"]\" was given."
             }
           }
         }
@@ -131205,9 +131684,38 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "frozen",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2013,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$collection": "movies_u000000000053",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "nullable": null
             }
           }
         },
@@ -131695,38 +132203,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "$id": "<uniqid>",
-              "$collection": "movies_u000000000053",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "7",
-              "nullable": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },
@@ -132038,10 +132517,10 @@
                   "animation",
                   "kids"
                 ],
-                "with-dash": "Works4",
+                "with-dash": "Works",
                 "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "7",
+                "$id": "frozen",
+                "$sequence": "1",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",

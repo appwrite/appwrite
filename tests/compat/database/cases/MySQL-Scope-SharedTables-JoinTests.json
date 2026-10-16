@@ -35508,9 +35508,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'cust_uid': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "cust_uid",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -35629,9 +35641,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "product": "A",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -35650,9 +35671,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "product": "A",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -35671,9 +35701,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "product": "B",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
             }
           }
         },
@@ -35692,9 +35731,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "product": "C",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
             }
           }
         },
@@ -35713,9 +35761,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c2",
+              "product": "A",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5"
             }
           }
         },
@@ -35734,9 +35791,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c2",
+              "product": "A",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jcdg_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6"
             }
           }
         },
@@ -35784,12 +35850,16 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "unique_products": 3,
+              "cust_uid": "c1"
+            },
+            {
+              "unique_products": 1,
+              "cust_uid": "c2"
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

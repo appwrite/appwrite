@@ -120410,10 +120410,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'movies_u000000000045': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "movies_u000000000045",
+              "name": "movies_u000000000045",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"users\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -120440,9 +120452,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120470,9 +120494,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "director",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120500,9 +120536,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120530,9 +120578,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120560,9 +120620,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "active",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Boolean"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120590,9 +120662,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "genres",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120620,9 +120704,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "with-dash",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120650,9 +120746,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "nullable",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -120691,9 +120799,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "frozen",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2013,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "nullable": null
             }
           }
         },
@@ -120732,9 +120868,37 @@
           },
           "bind": "s10256",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen II",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2019,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "nullable": null
             }
           }
         },
@@ -120774,9 +120938,38 @@
           },
           "bind": "s10257",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Captain America: The First Avenger",
+              "director": "Joe Johnston",
+              "year": 2011,
+              "price": 25.94,
+              "active": true,
+              "genres": [
+                "science fiction",
+                "action",
+                "comics"
+              ],
+              "with-dash": "Works2",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "nullable": null
             }
           }
         },
@@ -120816,9 +121009,38 @@
           },
           "bind": "s10258",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Captain Marvel",
+              "director": "Anna Boden & Ryan Fleck",
+              "year": 2019,
+              "price": 25.99,
+              "active": true,
+              "genres": [
+                "science fiction",
+                "action",
+                "comics"
+              ],
+              "with-dash": "Works2",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4",
+              "nullable": null
             }
           }
         },
@@ -120854,9 +121076,34 @@
           },
           "bind": "s10259",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Work in Progress",
+              "director": "TBD",
+              "year": 2025,
+              "price": 0.0,
+              "active": false,
+              "genres": [],
+              "with-dash": "Works3",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5",
+              "nullable": null
             }
           }
         },
@@ -120891,9 +121138,68 @@
           },
           "bind": "s10260",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"user:x\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Work in Progress 2",
+              "director": "TBD",
+              "year": 2026,
+              "price": 0.0,
+              "active": false,
+              "genres": [],
+              "with-dash": "Works3",
+              "nullable": "Not null",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "movies_u000000000045",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "name",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Fulltext"
+                },
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
             }
           }
         },
@@ -120919,35 +121225,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "movies_u000000000045",
-            "index": {
-              "$value": "Index",
-              "fields": {
-                "key": "name",
-                "type": {
-                  "$enum": "Query\\Schema\\IndexType::Fulltext"
-                },
-                "attributes": [
-                  "name"
-                ],
-                "lengths": [],
-                "orders": [],
-                "ttl": null
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
             }
           }
         },
@@ -120978,9 +121257,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Index",
+            "fields": {
+              "key": "uniqueIndex",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
             }
           }
         },
@@ -121019,8 +121313,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },
@@ -121052,8 +121346,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
             }
           }
         },
@@ -121092,9 +121386,37 @@
           },
           "bind": "s10876",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen 5",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2013,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works4",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "8",
+              "nullable": null
             }
           }
         },

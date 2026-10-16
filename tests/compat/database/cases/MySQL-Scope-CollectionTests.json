@@ -101158,9 +101158,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'REGEXP': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "REGEXP",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -101182,9 +101194,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"REGEXP\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "REGEXP": "Reserved:REGEXP",
+              "$collection": "rkREGEXP",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -101195,7 +101217,20 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "REGEXP": "Reserved:REGEXP",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkREGEXP"
+            }
           }
         },
         {
@@ -101203,7 +101238,24 @@
           "args": {
             "collection": "rkREGEXP"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "REGEXP": "Reserved:REGEXP",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkREGEXP"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -101221,12 +101273,24 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: REGEXP"
+          "expect": [
+            {
+              "$document": {
+                "REGEXP": "Reserved:REGEXP",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkREGEXP"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -101242,12 +101306,24 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: REGEXP"
+          "expect": [
+            {
+              "$document": {
+                "REGEXP": "Reserved:REGEXP",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkREGEXP"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",

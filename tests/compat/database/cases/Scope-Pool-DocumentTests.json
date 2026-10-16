@@ -29506,9 +29506,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'price': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -29715,9 +29727,37 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$id": "frozen",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2013,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "nullable": null
             }
           }
         },
@@ -29756,9 +29796,37 @@
           },
           "bind": "s10064",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Frozen II",
+              "director": "Chris Buck & Jennifer Lee",
+              "year": 2019,
+              "price": 39.5,
+              "active": true,
+              "genres": [
+                "animation",
+                "kids"
+              ],
+              "with-dash": "Works",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "nullable": null
             }
           }
         },
@@ -29798,9 +29866,38 @@
           },
           "bind": "s10065",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Captain America: The First Avenger",
+              "director": "Joe Johnston",
+              "year": 2011,
+              "price": 25.94,
+              "active": true,
+              "genres": [
+                "science fiction",
+                "action",
+                "comics"
+              ],
+              "with-dash": "Works2",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "nullable": null
             }
           }
         },
@@ -29840,9 +29937,38 @@
           },
           "bind": "s10066",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Captain Marvel",
+              "director": "Anna Boden & Ryan Fleck",
+              "year": 2019,
+              "price": 25.99,
+              "active": true,
+              "genres": [
+                "science fiction",
+                "action",
+                "comics"
+              ],
+              "with-dash": "Works2",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4",
+              "nullable": null
             }
           }
         },
@@ -29878,9 +30004,34 @@
           },
           "bind": "s10067",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Work in Progress",
+              "director": "TBD",
+              "year": 2025,
+              "price": 0.0,
+              "active": false,
+              "genres": [],
+              "with-dash": "Works3",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5",
+              "nullable": null
             }
           }
         },
@@ -29915,9 +30066,32 @@
           },
           "bind": "s10068",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"price\""
+            "$document": {
+              "$permissions": [
+                "read(\"user:x\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "name": "Work in Progress 2",
+              "director": "TBD",
+              "year": 2026,
+              "price": 0.0,
+              "active": false,
+              "genres": [],
+              "with-dash": "Works3",
+              "nullable": "Not null",
+              "$id": "<uniqid>",
+              "$collection": "movies_u000000000045",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
             }
           }
         },
@@ -29991,7 +30165,68 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Work in Progress",
+                "director": "TBD",
+                "year": 2025,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": null,
+                "$id": "<uniqid>",
+                "$sequence": "5",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "read(\"user:1\")",
+                  "read(\"user:2\")",
+                  "create(\"any\")",
+                  "create(\"user:1x\")",
+                  "create(\"user:2x\")",
+                  "update(\"any\")",
+                  "update(\"user:1x\")",
+                  "update(\"user:2x\")",
+                  "delete(\"any\")",
+                  "delete(\"user:1x\")",
+                  "delete(\"user:2x\")"
+                ],
+                "$collection": "movies_u000000000045"
+              }
+            },
+            {
+              "$document": {
+                "name": "Work in Progress 2",
+                "director": "TBD",
+                "year": 2026,
+                "price": 0.0,
+                "active": false,
+                "genres": [],
+                "with-dash": "Works3",
+                "nullable": "Not null",
+                "$id": "<uniqid>",
+                "$sequence": "6",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:x\")",
+                  "create(\"any\")",
+                  "create(\"user:1x\")",
+                  "create(\"user:2x\")",
+                  "update(\"any\")",
+                  "update(\"user:1x\")",
+                  "update(\"user:2x\")",
+                  "delete(\"any\")",
+                  "delete(\"user:1x\")",
+                  "delete(\"user:2x\")"
+                ],
+                "$collection": "movies_u000000000045"
+              }
+            }
+          ]
         }
       ]
     },
@@ -92736,9 +92971,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for index creation 'uniqueIndex': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Index",
+            "fields": {
+              "key": "uniqueIndex",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
             }
           }
         },
@@ -92776,37 +93026,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "$id": "<uniqid>",
-              "$collection": "movies_u000000000045",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "7",
-              "nullable": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },
@@ -92838,8 +93060,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Unique",
-              "message": "Unique index violation"
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
             }
           }
         },
@@ -92965,37 +93187,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "nullable": null,
-              "$sequence": "8",
-              "$id": "<uniqid>",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "$collection": "movies_u000000000045"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },

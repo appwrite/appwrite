@@ -93967,9 +93967,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'numbers': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "numbers",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -93992,9 +94004,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "numbers": [
+                10,
+                20,
+                30
+              ],
+              "$id": "<uniqid>",
+              "$collection": "test_array_item_type_violation",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -94017,9 +94042,21 @@
           },
           "bind": "s28185",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "numbers": [
+                100,
+                200
+              ],
+              "$id": "<uniqid>",
+              "$collection": "test_array_item_type_violation",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
