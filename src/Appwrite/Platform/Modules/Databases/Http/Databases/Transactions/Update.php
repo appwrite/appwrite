@@ -687,7 +687,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
@@ -764,7 +764,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
 

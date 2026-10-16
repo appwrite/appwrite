@@ -94,6 +94,8 @@ trait StagedDependants
         $this->assertSame(201, $existing['headers']['status-code'], \json_encode($existing['body']) ?: '');
 
         $newId = Id::unique();
+        $targetId = Id::unique();
+        $strayId = Id::unique();
         $transactionId = $this->createStagedDependantsTransaction();
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
             'operations' => [
@@ -104,6 +106,13 @@ trait StagedDependants
                     'action' => 'upsert',
                     $this->getRecordIdParam() => $existingId,
                     'data' => ['name' => 'after'],
+                ],
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'upsert',
+                    $this->getRecordIdParam() => $targetId,
+                    'data' => ['$id' => $strayId, 'name' => 'target'],
                 ],
             ],
         ]);
@@ -119,6 +128,13 @@ trait StagedDependants
         $updated = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $existingId), $headers);
         $this->assertSame(200, $updated['headers']['status-code']);
         $this->assertSame('after', $updated['body']['name'], 'An upsert of an existing record updates that record');
+
+        $target = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $targetId), $headers);
+        $this->assertSame(200, $target['headers']['status-code'], 'The record ID of the operation wins over an $id in its data');
+        $this->assertSame('target', $target['body']['name']);
+
+        $stray = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $strayId), $headers);
+        $this->assertSame(404, $stray['headers']['status-code']);
     }
 
     /**
