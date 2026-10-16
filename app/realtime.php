@@ -46,8 +46,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\Lock\Distributed;
-use Utopia\Lock\Exception\Contention;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -1494,39 +1492,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         /** @var Group $pools */
                         $pools = $container->get('pools');
 
-                        $lockKey = 'presence:' . $projectId . ':' . ((string) $userId);
-
-                        /** @var array<string, Document> $deletedPresences */
-                        $deletedPresences = [];
-                        $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $lockKey, $presenceState, $projectId, $userId, &$deletedPresences): void {
-                            $lock = new Distributed($redis, $lockKey, ttl: PresenceHandler::LOCK_TTL);
-
-                            try {
-                                $lock->withLock(function () use ($lock, $dbForProject, $presenceIds, $presenceState, $redis, $projectId, $userId, &$deletedPresences): void {
-                                    // Exact zero only; a negative count means Redis lost the key, so keep the row for expiresAt.
-                                    if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
-                                        return;
-                                    }
-
-                                    // Fence: refresh() proves we still hold the lease. If lost, another op may own the row, so leave it to expiresAt.
-                                    if (!$lock->refresh()) {
-                                        return;
-                                    }
-
-                                    foreach ($presenceIds as $presenceId) {
-                                        $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('presenceLogs', $presenceId));
-                                        if ($presence->isEmpty()) {
-                                            continue;
-                                        }
-
-                                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('presenceLogs', $presenceId));
-                                        $deletedPresences[$presence->getId()] = $presence;
-                                    }
-                                }, timeout: PresenceHandler::LOCK_TIMEOUT);
-                            } catch (Contention) {
-                                // On contention, leave the row to expiresAt rather than decrement outside the lock.
-                            }
-                        });
+                        $deletedPresences = $presenceState->releaseConnection($pools, $dbForProject, $projectId, (string) $userId, $presenceIds);
 
                         if (!empty($deletedPresences)) {
                             $presenceState->triggerUsage($publisherForUsage, $project, -\count($deletedPresences));
@@ -1535,11 +1501,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $queueForEvents = getQueueForEvents();
                         $queueForRealtime = getQueueForRealtime();
                         foreach ($deletedPresences as $presence) {
-                            $presence->removeAttribute('$collection');
-                            $presence->removeAttribute('$tenant');
-                            $presence->removeAttribute('hostname');
-                            $presence->removeAttribute('permissionsHash');
-                            $presence->removeAttribute('userInternalId');
                             try {
                                 $presenceState->triggerEvent(
                                     $queueForEvents,

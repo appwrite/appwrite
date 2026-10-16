@@ -25,9 +25,6 @@ use Utopia\Validator\Text;
 
 class Presence extends Action
 {
-    public const int LOCK_TTL = 10;
-    public const int LOCK_TIMEOUT = 5;
-
     public function __construct()
     {
         $this
@@ -101,7 +98,7 @@ class Presence extends Action
 
         $projectId = $project->getId();
         $userId = $user->getId();
-        $lockKey = 'presence:' . $projectId . ':' . $userId;
+        $lockKey = PresenceState::getLockKey($projectId, $userId);
 
         $upsert = fn (): Document => $presenceState->upsertForUser(
             $database,
@@ -113,7 +110,7 @@ class Presence extends Action
 
         // Serialize this upsert against a close that may delete the row, and against a second message on this connection.
         $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $lockKey, $presenceState, $projectId, $userId, $realtime, $connectionId): Document {
-            $lock = new Distributed($redis, $lockKey, ttl: self::LOCK_TTL);
+            $lock = new Distributed($redis, $lockKey, ttl: PresenceState::LOCK_TTL);
 
             try {
                 return $lock->withLock(function () use ($upsert, $presenceState, $redis, $projectId, $userId, $realtime, $connectionId): Document {
@@ -126,18 +123,14 @@ class Presence extends Action
                     $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
 
                     return $presence;
-                }, timeout: self::LOCK_TIMEOUT);
+                }, timeout: PresenceState::LOCK_TIMEOUT);
             } catch (Contention) {
                 // On contention, upsert anyway but skip the count and hold so they stay balanced.
                 return $upsert();
             }
         });
 
-        $presence->removeAttribute('$collection');
-        $presence->removeAttribute('$tenant');
-        $presence->removeAttribute('hostname');
-        $presence->removeAttribute('permissionsHash');
-        $presence->removeAttribute('userInternalId');
+        $presence = $presenceState->stripInternalAttributes($presence);
 
         $presenceState->triggerEvent(
             $queueForEvents,

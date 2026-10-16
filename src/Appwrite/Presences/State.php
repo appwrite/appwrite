@@ -23,6 +23,9 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
+use Utopia\Pools\Group;
 use Utopia\Span\Span;
 
 class State
@@ -30,6 +33,14 @@ class State
     public const LIST_CACHE_FIELD_PRESENCES = 'presences';
     public const LIST_CACHE_FIELD_TOTAL = 'total';
     public const COLLECTION_ID = 'presenceLogs';
+
+    public const int LOCK_TTL = 10;
+    public const int LOCK_TIMEOUT = 5;
+
+    public static function getLockKey(string $projectId, string $userId): string
+    {
+        return 'presence:' . $projectId . ':' . $userId;
+    }
 
     public static function getConnectionCounterKey(string $projectId, string $userId): string
     {
@@ -50,6 +61,70 @@ class State
         }
 
         return $remaining;
+    }
+
+    public function clearConnections(\Redis $redis, string $projectId, string $userId): void
+    {
+        $redis->del(self::getConnectionCounterKey($projectId, $userId));
+    }
+
+    /**
+     * Release a connection's hold: decrement the live-holder count and, at the last
+     * holder, delete the row(s) under the lock. Returns the deleted presences, cleaned
+     * for emission, or an empty array when nothing was deleted.
+     *
+     * @param  array<int, string>  $presenceIds
+     * @return array<string, Document>
+     */
+    public function releaseConnection(
+        Group $pools,
+        Database $dbForProject,
+        string $projectId,
+        string $userId,
+        array $presenceIds,
+    ): array {
+        $deleted = [];
+
+        $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $projectId, $userId, &$deleted): void {
+            $lock = new Distributed($redis, self::getLockKey($projectId, $userId), ttl: self::LOCK_TTL);
+
+            try {
+                $lock->withLock(function () use ($lock, $dbForProject, $presenceIds, $redis, $projectId, $userId, &$deleted): void {
+                    // Exact zero only; a negative count means Redis lost the key, so keep the row for expiresAt.
+                    if ($this->decrementConnections($redis, $projectId, $userId) !== 0) {
+                        return;
+                    }
+
+                    // Fence: refresh() proves we still hold the lease. If lost, another op may own the row, so leave it to expiresAt.
+                    if (!$lock->refresh()) {
+                        return;
+                    }
+
+                    foreach ($presenceIds as $presenceId) {
+                        $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(self::COLLECTION_ID, $presenceId));
+                        if ($presence->isEmpty()) {
+                            continue;
+                        }
+
+                        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument(self::COLLECTION_ID, $presenceId));
+                        $deleted[$presence->getId()] = $this->stripInternalAttributes($presence);
+                    }
+                }, timeout: self::LOCK_TIMEOUT);
+            } catch (Contention) {
+                // On contention, leave the row to expiresAt rather than decrement outside the lock.
+            }
+        });
+
+        return $deleted;
+    }
+
+    public function stripInternalAttributes(Document $presence): Document
+    {
+        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId'] as $attribute) {
+            $presence->removeAttribute($attribute);
+        }
+
+        return $presence;
     }
 
     public function setPermissions(
