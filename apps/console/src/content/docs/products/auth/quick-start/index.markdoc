@@ -647,55 +647,43 @@ class MainActivity : ComponentActivity() {
 ```
 {% /tabsitem %}
 {% tabsitem #react-native title="React Native" %}
-This example will use `@react-navigation/native` and `@react-navigation/native-stack` to manage the authentication state and redirect users to the login page if they are not authenticated.
-You can find a version of this example in the [Appwrite Android tutorial](/docs/tutorials/android/step-1).
+This example uses protected routes in [Expo Router](https://docs.expo.dev/router/introduction/) to redirect users to the login page if they are not authenticated.
+You can find a version of this example in the [Appwrite React Native tutorial](/docs/tutorials/react-native/step-1).
 
-Create a `UserContext` to manage the authentication state.
+Create a `UserContext` that loads the current user with `account.get()` and exposes the user and a `loading` flag through a `useUser()` hook.
+Then, consume the `UserContext` in your root layout, `src/app/_layout.tsx`, to check the authentication state before rendering a route.
 ```client-react-native
-import { StyleSheet, Text, View } from 'react-native';
-import { UserProvider } from './contexts/UserContext';
-import { Router } from './lib/Router';
+import { Stack } from "expo-router";
+import { UserProvider, useUser } from "@/contexts/UserContext";
 
-export default function App() {
+function RootNavigator() {
+  const user = useUser();
+
+  // Wait until the current session is checked before choosing a screen.
+  if (user.loading) {
+    return null;
+  }
+
+  const isLoggedIn = user.current !== null;
+
   return (
-    <UserProvider>
-        <Router />
-    </UserProvider >
+    <Stack>
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="index" options={{ title: "Protected" }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="login" options={{ title: "Login" }} />
+      </Stack.Protected>
+    </Stack>
   );
 }
-```
 
-Then, consume the `UserContext` in your `Router` component to check the authentication state before rendering a route.
-```client-react-native
-import { NavigationContainer } from '@react-navigation/native';
-import LoginScreen from '../views/Login';
-import ProtectedSCreen from '../views/Protected';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useUser } from '../contexts/UserContext';
-
-const Stack = createNativeStackNavigator();
-export function Router() {
-    const user = useUser();
-    return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                {user.current == null ? (
-                    <Stack.Screen
-                        name="Login"
-                        component={LoginScreen}
-                        options={{ title: 'Login' }}
-                    />
-                ) : (
-                    <Stack.Screen
-                        name="Protected"
-                        component={ProtectedSCreen}
-                        options={{ title: 'Protected' }}
-                    />
-                )}
-
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <RootNavigator />
+    </UserProvider>
+  );
 }
 ```
 {% /tabsitem %}

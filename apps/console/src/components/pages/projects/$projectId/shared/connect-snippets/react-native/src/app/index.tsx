@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { Account } from 'react-native-appwrite'
-import { client } from './lib/appwrite'
-import { SignIn } from './pages/SignIn'
-import { SignUp } from './pages/SignUp'
+import { client } from '../lib/appwrite'
+import { SignIn } from '../components/sign-in'
+import { SignUp } from '../components/sign-up'
 
 function Home({
   onGoToSignIn,
@@ -54,7 +54,7 @@ function Home({
   )
 }
 
-export default function App() {
+export default function Index() {
   const [route, setRoute] = useState('home')
 
   return (

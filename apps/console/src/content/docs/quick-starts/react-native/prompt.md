@@ -7,7 +7,7 @@
 ## Step 1: Scaffold or use existing Expo app
 
 - If you already have an Expo project open, stay in it and use it.
-- Otherwise, run: `npx create-expo-app my-app && cd my-app`
+- Otherwise, run: `npx create-expo-app@latest my-app && cd my-app`. The default template is an Expo Router app with its routes in `src/app`.
 
 ## Step 2: Install SDK and polyfills
 
@@ -20,7 +20,9 @@
 
 ## Step 4: Client setup (key snippet)
 
-- File: `app/lib/appwrite.ts` (or `.js`)
+- File: `src/lib/appwrite.ts` (or `lib/appwrite.ts` if the project has no `src/` directory).
+- Never put this file inside the Expo Router routes directory (`src/app/` or `app/`). Expo Router treats every file there as a route.
+- Always call `setPlatform()` with the package name or bundle ID the user registered. Without it, native requests fail with an invalid origin error.
 
 ```ts
 import 'react-native-url-polyfill/auto';
@@ -37,8 +39,9 @@ export { ID };
 
 ## Step 5: UI wiring (idea + key snippets)
 
-- If this is a fresh project, you can reuse the default entry screen (e.g., `app/(tabs)/index.tsx`).
-- If you are adding to an existing project, create a new screen/route (e.g., `app/auth.tsx` or a new tab/stack screen) instead of overriding the current default route.
+- If this is a fresh project, replace the contents of the default entry screen, `src/app/index.tsx`.
+- If you are adding to an existing project, create a new route instead of overriding the current default route (e.g., `src/app/auth.tsx`, or `app/auth.tsx` if the project has no `src/` directory).
+- Adjust the `lib/appwrite` import path to the screen's location.
 - Screen file example:
 
 ```tsx
@@ -107,4 +110,4 @@ export default function AuthScreen() {
 
 ## Deliverables
 
-- `app/lib/appwrite.ts`, updated screen with minimal form and actions
+- `src/lib/appwrite.ts` (or `lib/appwrite.ts`), updated screen with minimal form and actions

@@ -6,7 +6,7 @@ step: 8
 ---
 
 ## Test your project {% #test-project %}
-You can run your projects with `npm run start`. This will start the Metro bundler and open the Expo Go app on your device. 
+You can run your project with `npx expo start`. This starts the Metro bundler and shows a QR code that you can scan with the [Expo Go](https://expo.dev/go) app on your device.
 You can also run your project on an emulator or simulator by pressing `i` for iOS and `a` for Android.
 
 ## Bundling for production {% #bundle-production %}

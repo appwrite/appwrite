@@ -92,6 +92,20 @@ APPWRITE_ENDPOINT="${endpoint}"`
   }
 }
 
+/**
+ * Project details for a native starter's config. The React Native starter
+ * reads them from `.env`, where Metro only inlines `EXPO_PUBLIC_` variables.
+ */
+export function buildNativeEnvBlock(
+  variant: string,
+  details: { projectId: string; projectName: string; endpoint: string },
+): string {
+  const prefix = variant.startsWith('react-native') ? 'EXPO_PUBLIC_' : ''
+  return `${prefix}APPWRITE_PROJECT_ID="${details.projectId}"
+${prefix}APPWRITE_PROJECT_NAME="${details.projectName}"
+${prefix}APPWRITE_ENDPOINT="${details.endpoint}"`
+}
+
 export function buildNativePromptConfig(
   variant: string,
   configCode: string,
@@ -249,20 +263,20 @@ const NATIVE_PLATFORM_PROMPTS: Record<
     title: 'Starter kit for Appwrite (React Native)',
     cloneCommand:
       'git clone https://github.com/appwrite/starter-for-react-native\ncd starter-for-react-native',
-    configFile: 'index.ts',
-    configLanguage: 'typescript',
+    configFile: '.env',
+    configLanguage: 'dotenv',
     runInstructions:
-      'Run `pnpm install` then `pnpm android` or `pnpm ios`, then use the demo to ping Appwrite.',
+      'Copy `.env.example` to `.env` with the project details, run `npm install`, then run `npx expo start` and press `a` to open the app on Android. Use the demo to ping Appwrite.',
     using: 'the terminal',
   },
   'react-native-ios': {
     title: 'Starter kit for Appwrite (React Native)',
     cloneCommand:
       'git clone https://github.com/appwrite/starter-for-react-native\ncd starter-for-react-native',
-    configFile: 'index.ts',
-    configLanguage: 'typescript',
+    configFile: '.env',
+    configLanguage: 'dotenv',
     runInstructions:
-      'Run `pnpm install` then `pnpm ios`, then use the demo to ping Appwrite.',
+      'Copy `.env.example` to `.env` with the project details, run `npm install`, then run `npx expo start` and press `i` to open the app on iOS. Use the demo to ping Appwrite.',
     using: 'the terminal',
   },
 }
