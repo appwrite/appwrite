@@ -760,7 +760,18 @@ class Nats implements Synchronous, Consumer, Bounded
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         try {
-            return $this->synchronize(fn (): array => $this->pull($queue, $timeout, max(1, $n)));
+            return $this->synchronize(function () use ($queue, $timeout, $n): array {
+                try {
+                    return $this->pull($queue, $timeout, max(1, $n));
+                } catch (ConnectionException|ProtocolException $error) {
+                    // Once. Only pull()'s first fetch fails here, and it handed nothing over.
+                    if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
+                        throw $error;
+                    }
+
+                    return $this->pull($queue, $timeout, max(1, $n));
+                }
+            });
         } finally {
             // Off the lock, and on the way out however pull() ended.
             $this->flushReports();
@@ -805,7 +816,11 @@ class Nats implements Synchronous, Consumer, Bounded
 
         // Whatever else is already waiting, on a poll that cannot block.
         if ($deliveries !== [] && \count($deliveries) < $max) {
-            $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            try {
+                $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            } catch (ConnectionException|ProtocolException $error) {
+                $this->report($error);
+            }
         }
 
         $messages = [];
@@ -1042,10 +1057,8 @@ class Nats implements Synchronous, Consumer, Bounded
      *
      * Everything derived from the old sockets is dropped rather than reused:
      * consumer handles and subscriptions belong to the connection that created
-     * them. In-flight messages are deliberately not carried over — their ack
-     * subjects died with the connection, so the honest outcome is to let the
-     * server redeliver them on ackWait rather than pretend they can still be
-     * acknowledged.
+     * them. In-flight deliveries are kept: every ack goes out on the current
+     * commands connection, so a handler still running can still acknowledge.
      */
     public function reconnect(): bool
     {
@@ -1073,7 +1086,33 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->advisories = [];
         $this->spareDelivery = [];
         $this->provisioned = [];
-        $this->inFlight = [];
+
+        return true;
+    }
+
+    /**
+     * Rebuild only the receive connection. The commands connection may be mid-ack
+     * under a lock this path does not hold; command() rebuilds it if it fails.
+     */
+    private function reconnectReceive(): bool
+    {
+        // One socket serves both roles here; rebuilding it is reconnect()'s job.
+        if (!$this->source instanceof \Closure) {
+            return false;
+        }
+
+        try {
+            $this->connection?->close();
+        } catch (\Throwable) {
+            // Already gone.
+        }
+
+        $this->connection = null;
+        $this->js = null;
+        $this->consumers = [];
+        $this->advisories = [];
+        $this->spareDelivery = [];
+        $this->provisioned = [];
 
         return true;
     }
