@@ -11,6 +11,13 @@ use Utopia\Storage\Exception\RemoteException;
 
 final class S3StreamingTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!interface_exists(\Utopia\Client\Psr18\ResponseStreamingClientInterface::class)) {
+            $this->markTestSkipped('Response-aware streaming requires the current client; run with --linked before its release.');
+        }
+    }
+
     public function testBytesReachSinkBeforeTheBackendFinishes(): void
     {
         $this->serve(function (S3 $device, string $marker): void {
@@ -60,6 +67,42 @@ final class S3StreamingTest extends TestCase
         });
     }
 
+    public function testTruncatedBackendResponseIsNotReplayed(): void
+    {
+        $this->serve(function (S3 $device, string $marker): void {
+            $bytes = '';
+            try {
+                $device->stream('/truncated', static function (string $chunk) use (&$bytes): void {
+                    $bytes .= $chunk;
+                });
+                $this->fail('Expected the truncated transfer to fail');
+            } catch (\Utopia\Storage\Exception\TransportException) {
+            }
+            $this->assertSame(str_repeat('x', 12345), $bytes);
+            $this->assertSame('1', file_get_contents($marker . '.requests'));
+        });
+    }
+
+    public function testCancelledSinkStopsTheBackendRequestWithoutReplay(): void
+    {
+        $this->serve(function (S3 $device, string $marker): void {
+            $received = 0;
+            $cancelled = new \RuntimeException('Downstream disconnected');
+            try {
+                $device->stream('/object', static function (string $chunk) use (&$received, $cancelled): void {
+                    $received += strlen($chunk);
+                    throw $cancelled;
+                });
+                $this->fail('Expected downstream cancellation to propagate');
+            } catch (\RuntimeException $error) {
+                $this->assertSame($cancelled, $error);
+            }
+            $this->assertGreaterThan(0, $received);
+            $this->assertLessThanOrEqual(65536, $received);
+            $this->assertSame('1', file_get_contents($marker . '.requests'));
+        });
+    }
+
     /** @param callable(S3, string): void $test */
     private function serve(callable $test): void
     {
@@ -94,8 +137,10 @@ final class S3StreamingTest extends TestCase
                 fclose($pipe);
             }
             proc_close($process);
-            if (file_exists($marker)) {
-                unlink($marker);
+            foreach ([$marker, $marker . '.requests'] as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
             }
         }
     }
