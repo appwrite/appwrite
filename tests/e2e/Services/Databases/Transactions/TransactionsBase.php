@@ -13,6 +13,7 @@ use Utopia\Database\Role;
 
 trait TransactionsBase
 {
+    use StagedReads;
     use SchemaPolling;
 
     protected static string $sharedDatabaseId = '';
