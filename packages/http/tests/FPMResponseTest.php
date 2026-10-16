@@ -90,12 +90,13 @@ final class FPMResponseTest extends TestCase
 
     public function testChunkedResponseCountsDeliveredBytesAndFinishesOnce(): void
     {
+        $response = new Response();
         ob_start();
         try {
-            @$this->response->chunk('first-');
-            $firstSize = $this->response->getSize();
-            @$this->response->chunk('last', true);
-            @$this->response->chunk('ignored', true);
+            @$response->chunk('first-');
+            $firstSize = $response->getSize();
+            @$response->chunk('last', true);
+            @$response->chunk('ignored', true);
             $body = ob_get_contents();
         } finally {
             ob_end_clean();
@@ -103,8 +104,8 @@ final class FPMResponseTest extends TestCase
 
         $this->assertSame('first-last', $body);
         $this->assertGreaterThanOrEqual(6, $firstSize);
-        $this->assertSame(4, $this->response->getSize() - $firstSize);
-        $this->assertTrue($this->response->isSent());
+        $this->assertSame(4, $response->getSize() - $firstSize);
+        $this->assertTrue($response->isSent());
     }
 
     public function testCanSendMinimalCookie(): void
