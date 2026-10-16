@@ -184,14 +184,17 @@ class Increment extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            throw new Exception($this->getStructureNotFoundException());
+            $stored = $authorization->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $documentId));
+            throw $stored->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception($this->getStructureNotFoundException(), params: [$attribute]);
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
+            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the maximum value of ' . $max);
         } catch (TypeException $e) {
             if ($value <= 0) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
             }
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
