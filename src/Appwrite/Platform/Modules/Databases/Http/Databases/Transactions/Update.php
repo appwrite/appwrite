@@ -370,7 +370,7 @@ class Update extends Action
                 if ($currentChange <= 0) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
                 }
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
