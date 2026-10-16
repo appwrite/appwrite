@@ -533,6 +533,67 @@ final class MqttServerTest extends Scope
     }
 
     /**
+     * A user with no push target is reached on users/<userId> through the enabled Appwrite provider
+     * even when another push provider is the default. A fresh project makes FCM the first enabled
+     * push provider; the user holds no FCM token, so FCM is never called.
+     */
+    public function testUserTopicReceivesPushWhenAnotherProviderIsDefault(): void
+    {
+        $project = $this->getProject(true);
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser($project);
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $this->createFcmProvider($server);
+        $this->setupAppwriteProvider($server);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($project['$id'], $jwt, 'e2e-usertopic-default-' . $userId, cleanStart: true));
+        $this->assertSame([1], $subscriber->subscribe(['users/' . $userId]));
+
+        try {
+            $status = $this->publishToUser($server, $userId, 'Ping', 'not the default');
+            $received = $subscriber->consume(limit: 1, timeout: 20.0);
+        } finally {
+            $subscriber->disconnect();
+        }
+
+        // Test for SUCCESS: the message is SENT and delivered on the user's reserved topic.
+        $this->assertSame(MessageStatus::SENT, $status);
+        $this->assertCount(1, $received, 'the targetless user did not receive the push');
+        $this->assertSame('users/' . $userId, $received[0]['topic']);
+    }
+
+    /**
+     * The targetless fallback needs an enabled Appwrite provider: with it disabled and FCM enabled, a
+     * user holding no push target is not reachable and the message fails.
+     */
+    public function testUserPushWithoutEnabledAppwriteProviderFails(): void
+    {
+        $project = $this->getProject(true);
+        ['userId' => $userId] = $this->createUser($project);
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $this->createFcmProvider($server);
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
+            'providerId' => Id::unique(),
+            'name' => 'appwrite-disabled',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Test for FAILURE: no recipient resolves, so nothing is sent.
+        $this->assertSame(MessageStatus::FAILED, $this->publishToUser($server, $userId, 'Ping', 'nobody home'));
+    }
+
+    /**
      * A users[]-addressed push reaches only its user, whatever another user of the project subscribed
      * to. The other user's SUBACKs are deliberately not asserted here (testUserTopicOwnershipOnSubscribe
      * does that): this pins the outcome, so it also holds on the delivery path alone.
@@ -764,6 +825,31 @@ final class MqttServerTest extends Scope
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         return $provider['body']['$id'];
+    }
+
+    /**
+     * An enabled FCM provider with placeholder credentials. Only valid for sends that reach no FCM
+     * target, so the worker never calls Google.
+     *
+     * @param  array<string, string>  $server
+     */
+    private function createFcmProvider(array $server): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', $server, [
+            'providerId' => Id::unique(),
+            'name' => 'fcm-default',
+            'serviceAccountJSON' => [
+                'type' => 'service_account',
+                'project_id' => 'test-project',
+                'private_key_id' => 'test-private-key-id',
+                'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n",
+                'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                'token_uri' => 'https://oauth2.googleapis.com/token',
+            ],
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertTrue($provider['body']['enabled']);
     }
 
     /**
