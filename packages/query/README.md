@@ -180,7 +180,7 @@ The bundled builders page on a `_cursor` column, so they bind the cursor row's `
 
 ### Join Queries
 
-Every join names the joined collection and an alias, which is required. Conditioned joins take an ON list of `on()` column comparisons and the filters `Method::isJoinCondition()` accepts (comparisons, `between`, null checks, `contains*`, `startsWith`/`endsWith` and their negations, and `and`/`or` of those); anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, `search()`, …) throws `ValidationException`.
+Every join names the joined collection and the alias it is read under. An empty alias reads the join under the collection's own name, and `isAliasDefaulted()` reports it, so a consumer can tell the caller why that name cannot serve as an alias; the flag is decided when the query is built and survives `setAttribute()`, `toArray()` and `parse()`. A join with neither a collection nor an alias throws `ValidationException`. Conditioned joins take an ON list of `on()` column comparisons and the filters `Method::isJoinCondition()` accepts (comparisons, `between`, null checks, `contains*`, `startsWith`/`endsWith` and their negations, and `and`/`or` of those); anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, `search()`, …) throws `ValidationException`.
 
 ```php
 Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);
@@ -192,8 +192,10 @@ Query::rightJoin('orders', 'o', [Query::on('users.id', 'o.user_id', '!=')]);
 Query::fullOuterJoin('orders', 'o', [Query::on('users.id', 'o.user_id')]);
 Query::crossJoin('colors', 'c');
 Query::naturalJoin('profiles', 'p');
+Query::join('orders', '', [Query::on('users.id', 'orders.user_id')]); // read as `orders`
 
 $join->getAlias();          // 'o'
+$join->isAliasDefaulted();  // false; true for a join given no alias
 $join->getJoinOnQueries();  // the ON list
 ```
 
