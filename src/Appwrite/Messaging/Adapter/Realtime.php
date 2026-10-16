@@ -207,8 +207,9 @@ class Realtime extends MessagingAdapter
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
-        // Recorded once by the connection handler; every later (re)subscribe keeps it.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
+        // Recorded once by the connection handler or a presence write; every later (re)subscribe
+        // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
