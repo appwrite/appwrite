@@ -12,13 +12,18 @@ final readonly class Zone
     public string $name;
 
     /**
+     * @var list<Record>
+     */
+    public array $records;
+
+    /**
      * @param string $name The zone domain name (usually apex)
-     * @param list<Record> $records DNS records in this zone (excluding SOA)
+     * @param list<Record> $records DNS records in this zone (excluding SOA). Identical records are kept once.
      * @param Record $soa The SOA record for this zone
      */
     public function __construct(
         string $name,
-        public array $records,
+        array $records,
         public Record $soa,
     ) {
         if ($soa->type !== Record::TYPE_SOA) {
@@ -32,7 +37,11 @@ final readonly class Zone
 
         $zoneSuffix = $this->name === '.' ? '.' : ".$this->name";
 
-        // Validate that all records belong to the zone
+        // Validate that all records belong to the zone, and keep one copy of identical
+        // records: RFC 2181 section 5 says servers should suppress such duplicates. The
+        // copy kept carries the lowest TTL among them, as section 5.2 has an RRset take,
+        // and an MX or SRV field left unset is the 0 it is encoded as.
+        $unique = [];
         foreach ($records as $record) {
             if ($record->type === Record::TYPE_SOA) {
                 throw new \InvalidArgumentException('SOA records should be passed as the $soa parameter, not in $records');
@@ -42,7 +51,13 @@ final readonly class Zone
                     "Record name '$record->name' does not belong to zone '$this->name'",
                 );
             }
+
+            $key = implode("\0", [$record->name, $record->type, $record->class, $record->rdata, $record->priority ?? 0, $record->weight ?? 0, $record->port ?? 0]);
+            if (!isset($unique[$key]) || $record->ttl < $unique[$key]->ttl) {
+                $unique[$key] = $record;
+            }
         }
+        $this->records = array_values($unique);
     }
 
     /**
