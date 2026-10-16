@@ -522,7 +522,14 @@ class Deletes extends Action
     private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
         Console::info('Delete expired targets');
-        Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
+
+        $dbForProject = $getProjectDB($project);
+
+        // Nothing backfills `targets` into a database that predates it, and failing there
+        // fails the maintenance run and every sweep queued behind this one.
+        if (!Targets::deleteExpired($dbForProject)) {
+            Console::warning("Skipped the targets sweep on {$dbForProject->getDatabase()}: no targets collection");
+        }
     }
 
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
