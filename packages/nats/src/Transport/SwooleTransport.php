@@ -101,6 +101,8 @@ final class SwooleTransport implements Transport
         $client->set($this->buildTlsSettings($options));
 
         if (!$client->enableSSL()) {
+            // The socket is left mid-handshake and cannot carry NATS either way.
+            $this->close();
             throw new TlsException('Failed to upgrade connection to TLS');
         }
     }

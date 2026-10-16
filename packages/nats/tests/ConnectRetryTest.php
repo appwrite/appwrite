@@ -199,6 +199,33 @@ final class ConnectRetryTest extends TestCase
         $this->assertSame(1, $connects);
     }
 
+    public function testFailedAttemptsLeaveNoTransportOpen(): void
+    {
+        /** @var list<FakeTransport> $transports */
+        $transports = [];
+        $factory = static function () use (&$transports): FakeTransport {
+            // Connects and sends INFO, then never answers the PING: the
+            // attempt fails after its socket is up.
+            $transport = new FakeTransport();
+            $transport->answerPings = false;
+            $transports[] = $transport;
+
+            return $transport;
+        };
+
+        try {
+            Connection::connect(self::options($factory, 2, servers: ['nats://a.cloud:4222', 'nats://b.cloud:4222']));
+            $this->fail('connect() must give up when no server answers the PING');
+        } catch (ConnectionException $error) {
+            $this->assertInstanceOf(TimeoutException::class, $error->getPrevious());
+        }
+
+        $this->assertCount(4, $transports, 'two servers, two passes');
+        foreach ($transports as $index => $transport) {
+            $this->assertFalse($transport->isConnected(), "transport {$index} was left open");
+        }
+    }
+
     public function testPassesArePausedBetween(): void
     {
         $connects = [];

@@ -635,6 +635,12 @@ final class Connection
                 } catch (\Throwable $e) {
                     $lastError = $e;
                     $retryable = $retryable && self::retriesConnect($e);
+                    // A failure after the socket connected (no INFO, a handshake
+                    // timeout, a failed upgrade) leaves it open, and the next
+                    // attempt replaces the transport without closing it.
+                    if (isset($this->transport)) {
+                        $this->transport->close();
+                    }
                 }
             }
 
