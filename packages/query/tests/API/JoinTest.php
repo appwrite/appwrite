@@ -163,7 +163,33 @@ class JoinTest extends TestCase
         $this->assertSame('orders', $renamed->getAlias());
         $this->assertTrue($renamed->isAliasDefaulted());
         $this->assertSame('orders', $renamed->toArray()['alias']);
-        $this->assertSame('orders', Query::parseQuery($renamed->toArray())->getAlias());
+    }
+
+    /**
+     * The serialized form carries the alias itself, so a join serialized after its collection was
+     * renamed is parsed under the same alias, and read as an alias given explicitly.
+     */
+    public function testRenamedJoinSerializesItsAliasExplicitly(): void
+    {
+        $renamed = (clone Query::join('orders', '', [Query::on('users.id', 'orders.user_id')]))->setAttribute('database_1_collection_7');
+
+        $parsed = Query::parseQuery($renamed->toArray());
+
+        $this->assertSame('database_1_collection_7', $parsed->getAttribute());
+        $this->assertSame('orders', $parsed->getAlias());
+        $this->assertFalse($parsed->isAliasDefaulted());
+    }
+
+    /**
+     * An unaliased builder join has no alias to serialize, so parsing it back reads it under its
+     * collection like any join given no alias.
+     */
+    public function testBuilderJoinWithoutAliasParsesUnderItsCollection(): void
+    {
+        $parsed = Query::parseQuery(new Query(Method::Join, 'orders', [Query::on('users.id', 'orders.user_id')])->toArray());
+
+        $this->assertSame('orders', $parsed->getAlias());
+        $this->assertTrue($parsed->isAliasDefaulted());
     }
 
     /**

@@ -13,8 +13,9 @@ All notable changes to `utopia-php/query` are documented in this file.
   with neither a collection nor an alias still throws.
 - `Query::isAliasDefaulted()` (new) reports a join read under its collection's
   name. It is derived when the query is constructed (the alias equals the
-  collection), so it survives `toArray()`/`parse()` round trips and a later
-  `setAttribute()`.
+  collection), so a `toArray()`/`parse()` round trip re-derives it and a later
+  `setAttribute()` on the built query keeps it. A join serialized after its
+  collection was renamed keeps its alias, which `parse()` reads as explicit.
 
 ## 0.7.1
 
