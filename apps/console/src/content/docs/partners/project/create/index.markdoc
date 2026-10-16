@@ -113,7 +113,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndpoint("https://cloud.appwrite.io/v1")
     .SetOrganization("<ORGANIZATION_ID>")
     .SetKey("<YOUR_PARTNERS_KEY>");
 
@@ -211,9 +211,9 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/id"
-    "github.com/appwrite/sdk-for-go/organization"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/id"
+    "github.com/appwrite/sdk-for-go/v7/organization"
 )
 
 func main() {

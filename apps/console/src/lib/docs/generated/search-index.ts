@@ -457,7 +457,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting",
     "title": "Self-hosting",
     "description": "Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.",
-    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from an older version of Appwrite, you need to follow the migration…",
+    "excerpt": "Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a Docker CLI, or on your own Kubernetes cluster with the official Helm chart. Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud. Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the appwrite/appwrite repository. If you are migrating from…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -589,7 +589,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/installation",
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
-    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install with Docker The easiest way to install Appwrite is using our Docker installer. The installer launches a web-based…",
+    "excerpt": "This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker. To install Appwrite on a Kubernetes cluster instead of a single Docker host, use the official Helm chart. System requirements Before installing Appwrite, ensure your system meets these minimum requirements: - **2 CPU cores** - **4GB of RAM** - **2GB of swap memory** - **Operating system** that supports Docker - **Docker Compose Version 2** Install…",
     "breadcrumbs": [
       "Self-hosting",
       "Getting started",
@@ -671,6 +671,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Self-hosting",
       "Platform deployment",
       "Google Cloud"
+    ]
+  },
+  {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "excerpt": "The official Appwrite Helm chart installs self-hosted Appwrite on your own Kubernetes cluster, and upgrades it with Helm. It deploys the API, console, realtime, workers, and schedulers, plus the routes your ingress controller or Gateway needs to reach them. A plain install includes everything Appwrite needs, PostgreSQL, Redis, and ClickHouse included, so you can try it on an empty cluster. For production, you replace each of those with a managed service, one at a time. The chart is published to…",
+    "breadcrumbs": [
+      "Self-hosting",
+      "Platform deployment",
+      "Kubernetes"
     ]
   },
   {
@@ -5200,7 +5211,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/quick-start/tanstack-start",
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…",
+    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. When the CLI asks for a deployment adapter, select **Nitro (agnostic)** or **None**. Appwrite Sites runs both. The adapter sets the output directory you confirm in step 3. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project.…",
     "breadcrumbs": [
       "Sites",
       "Start with Sites",

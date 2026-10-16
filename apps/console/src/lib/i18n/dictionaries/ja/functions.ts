@@ -704,6 +704,16 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Your plan supports intervals of {minutes} minutes or longer.':
     'ご利用のプランでは {minutes} 分以上の間隔を設定できます。',
   'Upgrade to unlock': 'アップグレードで利用可能',
+  'Cron schedules are available on paid plans.':
+    'Cron スケジュールは有料プランで利用できます。',
+  'to use cron.': 'すると、Cron を使用できます。',
+  'Cron schedules are not available on your plan':
+    'ご利用のプランでは Cron スケジュールを利用できません',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'この関数は、間隔に切り替えるまで現在の Cron で引き続き実行されます。',
+  'to edit cron schedules.': 'すると、Cron スケジュールを編集できます。',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。',
   'Interval length': '間隔の長さ',
   'Interval unit': '間隔の単位',
   'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
@@ -712,4 +722,20 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': '{count} 分ごと',
   'Every {count} hours': '{count} 時間ごと',
   'Every {count} days': '{count} 日ごと',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'メールトリガーを有効にしました',
+  'Email trigger disabled': 'メールトリガーを無効にしました',
+  'Failed to update email trigger': 'メールトリガーの更新に失敗しました',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    '受信メールでこの関数をトリガーできるようにします。デフォルトはオフのため、有効にするまでメールは受け付けません。',
+  'Email trigger': 'メールトリガー',
+  'Inbound mail for this function is accepted.':
+    'この関数宛ての受信メールを受け付けます。',
+  'Inbound mail for this function is rejected.':
+    'この関数宛ての受信メールは拒否されます。',
+  'Default address': 'デフォルトアドレス',
+  'Enable the email trigger to receive mail at this address.':
+    'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
+  'Mail is delivered when this function has an active deployment.':
+    'この関数にアクティブなデプロイがある場合にメールが配信されます。',
 }

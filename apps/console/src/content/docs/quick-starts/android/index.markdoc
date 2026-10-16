@@ -53,7 +53,7 @@ You can skip optional steps.
 To add the Appwrite SDK for Android as a dependency, add the following to your app-level **build.gradle.kts** file inside the **dependencies** block.
 
 ```kotlin
-implementation("io.appwrite:sdk-for-android:8.1.0")
+implementation("io.appwrite:sdk-for-android:29.2.0")
 ```
 
 In order to allow creating OAuth sessions, the following activity needs to be added inside the `<application>` tag, along side the existing `<activity>` tags in your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml).

@@ -4,7 +4,11 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/enterprise/View'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
+import { enterpriseFaqItems } from '@/lib/enterprise/content'
 
 export const Route = createFileRoute('/_marketing/enterprise')({
   ...marketingRouteLifetime,
@@ -17,7 +21,7 @@ export const Route = createFileRoute('/_marketing/enterprise')({
       description:
         "Want to learn more about Appwrite's Enterprise plan? Contact our team for custom resources, premium support, and advanced security features.",
     });
-    return seo;
+    return { ...seo, scripts: [getMarketingFaqScript(enterpriseFaqItems)] };
   },
   loader: async ({ context }) => {
   },

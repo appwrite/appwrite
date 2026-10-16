@@ -35,7 +35,7 @@ _Note: This is for the Kotlin Server SDK, meant for server and backend applicati
 ```kotlin
 dependencies {
     // ... other dependencies
-    implementation("io.appwrite:sdk-for-kotlin:9.0.0")
+    implementation("io.appwrite:sdk-for-kotlin:22.4.0")
 }
 ```
 

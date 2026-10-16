@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AccountTest extends Scope
 {
@@ -24,7 +24,7 @@ final class AccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'name' => 'User Name',
                 'email' => $email,
                 'password' => 'password',
@@ -77,7 +77,7 @@ final class AccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
             ]
         ];

@@ -3,7 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/dns`](https://github.com/appwrite/appwrite/tree/main/packages/dns) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Tests](https://github.com/utopia-php/dns/actions/workflows/tests.yml/badge.svg)](https://github.com/utopia-php/dns/actions/workflows/tests.yml)
 [![Packagist Version](https://img.shields.io/packagist/v/utopia-php/dns.svg)](https://packagist.org/packages/utopia-php/dns)
 ![Packagist Downloads](https://img.shields.io/packagist/dt/utopia-php/dns.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244)](https://appwrite.io/discord)

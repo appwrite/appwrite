@@ -6,13 +6,12 @@ Initialize your SDK with your Appwrite server API endpoint and project ID which 
 
 ```kotlin
 import io.appwrite.Client
-import io.appwrite.services.Account
 
 suspend fun main() {
-    val client = Client(context)
+    val client = Client()
       .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
       .setProject("5df5acd0d48c2") // Your project ID
-      .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
       .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
 }
 ```
@@ -24,7 +23,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```kotlin
 val users = Users(client)
 val user = users.create(
-    user = ID.unique(),
+    userId = ID.unique(),
     email = "email@example.com",
     phone = "+123456789",
     password = "password",
@@ -40,15 +39,15 @@ import io.appwrite.services.Users
 import io.appwrite.ID
 
 suspend fun main() {
-    val client = Client(context)
+    val client = Client()
       .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
       .setProject("5df5acd0d48c2") // Your project ID
-      .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
       .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
 
     val users = Users(client)
     val user = users.create(
-        user = ID.unique(),
+        userId = ID.unique(),
         email = "email@example.com",
         phone = "+123456789",
         password = "password",
@@ -59,7 +58,7 @@ suspend fun main() {
 
 ### Type Safety with Models
 
-The Appwrite Kotlin SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+The Appwrite Kotlin SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
 
 **Kotlin:**
 ```kotlin
@@ -72,20 +71,21 @@ data class Book(
     val isCheckedOut: Boolean
 )
 
-val databases = Databases(client)
+val tablesDB = TablesDB(client)
 
 try {
-    val documents = databases.listDocuments(
+    val result = tablesDB.listRows(
         databaseId = "your-database-id",
-        collectionId = "your-collection-id",
+        tableId = "your-table-id",
         nestedType = Book::class.java // Pass in your custom model type
     )
     
-    for (book in documents.documents) {
-        Log.d("Appwrite", "Book: ${book.name} by ${book.author}") // Now you have full type safety
+    for (row in result.rows) {
+        val book = row.data
+        println("Book: ${book.name} by ${book.author}") // Now you have full type safety
     }
 } catch (e: AppwriteException) {
-    Log.e("Appwrite", e.message ?: "Unknown error")
+    println(e.message ?: "Unknown error")
 }
 ```
 
@@ -126,21 +126,24 @@ public class Book {
     public void setCheckedOut(boolean checkedOut) { isCheckedOut = checkedOut; }
 }
 
-Databases databases = new Databases(client);
+TablesDB tablesDB = new TablesDB(client);
 
-try {
-    DocumentList<Book> documents = databases.listDocuments(
-        "your-database-id",
-        "your-collection-id",
-        Book.class // Pass in your custom model type
-    );
-    
-    for (Book book : documents.getDocuments()) {
-        Log.d("Appwrite", "Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
-    }
-} catch (AppwriteException e) {
-    Log.e("Appwrite", e.getMessage() != null ? e.getMessage() : "Unknown error");
-}
+tablesDB.listRows(
+    "your-database-id",
+    "your-table-id",
+    Book.class, // Pass in your custom model type
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            System.out.println(error.getMessage());
+            return;
+        }
+
+        for (Row<Book> row : result.getRows()) {
+            Book book = row.getData();
+            System.out.println("Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
+        }
+    })
+);
 ```
 
 **Tip**: You can use the `appwrite types` command to automatically generate model definitions based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
@@ -154,7 +157,7 @@ All Appwrite models come with built-in methods for data conversion and manipulat
 val account = Account(client)
 val user = account.get()
 val userMap = user.toMap()
-Log.d("Appwrite", userMap.toString()) // Prints all user properties as a Map
+println(userMap) // Prints all user properties as a Map
 ```
 
 **`from(map:, nestedType:)`** - Creates a model instance from a Map, useful when working with raw data:
@@ -177,7 +180,7 @@ val user = account.get()
 // Convert to JSON
 val gson = Gson()
 val jsonString = gson.toJson(user)
-Log.d("Appwrite", "User JSON: $jsonString")
+println("User JSON: $jsonString")
 
 // Convert from JSON
 val userFromJson = gson.fromJson(jsonString, User::class.java)
@@ -196,7 +199,7 @@ suspend fun main() {
     val users = Users(client)
     try {
         val user = users.create(
-            user = ID.unique(),
+            userId = ID.unique(),
             email = "email@example.com",
             phone = "+123456789",
             password = "password",

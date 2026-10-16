@@ -17,6 +17,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-appwrite-helm-chart",
+    "href": "/blog/post/announcing-appwrite-helm-chart",
+    "title": "Announcing the official Appwrite Helm chart for Kubernetes",
+    "description": "Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 8,
+    "author": "levi-van-noort",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-helm-chart/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "tanstack-start-stable-appwrite-sites",
+    "href": "/blog/post/tanstack-start-stable-appwrite-sites",
+    "title": "TanStack Start is stable, and it runs on Appwrite Sites",
+    "description": "TanStack Start 1.0 is stable and ready for production. Deploy it to Appwrite Sites with server-side rendering, server functions, and API routes.",
+    "date": "2026-10-14",
+    "lastUpdated": "2026-10-14",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "products",
+    "featured": false,
+    "cover": "/images/blog/tanstack-start-stable-appwrite-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-function-intervals",
     "href": "/blog/post/announcing-function-intervals",
     "title": "Announcing function intervals: run functions every N minutes",

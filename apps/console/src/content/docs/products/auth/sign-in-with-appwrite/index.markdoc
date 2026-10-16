@@ -187,6 +187,7 @@ val account = Account(client)
 
 // Go to the Appwrite consent screen
 account.createOAuth2Session(
+    activity = activity,
     provider = OAuthProvider.APPWRITE
 )
 ```
