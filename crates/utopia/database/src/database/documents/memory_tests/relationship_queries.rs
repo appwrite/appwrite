@@ -27,12 +27,14 @@ async fn blog() -> Database {
     let db = memory("relationship_queries").await;
     db.add_hook(Hook::Relationships(Arc::new(Relationships::new(true)))).unwrap();
     collection(&db, POSTS, vec![Attribute::string("title", 64)], crud(), false).await;
-    collection(&db, COMMENTS, vec![Attribute::string("text", 64), Attribute::boolean("approved")], crud(), false)
-        .await;
+    collection(&db, COMMENTS, vec![Attribute::string("text", 64), Attribute::boolean("approved")], crud(), false).await;
     collection(&db, TAGS, vec![Attribute::string("name", 64)], crud(), false).await;
-    db.create_relationship(POSTS, Relationship::one_to_many(COMMENTS).key("comments").two_way(true).two_way_key("post"))
-        .await
-        .unwrap();
+    db.create_relationship(
+        POSTS,
+        Relationship::one_to_many(COMMENTS).key("comments").two_way(true).two_way_key("post"),
+    )
+    .await
+    .unwrap();
     db.create_relationship(POSTS, Relationship::many_to_many(TAGS).key("tags").two_way(true).two_way_key("posts"))
         .await
         .unwrap();
@@ -82,7 +84,8 @@ fn pairs(expected: &[(&str, &[&str])]) -> Vec<(String, Vec<String>)> {
 fn a_relationship_query_pages_each_parents_related_documents() {
     block_on(async {
         let db = blog().await;
-        let queries = vec![Query::relationship(COMMENTS, [Query::limit(1), Query::offset(1)]), Query::order_asc("$id", None)];
+        let queries =
+            vec![Query::relationship(COMMENTS, [Query::limit(1), Query::offset(1)]), Query::order_asc("$id", None)];
         let posts = db.find(POSTS, queries, PermissionType::Read).await.unwrap();
         assert_eq!(related(&posts, COMMENTS), pairs(&[("p1", &["c2"]), ("p2", &[])]));
     });
@@ -118,8 +121,10 @@ fn a_relationship_query_orders_many_to_many_documents() {
 fn a_bulk_write_refuses_a_relationship_query() {
     block_on(async {
         let db = blog().await;
-        let error =
-            db.delete_documents(POSTS, vec![Query::relationship(COMMENTS, [Query::limit(1)])], 100, None).await.unwrap_err();
+        let error = db
+            .delete_documents(POSTS, vec![Query::relationship(COMMENTS, [Query::limit(1)])], 100, None)
+            .await
+            .unwrap_err();
         assert_eq!((error.kind(), error.message()), (Kind::Query, "Invalid query: Invalid query method: relationship"));
         assert_eq!(db.count(POSTS, Vec::new(), None).await.unwrap(), 2);
     });

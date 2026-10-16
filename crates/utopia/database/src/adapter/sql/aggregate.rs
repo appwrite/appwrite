@@ -174,7 +174,16 @@ impl Sql {
 
         if let Some(filters) = self.compile_row_filters(&mut builder, &queries)? {
             let row = self
-                .fetch_aggregate(collection, &name, &roles, aggregate(), &column, max, Event::DocumentSum, Some(filters))
+                .fetch_aggregate(
+                    collection,
+                    &name,
+                    &roles,
+                    aggregate(),
+                    &column,
+                    max,
+                    Event::DocumentSum,
+                    Some(filters),
+                )
                 .await?;
             return Ok(sum_of(&row));
         }
@@ -210,7 +219,8 @@ impl Sql {
             if query.method() != wanted {
                 continue;
             }
-            let values: Vec<String> = query.values().values().map(|v| crate::value::to_text(&crate::value::from_query(v))).collect();
+            let values: Vec<String> =
+                query.values().values().map(|v| crate::value::to_text(&crate::value::from_query(v))).collect();
             let Some(index) = values.iter().position(|v| v == attribute) else { continue };
 
             let (prefix, key) = match attribute.split_once('.') {

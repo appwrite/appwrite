@@ -13,8 +13,8 @@ use crate::event::{Domain, Event};
 use crate::hook::Lifecycle;
 use crate::permission::PermissionType;
 use crate::query::{ParsedQuery, Query};
-use crate::value::{Str, Value, to_text};
 use crate::validator::authorization::Input;
+use crate::value::{Str, Value, to_text};
 
 impl Database {
     /// Deletes the document `id` (`deleteDocument()`), applying the
@@ -298,7 +298,12 @@ impl Database {
     /// out, a document another deleter removed meanwhile is reported as
     /// deleted by this call, and a cascade that already ran for a kept
     /// document stays.
-    async fn delete_batch(&self, collection: &Collection, batch: &[Document], parsed: &ParsedQuery) -> Result<Vec<Document>> {
+    async fn delete_batch(
+        &self,
+        collection: &Collection,
+        batch: &[Document],
+        parsed: &ParsedQuery,
+    ) -> Result<Vec<Document>> {
         let mut filters = Vec::new();
         let mut documents = if on_sequence_only(&parsed.filters) {
             batch.to_vec()
@@ -332,8 +337,7 @@ impl Database {
         let expected = sequences.len() as i64;
         if filters.is_empty() {
             adapter.delete_documents(collection, sequences, permission_ids).await?;
-        } else if adapter.delete_documents_matching(collection, sequences, permission_ids, filters).await? < expected
-        {
+        } else if adapter.delete_documents_matching(collection, sequences, permission_ids, filters).await? < expected {
             let removed = self.without_stored(collection, &documents).await?;
             if removed.len() < documents.len() {
                 if adapter.in_transaction() {
@@ -359,7 +363,10 @@ impl Database {
             .iter()
             .map(|d| Value::Str(Str::from(d.sequence().map(to_text).unwrap_or_default().as_str())))
             .collect();
-        let queries = vec![Query::equal(document::SEQUENCE, sequences.iter().map(crate::value::to_query).collect::<Vec<_>>()), Query::limit(sequences.len() as i64)];
+        let queries = vec![
+            Query::equal(document::SEQUENCE, sequences.iter().map(crate::value::to_query).collect::<Vec<_>>()),
+            Query::limit(sequences.len() as i64),
+        ];
 
         let stored = self
             .silent(self.skip_query_hooks(self.skip_validation(self.skip_relationships(
@@ -392,7 +399,10 @@ impl Database {
             return Ok(Vec::new());
         }
 
-        let mut queries = vec![Query::equal(document::SEQUENCE, sequences.iter().map(crate::value::to_query).collect::<Vec<_>>()), Query::limit(sequences.len() as i64)];
+        let mut queries = vec![
+            Query::equal(document::SEQUENCE, sequences.iter().map(crate::value::to_query).collect::<Vec<_>>()),
+            Query::limit(sequences.len() as i64),
+        ];
         queries.extend(parsed.selections.iter().cloned());
         queries.extend(parsed.filters.iter().cloned());
 

@@ -817,11 +817,8 @@ impl Sql {
         self.sync_write_hooks();
         let run = async {
             let name = self.filter(collection.id());
-            let filters: Vec<Query> = self
-                .main_row_queries(queries, collection)?
-                .into_iter()
-                .filter(|q| !q.method().is_vector())
-                .collect();
+            let filters: Vec<Query> =
+                self.main_row_queries(queries, collection)?.into_iter().filter(|q| !q.method().is_vector()).collect();
 
             let mut builder = self.simple_builder(&name, "")?;
             builder.filter(vec![utopia_query::Query::equal(storage::SEQUENCE, query_values(&sequences))]);

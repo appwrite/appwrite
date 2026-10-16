@@ -172,8 +172,7 @@ fn with_tie_break(
     if attributes.iter().any(|a| a == document::ID || a == document::SEQUENCE) {
         return (attributes, directions);
     }
-    let leading_on_time =
-        attributes.first().is_some_and(|a| a == document::CREATED_AT || a == document::UPDATED_AT);
+    let leading_on_time = attributes.first().is_some_and(|a| a == document::CREATED_AT || a == document::UPDATED_AT);
     attributes.push(document::SEQUENCE.to_owned());
     directions.push(if leading_on_time { directions[0] } else { OrderDirection::Asc });
     (attributes, directions)

@@ -20,8 +20,7 @@ impl Database {
     /// Fails ([`crate::Kind::Query`]) with the select validator's
     /// description (`Invalid query: ...`).
     pub(crate) async fn validate_relationship_selects(&self, collection: &Collection, queries: &[Query]) -> Result<()> {
-        let relationship_queries: Vec<&Query> =
-            queries.iter().filter(|q| q.method() == Method::Relationship).collect();
+        let relationship_queries: Vec<&Query> = queries.iter().filter(|q| q.method() == Method::Relationship).collect();
         if relationship_queries.is_empty() {
             return Ok(());
         }

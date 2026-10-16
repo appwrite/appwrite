@@ -15,12 +15,12 @@ use std::sync::Arc;
 use utopia_query::{CursorDirection, Method, OrderDirection, Value as QValue};
 
 use super::super::{BoxFuture, BoxStream, Database, METADATA, internal_attributes, warning};
-use crate::aggregation::Aggregation;
 use super::joins::{
     Joined, assert_join_count, assert_max, batch_size, joined, joined_by_alias, outer_join_id_selections,
     with_join_authorization,
 };
 use crate::adapter::Find;
+use crate::aggregation::Aggregation;
 use crate::capability::Capability;
 use crate::collection::{Collection, DOCUMENT_SECURITY};
 use crate::document::{self, Document};
@@ -100,7 +100,9 @@ impl Database {
         for_permission: PermissionType,
         aggregate: bool,
     ) -> BoxFuture<'a, Result<Vec<Document>>> {
-        Box::pin(async move { Ok(self.fetch_documents(collection, queries, for_permission, aggregate).await?.documents) })
+        Box::pin(
+            async move { Ok(self.fetch_documents(collection, queries, for_permission, aggregate).await?.documents) },
+        )
     }
 
     /// [`Database::fetch`] with what the read handed the adapter
@@ -260,8 +262,18 @@ impl Database {
         let outer_ids =
             if distinct { Vec::new() } else { outer_join_id_selections(&selects, &joins, &joined_collections) };
 
-        let mut queries =
-            self.read_queries(collection, &selects, filters, aggregations, having, &joins, group_by, distinct, &by_alias, &outer_ids)?;
+        let mut queries = self.read_queries(
+            collection,
+            &selects,
+            filters,
+            aggregations,
+            having,
+            &joins,
+            group_by,
+            distinct,
+            &by_alias,
+            &outer_ids,
+        )?;
 
         let selections = self.validate_selections(collection, &selects)?;
 
@@ -407,7 +419,13 @@ impl Database {
             && !results.is_empty()
         {
             results = self
-                .silent(hook.populate_selected(results, collection, hook.fetch_depth(), nested, Some(!selects.is_empty())))
+                .silent(hook.populate_selected(
+                    results,
+                    collection,
+                    hook.fetch_depth(),
+                    nested,
+                    Some(!selects.is_empty()),
+                ))
                 .await?;
         }
 
@@ -651,7 +669,8 @@ impl Database {
             }
         }
 
-        let adapter_collection = self.read_collection(collection, &joins, &joined_by_id, &security, collection_granted)?;
+        let adapter_collection =
+            self.read_collection(collection, &joins, &joined_by_id, &security, collection_granted)?;
         Ok(Some((adapter_collection, queries, collection_granted && joins.is_empty())))
     }
 
@@ -1040,8 +1059,12 @@ fn assert_finite(value: Option<&Value>) -> Result<()> {
         Some(Value::Str(s)) => {
             // PCRE's `$` without `/D` also matches before a final newline.
             let text = s.as_bytes();
-            let text = text.strip_suffix(b"
-").unwrap_or(text);
+            let text = text
+                .strip_suffix(
+                    b"
+",
+                )
+                .unwrap_or(text);
             let unsigned = text.strip_prefix(b"+").or_else(|| text.strip_prefix(b"-")).unwrap_or(text);
             !(unsigned.eq_ignore_ascii_case(b"inf")
                 || unsigned.eq_ignore_ascii_case(b"infinity")

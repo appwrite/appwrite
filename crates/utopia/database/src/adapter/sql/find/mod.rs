@@ -781,7 +781,15 @@ impl Sql {
                 projected,
                 joins,
             )?;
-            self.apply_find_cursor(&mut half, order_attributes, order_types, cursor, cursor_direction, &join_aliases, true)?;
+            self.apply_find_cursor(
+                &mut half,
+                order_attributes,
+                order_types,
+                cursor,
+                cursor_direction,
+                &join_aliases,
+                true,
+            )?;
             halves.push(half);
         }
 

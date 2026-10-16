@@ -30,12 +30,12 @@ mod numeric;
 #[cfg(test)]
 mod queries_hook_tests;
 mod read;
-mod relationship_queries;
-#[cfg(all(test, feature = "sqlite", feature = "memory"))]
-mod rows_tests;
 #[cfg(test)]
 mod read_memory_tests;
+mod relationship_queries;
 #[cfg(test)]
 mod resolved_read_tests;
+#[cfg(all(test, feature = "sqlite", feature = "memory"))]
+mod rows_tests;
 mod update;
 mod upsert;

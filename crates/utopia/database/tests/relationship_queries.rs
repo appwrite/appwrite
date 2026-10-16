@@ -99,7 +99,8 @@ fn a_relationship_query_round_trips() {
 // PHP: QueryTest::testRelationshipParsesStringChildren, `$this->assertSame(Method::Limit, $inner[0]->getMethod())`.
 #[test]
 fn a_relationship_query_parses_string_children() {
-    let json = json!({"method": "relationship", "attribute": "comments", "values": [Query::limit(3).to_json().unwrap()]});
+    let json =
+        json!({"method": "relationship", "attribute": "comments", "values": [Query::limit(3).to_json().unwrap()]});
     let parsed = Query::parse(&json.to_string(), false).unwrap();
     match parsed.values().values().next() {
         Some(utopia_query::Value::Ext(utopia_query::Object::Query(q))) => assert_eq!(q.method(), Method::Limit),
@@ -147,9 +148,8 @@ fn a_page_slices_by_limit_and_offset() {
 #[test]
 fn a_page_slices_after_and_before_a_cursor() {
     let all = documents(&["a", "b", "c", "d", "e"]);
-    let after = Page::from(vec![Query::cursor_after(&doc(json!({"$id": "b"}))), Query::offset(1), Query::limit(2)])
-        .0
-        .unwrap();
+    let after =
+        Page::from(vec![Query::cursor_after(&doc(json!({"$id": "b"}))), Query::offset(1), Query::limit(2)]).0.unwrap();
     assert_eq!(ids(&after.slice(&all)), ["d", "e"]);
 
     let before = Page::from(vec![Query::cursor_before_value(utopia_query::string("d")), Query::limit(2)]).0.unwrap();
@@ -183,7 +183,12 @@ fn a_relationship_query_on_a_plural_relationship_is_accepted() {
     let validator = relationship_validator();
     let query = Query::relationship(
         "comments",
-        [Query::equal("approved", [true]), Query::order_desc("$createdAt", None), Query::limit(2), Query::select(["*"])],
+        [
+            Query::equal("approved", [true]),
+            Query::order_desc("$createdAt", None),
+            Query::limit(2),
+            Query::select(["*"]),
+        ],
     );
     assert!(validator.check(&query), "{}", validator.description());
 }
@@ -209,7 +214,10 @@ fn a_relationship_query_is_refused_with_the_reason() {
         Query::relationship("comments", [Query::or([Query::relationship("comments", [Query::limit(1)])])]),
         "Relationship queries cannot contain relationship queries",
     );
-    refused(Query::relationship("comments", [Query::count("*", "n")]), "Relationship queries cannot contain count queries");
+    refused(
+        Query::relationship("comments", [Query::count("*", "n")]),
+        "Relationship queries cannot contain count queries",
+    );
     refused(
         Query::relationship("comments", [Query::limit(0)]),
         "Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807",

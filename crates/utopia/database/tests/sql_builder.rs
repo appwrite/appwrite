@@ -579,7 +579,10 @@ mod float_overflow {
         for make in [|| SqlBuilder::MariaDb(builder::mariadb()), || SqlBuilder::MySql(builder::mysql())] {
             assert_eq!(compiled(make(), Query::sum("reading", "total")), "SUM(`reading`) + 0 AS `total`");
             assert_eq!(compiled(make(), Query::avg("reading", "")), "AVG(`reading`) + 0 AS `AVG(``reading``)`");
-            assert_eq!(compiled(make(), Query::stddev_pop("reading", "spread")), "SQRT(VAR_POP(`reading`) + 0) AS `spread`");
+            assert_eq!(
+                compiled(make(), Query::stddev_pop("reading", "spread")),
+                "SQRT(VAR_POP(`reading`) + 0) AS `spread`"
+            );
             assert_eq!(compiled(make(), Query::count("reading", "n")), "COUNT(`reading`) AS `n`");
         }
     }

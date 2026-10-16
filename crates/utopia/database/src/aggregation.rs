@@ -405,11 +405,7 @@ fn integer(value: &Value) -> Value {
         return Value::Int(i);
     }
     let float = float(value);
-    if float.floor() == float && float.abs() < i64::MAX as f64 {
-        Value::Int(float as i64)
-    } else {
-        Value::Float(float)
-    }
+    if float.floor() == float && float.abs() < i64::MAX as f64 { Value::Int(float as i64) } else { Value::Float(float) }
 }
 
 /// `is_numeric($value) ? (float) $value : 0.0` (`float()`).

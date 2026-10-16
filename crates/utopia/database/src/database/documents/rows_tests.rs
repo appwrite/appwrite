@@ -201,7 +201,8 @@ fn a_floating_aggregate_that_overflows_is_refused() {
     block_on(async {
         for values in [[1e308, 1e308], [-1e308, -1e308]] {
             let db = readings(&values).await;
-            for aggregate in [Query::sum("reading", "total"), Query::avg("reading", "total"), Query::sum("reading", "")] {
+            for aggregate in [Query::sum("reading", "total"), Query::avg("reading", "total"), Query::sum("reading", "")]
+            {
                 let error = db.aggregate("readings", vec![aggregate]).await.unwrap_err();
                 assert_eq!((error.kind(), error.message()), (Kind::Limit, "Value out of range"));
             }
@@ -217,8 +218,10 @@ fn a_floating_aggregate_that_overflows_is_refused() {
 fn the_largest_finite_sum_is_still_answered() {
     block_on(async {
         let db = readings(&[1e308]).await;
-        let rows =
-            db.aggregate("readings", vec![Query::sum("reading", "total"), Query::avg("reading", "mean")]).await.unwrap();
+        let rows = db
+            .aggregate("readings", vec![Query::sum("reading", "total"), Query::avg("reading", "mean")])
+            .await
+            .unwrap();
         assert_eq!(rows[0].get_str("total"), Some(&Value::Float(1e308)));
         assert_eq!(rows[0].get_str("mean"), Some(&Value::Float(1e308)));
     });

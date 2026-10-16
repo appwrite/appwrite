@@ -7,11 +7,11 @@ mod authorize;
 mod bulk;
 mod bulk_more;
 mod delete_race;
-mod relationship_queries;
 mod engine;
 mod ids;
 mod integer_rounding;
 mod numeric;
+mod relationship_queries;
 mod toggles;
 
 use crate::error::{Kind, Result};

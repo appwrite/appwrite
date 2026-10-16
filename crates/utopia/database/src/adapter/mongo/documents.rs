@@ -583,7 +583,8 @@ impl Mongo {
         Self::escape_query_attributes(collection, &mut queries)?;
         let matching = self.build_filters(&queries, "$and")?;
         if !matching.is_empty() {
-            filters = map([("$and", Value::Array(Array::from_list(vec![Value::Array(filters), Value::Array(matching)])))]);
+            filters =
+                map([("$and", Value::Array(Array::from_list(vec![Value::Array(filters), Value::Array(matching)])))]);
         }
 
         let filters = replace_internal_ids_keys(&filters);
