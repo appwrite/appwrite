@@ -255,8 +255,15 @@ class Messaging extends Action
         // Topics already published over Appwrite push, so a topic is sent once per message, not once per page.
         $appwriteTopics = [];
 
-        $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
-            && $this->checkAppwritePushEnabled($dbForProject, $default);
+        // The enabled Appwrite push provider, whichever provider is the default; empty when there is none.
+        $appwrite = $providerType === MESSAGE_TYPE_PUSH
+            ? $this->getAppwritePushProvider($dbForProject, $default)
+            : new Document();
+        if (!$appwrite->isEmpty()) {
+            $providers[$appwrite->getId()] = $appwrite;
+        }
+
+        $isWakeupSignalEnabled = !$appwrite->isEmpty();
 
         $mqttUsers = [];
         $topicInternalIds = [];
@@ -276,7 +283,7 @@ class Messaging extends Action
             }
         }
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as [$page, $topicId]) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default, $appwrite) as [$page, $topicId]) {
             $perUser = $topicId === null;
 
             /**
@@ -484,7 +491,8 @@ class Messaging extends Action
         array $targetIds,
         array $emails,
         string $providerType,
-        Document $default
+        Document $default,
+        Document $appwrite
     ): \Generator {
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->skipFilters(
@@ -609,7 +617,8 @@ class Messaging extends Action
 
             // Appwrite push needs no device target: reach existing users with no registered target on
             // their reserved MQTT topic (users/<userId>), which they subscribe to with their session.
-            if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+            // Uses the enabled Appwrite provider even when another push provider is the default.
+            if (!$appwrite->isEmpty()) {
                 $targetless = \array_values(\array_filter(
                     $existingUserIds,
                     fn (string $userId) => !isset($reachedViaTarget[$userId]),
@@ -621,7 +630,7 @@ class Messaging extends Action
                         $identifiers[$userId] = $userId;
                     }
 
-                    yield [[$default->getId() => $identifiers], null];
+                    yield [[$appwrite->getId() => $identifiers], null];
                 }
             }
         }
@@ -733,18 +742,18 @@ class Messaging extends Action
         return $provider;
     }
 
-    private function checkAppwritePushEnabled(Database $dbForProject, Document $default): bool
+    /** The default provider when it is Appwrite push, else the first enabled one; empty when none is enabled. */
+    private function getAppwritePushProvider(Database $dbForProject, Document $default): Document
     {
         if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
-            return true;
+            return $default;
         }
 
-        return !$dbForProject->findOne('providers', [
+        return $dbForProject->findOne('providers', [
             Query::equal('provider', [self::APPWRITE_PUSH_PROVIDER]),
             Query::equal('type', [MESSAGE_TYPE_PUSH]),
             Query::equal('enabled', [true]),
-            Query::select(['$id']),
-        ])->isEmpty();
+        ]);
     }
 
     /**
