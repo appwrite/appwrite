@@ -113,7 +113,7 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(1, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $this->ordersOfCustomers()));
     }
 
-    public function testUnjoinedReadInATransactionOverlaysInPlaceAndAppendsCreates(): void
+    public function testUnjoinedReadInATransactionOrdersStagedWritesWithStoredRows(): void
     {
         $transaction = $this->shop();
         $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
@@ -122,7 +122,7 @@ final class TransactionStateTest extends TestCase
 
         $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries);
 
-        $this->assertSame([['bob', 'Bob', null], ['ada', 'Ada Lovelace', null], ['cy', 'Cy', null]], $this->project($rows), 'committed documents keep the order find returns, staged creates follow');
+        $this->assertSame([['cy', 'Cy', null], ['bob', 'Bob', null], ['ada', 'Ada Lovelace', null]], $this->project($rows), 'staged creates and updates take their place in the order');
         $this->assertSame(3, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
     }
 
@@ -255,7 +255,7 @@ final class TransactionStateTest extends TestCase
     /**
      * @param array<string, mixed> $data
      */
-    private function stage(Document $transaction, string $action, string $customerId, array $data): void
+    private function stage(Document $transaction, string $action, ?string $customerId, array $data): void
     {
         $this->store->createDocument('transactionLogs', new Document([
             'transactionInternalId' => (string) $transaction->getSequence(),
@@ -265,5 +265,107 @@ final class TransactionStateTest extends TestCase
             'action' => $action,
             'data' => $data,
         ]));
+    }
+
+    public function testStagedCreateThatMissesTheFilterIsLeftOut(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+        $queries = [Query::equal('name', ['Bob'])];
+
+        $this->assertSame([['bob', 'Bob', null]], $this->project($this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries)));
+        $this->assertSame(1, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
+    }
+
+    public function testStagedUpdateIsMatchedAgainstTheFilterWithItsNewValues(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'update', 'ada', ['name' => 'Zed']);
+
+        $old = [Query::equal('name', ['Ada'])];
+        $this->assertSame([], $this->project($this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $old)), 'the row no longer matches once its staged update is applied');
+        $this->assertSame(0, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $old));
+
+        $new = [Query::equal('name', ['Zed'])];
+        $this->assertSame([['ada', 'Zed', null]], $this->project($this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $new)), 'the row matches on its staged value');
+        $this->assertSame(1, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $new));
+    }
+
+    public function testOrderAndLimitApplyToTheMergedSet(): void
+    {
+        $transaction = $this->shopWithStagedCreates();
+
+        $descending = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::orderDesc('name'), Query::limit(2)]);
+        $this->assertSame([['cy', 'Cy', null], ['bob', 'Bob', null]], $this->project($descending));
+
+        $ascending = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::orderAsc('name'), Query::limit(2)]);
+        $this->assertSame([['dee', 'Abe', null], ['ada', 'Ada', null]], $this->project($ascending));
+
+        $this->assertSame(4, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::orderAsc('name'), Query::limit(2)]), 'total counts the merged set, not the page');
+    }
+
+    public function testDefaultOrderPutsStagedCreatesAfterStoredRows(): void
+    {
+        $transaction = $this->shopWithStagedCreates();
+        $this->stage($transaction, 'delete', 'ada', []);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::limit(2)]);
+        $this->assertSame([['bob', 'Bob', null], ['cy', 'Cy', null]], $this->project($rows), 'stored rows by sequence, then staged creates in staging order');
+        $this->assertSame(3, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), []));
+    }
+
+    public function testOffsetAndCursorPageThroughTheMergedSet(): void
+    {
+        $transaction = $this->shopWithStagedCreates();
+        $byName = Query::orderAsc('name');
+        $bob = $this->store->getDocument(self::CUSTOMERS, 'bob');
+
+        $page = fn (array $queries): array => $this->project($this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [$byName, ...$queries]));
+
+        $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null]], $page([Query::offset(1), Query::limit(2)]));
+        $this->assertSame([['cy', 'Cy', null]], $page([Query::cursorAfter($bob)]), 'after a stored row');
+        $this->assertSame([['dee', 'Abe', null], ['ada', 'Ada', null]], $page([Query::cursorBefore($bob)]), 'before a stored row');
+        $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null], ['cy', 'Cy', null]], $page([Query::cursorAfter(new Document(['$id' => 'dee', 'name' => 'Abe']))]), 'after a staged row');
+        $this->assertSame([['ada', 'Ada', null], ['bob', 'Bob', null]], $page([Query::cursorBefore(new Document(['$id' => 'cy', 'name' => 'Cy'])), Query::limit(2)]), 'the rows nearest before a staged row');
+    }
+
+    public function testOrderOnAnAttributeTheReadSelectsAwayStillOrdersStoredRows(): void
+    {
+        $transaction = $this->shop();
+        $this->store->createDocument(self::CUSTOMERS, new Document(['$id' => 'abe', 'name' => 'Abe']));
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::select(['$id']), Query::orderAsc('name')]);
+
+        $this->assertSame(['abe', 'ada', 'bob', 'cy'], \array_map(static fn (Document $row): string => $row->getId(), $rows));
+        $this->assertNull($rows[0]->getAttribute('name'), 'the order attribute is selected for the merge only');
+    }
+
+    public function testExistsFilterSeesAStagedUpdateThatSetsTheAttribute(): void
+    {
+        $transaction = $this->shop();
+        $this->store->createDocument(self::CUSTOMERS, new Document(['$id' => 'nameless']));
+        $this->stage($transaction, 'update', 'nameless', ['name' => 'Named']);
+
+        $rows = $this->state->listDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), [Query::exists(['name']), Query::equal('$id', ['nameless'])]);
+        $this->assertSame([['nameless', 'Named', null]], $this->project($rows));
+    }
+
+    public function testStagedWriteIsNotMatchedByAFilterOnlyTheEngineEvaluates(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+        $this->stage($transaction, 'bulkDelete', null, ['queries' => [Query::regex('name', '^B')->toString()]]);
+
+        $this->assertSame('Cy', $this->state->getDocument(new Document(), self::CUSTOMERS, 'cy', $transaction->getId())->getAttribute('name'), 'a staged bulk delete by a pattern the matcher cannot evaluate leaves a staged create alone');
+    }
+
+    private function shopWithStagedCreates(): Document
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'create', 'cy', ['$id' => 'cy', 'name' => 'Cy']);
+        $this->stage($transaction, 'create', 'dee', ['$id' => 'dee', 'name' => 'Abe']);
+
+        return $transaction;
     }
 }

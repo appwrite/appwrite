@@ -143,6 +143,10 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
+            if ($cursorDocument->isEmpty() && $transactionId !== null) {
+                $cursorDocument = $transactionState->getDocument($database, $collectionTableId, (string) $documentId, $transactionId);
+            }
+
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
