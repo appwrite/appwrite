@@ -252,6 +252,7 @@ class Upsert extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $documentId,
+                'documentUpdatedAt' => $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId))->getUpdatedAt(),
                 'action' => 'upsert',
                 'data' => $data,
             ]);

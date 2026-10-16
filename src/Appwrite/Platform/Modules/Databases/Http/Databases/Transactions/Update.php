@@ -16,6 +16,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\TransactionLog;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console;
@@ -255,7 +256,7 @@ class Update extends Action
                         $currentDocumentId = $documentId;
                         $currentAttribute = null;
                         $currentChange = null;
-                        $createdAt = new \DateTime($operation['$createdAt']);
+                        $timestamp = (new TransactionLog($operation->getArrayCopy()))->getRequestTimestamp();
                         $action = $operation['action'];
                         $data = $operation['data'];
 
@@ -289,40 +290,40 @@ class Update extends Action
 
                         switch ($action) {
                             case 'create':
-                                $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $timestamp, $state);
                                 break;
                             case 'update':
-                                $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $timestamp, $state);
                                 break;
                             case 'upsert':
-                                $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $timestamp, $state);
                                 break;
                             case 'delete':
-                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
+                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $timestamp, $state);
                                 break;
                             case 'increment':
-                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $timestamp, $state);
                                 break;
                             case 'decrement':
-                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $timestamp, $state);
                                 break;
                             case 'bulkCreate':
-                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $timestamp, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $timestamp, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpsert':
-                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $timestamp, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $timestamp, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -674,7 +675,7 @@ class Update extends Action
      * @param string $collectionId
      * @param string|null $documentId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws \Utopia\Database\Exception
@@ -684,13 +685,13 @@ class Update extends Action
         string $collectionId,
         ?string $documentId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         if ($documentId && !isset($data['$id'])) {
             $data['$id'] = $documentId;
         }
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $data, &$state) {
             $doc = $dbForDatabases->createDocument(
                 $collectionId,
                 $this->stripResponseMetadata(new Document($data)),
@@ -706,7 +707,7 @@ class Update extends Action
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws ConflictException
@@ -717,7 +718,7 @@ class Update extends Action
         string $collectionId,
         string $documentId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
@@ -731,7 +732,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state) {
             $document = $dbForDatabases->updateDocument(
                 $collectionId,
                 $documentId,
@@ -751,7 +752,7 @@ class Update extends Action
      * @param string $collectionId
      * @param string|null $documentId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws \Utopia\Database\Exception
@@ -761,7 +762,7 @@ class Update extends Action
         string $collectionId,
         ?string $documentId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
@@ -781,7 +782,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $data, &$state) {
             $doc = $dbForDatabases->upsertDocument(
                 $collectionId,
                 $this->stripResponseMetadata(new Document($data)),
@@ -805,7 +806,7 @@ class Update extends Action
      * @param Database $dbForDatabases
      * @param string $collectionId
      * @param string $documentId
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws \Utopia\Database\Exception
@@ -815,7 +816,7 @@ class Update extends Action
         Database $dbForDatabases,
         string $collectionId,
         string $documentId,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
@@ -826,7 +827,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, &$state) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $documentId, &$state) {
             $deleted = $dbForDatabases->deleteDocument($collectionId, $documentId);
             if (!$deleted) {
                 throw new NotFoundException('');
@@ -866,7 +867,7 @@ class Update extends Action
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws ConflictException
@@ -877,7 +878,7 @@ class Update extends Action
         string $collectionId,
         string $documentId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
@@ -888,7 +889,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
         });
     }
@@ -900,7 +901,7 @@ class Update extends Action
      * @param string $collectionId
      * @param string $documentId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return void
      * @throws ConflictException
@@ -911,7 +912,7 @@ class Update extends Action
         string $collectionId,
         string $documentId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
@@ -922,7 +923,7 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
         });
     }
@@ -933,7 +934,7 @@ class Update extends Action
      * @param Database $dbForDatabases
      * @param string $collectionId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return int Number of documents created
      * @throws \Utopia\Database\Exception
@@ -942,11 +943,11 @@ class Update extends Action
         Database $dbForDatabases,
         string $collectionId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): int {
         $count = 0;
-        $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state, &$count) {
+        $dbForDatabases->withRequestTimestamp($timestamp, function () use ($dbForDatabases, $collectionId, $data, &$state, &$count) {
             $documents = \array_map(function ($doc) {
                 return $doc instanceof Document ? $doc : new Document($doc);
             }, $data);
@@ -969,7 +970,7 @@ class Update extends Action
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return int Number of documents updated
      * @throws \Utopia\Database\Exception
@@ -981,7 +982,7 @@ class Update extends Action
         TransactionState $transactionState,
         string $collectionId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
@@ -997,14 +998,14 @@ class Update extends Action
             $collectionId,
             clone $updateData,
             $queries,
-            onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt, &$dependentDocs) {
+            onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $timestamp, &$dependentDocs) {
                 $dependent = isset($state[$collectionId][$updated->getId()]);
 
                 if ($dependent) {
                     $dependentDocs[] = $updated->getId();
                 } else {
                     $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
-                    if ($oldUpdatedAt > $createdAt) {
+                    if ($oldUpdatedAt > $timestamp) {
                         throw new ConflictException('Document was updated after the request timestamp');
                     }
                     $state[$collectionId][$updated->getId()] = $updated;
@@ -1042,7 +1043,7 @@ class Update extends Action
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return int Number of documents upserted
      * @throws ConflictException
@@ -1053,7 +1054,7 @@ class Update extends Action
         TransactionState $transactionState,
         string $collectionId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): int {
         $documents = \array_map(function ($doc) {
@@ -1070,13 +1071,13 @@ class Update extends Action
         $count = $dbForDatabases->upsertDocuments(
             $collectionId,
             $mergedDocuments,
-            onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
+            onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $timestamp) {
                 if ($old !== null) {
                     $dependent = isset($state[$collectionId][$upserted->getId()]);
 
                     if (!$dependent) {
                         $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
-                        if ($oldUpdatedAt > $createdAt) {
+                        if ($oldUpdatedAt > $timestamp) {
                             throw new ConflictException('Document was updated after the request timestamp');
                         }
                     }
@@ -1096,7 +1097,7 @@ class Update extends Action
      * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
-     * @param \DateTime $createdAt
+     * @param \DateTime $timestamp
      * @param array &$state
      * @return int Number of documents deleted
      * @throws \Utopia\Database\Exception\Query
@@ -1108,7 +1109,7 @@ class Update extends Action
         TransactionState $transactionState,
         string $collectionId,
         array $data,
-        \DateTime $createdAt,
+        \DateTime $timestamp,
         array &$state
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
@@ -1116,12 +1117,12 @@ class Update extends Action
         $count = $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
-            onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
+            onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $timestamp) {
                 $dependent = isset($state[$collectionId][$deleted->getId()]);
 
                 if (!$dependent) {
                     $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
-                    if ($oldUpdatedAt > $createdAt) {
+                    if ($oldUpdatedAt > $timestamp) {
                         throw new ConflictException('Document was updated after the transaction operation');
                     }
                 }

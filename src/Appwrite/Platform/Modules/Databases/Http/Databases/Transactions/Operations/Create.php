@@ -246,6 +246,7 @@ class Create extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $operation[$this->getResourceId()] ?? null,
+                'documentUpdatedAt' => $document?->getUpdatedAt(),
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
