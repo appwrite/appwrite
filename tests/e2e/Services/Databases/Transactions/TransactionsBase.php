@@ -6864,4 +6864,78 @@ trait TransactionsBase
         $this->assertEquals(['x', 'y', 'z', 'w'], $row['body']['list2'], 'arrayAppend should add element at the end');
         $this->assertEquals(['1', '2', '4', '5'], $row['body']['list3'], 'arrayRemove should remove the element');
     }
+
+    public function testDistinctReadInATransactionCarriesOnlyTheSelectedAttributes(): void
+    {
+        if (!$this->getSupportForAttributes() || !$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support distinct reads');
+        }
+
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $recordIds = [];
+        foreach (['distinct-a', 'distinct-a', 'distinct-b'] as $name) {
+            $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $serverHeaders, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['name' => $name],
+            ]);
+            $this->assertSame(201, $record['headers']['status-code'], \json_encode($record['body']) ?: '');
+            $recordIds[] = $record['body']['$id'];
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(201, $transaction['headers']['status-code']);
+
+        $transactionId = $transaction['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b']);
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $serverHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'distinct-c'],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], \json_encode($staged['body']) ?: '');
+        $recordIds[] = $staged['body']['$id'];
+
+        $this->assertDistinctNamesInTransaction($databaseId, $collectionId, $transactionId, $recordIds, ['distinct-a', 'distinct-b', 'distinct-c']);
+    }
+
+    /**
+     * @param list<string> $recordIds
+     * @param list<string> $expected
+     */
+    private function assertDistinctNamesInTransaction(string $databaseId, string $collectionId, string $transactionId, array $recordIds, array $expected): void
+    {
+        $rows = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', $recordIds)->toString(),
+                Query::distinct()->toString(),
+                Query::select(['name'])->toString(),
+            ],
+            'transactionId' => $transactionId,
+        ]);
+
+        $this->assertSame(200, $rows['headers']['status-code'], \json_encode($rows['body']) ?: '');
+        $records = $rows['body'][$this->getRecordResource()];
+        $this->assertCount(\count($expected), $records, \json_encode($records) ?: '');
+        foreach ($records as $record) {
+            $this->assertSame(['name'], \array_keys($record), \json_encode($record) ?: '');
+        }
+        $names = \array_column($records, 'name');
+        \sort($names);
+        $this->assertSame($expected, $names);
+    }
 }
