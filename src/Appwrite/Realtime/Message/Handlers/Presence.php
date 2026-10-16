@@ -86,7 +86,7 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
+            'expiresAt' => DateTime::format((new \DateTime())->modify('+15 minutes')),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {
@@ -112,7 +112,17 @@ class Presence extends Action
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
 
-        $holderId = $connectionId !== '' ? $connectionId : (string) $socketId;
+        // The SDK sends a connection id per connection; fall back to a node-unique id so two
+        // nodes' matching socket fds cannot collide into one holder.
+        $holderId = $connectionId !== '' ? $connectionId : (\gethostname() ?: 'node') . ':' . $socketId;
+
+        // If this connection already held under a different id (a second presence with another
+        // id), release the old hold so it does not leak until the keep-alive lapses.
+        $existing = $realtime->connections[$socketId]['presence'] ?? null;
+        if ($existing !== null && ($existing['connectionId'] ?? '') !== $holderId) {
+            $presenceStore->release((string) $existing['projectId'], (string) $existing['userId'], (string) $existing['connectionId']);
+        }
+
         $presenceStore->hold($project->getId(), $userId, $holderId, [
             'status' => $status,
             'metadata' => $metadata,

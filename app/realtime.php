@@ -472,47 +472,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         $eventTailRegistry->flush($server);
     });
 
-    // Refresh live presence holders in the store (~5m) so a still-connected client that is
-    // not re-sending presence does not age out of the keep-alive window. Swoole handles the
-    // socket heartbeat; this only re-stamps holders this worker still has open.
-    Timer::tick(300000, function () use ($realtime) {
-        $byUser = [];
-        foreach ($realtime->connections as $connection) {
-            $hold = $connection['presence'] ?? null;
-            if ($hold === null) {
-                continue;
-            }
-            $byUser[$hold['projectId'] . ':' . $hold['userId']][] = $hold['connectionId'];
-        }
-
-        if ($byUser === []) {
-            return;
-        }
-
+    // One presence timer (~2s): reap users whose last holder left (delete row + emit offline),
+    // and every ~5m re-stamp still-connected holders so they do not age out of the keep-alive.
+    $presenceTick = 0;
+    Timer::tick(2000, function () use ($realtime, $presenceState, $container, &$presenceTick) {
         $store = new PresenceStore(getCache());
-        foreach ($byUser as $key => $connectionIds) {
-            [$projectId, $userId] = \explode(':', $key, 2);
-            $store->refresh($projectId, $userId, $connectionIds);
-        }
-    });
 
-    // Reap presence rows off the hot path: for users whose last holder has left, delete the
-    // row and announce offline. onClose only queues them, so a disconnect storm batches here.
-    Timer::tick(10000, function () use ($presenceState, $container) {
-        $store = new PresenceStore(getCache());
-        $candidates = $store->reapCandidates();
-        if ($candidates === []) {
-            return;
-        }
-
-        foreach ($candidates as $candidate) {
+        foreach ($store->reapCandidates() as $candidate) {
             $projectId = $candidate['projectId'];
             $userId = $candidate['userId'];
 
-            $store->clearReap($projectId, $userId);
-
-            // A reconnect re-held the presence; leave the row.
+            // A reconnect re-held the presence; it is no longer a reap candidate.
             if ($store->count($projectId, $userId) > 0) {
+                $store->clearReap($projectId, $userId);
                 continue;
             }
 
@@ -520,6 +492,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $dbForPlatform = getConsoleDB();
                 $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if ($project->isEmpty()) {
+                    $store->clearReap($projectId, $userId);
                     continue;
                 }
 
@@ -528,6 +501,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     fn () => $dbForProject->findOne('presenceLogs', [Query::equal('userId', [$userId])])
                 );
                 if ($presence->isEmpty()) {
+                    $store->clearReap($projectId, $userId);
+                    continue;
+                }
+
+                // Re-check right before the destructive delete to narrow the reconnect race.
+                if ($store->count($projectId, $userId) > 0) {
+                    $store->clearReap($projectId, $userId);
                     continue;
                 }
 
@@ -556,9 +536,32 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'presences.[presenceId].delete',
                     $presence,
                 );
+
+                // Cleared only after a successful delete, so any failure retries on the next tick.
+                $store->clearReap($projectId, $userId);
             } catch (Throwable $th) {
                 Console::error('Realtime presence reap error: ' . $th->getMessage());
             }
+        }
+
+        // Re-stamp still-connected holders every ~5 minutes (every 150th ~2s tick), well inside
+        // the keep-alive, so an idle-but-connected client is not aged out.
+        if (++$presenceTick % 150 !== 0) {
+            return;
+        }
+
+        $byUser = [];
+        foreach ($realtime->connections as $connection) {
+            $hold = $connection['presence'] ?? null;
+            if ($hold === null) {
+                continue;
+            }
+            $byUser[$hold['projectId'] . "\0" . $hold['userId']][] = $hold['connectionId'];
+        }
+
+        foreach ($byUser as $key => $connectionIds) {
+            [$projectId, $userId] = \explode("\0", $key, 2);
+            $store->refresh($projectId, $userId, $connectionIds);
         }
     });
 

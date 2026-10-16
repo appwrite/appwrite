@@ -124,11 +124,13 @@ class Authentication extends Action
                 if (isset($realtime->connections[$connectionId])) {
                     $realtime->connections[$connectionId]['presence'] = $presenceHold;
                 }
-            } else {
+            } elseif (isset($realtime->connections[$connectionId])) {
                 $remaining = $presenceStore->release((string) $projectId, (string) $previousUserId, (string) ($presenceHold['connectionId'] ?? ''));
                 if ($remaining === 0) {
                     $presenceStore->markForReap((string) $projectId, (string) $previousUserId);
                 }
+                // Drop the stale hold so onClose does not act on the previous user.
+                unset($realtime->connections[$connectionId]['presence']);
             }
         }
 
