@@ -212,7 +212,7 @@ abstract class Action extends DatabasesAction
             }
 
             $bound = $definition->getAttribute('formatOptions', [])[$key] ?? null;
-            $integer = \in_array($definition->getAttribute('type'), [ColumnType::Integer->value, ColumnType::BigInteger->value], true);
+            $integer = \in_array(Attribute::columnType((string) $definition->getAttribute('type')), [ColumnType::Integer, ColumnType::BigInteger], true);
 
             return [\is_int($bound) || \is_float($bound) ? $bound : null, $integer];
         }

@@ -10779,6 +10779,18 @@ trait DatabasesBase
         $this->assertSame(400, $looser['headers']['status-code']);
         $this->assertSame($field . ' "b" has reached the maximum value of 10', $looser['body']['message'], 'a request bound looser than the column leaves the column bound');
 
+        $big = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/bigint', $headers, [
+            'key' => 'big',
+            'required' => false,
+        ]);
+        $this->assertSame(202, $big['headers']['status-code'], $big['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'big');
+        $this->assertSame(200, $this->client->call(Client::METHOD_PATCH, $url, $headers, ['data' => ['big' => 5]])['headers']['status-code']);
+
+        $fractional = $this->client->call(Client::METHOD_PATCH, $url . '/big/increment', $headers, ['value' => 4, 'max' => 8.5]);
+        $this->assertSame(400, $fractional['headers']['status-code'], \json_encode($fractional['body']) ?: '');
+        $this->assertSame($field . ' "big" has reached the maximum value of 8', $fractional['body']['message'], 'a fractional bound on a big integer is reported as the whole bound the database holds it to');
+
         $stored = $this->client->call(Client::METHOD_GET, $url, $headers);
         $this->assertSame(5, $stored['body']['b']);
     }
