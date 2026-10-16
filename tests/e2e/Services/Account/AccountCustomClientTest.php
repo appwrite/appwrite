@@ -5820,6 +5820,165 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($targetId, $response['body']['$id']);
     }
 
+    /**
+     * Apple's SDK registers its APNs token with the app's bundle ID and APNs environment instead of a
+     * provider ID. The target lands on the oldest enabled APNs provider for that app and environment,
+     * next to an Appwrite push provider that would otherwise compete as the default.
+     */
+    public function testCreatePushTargetRoutesApnsByBundleAndEnvironment(): void
+    {
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $this->createAppwritePushProvider();
+        $this->createApnsProvider($bundleId, sandbox: true, enabled: false);
+        $sandbox = $this->createApnsProvider($bundleId, sandbox: true);
+        $this->createApnsProvider($bundleId, sandbox: true);
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($sandbox, $target['body']['providerId'], 'expected the oldest enabled sandbox provider');
+
+        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // An explicit provider ID wins over the bundle and environment.
+        $target = $this->createPushTarget(['providerId' => $production, 'bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // No APNs provider for the bundle keeps the target on the default provider, as before.
+        $target = $this->createPushTarget(['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'development']);
+        $this->assertEquals(400, $target['headers']['status-code']);
+    }
+
+    /**
+     * The SDK re-registers through PUT on a 409, so PUT moves an APNs target when the same install
+     * switches build (a debug build moving to TestFlight), and leaves a non-APNs provider alone.
+     */
+    public function testUpdatePushTargetReroutesApnsEnvironment(): void
+    {
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $sandbox = $this->createApnsProvider($bundleId, sandbox: true);
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($sandbox, $target['body']['providerId']);
+        $targetId = $target['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->updatePushTarget($targetId, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // No match leaves the current provider in place rather than clearing it.
+        $target = $this->updatePushTarget($targetId, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'sandbox']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // A target on a provider other than APNs is never moved.
+        $appwrite = $this->createAppwritePushProvider();
+        $target = $this->createPushTarget(['providerId' => $appwrite]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $target = $this->updatePushTarget($target['body']['$id'], ['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($appwrite, $target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->updatePushTarget($targetId, ['bundleId' => $bundleId, 'environment' => 'development']);
+        $this->assertEquals(400, $target['headers']['status-code']);
+    }
+
+    /**
+     * An APNs provider with placeholder credentials. Creating and routing targets never contacts Apple.
+     *
+     * @return string the provider id
+     */
+    private function createApnsProvider(string $bundleId, bool $sandbox, bool $enabled = true): string
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/apns', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'apns-' . ($sandbox ? 'sandbox' : 'production'),
+            'authKey' => 'placeholder-auth-key',
+            'authKeyId' => 'placeholder-auth-key-id',
+            'teamId' => 'placeholder-team-id',
+            'bundleId' => $bundleId,
+            'sandbox' => $sandbox,
+            'enabled' => $enabled,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertSame($enabled, $provider['body']['enabled']);
+
+        return $provider['body']['$id'];
+    }
+
+    /** @return string the provider id */
+    private function createAppwritePushProvider(): string
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'appwrite-push',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        return $provider['body']['$id'];
+    }
+
+    /**
+     * Register a push target for the session user with a fresh token, as the Apple SDK does.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private function createPushTarget(array $params): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), \array_merge([
+            'targetId' => Id::unique(),
+            'identifier' => 'apns-token-' . Id::unique(),
+        ], $params));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private function updatePushTarget(string $targetId, array $params): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), \array_merge([
+            'identifier' => 'apns-token-' . Id::unique(),
+        ], $params));
+    }
+
     public function testMFARecoveryCodeChallenge(): void
     {
         // Generate recovery codes using existing authenticated session
