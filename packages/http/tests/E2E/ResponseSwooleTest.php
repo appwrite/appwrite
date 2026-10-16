@@ -34,6 +34,13 @@ final class ResponseSwooleTest extends TestCase
         $response = $this->client->call(Client::METHOD_DELETE, '/swoole-test');
         $this->assertSame('DELETE', $response['body']);
     }
+    public function testEmptyFinalChunkCompletesStream(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/empty-final');
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('prefix', $response['body']);
+    }
+
     public function testAbortedStreamIsReportedAsIncomplete(): void
     {
         $received = '';
