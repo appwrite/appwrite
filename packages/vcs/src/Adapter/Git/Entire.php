@@ -1965,11 +1965,12 @@ class Entire extends Git
             '/repos/' . rawurlencode($repositoryId) . '/commits/' . rawurlencode($SHA) . '/check-runs',
             [
                 'branch' => $this->branchContaining($repositoryId, $SHA),
+                // A suite reports status and external_updated_at together or
+                // not at all; the runs carry the state
                 'check_suite' => [
                     'key' => $context,
                     'name' => $context,
                     'external_id' => $context,
-                    'external_updated_at' => $now,
                 ],
                 'check_runs' => [$checkRun],
             ],
