@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "customer-story-creators-mind",
+    "href": "/blog/post/customer-story-creators-mind",
+    "title": "How Creators Mind runs 1,100+ coaching apps on Appwrite",
+    "description": "Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite Cloud that powers 1,100+ coaching apps for Indian educators and reaches nearly 10 million students.",
+    "date": "2026-10-19",
+    "lastUpdated": "2026-10-19",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-creators-mind/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-passkeys",
     "href": "/blog/post/announcing-passkeys",
     "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
@@ -537,20 +551,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-sites-dynamic-api-keys/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "customer-story-creators-mind",
-    "href": "/blog/post/customer-story-creators-mind",
-    "title": "How Creators Mind runs 1,100+ coaching apps on Appwrite",
-    "description": "Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite Cloud that powers 1,100+ coaching apps for Indian educators and reaches nearly 10 million students.",
-    "date": "2026-09-16",
-    "lastUpdated": "2026-09-16",
-    "timeToRead": 6,
-    "author": "aditya-oberai",
-    "category": "customer-stories",
-    "featured": false,
-    "cover": "/images/blog/customer-story-creators-mind/cover.avif",
     "hasCover": true
   },
   {
