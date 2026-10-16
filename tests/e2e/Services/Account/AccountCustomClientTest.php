@@ -5827,6 +5827,7 @@ final class AccountCustomClientTest extends Scope
      */
     public function testCreatePushTargetRoutesApnsByBundleAndEnvironment(): void
     {
+        $session = $this->createDeviceSession();
         $bundleId = 'io.appwrite.e2e.' . Id::unique();
         $this->createAppwritePushProvider();
         $this->createApnsProvider($bundleId, sandbox: true, enabled: false);
@@ -5837,28 +5838,28 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'sandbox']);
         $this->assertEquals(201, $target['headers']['status-code']);
         $this->assertSame($sandbox, $target['body']['providerId'], 'expected the oldest enabled sandbox provider');
 
-        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'production']);
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'production']);
         $this->assertEquals(201, $target['headers']['status-code']);
         $this->assertSame($production, $target['body']['providerId']);
 
         // An explicit provider ID wins over the bundle and environment.
-        $target = $this->createPushTarget(['providerId' => $production, 'bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $target = $this->createPushTarget($session, ['providerId' => $production, 'bundleId' => $bundleId, 'environment' => 'sandbox']);
         $this->assertEquals(201, $target['headers']['status-code']);
         $this->assertSame($production, $target['body']['providerId']);
 
         // No APNs provider for the bundle keeps the target on the default provider, as before.
-        $target = $this->createPushTarget(['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'production']);
+        $target = $this->createPushTarget($session, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'production']);
         $this->assertEquals(201, $target['headers']['status-code']);
         $this->assertEmpty($target['body']['providerId']);
 
         /**
          * Test for FAILURE
          */
-        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'development']);
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'development']);
         $this->assertEquals(400, $target['headers']['status-code']);
     }
 
@@ -5868,11 +5869,12 @@ final class AccountCustomClientTest extends Scope
      */
     public function testUpdatePushTargetReroutesApnsEnvironment(): void
     {
+        $session = $this->createDeviceSession();
         $bundleId = 'io.appwrite.e2e.' . Id::unique();
         $sandbox = $this->createApnsProvider($bundleId, sandbox: true);
         $production = $this->createApnsProvider($bundleId, sandbox: false);
 
-        $target = $this->createPushTarget(['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'sandbox']);
         $this->assertEquals(201, $target['headers']['status-code']);
         $this->assertSame($sandbox, $target['body']['providerId']);
         $targetId = $target['body']['$id'];
@@ -5880,29 +5882,70 @@ final class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $target = $this->updatePushTarget($targetId, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => $bundleId, 'environment' => 'production']);
         $this->assertEquals(200, $target['headers']['status-code']);
         $this->assertSame($production, $target['body']['providerId']);
 
         // No match leaves the current provider in place rather than clearing it.
-        $target = $this->updatePushTarget($targetId, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'sandbox']);
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'sandbox']);
         $this->assertEquals(200, $target['headers']['status-code']);
         $this->assertSame($production, $target['body']['providerId']);
 
         // A target on a provider other than APNs is never moved.
         $appwrite = $this->createAppwritePushProvider();
-        $target = $this->createPushTarget(['providerId' => $appwrite]);
+        $target = $this->createPushTarget($session, ['providerId' => $appwrite]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $target = $this->updatePushTarget($target['body']['$id'], ['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $target = $this->updatePushTarget($session, $target['body']['$id'], ['bundleId' => $bundleId, 'environment' => 'sandbox']);
         $this->assertEquals(200, $target['headers']['status-code']);
         $this->assertSame($appwrite, $target['body']['providerId']);
 
         /**
          * Test for FAILURE
          */
-        $target = $this->updatePushTarget($targetId, ['bundleId' => $bundleId, 'environment' => 'development']);
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => $bundleId, 'environment' => 'development']);
         $this->assertEquals(400, $target['headers']['status-code']);
+    }
+
+    /**
+     * An install that registered before routing holds a providerless target. Its next registration,
+     * now routed, adopts that target instead of leaving it live on the default provider beside a new one.
+     */
+    public function testCreatePushTargetAdoptsLegacyProviderlessTarget(): void
+    {
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        /**
+         * Test for SUCCESS
+         */
+        // A rotated token with a fresh target ID moves the legacy target onto the APNs provider.
+        $session = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($session, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+        $this->assertEmpty($legacy['body']['providerId']);
+
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($legacy['body']['$id'], $target['body']['$id']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        $live = \array_filter($this->getSessionTargets($session), fn (array $target) => !$target['expired']);
+        $this->assertCount(1, $live, 'the legacy target stayed live beside the routed one');
+
+        // An unchanged token with a fresh target ID resolves to the legacy target instead of a 409.
+        $session = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($session, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+
+        $target = $this->createPushTarget($session, [
+            'identifier' => $legacy['body']['identifier'],
+            'bundleId' => $bundleId,
+            'environment' => 'production',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($legacy['body']['$id'], $target['body']['$id']);
+        $this->assertSame($production, $target['body']['providerId']);
     }
 
     /**
@@ -5949,32 +5992,72 @@ final class AccountCustomClientTest extends Scope
     }
 
     /**
+     * A new user with one session, standing in for one device install, so routing tests don't adopt the
+     * shared session's targets.
+     *
+     * @return array<string, string> client headers for that session
+     */
+    private function createDeviceSession(): array
+    {
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $userId = Id::unique();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'apns-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $server);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $session headers from createDeviceSession()
+     * @return array<int, array<string, mixed>>
+     */
+    private function getSessionTargets(array $session): array
+    {
+        $account = $this->client->call(Client::METHOD_GET, '/account', $session);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        return \array_values(\array_filter($account['body']['targets'], fn (array $target) => $target['providerType'] === 'push'));
+    }
+
+    /**
      * Register a push target for the session user with a fresh token, as the Apple SDK does.
      *
+     * @param  array<string, string>  $session headers from createDeviceSession()
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */
-    private function createPushTarget(array $params): array
+    private function createPushTarget(array $session, array $params): array
     {
-        return $this->client->call(Client::METHOD_POST, '/account/targets/push', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), \array_merge([
+        return $this->client->call(Client::METHOD_POST, '/account/targets/push', $session, \array_merge([
             'targetId' => Id::unique(),
             'identifier' => 'apns-token-' . Id::unique(),
         ], $params));
     }
 
     /**
+     * @param  array<string, string>  $session headers from createDeviceSession()
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */
-    private function updatePushTarget(string $targetId, array $params): array
+    private function updatePushTarget(array $session, string $targetId, array $params): array
     {
-        return $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), \array_merge([
+        return $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', $session, \array_merge([
             'identifier' => 'apns-token-' . Id::unique(),
         ], $params));
     }

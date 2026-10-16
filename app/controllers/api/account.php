@@ -5446,6 +5446,7 @@ Http::post('/v1/account/targets/push')
         // Apple's SDK registers its APNs token with the app's bundle ID and APNs environment, not a provider
         // ID. Route it to the oldest enabled APNs provider for that app and environment; no match keeps the
         // target on the default provider, as before.
+        $routed = false;
         if (empty($providerId) && $bundleId !== '') {
             $candidates = $authorization->skip(fn () => $dbForProject->find('providers', [
                 Query::equal('provider', ['apns']),
@@ -5461,6 +5462,7 @@ Http::post('/v1/account/targets/push')
                     && ($environment === '' || $sandbox === ($environment === 'sandbox'))) {
                     $provider = $candidate;
                     $providerId = $candidate->getId();
+                    $routed = true;
                     break;
                 }
             }
@@ -5488,9 +5490,12 @@ Http::post('/v1/account/targets/push')
                 Query::equal('userInternalId', [$user->getSequence()]),
                 Query::equal('sessionInternalId', [$session->getSequence()]),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                empty($providerId)
-                    ? Query::isNull('providerId')
-                    : Query::equal('providerId', [$providerId]),
+                match (true) {
+                    empty($providerId) => Query::isNull('providerId'),
+                    // Before routing, this install registered the same token providerless; adopt that target.
+                    $routed => Query::or([Query::isNull('providerId'), Query::equal('providerId', [$providerId])]),
+                    default => Query::equal('providerId', [$providerId]),
+                },
                 Query::orderAsc('$sequence'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
@@ -5529,11 +5534,14 @@ Http::post('/v1/account/targets/push')
                     'identifier' => $identifier,
                     'name' => $name
                 ]))
-                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document(\array_merge([
                     'identifier' => $identifier,
                     'expired' => false,
                     'name' => $name,
-                ]));
+                ], $routed ? [
+                    'providerId' => $providerId,
+                    'providerInternalId' => $provider->getSequence(),
+                ] : [])));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
