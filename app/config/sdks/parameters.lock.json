@@ -81,7 +81,9 @@
         "account.createPushTarget": [
             "targetId",
             "identifier",
-            "providerId"
+            "providerId",
+            "bundleId",
+            "environment"
         ],
         "account.createRecovery": [
             "email",
@@ -215,7 +217,9 @@
         ],
         "account.updatePushTarget": [
             "targetId",
-            "identifier"
+            "identifier",
+            "bundleId",
+            "environment"
         ],
         "account.updateRecovery": [
             "userId",
@@ -954,7 +958,9 @@
         "account.createPushTarget": [
             "targetId",
             "identifier",
-            "providerId"
+            "providerId",
+            "bundleId",
+            "environment"
         ],
         "account.createRecovery": [
             "email",
@@ -1089,7 +1095,9 @@
         ],
         "account.updatePushTarget": [
             "targetId",
-            "identifier"
+            "identifier",
+            "bundleId",
+            "environment"
         ],
         "account.updateRecovery": [
             "userId",
