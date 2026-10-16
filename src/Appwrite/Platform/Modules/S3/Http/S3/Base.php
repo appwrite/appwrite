@@ -27,6 +27,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
@@ -91,6 +92,8 @@ abstract class Base extends Action
     ): void {
         try {
             $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor);
+        } catch (Contention $error) {
+            $this->sendError($response, 'SlowDown', 'The object is busy. Please retry.', $request->getURI(), Response::STATUS_CODE_SERVICE_UNAVAILABLE);
         } catch (AppwriteException $error) {
             $this->sendError($response, $this->mapError($error), $error->getMessage(), $request->getURI(), $this->mapStatus($error));
         } catch (\Throwable $error) {

@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
@@ -119,8 +120,9 @@ class Get extends Base
         $isUnsupported = $this->unsupportedSubresource($request);
         $ifNoneMatch = $request->getHeaderLine('if-none-match');
         $ifMatch = $request->getHeaderLine('if-match');
-        // Ordinary PUT overwrites its Device path in place, so metadata lookup and
-        // body materialization must not overlap that key's write critical section.
+        // Capture the version under the writer lock: Local returns an open handle,
+        // S3 returns a private temporary-file snapshot. Overwrites use a new path,
+        // so deleting the old path cannot change this stream after lock release.
         [$file, $body, $changedRepeatedly] = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $isHead, $isAcl, $isUnsupported, $ifNoneMatch, $ifMatch, $request): array {
             $file = $this->getObject($dbForProject, $bucket, $key);
             $body = null;
@@ -145,8 +147,8 @@ class Get extends Base
 
                 try {
                     $body = $range === null
-                        ? (string) $deviceForFiles->read($path)
-                        : (string) $deviceForFiles->read($path, $range[0], $range[1] - $range[0] + 1);
+                        ? $deviceForFiles->read($path)
+                        : $deviceForFiles->read($path, $range[0], $range[1] - $range[0] + 1);
                     break;
                 } catch (\Throwable $error) {
                     $latest = $this->getObject($dbForProject, $bucket, $key);
@@ -264,7 +266,42 @@ class Get extends Base
             return;
         }
 
-        $response->send((string) $body);
+        if ($body === null) {
+            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Missing object stream.');
+        }
+
+        // S3 returns the stored object representation, including for byte ranges.
+        $response->setAcceptEncoding('');
+        $remaining = $range === null ? $size : $range[1] - $range[0] + 1;
+        $started = false;
+        try {
+            if ($remaining <= MAX_OUTPUT_CHUNK_SIZE) {
+                $chunk = $remaining === 0 ? '' : $body->read($remaining);
+                if (\strlen($chunk) !== $remaining) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Incomplete object read.');
+                }
+                $response->send($chunk);
+                return;
+            }
+
+            $response->removeHeader('Content-Length');
+            while ($remaining > 0) {
+                $chunk = $body->read(\min(MAX_OUTPUT_CHUNK_SIZE, $remaining));
+                if ($chunk === '') {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Incomplete object read.');
+                }
+                $remaining -= \strlen($chunk);
+                $started = true;
+                $response->chunk($chunk, $remaining === 0);
+            }
+        } catch (\Throwable $error) {
+            if ($started) {
+                $response->abort();
+            }
+            throw $error;
+        } finally {
+            $body->close();
+        }
     }
 
     /**
