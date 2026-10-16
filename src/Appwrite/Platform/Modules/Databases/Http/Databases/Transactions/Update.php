@@ -339,7 +339,7 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
 
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+                throw new Exception($this->getNotFoundException(), previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -764,6 +764,10 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        if ($documentId && !isset($data['$id'])) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {

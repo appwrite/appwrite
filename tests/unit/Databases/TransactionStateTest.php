@@ -126,6 +126,53 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(3, $this->state->countDocuments(new Document(), self::CUSTOMERS, $transaction->getId(), $queries));
     }
 
+    public function testDocumentAnEarlierOperationOfTheSameRequestWritesExists(): void
+    {
+        $transaction = $this->shop();
+        $pending = [
+            $this->pending($transaction, 'bulkCreate', null, [['$id' => 'cy', 'name' => 'Cy']]),
+            $this->pending($transaction, 'bulkUpsert', null, [['$id' => 'dee', 'name' => 'Dee']]),
+            $this->pending($transaction, 'upsert', 'eve', ['name' => 'Eve']),
+            $this->pending($transaction, 'create', 'fay', ['name' => 'Fay']),
+        ];
+
+        foreach (['cy' => 'Cy', 'dee' => 'Dee', 'eve' => 'Eve', 'fay' => 'Fay'] as $id => $name) {
+            $document = $this->state->getDocument(new Document(), self::CUSTOMERS, $id, $transaction->getId(), pending: $pending);
+            $this->assertSame($name, $document->getAttribute('name'), "{$id} is written earlier in the same request");
+        }
+
+        $this->assertTrue($this->state->getDocument(new Document(), self::CUSTOMERS, 'cy', $transaction->getId())->isEmpty(), 'operations of a request are not stored until it succeeds');
+    }
+
+    public function testDocumentAnEarlierOperationOfTheSameRequestDeletesIsMissing(): void
+    {
+        $transaction = $this->shop();
+        $pending = [
+            $this->pending($transaction, 'bulkCreate', null, [['$id' => 'cy', 'name' => 'Cy']]),
+            $this->pending($transaction, 'delete', 'cy', []),
+            $this->pending($transaction, 'delete', 'ada', []),
+        ];
+
+        $this->assertTrue($this->state->getDocument(new Document(), self::CUSTOMERS, 'cy', $transaction->getId(), pending: $pending)->isEmpty());
+        $this->assertTrue($this->state->getDocument(new Document(), self::CUSTOMERS, 'ada', $transaction->getId(), pending: $pending)->isEmpty());
+        $this->assertSame('Bob', $this->state->getDocument(new Document(), self::CUSTOMERS, 'bob', $transaction->getId(), pending: $pending)->getAttribute('name'));
+    }
+
+    /**
+     * @param array<mixed> $data
+     */
+    private function pending(Document $transaction, string $action, ?string $documentId, array $data): Document
+    {
+        return new Document([
+            'transactionInternalId' => (string) $transaction->getSequence(),
+            'databaseInternalId' => '1',
+            'collectionInternalId' => '2',
+            'documentId' => $documentId,
+            'action' => $action,
+            'data' => $data,
+        ]);
+    }
+
     /**
      * @return list<Query>
      */

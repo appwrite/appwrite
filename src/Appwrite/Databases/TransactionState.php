@@ -46,6 +46,7 @@ class TransactionState
      * @param string $documentId Document ID
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
+     * @param array<Document> $pending Operations of the same request, staged before this read and not stored yet
      * @return Document
      * @throws Exception
      * @throws Exception\Query
@@ -56,14 +57,15 @@ class TransactionState
         string $collectionId,
         string $documentId,
         ?string $transactionId = null,
-        array $queries = []
+        array $queries = [],
+        array $pending = []
     ): Document {
         $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
             return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
         }
 
-        $state = $this->getTransactionState($transactionId);
+        $state = $this->getTransactionState($transactionId, $pending);
 
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
@@ -414,12 +416,13 @@ class TransactionState
      * Get the current state of a transaction by replaying its operations
      *
      * @param string $transactionId Transaction ID
+     * @param array<Document> $pending Operations of the same request, replayed after the stored ones
      * @return array State array with structure: [collectionId => [docId => ['action' => ..., 'document' => ..., 'exists' => ...]]]
      * @throws Exception
      * @throws Exception\Query
      * @throws Timeout
      */
-    private function getTransactionState(string $transactionId): array
+    private function getTransactionState(string $transactionId, array $pending = []): array
     {
         $roles = $this->authorization->getRoles();
 
@@ -437,7 +440,7 @@ class TransactionState
             Query::limit(PHP_INT_MAX)
         ]));
 
-        return $this->replay($operations);
+        return $this->replay([...$operations, ...$pending]);
     }
 
     /**
@@ -550,6 +553,9 @@ class TransactionState
                         foreach ($data as $doc) {
                             if ($doc instanceof Document) {
                                 $doc = $doc->getArrayCopy();
+                            }
+                            if (empty($doc['$id'])) {
+                                continue;
                             }
                             $state[$collectionId][$doc['$id']] = [
                                 'action' => 'create',

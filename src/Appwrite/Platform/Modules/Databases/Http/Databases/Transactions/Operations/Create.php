@@ -123,7 +123,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = $dependants = [];
+        $databases = $collections = $staged = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -143,7 +143,7 @@ class Create extends Action
                 $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
 
             if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND, params: [$operation[$this->getGroupId()]]);
+                throw new Exception($this->getParentNotFoundException(), params: [$operation[$this->getGroupId()]]);
             }
 
             if (\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -156,20 +156,18 @@ class Create extends Action
                 }
             }
 
-            // For update, upsert, delete, increment, decrement, check document existence first
             $document = null;
             if (\in_array($operation['action'], ['update', 'delete', 'upsert', 'increment', 'decrement'])) {
                 $documentId = $operation[$this->getResourceId()] ?? null;
                 if (empty($documentId)) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is required for ' . $operation['action'] . ' operations');
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, \ucfirst($this->getResource()) . ' ID is required for ' . $operation['action'] . ' operations');
                 }
 
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId);
-                if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
+                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId, pending: $staged);
+                if ($document->isEmpty() && $operation['action'] !== 'upsert') {
+                    throw new Exception($this->getNotFoundException(), params: [$documentId]);
                 }
             }
 
@@ -233,7 +231,7 @@ class Create extends Action
                             fn () => $creates
                                 ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data), $stagedView)
                                 : $dbForDatabases->authorizeUpdate($collectionKey, $stagedView($collectionKey, $operation[$this->getResourceId()]) ?? $document ?? new Document(), new Document($data), $stagedView),
-                            Exception::COLLECTION_NOT_FOUND,
+                            $this->getParentNotFoundException(),
                             $operation[$this->getGroupId()],
                         );
                     }
@@ -249,15 +247,6 @@ class Create extends Action
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
-
-            // Track create operations for dependent update/increment/decrement/delete operations in same batch
-            if ($operation['action'] === 'create') {
-                $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                $documentId = $operation[$this->getResourceId()] ?? null;
-                if ($documentId) {
-                    $dependants[$collectionKey][$documentId] = true;
-                }
-            }
         }
 
         $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $operations) {
