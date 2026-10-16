@@ -17,9 +17,7 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -69,7 +67,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to site code in the template repo.')
@@ -173,14 +171,10 @@ class Create extends Base
 
         $ref = Base::resolveTemplateRef($vcsFactory, $owner, $repository, $type, $reference);
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            '$permissions' => Deployments::permissions(),
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
@@ -201,11 +195,11 @@ class Create extends Base
         ]));
 
         $sitesDomain = $platform['sitesDomain'];
-        $domain = ID::unique() . "." . $sitesDomain;
+        $domain = Id::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
         $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([

@@ -1,0 +1,51 @@
+---
+---
+
+<html lang="en">
+  <head><title>Sign up</title></head>
+  <body>
+    <form id="sign-up-form">
+      <h1>Sign up</h1>
+      <p id="error"></p>
+      <input type="text" name="name" placeholder="Name" />
+      <input type="email" name="email" placeholder="Email" required />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+      />
+      <button type="submit">Sign up</button>
+      <p>Already have an account? <a href="/sign-in">Sign in</a></p>
+    </form>
+
+    <script>
+      import { Account, ID } from 'appwrite'
+      import { client } from '../lib/appwrite'
+
+      const account = new Account(client)
+
+      document
+        .querySelector('#sign-up-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault()
+          const form = new FormData(e.target)
+          const email = form.get('email')
+          const password = form.get('password')
+          try {
+            await account.create({
+              userId: ID.unique(),
+              email,
+              password,
+              name: form.get('name').trim() || undefined,
+            })
+            await account.createEmailPasswordSession({ email, password })
+            window.location.href = '/'
+          } catch (err) {
+            document.querySelector('#error').textContent =
+              err instanceof Error ? err.message : 'Sign up failed'
+          }
+        })
+    </script>
+  </body>
+</html>

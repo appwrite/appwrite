@@ -1,0 +1,53 @@
+---
+layout: article
+title: Abuse protection
+description: Learn how Appwrite protects your apps from abuse through rate limiting and cross-site scripting protection.
+---
+Appwrite comes packaged with tools to protect against various forms of abuse, like brute force attacks, data scraping, and many
+other common forms of abuse.
+
+# Rate limiting {% #rate-limiting %}
+Appwrite uses rate limits on some endpoints to avoid abuse or brute-force attacks against Appwrite's REST API.
+Each Appwrite route documentation has information about any rate limits that might apply to them.
+
+Rate limits limit the number of requests a user or IP can make against an API within a period of time.
+Rate limits help protect against brute force attacks against authentication endpoints and other forms of API
+abuse like [denial of service attacks](https://en.wikipedia.org/wiki/Denial-of-service_attack).
+
+{% arrow_link href="/docs/advanced/security/rate-limits" %}
+Learn more about rate limits
+{% /arrow_link %}
+
+# Email policies {% #email-policies %}
+Email policies let you block sign-ups and email updates from free, aliased, or disposable email providers. This helps keep throwaway accounts, signup spam, and bot registrations out of your project before they reach your authentication and rate-limit layers. Policies run at sign-up time and on email updates, and do not affect existing sessions.
+
+{% arrow_link href="/docs/products/auth/email-policies" %}
+Learn more about email policies
+{% /arrow_link %}
+
+# Cross-origin resource sharing (CORS) {% #CORS %}
+Appwrite limits who can make requests to Appwrite's APIs by default.
+This means that unless your app's domain is added to Appwrite as a platform, requests are rejected.
+By being explicit with the domains that are allowed
+to make requests to your Appwrite project, requests from JavaScript hosted on unknown domains
+will not be accepted.
+
+You can add new platforms by navigating to **Overview** > **Platforms** > **Add platform**.
+
+{% only_dark %}
+![Add a platform](/images/docs/quick-starts/dark/add-platform.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a platform](/images/docs/quick-starts/add-platform.avif)
+{% /only_light %}
+
+{% arrow_link href="/blog/post/cors-error" %}
+Learn more about debugging CORS errors
+{% /arrow_link %}
+
+# DDoS protection {% #ddos-protection %}
+Appwrite Cloud's infrastructure is protected with always-on DDoS protection.
+Appwrite's DDoS protection operates across multiple layers, including the Network (layer 3), Transport (layer 4), and Application (layer 7) layers.
+This comprehensive protection safeguards Appwrite's infrastructure against volumetric attacks such as UDP floods, ICMP floods, TCP floods, and DNS reflection attacks, as well as protocol-layer attacks like SYN floods, BGP attacks, and ping-of-death attacks.
+
+Additionally, we have implemented advanced security rules that monitor traffic patterns to detect and block increased suspicious activity, ensuring the security and stability of your applications.

@@ -16,7 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -72,7 +72,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
             ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
@@ -170,7 +170,7 @@ class Create extends Action
         }
 
         $contentRange = $request->getHeaderLine('content-range');
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -250,6 +250,11 @@ class Create extends Action
                         throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
                     }
 
+                    // The chunk count and size were fixed by the first chunk.
+                    if ((int) $deployment->getAttribute('sourceSize', 0) !== $fileSize) {
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -286,11 +291,11 @@ class Create extends Action
                         ]));
 
                         $sitesDomain = $platform['sitesDomain'];
-                        $domain = ID::unique() . "." . $sitesDomain;
+                        $domain = Id::unique() . "." . $sitesDomain;
 
                         // TODO: (@Meldiron) Remove after 1.7.x migration
                         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                         $rule = $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
@@ -327,7 +332,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileSize, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $contentRange, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileSize, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -373,6 +378,20 @@ class Create extends Action
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForSites->finalize($path, $chunks, $metadata);
 
+                    // A chunk can carry more or fewer bytes than its range announces.
+                    if (!empty($contentRange) && $deviceForSites->getFileSize($path) !== $fileSize) {
+                        $deviceForSites->delete($path);
+
+                        // Marked failed and fully uploaded so a retry returns it instead of writing to the removed source.
+                        $deployments->upload($site, $deployment->setAttributes([
+                            'status' => 'failed',
+                            'buildLogs' => 'Uploaded size does not match the size announced by Content-Range.',
+                            'sourceChunksUploaded' => $chunks,
+                        ]));
+
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
+
                     $fileSize = $deviceForSites->getFileSize($path);
                     $isNewDeployment = $deployment->isEmpty();
                     $deployment = $deployments->createFromUpload($site, $deployment->setAttributes([
@@ -394,11 +413,11 @@ class Create extends Action
 
                     if ($isNewDeployment) {
                         $sitesDomain = $platform['sitesDomain'];
-                        $domain = ID::unique() . "." . $sitesDomain;
+                        $domain = Id::unique() . "." . $sitesDomain;
 
                         // TODO: (@Meldiron) Remove after 1.7.x migration
                         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-                        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+                        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
                         $rule = $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([

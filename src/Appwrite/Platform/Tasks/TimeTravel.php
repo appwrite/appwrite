@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -65,7 +65,7 @@ class TimeTravel extends Action
             '$createdAt' => $createdAt,
         ]);
 
-        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
+        $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
 
         Console::success('Time-travel successful. Updated $createdAt for ' . $resourceType . ' ' . $resourceId . ' to ' . $createdAt);
     }

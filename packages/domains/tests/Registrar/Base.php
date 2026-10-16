@@ -336,7 +336,6 @@ abstract class Base extends TestCase
             $this->assertIsString($result->orderId);
             $this->assertNotEmpty($result->orderId);
             $this->assertInstanceOf(\DateTime::class, $result->expiresAt);
-            $this->assertInstanceOf(\DateTime::class, $result->expiresAt);
         } catch (\Exception $e) {
             // Renewal may fail for various reasons depending on the registrar
             $this->assertNotEmpty($e->getMessage());

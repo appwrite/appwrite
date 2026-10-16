@@ -71,7 +71,7 @@ class Update extends Action
                     ]
                 )
             ])
-            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Provider ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
             ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
@@ -104,6 +104,12 @@ class Update extends Action
 
         $credentials = $provider->getAttribute('credentials');
 
+        // Earlier provider updates stored a changed bundle ID under `bundle`; promote it so this save repairs the row.
+        if (isset($credentials['bundle'])) {
+            $credentials['bundleId'] = $credentials['bundle'];
+            unset($credentials['bundle']);
+        }
+
         if (!empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
@@ -117,7 +123,7 @@ class Update extends Action
         }
 
         if (!empty($bundleId)) {
-            $credentials['bundle'] = $bundleId;
+            $credentials['bundleId'] = $bundleId;
         }
 
         $provider->setAttribute('credentials', $credentials);

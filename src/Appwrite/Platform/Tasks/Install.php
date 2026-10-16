@@ -2,10 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
 use Appwrite\Installer\Report;
+use Appwrite\Installer\Secret;
 use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
@@ -13,11 +16,10 @@ use Appwrite\Platform\Installer\Validator\AppDomain;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Header;
@@ -25,6 +27,7 @@ use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -68,8 +71,8 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
@@ -145,10 +148,7 @@ class Install extends Action
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
-                $ports = [
-                    $defaultHttpPort => $defaultHttpPort,
-                    $defaultHttpsPort => $defaultHttpsPort
-                ];
+                $ports = [];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
@@ -187,15 +187,25 @@ class Install extends Action
                             $vars[$key]['default'] = $value;
                         }
                     }
+
+                    // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
+                    $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
+                    $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
                 }
 
-                foreach ($ports as $key => $value) {
-                    if ($value === $defaultHttpPort) {
-                        $defaultHttpPort = $key;
+                // A literal port in the compose file is what is published, even if .env says otherwise.
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
                     }
 
-                    if ($value === $defaultHttpsPort) {
-                        $defaultHttpsPort = $key;
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
                     }
                 }
             }
@@ -243,7 +253,6 @@ class Install extends Action
         // Skip the web installer when explicit CLI params are provided
         if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
-            Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
@@ -253,30 +262,6 @@ class Install extends Action
 
         // Fall back to CLI mode
         $source = ($interactive === 'Y' && Console::isInteractive()) ? Report::SOURCE_CLI : Report::SOURCE_CLI_HEADLESS;
-        $enableAssistant = false;
-        $assistantExistsInOldCompose = false;
-        if ($existingInstallation) {
-            try {
-                $compose->getService('appwrite-assistant');
-                $assistantExistsInOldCompose = true;
-            } catch (\Throwable) {
-                /* ignore */
-            }
-        }
-
-        if ($interactive === 'Y' && Console::isInteractive()) {
-            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
-            $answer = Console::confirm($prompt);
-
-            if (empty($answer)) {
-                $enableAssistant = $assistantExistsInOldCompose;
-            } else {
-                $enableAssistant = \strtolower($answer) === 'y';
-            }
-        } elseif ($assistantExistsInOldCompose) {
-            $enableAssistant = true;
-        }
-
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
             $httpPort = ($httpPort) ?: $defaultHttpPort;
@@ -287,6 +272,14 @@ class Install extends Action
             $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
         }
 
+        $portValidator = new Port();
+        foreach (['HTTP' => $httpPort, 'HTTPS' => $httpsPort] as $label => $port) {
+            if (!$portValidator->isValid($port)) {
+                Console::error("Invalid {$label} port '{$port}'. " . $portValidator->getDescription() . '.');
+                Console::exit(1);
+            }
+        }
+
         $userInput = [];
         if ($domain !== '') {
             $userInput['_APP_DOMAIN'] = $domain;
@@ -295,31 +288,6 @@ class Install extends Action
 
         foreach ($vars as $var) {
             if (isset($userInput[$var['name']])) {
-                continue;
-            }
-
-            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
-                if (!$enableAssistant) {
-                    $userInput[$var['name']] = '';
-                    continue;
-                }
-
-                if (!empty($var['default'])) {
-                    $userInput[$var['name']] = $var['default'];
-                    continue;
-                }
-
-                if (Console::isInteractive() && $interactive === 'Y') {
-                    $userInput[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
-                    if (empty($userInput[$var['name']])) {
-                        Console::warning('No API key provided. Assistant will be disabled.');
-                        $enableAssistant = false;
-                        $userInput[$var['name']] = '';
-                    }
-                } else {
-                    $userInput[$var['name']] = '';
-                }
-
                 continue;
             }
 
@@ -407,10 +375,15 @@ class Install extends Action
         // Start Swoole-based installer server in background
         // Redirect stdout/stderr to a log file so exec() returns immediately
         // (otherwise the backgrounded process holds the pipe open and exec() hangs)
+        $secret = Secret::generate()->value;
         $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
-        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
+        \exec(
+            Secret::ENVIRONMENT . '=' . \escapeshellarg($secret)
+            . " php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!",
+            $output
+        );
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {
@@ -418,6 +391,9 @@ class Install extends Action
                 @\posix_kill($pid, SIGTERM);
             }
         });
+        Console::info('Installer secret: ' . $secret);
+        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
+
         \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
@@ -439,7 +415,6 @@ class Install extends Action
     {
         $input = [];
         $password = new Password();
-        $token = new Token();
 
         // Start with all defaults
         foreach ($vars as $var) {
@@ -447,15 +422,7 @@ class Install extends Action
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
 
-            if ($filter === 'token') {
-                if ($hasDefault) {
-                    $input[$var['name']] = $default;
-                } elseif ($shouldGenerateSecrets) {
-                    $input[$var['name']] = $token->generate();
-                } else {
-                    $input[$var['name']] = '';
-                }
-            } elseif ($filter === 'password') {
+            if ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
@@ -471,9 +438,18 @@ class Install extends Action
 
         // Override with user inputs
         foreach ($userInput as $key => $value) {
-            if ($value !== null && ($value !== '' || $key === '_APP_ASSISTANT_OPENAI_API_KEY')) {
+            if ($value !== null && $value !== '') {
                 $input[$key] = $value;
             }
+        }
+
+        foreach ($vars as $var) {
+            if (($var['filter'] ?? null) !== 'token') {
+                continue;
+            }
+            $name = $var['name'];
+            $value = $input[$name] ?? '';
+            $input[$name] = EncryptionKey::resolve(is_string($value) ? $value : '', $shouldGenerateSecrets);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
@@ -661,8 +637,6 @@ class Install extends Action
             $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
-        $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
-        $enableAssistant = trim($assistantKey) !== '';
         $enabledRuntimes = \array_unique(\array_filter(\array_map(
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
@@ -687,7 +661,6 @@ class Install extends Action
             'version' => $version,
             'database' => $database,
             'hostPath' => $this->hostPath,
-            'enableAssistant' => $enableAssistant,
             'topology' => $this->topology,
         ]);
 
@@ -745,8 +718,11 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $this->copyConfigFiles(match ($database) {
+                    'mongodb' => ['clickhouse-config.xml', 'clickhouse-init.sh', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml', 'clickhouse-init.sh'],
+                });
             }
 
             // Changes to what the containers run on, rather than to what is inside the
@@ -1104,6 +1080,12 @@ class Install extends Action
 
         $healthPath = '/v1/health/version';
 
+        // A port bound to one host interface (127.0.0.1:80) is still reached on its port.
+        $separator = \strrpos($httpPort, ':');
+        if ($separator !== false) {
+            $httpPort = \substr($httpPort, $separator + 1);
+        }
+
         if ($isLocalInstall) {
             $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
                 ? ['http://host.docker.internal:' . $httpPort . $healthPath]
@@ -1299,22 +1281,28 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * Copy the files the compose file bind-mounts next to itself.
+     *
+     * @param array<string> $files
+     */
+    private function copyConfigFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
                 $target = $this->path . '/' . $file;
+                // A local install writes into the project root itself, and copy() fails onto the same file
+                if (\realpath($source) === \realpath($target)) {
+                    continue;
+                }
                 if (@copy($source, $target) === false) {
                     $lastError = error_get_last();
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
@@ -1342,7 +1330,6 @@ class Install extends Action
         if ($isLocalInstall && $this->hostPath !== '') {
             $composePath = $this->hostPath;
         }
-        $composeFile = $composePath . '/' . $this->getComposeFileName();
         $envFile = $composePath . '/' . $this->getEnvFileName();
 
         $command = [
@@ -1350,9 +1337,11 @@ class Install extends Action
             'compose',
             '--env-file',
             $envFile,
-            '-f',
-            $composeFile,
         ];
+        foreach ((new Files($this->path, $this->getComposeFileName()))->names() as $name) {
+            $command[] = '-f';
+            $command[] = $composePath . '/' . $name;
+        }
 
         if ($isLocalInstall) {
             $command[] = '--project-name';
@@ -1371,6 +1360,10 @@ class Install extends Action
             throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
         }
 
+        $servicesCommand = $command;
+        $servicesCommand[] = 'config';
+        $servicesCommand[] = '--services';
+
         $command[] = 'up';
         $command[] = '-d';
         $command[] = '--remove-orphans';
@@ -1378,7 +1371,7 @@ class Install extends Action
         $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
 
         if ($progress) {
-            $totalServices = $this->countComposeServices($composeFile);
+            $totalServices = $this->countComposeServices($env . implode(' ', array_map(escapeshellarg(...), $servicesCommand)));
             if ($totalServices > 0) {
                 $verb = $isUpgrade ? 'Restarting' : 'Starting';
                 try {
@@ -1408,14 +1401,17 @@ class Install extends Action
         }
     }
 
-    private function countComposeServices(string $composeFile): int
+    /**
+     * Services in the merged compose configuration, overrides included.
+     */
+    private function countComposeServices(string $commandLine): int
     {
-        $content = @file_get_contents($composeFile);
-        if ($content === false) {
+        \exec($commandLine . ' 2> /dev/null', $services, $exit);
+        if ($exit !== 0) {
             return 0;
         }
-        $count = preg_match_all('/^\s*container_name:/m', $content);
-        return $count !== false ? $count : 0;
+
+        return count(array_filter($services, fn (string $service): bool => trim($service) !== ''));
     }
 
     private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array

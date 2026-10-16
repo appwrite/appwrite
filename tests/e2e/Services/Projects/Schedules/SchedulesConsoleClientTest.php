@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -35,7 +35,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Schedule Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -79,7 +79,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Schedule Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -138,7 +138,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -150,7 +150,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'invalid',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -162,7 +162,7 @@ final class SchedulesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => 'not-a-cron',
         ]);
 
@@ -173,7 +173,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'resourceId' => ID::unique(),
+            'resourceId' => Id::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
@@ -190,16 +190,69 @@ final class SchedulesConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Missing schedule
+        // Missing schedule and interval
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => $functionId,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    public function testCreateIntervalSchedule(): void
+    {
+        $data = $this->setupScheduleData();
+        $id = $data['projectId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
+            'resourceType' => 'function',
+            'resourceId' => $data['functionId'],
+            'interval' => 60,
+            'active' => true,
+        ]);
+
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(60, $response['body']['interval']);
+        $this->assertSame('', $response['body']['schedule']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
+            'resourceType' => 'function',
+            'resourceId' => $data['functionId'],
+            'schedule' => '0 0 * * *',
+            'interval' => 60,
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
+            'resourceType' => 'execution',
+            'resourceId' => ID::unique(),
+            'interval' => 60,
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', $headers, [
+            'resourceType' => 'function',
+            'resourceId' => $data['functionId'],
+            'interval' => -5,
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
     public function testGetSchedule(): void
@@ -227,7 +280,7 @@ final class SchedulesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -330,7 +383,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Isolation Test Team',
         ]);
 
@@ -340,7 +393,7 @@ final class SchedulesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Isolation Test Project',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default'),

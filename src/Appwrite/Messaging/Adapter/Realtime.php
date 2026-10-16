@@ -8,9 +8,11 @@ use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
+use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
 {
@@ -42,6 +44,38 @@ class Realtime extends MessagingAdapter
         'presences'
     ];
 
+    // User events, after `users.{userId}`, that neither shape the user's roles nor
+    // end a session, so fromPayload() does not re-resolve the user's open connections
+    // for them. `*` stands for one ID segment. Anything not listed re-resolves, so a
+    // new user event is safe by default.
+    //
+    // `update.password` and `recovery.*.update` stay out: with `invalidateSessions`
+    // they delete sessions without emitting `sessions.*.delete`. `sessions.*.create`
+    // stays out too: the session limit and ID-token sign-in delete older sessions the
+    // same way, and magic URL, OTP and OAuth sign-in can set verification.
+    // `sessions.*.update` stays out: extending a session moves the expiry its open
+    // connections are held to.
+    // `update.email` and `update.phone` stay out: they reset verification, which
+    // changes roles.
+    private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
+        'create',
+        'update.name',
+        'update.prefs',
+        'update.avatar',
+        'update.mfa',
+        'update.mfa.recovery-codes',
+        'create.mfa.recovery-codes',
+        'delete.mfa',
+        'recovery.*.create',
+        'verification.*.create',
+        'targets.*.create',
+        'targets.*.update',
+        'targets.*.delete',
+        'tokens.*.create',
+        'challenges.*.create',
+        'identities.*.delete',
+    ];
+
     /**
      * Connection Tree
      *
@@ -49,6 +83,11 @@ class Realtime extends MessagingAdapter
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
+     *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
+     *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
+     *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
+     *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
+     *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
@@ -122,7 +161,7 @@ class Realtime extends MessagingAdapter
             }
             $data = [
                 'strings' => $strings,
-                'compiled' => RuntimeQuery::compile($queryGroup),
+                'compiled' => RuntimeQuery::prepare($queryGroup),
             ];
         }
 
@@ -156,8 +195,11 @@ class Realtime extends MessagingAdapter
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
-        if (\array_key_exists('authorization', $existing)) {
-            $entry['authorization'] = $existing['authorization'];
+        // Recorded once by the connection handler; every later (re)subscribe keeps it.
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
+            if (\array_key_exists($key, $existing)) {
+                $entry[$key] = $existing[$key];
+            }
         }
 
         $this->connections[$identifier] = $entry;
@@ -413,6 +455,69 @@ class Realtime extends MessagingAdapter
             && array_key_exists($role, $this->subscriptions[$projectId])
             && array_key_exists($channel, $this->subscriptions[$projectId][$role])
             && !empty($this->subscriptions[$projectId][$role][$channel]);
+    }
+
+    /**
+     * Whether the session or JWT a connection authenticated with has expired.
+     *
+     * Expiry fires no event, so this is checked before every delivery. A connection
+     * that receives nothing stays open, but is closed at its next delivery.
+     */
+    public function isExpired(mixed $connection, int $now): bool
+    {
+        foreach (['expire', 'jwtExpire'] as $key) {
+            $expire = $this->connections[$connection][$key] ?? null;
+            if ($expire !== null && $expire <= $now) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Connection IDs of every connection a user holds in a project, whether or not
+     * it currently subscribes to anything.
+     *
+     * @return array<int, mixed>
+     */
+    public function getUserConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId && ($connection['userId'] ?? '') === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every connection a user opened, in any project, while
+     * impersonating someone else.
+     *
+     * @return array<int, mixed>
+     */
+    public function getImpersonatorConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            $impersonator = $connection['impersonator'] ?? null;
+            if (($impersonator['projectId'] ?? null) === $projectId && ($impersonator['userId'] ?? null) === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
     }
 
     /**
@@ -774,7 +879,7 @@ class Realtime extends MessagingAdapter
     {
         $queries = Query::parseQueries($queries);
         $stack = $queries;
-        $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
 
         while (!empty($stack)) {
             $query = array_pop($stack);
@@ -782,15 +887,15 @@ class Realtime extends MessagingAdapter
 
             if (! in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
                 throw new QueryException(
-                    "Query method '{$method}' is not supported in Realtime queries. Allowed: {$allowed}"
+                    "Query method '{$method->value}' is not supported in Realtime queries. Allowed: {$allowed}"
                 );
             }
 
-            if ($method === Query::TYPE_SELECT) {
+            if ($method === Method::Select) {
                 RuntimeQuery::validateSelectQuery($query);
             }
 
-            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+            if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
             }
         }
@@ -823,7 +928,25 @@ class Realtime extends MessagingAdapter
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                $roles = [Role::user(Id::custom($parts[1]))->toString()];
+                // Roles come from the user document (verification, labels, status,
+                // sessions), so the user's open connections re-resolve when it changes,
+                // as they already do for memberships.
+                $permissionsChanged = true;
+                $suffix = \array_slice($parts, 2);
+                foreach (self::USER_EVENTS_WITHOUT_ACCESS_CHANGE as $pattern) {
+                    $segments = \explode('.', $pattern);
+                    if (\count($segments) !== \count($suffix)) {
+                        continue;
+                    }
+                    foreach ($segments as $i => $segment) {
+                        if ($segment !== '*' && $segment !== $suffix[$i]) {
+                            continue 2;
+                        }
+                    }
+                    $permissionsChanged = false;
+                    break;
+                }
                 break;
             case 'rules':
             case 'migrations':
@@ -848,7 +971,17 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'teams';
                     $channels[] = 'teams.' . $parts[1];
                 }
-                $roles = [Role::team(ID::custom($parts[1]))->toString()];
+                $roles = [Role::team(Id::custom($parts[1]))->toString()];
+                // permissionsChanged makes the worker re-subscribe the member's connections with
+                // their current roles before matching, so after a delete team:{teamId} is no
+                // longer in the subscription tree for them. Address the delete to their user
+                // role too so they still receive it; teammates match the team role.
+                if ($parts[2] === 'memberships' && ($parts[4] ?? '') === 'delete') {
+                    $userId = $payload->getAttribute('userId', '');
+                    if (\is_string($userId) && $userId !== '') {
+                        $roles[] = Role::user(Id::custom($userId))->toString();
+                    }
+                }
                 break;
             case 'databases':
             case 'tablesdb':
@@ -889,8 +1022,8 @@ class Realtime extends MessagingAdapter
                     }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
-                        ? \array_merge($collection->getRead(), $payload->getRead())
-                        : $collection->getRead();
+                        ? \array_merge($collection->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $collection->getPermissionsByType(PermissionType::Read);
                 }
                 break;
             case 'buckets':
@@ -903,20 +1036,20 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
 
                     $roles = $bucket->getAttribute('fileSecurity', false)
-                        ? \array_merge($bucket->getRead(), $payload->getRead())
-                        : $bucket->getRead();
+                        ? \array_merge($bucket->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $bucket->getPermissionsByType(PermissionType::Read);
                 }
 
                 break;
             case 'functions':
                 if ($parts[2] === 'executions') {
-                    if (!empty($payload->getRead())) {
+                    if (!empty($payload->getPermissionsByType(PermissionType::Read))) {
                         $channels[] = 'console';
                         $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('resourceId');
-                        $roles = $payload->getRead();
+                        $roles = $payload->getPermissionsByType(PermissionType::Read);
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
@@ -952,7 +1085,7 @@ class Realtime extends MessagingAdapter
             case 'presences':
                 $channels[] = 'presences';
                 $channels[] = 'presences.' . $parts[1];
-                $roles = $payload->getRead();
+                $roles = $payload->getPermissionsByType(PermissionType::Read);
                 break;
         }
 

@@ -57,11 +57,12 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
-            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->param('key', null, new Nullable(new VariableKey(255)), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: 255 chars.', true)
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the variable.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
@@ -74,6 +75,7 @@ class Update extends Base
         ?string $key,
         ?string $value,
         ?bool $secret,
+        ?string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject
@@ -93,7 +95,7 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }
 
-        if (\is_null($key) && \is_null($value) && \is_null($secret)) {
+        if (\is_null($key) && \is_null($value) && \is_null($secret) && \is_null($description)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID);
         }
 
@@ -112,15 +114,21 @@ class Update extends Base
             $updates->setAttribute('secret', $secret);
         }
 
+        if (!\is_null($description)) {
+            $updates->setAttribute('description', $description);
+        }
+
         try {
             $variable = $dbForProject->updateDocument('variables', $variable->getId(), $updates);
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-            'live' => false,
-        ]));
+        if (!\is_null($key) || !\is_null($value) || !\is_null($secret)) {
+            $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'live' => false,
+            ]));
+        }
 
         $queueForEvents->setParam('variableId', $variable->getId());
 

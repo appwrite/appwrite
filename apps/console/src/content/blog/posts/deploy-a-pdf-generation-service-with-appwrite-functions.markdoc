@@ -1,0 +1,80 @@
+---
+layout: post
+title: Deploy a PDF generation service in minutes with Appwrite Functions
+description: Learn how to deploy PDF generation service in minutes with Appwrite Functions.
+date: 2023-11-14
+lastUpdated: 2026-06-29
+cover: /images/blog/pdf-generation/pdf.avif
+timeToRead: 5
+author: luke-silver
+category: tutorials
+faqs:
+  - question: "Why use Appwrite Functions to generate PDFs instead of running a separate service?"
+    answer: "Appwrite Functions give you scalability, reliability, and security without managing infrastructure. You write a small piece of backend code, point a domain at it, and the function handles HTTP traffic. There is no separate server to provision, monitor, or scale."
+  - question: "How do I deploy the PDF generation template?"
+    answer: "Open the Functions page in your Appwrite project, switch to the Templates tab, and pick the Generate PDF template. No environment variables are required, so connecting a new repository and accepting the defaults is enough to ship the function. Full details are in the [Appwrite Functions docs](/docs/products/functions)."
+  - question: "How do I let users download the generated PDF in a browser?"
+    answer: "Use a plain HTML anchor tag with the download attribute pointed at your function URL, like `<a href=\"FUNCTION_URL\" download>Download invoice</a>`. The function returns a PDF, so the browser handles the download natively. On Flutter, packages like `download` or `open_filex` give you similar behavior."
+  - question: "How do I generate a PDF with real order data instead of the demo invoice?"
+    answer: "Change the function to read an order ID from a query parameter, fetch the matching row from [Appwrite Databases](/docs/products/databases) (or any external source), check the request against the `x-appwrite-user-id` header, and populate the PDF template with the real values. Code recipes in the Functions docs walk through each step."
+  - question: "Can I use this approach for invoices, reports, and other documents?"
+    answer: "Yes, the template is a starting point you can shape to any document type. You control the HTML and styling that becomes the PDF, so reports, contracts, statements, and certificates all work with the same pattern. Swap the demo invoice template for your own layout and feed it real data."
+  - question: "Is the function URL secure enough to expose to a frontend?"
+    answer: "By default the URL is public, so for sensitive documents you need to authenticate the caller and authorize access inside the function. Compare the request user against the document owner before returning the PDF, and consider executing the function from your own backend instead of linking directly from the browser."
+---
+Appwrite Functions allow you to extend Appwrite's functionality with just a few lines of backend code. Enabling you to build your applications as you imagined. You can start by cloning one of the quick start templates or using a template with pre-built integration to quickly implement features. Function templates are pre-built Appwrite Functions that can be integrated into your Appwrite project with just a few clicks. Using them, you can easily incorporate new features and integrations into your app without writing additional code or managing infrastructure.
+
+Generating PDFs is a requirement of many applications. For example: creating invoices, generating reports, or any other form of documentation. Yet, it can be difficult to build a robust service in a short amount of time. In this blog, we’ll learn to build a robust PDF generator build with an Appwrite Functions template. The template benefits from the built-in scalability, reliability, and security of Appwrite Functions.
+
+# Setting up the Template
+
+The template generates an invoice using fake order data - it includes details such as an order ID, date, customer's name, list of purchased items, and the total cost. It should get you up and running, but you will need to add real data to build a useful invoice.
+
+If you want to see the source code, you can find it on our [templates GitHub repository](https://github.com/appwrite/templates/tree/main/node/generate-pdf). 
+
+Now, let’s navigate to our functions page on **[Appwrite Cloud](https://cloud.appwrite.io)**. Head over to your Appwrite project and visit the **Functions** page. From there, we will select the **Templates** tab, search for and select the **Generate PDF** function template.
+
+![function](/images/blog/pdf-generation/templates.avif)
+
+The function doesn’t have any required environment variables, so you can proceed straight to the **Connect** step. Select **Create a new repository** (this will generate a GitHub repository for you with the function), and leave the production branch and root settings as default to create this function.
+
+![create function](/images/blog/pdf-generation/create-function.avif)
+
+# Using the Function
+
+Visit the **Domains** tab on the function page and copy the domain URL to test the function. 
+
+![generate pdf](/images/blog/pdf-generation/generate-pdf.avif)
+
+Go to the function URL in your web browser, and you'll see a PDF invoice like the one shown below.
+
+![sample invoice](/images/blog/pdf-generation/sample-invoice.avif)
+
+You can refresh the page in your browser to create a new invoice with new and random information.
+
+If you’d like to let people download the invoice from your web app, you can do it using plain HTML. Use the `<a>` tag along with the `download` attribute:
+
+```html
+<a href="[YOUR_FUNCTION_URL]" download>
+  Download My Invoice
+</a>
+```
+
+On Flutter you can use the [download](https://pub.dev/packages/download), or [open_filex](https://pub.dev/packages/open_filex/) package to achieve a similar result.
+
+The next step is extend the template to show real invoice data. Here’s a high-level overview of what’s required:
+
+1. Change the function to take the order ID as a query parameter in the function.
+2. Get the order row from your Appwrite database, or external data source. Unsure about this? View code recipes on the **[Appwrite Function Docs](https://appwrite.io/docs/functions).**
+3. If necessary, use the order row to ensure the user has permission to see the order. For example, compare the `x-appwrite-user-id` header with the row's user ID.
+4. Change the function to populate the PDF template with the real order row.
+
+# Next steps
+
+We’ve covered the basics, and now it’s your time to shine! With a few changes, you can extend this template to fit your application. Be sure to check out the other available Function Templates. We’ve created many that could be of use in your projects. You can find the [templates GitHub repository here](https://github.com/appwrite/templates).
+
+For more information about Appwrite and Appwrite Functions:
+
+1. **[Appwrite Function Docs](https://appwrite.io/docs/functions)**: These documents provide more information on how to use Appwrite Functions.
+2. **[Appwrite Cloud](https://cloud.appwrite.io/)**: Try our cloud service to get started quickly.
+3. **[Appwrite Discord](https://discord.com/invite/appwrite)**: Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

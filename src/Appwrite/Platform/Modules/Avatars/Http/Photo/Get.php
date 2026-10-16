@@ -21,6 +21,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
@@ -73,13 +74,14 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
-            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
+            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getMaxUidLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
             ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own email. Pass the hash, never the address itself.', true)
             ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
+            ->inject('clientForAvatars')
             ->callback($this->action(...));
     }
 
@@ -96,7 +98,9 @@ class Get extends Action
         Document $user,
         Database $dbForProject,
         Device $deviceForFiles,
+        Client $clientForAvatars,
     ): void {
+        $client = $clientForAvatars;
         $emailHash = \strtolower($emailHash);
 
         // An explicit emailHash or name already identifies who is being
@@ -159,12 +163,12 @@ class Get extends Action
         }
 
         if ($profile->getId() !== '') {
-            $providers[] = new OAuth2($dbForProject);
+            $providers[] = new OAuth2($dbForProject, $client);
         }
 
         if ($profile->getAttribute('emailHash', '') !== '') {
-            $providers[] = new Gravatar();
-            $providers[] = new Libavatar();
+            $providers[] = new Gravatar($client);
+            $providers[] = new Libavatar($client);
         }
 
         if ($profile->getAttribute('name', '') !== '') {

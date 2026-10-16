@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 final class MessagingTest extends TestCase
 {
@@ -28,15 +30,15 @@ final class MessagingTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
-            ID::unique(),
+            Id::unique(),
             [
-                Role::user(ID::custom('123'))->toString(),
+                Role::user(Id::custom('123'))->toString(),
                 Role::users()->toString(),
-                Role::team(ID::custom('abc'))->toString(),
-                Role::team(ID::custom('abc'), 'administrator')->toString(),
-                Role::team(ID::custom('abc'), 'moderator')->toString(),
-                Role::team(ID::custom('def'))->toString(),
-                Role::team(ID::custom('def'), 'guest')->toString(),
+                Role::team(Id::custom('abc'))->toString(),
+                Role::team(Id::custom('abc'), 'administrator')->toString(),
+                Role::team(Id::custom('abc'), 'moderator')->toString(),
+                Role::team(Id::custom('def'))->toString(),
+                Role::team(Id::custom('def'), 'guest')->toString(),
             ],
             // Pass plain channel names, Realtime::subscribe will normalize them
             ['files', 'documents', 'documents.789', 'account.123']
@@ -64,55 +66,55 @@ final class MessagingTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::user(ID::custom('123'))->toString()];
+        $event['roles'] = [Role::user(Id::custom('123'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
+        $event['roles'] = [Role::team(Id::custom('abc'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
+        $event['roles'] = [Role::team(Id::custom('abc'), 'administrator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
+        $event['roles'] = [Role::team(Id::custom('abc'), 'moderator')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::team(ID::custom('def'))->toString()];
+        $event['roles'] = [Role::team(Id::custom('def'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
+        $event['roles'] = [Role::team(Id::custom('def'), 'guest')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertSame(1, $receivers[0]);
 
-        $event['roles'] = [Role::user(ID::custom('456'))->toString()];
+        $event['roles'] = [Role::user(Id::custom('456'))->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = [Role::team(ID::custom('def'), 'member')->toString()];
+        $event['roles'] = [Role::team(Id::custom('def'), 'member')->toString()];
 
         $receivers = array_keys($realtime->getSubscribers($event));
 
@@ -157,7 +159,7 @@ final class MessagingTest extends TestCase
             '1',
             1,
             'sub-a',
-            [Role::user(ID::custom('123'))->toString()],
+            [Role::user(Id::custom('123'))->toString()],
             ['documents'],
         );
 
@@ -173,7 +175,7 @@ final class MessagingTest extends TestCase
 
         $this->assertContains('documents', $connection['channels']);
         $this->assertContains('files', $connection['channels']);
-        $this->assertContains(Role::user(ID::custom('123'))->toString(), $connection['roles']);
+        $this->assertContains(Role::user(Id::custom('123'))->toString(), $connection['roles']);
         $this->assertContains(Role::users()->toString(), $connection['roles']);
         $this->assertCount(2, $connection['channels']);
         $this->assertCount(2, $connection['roles']);
@@ -187,7 +189,7 @@ final class MessagingTest extends TestCase
             '1',
             1,
             'sub-a',
-            [Role::user(ID::custom('123'))->toString()],
+            [Role::user(Id::custom('123'))->toString()],
             ['documents'],
         );
 
@@ -206,7 +208,7 @@ final class MessagingTest extends TestCase
 
         // sub-a is fully cleaned from the tree
         $this->assertArrayNotHasKey(
-            Role::user(ID::custom('123'))->toString(),
+            Role::user(Id::custom('123'))->toString(),
             $realtime->subscriptions['1']
         );
 
@@ -225,7 +227,7 @@ final class MessagingTest extends TestCase
         $this->assertSame(['files'], $realtime->connections[1]['channels']);
 
         // Roles are connection-level auth context — union of both subscribe calls preserved
-        $this->assertContains(Role::user(ID::custom('123'))->toString(), $realtime->connections[1]['roles']);
+        $this->assertContains(Role::user(Id::custom('123'))->toString(), $realtime->connections[1]['roles']);
         $this->assertContains(Role::users()->toString(), $realtime->connections[1]['roles']);
     }
 
@@ -326,14 +328,14 @@ final class MessagingTest extends TestCase
             '1',
             1,
             'sub-a',
-            [Role::user(ID::custom('user-123'))->toString()],
+            [Role::user(Id::custom('user-123'))->toString()],
             ['documents'],
         );
 
         $this->assertSame('user-123', $realtime->connections[1]['userId']);
         $this->assertContains('documents', $realtime->connections[1]['channels']);
         $this->assertContains(Role::users()->toString(), $realtime->connections[1]['roles']);
-        $this->assertContains(Role::user(ID::custom('user-123'))->toString(), $realtime->connections[1]['roles']);
+        $this->assertContains(Role::user(Id::custom('user-123'))->toString(), $realtime->connections[1]['roles']);
     }
 
     public function testConvertChannelsGuest(): void
@@ -362,17 +364,17 @@ final class MessagingTest extends TestCase
     public function testConvertChannelsUser(): void
     {
         $user  = new Document([
-            '$id' => ID::custom('123'),
+            '$id' => Id::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => ID::custom('abc'),
+                    'teamId' => Id::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => ID::custom('def'),
+                    'teamId' => Id::custom('def'),
                     'roles' => [
                         'guest'
                     ]
@@ -541,7 +543,7 @@ final class MessagingTest extends TestCase
         // Step 1.
         $aChannels = \array_keys(Realtime::convertChannels(['account.create'], 'A'));
         $this->assertSame(['account.A.create'], $aChannels);
-        $realtime->subscribe('1', 1, 'sub-1', [Role::user(ID::custom('A'))->toString()], $aChannels, [], 'A');
+        $realtime->subscribe('1', 1, 'sub-1', [Role::user(Id::custom('A'))->toString()], $aChannels, [], 'A');
         $this->assertSame('A', $realtime->connections[1]['userId']);
 
         // Step 2: A → B.
@@ -550,7 +552,7 @@ final class MessagingTest extends TestCase
         $realtime->unsubscribe(1);
         foreach ($meta as $subId => $sub) {
             $rebound = Realtime::rebindAccountChannels($sub['channels'], $previousUserId, 'B');
-            $realtime->subscribe('1', 1, $subId, [Role::user(ID::custom('B'))->toString()], $rebound, [], 'B');
+            $realtime->subscribe('1', 1, $subId, [Role::user(Id::custom('B'))->toString()], $rebound, [], 'B');
         }
         $this->assertSame('B', $realtime->connections[1]['userId']);
         $this->assertContains('account.B.create', $realtime->connections[1]['channels']);
@@ -561,7 +563,7 @@ final class MessagingTest extends TestCase
         $realtime->unsubscribe(1);
         foreach ($meta as $subId => $sub) {
             $rebound = Realtime::rebindAccountChannels($sub['channels'], $previousUserId, 'B');
-            $realtime->subscribe('1', 1, $subId, [Role::user(ID::custom('B'))->toString()], $rebound, [], 'B');
+            $realtime->subscribe('1', 1, $subId, [Role::user(Id::custom('B'))->toString()], $rebound, [], 'B');
         }
         $this->assertSame('B', $realtime->connections[1]['userId']);
         $this->assertContains('account.B.create', $realtime->connections[1]['channels']);
@@ -572,7 +574,7 @@ final class MessagingTest extends TestCase
         $realtime->unsubscribe(1);
         foreach ($meta as $subId => $sub) {
             $rebound = Realtime::rebindAccountChannels($sub['channels'], $previousUserId, 'C');
-            $realtime->subscribe('1', 1, $subId, [Role::user(ID::custom('C'))->toString()], $rebound, [], 'C');
+            $realtime->subscribe('1', 1, $subId, [Role::user(Id::custom('C'))->toString()], $rebound, [], 'C');
         }
         $this->assertSame('C', $realtime->connections[1]['userId']);
         $this->assertContains('account.C.create', $realtime->connections[1]['channels']);
@@ -599,7 +601,7 @@ final class MessagingTest extends TestCase
         // Step 2: fromPayload publishes account.create alongside the user-scoped form.
         $publish = Realtime::fromPayload(
             event: 'users.B.create',
-            payload: new Document(['$id' => ID::custom('B')]),
+            payload: new Document(['$id' => Id::custom('B')]),
         );
         $this->assertContains('account.create', $publish['channels']);
         $this->assertContains('account.B.create', $publish['channels']);
@@ -621,7 +623,7 @@ final class MessagingTest extends TestCase
         $realtime->unsubscribe(1);
         foreach ($meta as $subId => $sub) {
             $rebound = Realtime::rebindAccountChannels($sub['channels'], $previousUserId, 'B');
-            $realtime->subscribe('1', 1, $subId, [Role::user(ID::custom('B'))->toString()], $rebound, [], 'B');
+            $realtime->subscribe('1', 1, $subId, [Role::user(Id::custom('B'))->toString()], $rebound, [], 'B');
         }
 
         // Literal channel is gone; user-scoped form is in place.
@@ -631,13 +633,183 @@ final class MessagingTest extends TestCase
         // B-scoped event delivers via the user-scoped channel.
         $bEvent = [
             'project' => '1',
-            'roles' => [Role::user(ID::custom('B'))->toString()],
+            'roles' => [Role::user(Id::custom('B'))->toString()],
             'data' => [
                 'channels' => $publish['channels'],
                 'payload' => ['$id' => 'B'],
             ],
         ];
         $this->assertArrayHasKey(1, $realtime->getSubscribers($bEvent));
+    }
+
+    public function testFromPayloadUserEventsChangePermissions(): void
+    {
+        // Everything that shapes a user's roles lives on the user document, so any
+        // change to it must re-resolve that user's open connections.
+        foreach ([
+            'users.A.update.status',
+            'users.A.update.labels',
+            'users.A.update.email',
+            'users.A.update.phone',
+            'users.A.update.password',
+            'users.A.update.verification',
+            'users.A.verification.V.update',
+            'users.A.recovery.R.update',
+            'users.A.sessions.S.create',
+            'users.A.sessions.S.update',
+            'users.A.sessions.S.delete',
+            'users.A.sessions.delete',
+            'users.A.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => Id::custom('A')]),
+            );
+
+            $this->assertTrue($result['permissionsChanged'], $event);
+            $this->assertSame([Role::user(Id::custom('A'))->toString()], $result['roles'], $event);
+        }
+    }
+
+    public function testFromPayloadUserEventsWithoutAccessChange(): void
+    {
+        // These neither shape roles nor end a session, so open connections are left alone.
+        foreach ([
+            'users.A.create',
+            'users.A.update.prefs',
+            'users.A.update.name',
+            'users.A.update.avatar',
+            'users.A.update.mfa',
+            'users.A.update.mfa.recovery-codes',
+            'users.A.create.mfa.recovery-codes',
+            'users.A.delete.mfa',
+            'users.A.recovery.R.create',
+            'users.A.verification.V.create',
+            'users.A.targets.T.create',
+            'users.A.tokens.T.create',
+            'users.A.challenges.C.create',
+            'users.A.identities.I.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => Id::custom('A')]),
+            );
+
+            $this->assertFalse($result['permissionsChanged'], $event);
+        }
+    }
+
+    public function testSubscribeKeepsConnectionAuthorizationState(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
+        $realtime->connections[1]['authorization'] = 'authorization';
+        $realtime->connections[1]['sessionId'] = 'session';
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'];
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->connections[1]['jwtExpire'] = 50;
+
+        // A later subscribe on the same connection unions its channels and must not
+        // drop what the connection handler recorded about how it was opened.
+        $realtime->subscribe('1', 1, 'sub-2', [$role], ['files'], [], 'A');
+
+        $this->assertSame('authorization', $realtime->connections[1]['authorization']);
+        $this->assertSame('session', $realtime->connections[1]['sessionId']);
+        $this->assertSame('A', $realtime->connections[1]['impersonatedUserId']);
+        $this->assertSame(['projectId' => 'console', 'userId' => 'C', 'sessionId' => 'other'], $realtime->connections[1]['impersonator']);
+        $this->assertSame(100, $realtime->connections[1]['expire']);
+        $this->assertSame(50, $realtime->connections[1]['jwtExpire']);
+        $this->assertEqualsCanonicalizing(['documents', 'files'], $realtime->connections[1]['channels']);
+
+        // A full unsubscribe forgets the connection entirely.
+        $realtime->unsubscribe(1);
+        $this->assertArrayNotHasKey(1, $realtime->connections);
+    }
+
+    public function testIsExpired(): void
+    {
+        $realtime = new Realtime();
+        $role = Role::user(Id::custom('A'))->toString();
+
+        // 1: session only. 2: session and a JWT that ends sooner. 3: neither (guest).
+        $realtime->subscribe('1', 1, 'sub-1', [$role], ['documents'], [], 'A');
+        $realtime->connections[1]['expire'] = 100;
+        $realtime->subscribe('1', 2, 'sub-2', [$role], ['documents'], [], 'A');
+        $realtime->connections[2]['expire'] = 100;
+        $realtime->connections[2]['jwtExpire'] = 50;
+        $realtime->subscribe('1', 3, 'sub-3', [Role::guests()->toString()], ['documents']);
+
+        $this->assertFalse($realtime->isExpired(1, 49));
+        $this->assertFalse($realtime->isExpired(2, 49));
+
+        // The JWT has expired; the session behind it has not.
+        $this->assertFalse($realtime->isExpired(1, 50));
+        $this->assertTrue($realtime->isExpired(2, 50));
+
+        $this->assertTrue($realtime->isExpired(1, 100));
+        $this->assertFalse($realtime->isExpired(3, \PHP_INT_MAX));
+        $this->assertFalse($realtime->isExpired(4, \PHP_INT_MAX));
+    }
+
+    public function testGetUserConnectionsIncludesConnectionsWithoutSubscriptions(): void
+    {
+        $realtime = new Realtime();
+        $roleA = Role::user(Id::custom('A'))->toString();
+        $roleB = Role::user(Id::custom('B'))->toString();
+
+        // A subscribes in project 1; opens a second connection there with no channels
+        // (message mode); and has a third connection in project 2.
+        $realtime->subscribe('1', 1, 'sub-1', [$roleA], ['documents'], [], 'A');
+        $realtime->subscribe('1', 2, '', [$roleA], [], [], 'A');
+        $realtime->subscribe('2', 3, 'sub-3', [$roleA], ['documents'], [], 'A');
+        // B in project 1, and a guest.
+        $realtime->subscribe('1', 4, 'sub-4', [$roleB], ['documents'], [], 'B');
+        $realtime->subscribe('1', 5, 'sub-5', [Role::guests()->toString()], ['documents'], [], '');
+
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getUserConnections('1', 'A'));
+        $this->assertSame([3], $realtime->getUserConnections('2', 'A'));
+        $this->assertSame([4], $realtime->getUserConnections('1', 'B'));
+        $this->assertSame([], $realtime->getUserConnections('1', ''));
+
+        // Dropping the last subscription keeps the connection, and so its user.
+        $realtime->unsubscribeSubscription(1, 'sub-1');
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getUserConnections('1', 'A'));
+
+        // Closing forgets it.
+        $realtime->unsubscribe(1);
+        $this->assertSame([2], $realtime->getUserConnections('1', 'A'));
+    }
+
+    public function testGetImpersonatorConnections(): void
+    {
+        $realtime = new Realtime();
+        $roleA = Role::user(Id::custom('A'))->toString();
+
+        // Console user C impersonates A in projects 1 and 2; A also connects directly.
+        $realtime->subscribe('1', 1, 'sub-1', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[1]['impersonatedUserId'] = 'A';
+        $realtime->connections[1]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's1'];
+        $realtime->subscribe('2', 2, 'sub-2', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[2]['impersonatedUserId'] = 'A';
+        $realtime->connections[2]['impersonator'] = ['projectId' => 'console', 'userId' => 'C', 'sessionId' => 's2'];
+        $realtime->subscribe('1', 3, 'sub-3', [$roleA], ['documents'], [], 'A');
+        $realtime->connections[3]['impersonator'] = null;
+
+        // C's own events reach both impersonated connections, across projects.
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
+        // A project user with the same ID is someone else.
+        $this->assertSame([], $realtime->getImpersonatorConnections('1', 'C'));
+        $this->assertSame([], $realtime->getImpersonatorConnections('console', ''));
+
+        // A's own events still reach every connection carrying A, impersonated or not.
+        $this->assertEqualsCanonicalizing([1, 3], $realtime->getUserConnections('1', 'A'));
+
+        // A later subscribe on an impersonated connection keeps the binding.
+        $realtime->subscribe('1', 1, 'sub-1b', [$roleA], ['files'], []);
+        $this->assertEqualsCanonicalizing([1, 2], $realtime->getImpersonatorConnections('console', 'C'));
     }
 
     public function testFromPayloadPermissions(): void
@@ -648,8 +820,8 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => ID::custom('test'),
-                '$collection' => ID::custom('collection'),
+                '$id' => Id::custom('test'),
+                '$collection' => Id::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
@@ -657,10 +829,10 @@ final class MessagingTest extends TestCase
                 ],
             ]),
             database: new Document([
-                '$id' => ID::custom('database'),
+                '$id' => Id::custom('database'),
             ]),
             collection: new Document([
-                '$id' => ID::custom('collection'),
+                '$id' => Id::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -678,8 +850,8 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => ID::custom('test'),
-                '$collection' => ID::custom('collection'),
+                '$id' => Id::custom('test'),
+                '$collection' => Id::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -687,10 +859,10 @@ final class MessagingTest extends TestCase
                 ],
             ]),
             database: new Document([
-                '$id' => ID::custom('database'),
+                '$id' => Id::custom('database'),
             ]),
             collection: new Document([
-                '$id' => ID::custom('collection'),
+                '$id' => Id::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
@@ -712,8 +884,8 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => ID::custom('test'),
-                '$collection' => ID::custom('bucket'),
+                '$id' => Id::custom('test'),
+                '$collection' => Id::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
@@ -721,7 +893,7 @@ final class MessagingTest extends TestCase
                 ],
             ]),
             bucket: new Document([
-                '$id' => ID::custom('bucket'),
+                '$id' => Id::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -739,8 +911,8 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => ID::custom('test'),
-                '$collection' => ID::custom('bucket'),
+                '$id' => Id::custom('test'),
+                '$collection' => Id::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -748,7 +920,7 @@ final class MessagingTest extends TestCase
                 ],
             ]),
             bucket: new Document([
-                '$id' => ID::custom('bucket'),
+                '$id' => Id::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::team('123abc')),
                     Permission::update(Role::team('123abc')),
@@ -766,14 +938,14 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => ID::custom('document_id'),
-                '$collection' => ID::custom('collection_id'),
+                '$id' => Id::custom('document_id'),
+                '$collection' => Id::custom('collection_id'),
                 '$collectionId' => 'collection_id',
                 '$permissions' => [Permission::read(Role::any())],
             ]),
-            database: new Document(['$id' => ID::custom('database_id')]),
+            database: new Document(['$id' => Id::custom('database_id')]),
             collection: new Document([
-                '$id' => ID::custom('collection_id'),
+                '$id' => Id::custom('collection_id'),
                 '$permissions' => [Permission::read(Role::any())],
             ])
         );
@@ -799,14 +971,14 @@ final class MessagingTest extends TestCase
             $result = Realtime::fromPayload(
                 event: "databases.database_id.collections.collection_id.documents.document_id.{$action}",
                 payload: new Document([
-                    '$id' => ID::custom('document_id'),
-                    '$collection' => ID::custom('collection_id'),
+                    '$id' => Id::custom('document_id'),
+                    '$collection' => Id::custom('collection_id'),
                     '$collectionId' => 'collection_id',
                     '$permissions' => [Permission::read(Role::any())],
                 ]),
-                database: new Document(['$id' => ID::custom('database_id')]),
+                database: new Document(['$id' => Id::custom('database_id')]),
                 collection: new Document([
-                    '$id' => ID::custom('collection_id'),
+                    '$id' => Id::custom('collection_id'),
                     '$permissions' => [Permission::read(Role::any())],
                 ])
             );
@@ -828,12 +1000,12 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.update',
             payload: new Document([
-                '$id' => ID::custom('file_id'),
+                '$id' => Id::custom('file_id'),
                 'bucketId' => 'bucket_id',
                 '$permissions' => [Permission::read(Role::any())],
             ]),
             bucket: new Document([
-                '$id' => ID::custom('bucket_id'),
+                '$id' => Id::custom('bucket_id'),
                 '$permissions' => [Permission::read(Role::any())],
             ])
         );
@@ -857,13 +1029,13 @@ final class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'functions.function_id.executions.execution_id.create',
             payload: new Document([
-                '$id' => ID::custom('execution_id'),
+                '$id' => Id::custom('execution_id'),
                 'resourceId' => 'function_id',
                 '$read' => [Role::any()->toString()],
                 '$permissions' => [Permission::read(Role::any())],
             ]),
             project: new Document([
-                '$id' => ID::custom('project_id'),
+                '$id' => Id::custom('project_id'),
                 'teamId' => '123abc',
             ])
         );
@@ -897,7 +1069,7 @@ final class MessagingTest extends TestCase
         // second-to-last segment, not the last one. The suffix must still be `.update`.
         $userResult = Realtime::fromPayload(
             event: 'users.user_id.update.email',
-            payload: new Document(['$id' => ID::custom('user_id')])
+            payload: new Document(['$id' => Id::custom('user_id')])
         );
 
         $this->assertContains('account', $userResult['channels']);
@@ -911,7 +1083,7 @@ final class MessagingTest extends TestCase
         // `teams.[teamId].update.prefs` — same shape at the team level.
         $teamResult = Realtime::fromPayload(
             event: 'teams.team_id.update.prefs',
-            payload: new Document(['$id' => ID::custom('team_id')])
+            payload: new Document(['$id' => Id::custom('team_id')])
         );
 
         $this->assertContains('teams', $teamResult['channels']);
@@ -924,7 +1096,7 @@ final class MessagingTest extends TestCase
         // `teams.[teamId].memberships.[membershipId].update.{attr}` — same again, deeper.
         $membershipResult = Realtime::fromPayload(
             event: 'teams.team_id.memberships.membership_id.update.status',
-            payload: new Document(['$id' => ID::custom('membership_id')])
+            payload: new Document(['$id' => Id::custom('membership_id')])
         );
 
         $this->assertContains('memberships', $membershipResult['channels']);
@@ -933,6 +1105,69 @@ final class MessagingTest extends TestCase
         $this->assertContains('memberships.membership_id.update', $membershipResult['channels']);
         $this->assertNotContains('memberships.status', $membershipResult['channels']);
         $this->assertNotContains('memberships.membership_id.status', $membershipResult['channels']);
+    }
+
+    public function testMembershipDeleteReachesSubjectAfterTeamRoleIsRevoked(): void
+    {
+        // Delete is published with permissionsChanged, and the realtime worker
+        // re-resolves the subject before fan-out. By then they no longer hold
+        // team:{teamId}. The delete must also be addressed to user:{userId}
+        // so that connection still matches. Create and update stay team-only.
+        $teamId = 'team_id';
+        $userId = 'user_id';
+        $membershipId = 'membership_id';
+        $teamRole = Role::team(Id::custom($teamId))->toString();
+        $userRole = Role::user(Id::custom($userId))->toString();
+
+        $delete = Realtime::fromPayload(
+            event: "teams.{$teamId}.memberships.{$membershipId}.delete",
+            payload: new Document([
+                '$id' => Id::custom($membershipId),
+                'userId' => $userId,
+                'teamId' => $teamId,
+            ])
+        );
+
+        $this->assertContains($teamRole, $delete['roles']);
+        $this->assertContains($userRole, $delete['roles']);
+        $this->assertContains('memberships', $delete['channels']);
+        $this->assertContains('memberships.delete', $delete['channels']);
+        $this->assertContains("memberships.{$membershipId}", $delete['channels']);
+        $this->assertContains("memberships.{$membershipId}.delete", $delete['channels']);
+
+        foreach (['create', 'update'] as $action) {
+            $result = Realtime::fromPayload(
+                event: "teams.{$teamId}.memberships.{$membershipId}.{$action}",
+                payload: new Document([
+                    '$id' => Id::custom($membershipId),
+                    'userId' => $userId,
+                    'teamId' => $teamId,
+                ])
+            );
+            $this->assertContains($teamRole, $result['roles'], $action);
+            $this->assertNotContains($userRole, $result['roles'], $action);
+        }
+
+        $realtime = new Realtime();
+        // Subject after the membership is revoked: user role only.
+        $realtime->subscribe('1', 1, 'subject', [$userRole], ['memberships'], [], $userId);
+        // Teammate who still holds the team.
+        $realtime->subscribe('1', 2, 'teammate', [$teamRole], ['memberships']);
+        // Another user subscribed to the same channel.
+        $realtime->subscribe('1', 3, 'other', [Role::user(Id::custom('other'))->toString()], ['memberships']);
+
+        $event = [
+            'project' => '1',
+            'roles' => $delete['roles'],
+            'data' => [
+                'channels' => $delete['channels'],
+                'payload' => ['$id' => $membershipId, 'userId' => $userId],
+            ],
+        ];
+        $receivers = $realtime->getSubscribers($event);
+        $this->assertArrayHasKey(1, $receivers);
+        $this->assertArrayHasKey(2, $receivers);
+        $this->assertArrayNotHasKey(3, $receivers);
     }
 
     public function testFromPayloadDoesNotSuffixAccountForNestedUserEvents(): void
@@ -947,7 +1182,7 @@ final class MessagingTest extends TestCase
             foreach (['create', 'update', 'delete'] as $action) {
                 $result = Realtime::fromPayload(
                     event: "users.user_id.{$sub}.sub_id.{$action}",
-                    payload: new Document(['$id' => ID::custom('sub_id')])
+                    payload: new Document(['$id' => Id::custom('sub_id')])
                 );
 
                 $this->assertContains('account', $result['channels'], "{$sub}.{$action} should still emit base account channel");
@@ -961,14 +1196,14 @@ final class MessagingTest extends TestCase
         // that suppresses the suffix for legitimate account-level CRUD.
         $createResult = Realtime::fromPayload(
             event: 'users.user_id.create',
-            payload: new Document(['$id' => ID::custom('user_id')])
+            payload: new Document(['$id' => Id::custom('user_id')])
         );
         $this->assertContains('account.create', $createResult['channels']);
         $this->assertContains('account.user_id.create', $createResult['channels']);
 
         $updateResult = Realtime::fromPayload(
             event: 'users.user_id.update.email',
-            payload: new Document(['$id' => ID::custom('user_id')])
+            payload: new Document(['$id' => Id::custom('user_id')])
         );
         $this->assertContains('account.update', $updateResult['channels']);
         $this->assertContains('account.user_id.update', $updateResult['channels']);
@@ -1030,7 +1265,7 @@ final class MessagingTest extends TestCase
 
     public function testFromPayloadPresenceChannels(): void
     {
-        $presenceId = ID::custom('presence123');
+        $presenceId = Id::custom('presence123');
 
         $result = Realtime::fromPayload(
             event: 'presences.' . $presenceId . '.upsert',
@@ -1127,5 +1362,113 @@ final class MessagingTest extends TestCase
         $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
         $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
         $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
+    }
+
+    public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void
+    {
+        $teamId = Id::custom('team123');
+        $result = Realtime::fromPayload(
+            event: 'teams.' . $teamId . '.create',
+            payload: new Document(['$id' => $teamId]),
+        );
+
+        $this->assertTrue($result['permissionsChanged']);
+        $this->assertSame([Role::team($teamId)->toString()], $result['roles']);
+    }
+
+    public function testFromPayloadMembershipUpdateSetsPermissionsChanged(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'teams.team123.memberships.mem456.update',
+            payload: new Document(['$id' => Id::custom('mem456')]),
+        );
+
+        $this->assertNotEmpty($result['permissionsChanged']);
+        $this->assertSame([Role::team('team123')->toString()], $result['roles']);
+    }
+
+    public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void
+    {
+        $result = Realtime::fromPayload(
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
+            payload: new Document([
+                '$id' => Id::custom('test'),
+                '$collection' => Id::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]),
+            database: new Document([
+                '$id' => Id::custom('database'),
+            ]),
+            collection: new Document([
+                '$id' => Id::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                ],
+                'documentSecurity' => true,
+            ])
+        );
+
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+    }
+
+    public function testRuntimeQueryPrepareSelectAllPassesPayload(): void
+    {
+        $payload = ['$id' => 'doc', 'name' => 'Arsenal'];
+
+        $empty = RuntimeQuery::prepare([]);
+        $this->assertSame('selectAll', $empty['type']);
+        $this->assertSame($payload, RuntimeQuery::filter($empty, $payload));
+
+        $selectAll = RuntimeQuery::prepare([Query::select(['*'])]);
+        $this->assertSame('selectAll', $selectAll['type']);
+        $this->assertSame($payload, RuntimeQuery::filter($selectAll, $payload));
+    }
+
+    public function testParseQueriesAcceptsSelectAllFromSubscriptionMetadata(): void
+    {
+        $realtime = new Realtime();
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-1',
+            [Role::user(Id::custom('U'))->toString()],
+            ['teams'],
+            [],
+            'U',
+        );
+
+        $meta = $realtime->getSubscriptionMetadata(1);
+        $this->assertArrayHasKey('sub-1', $meta);
+        $this->assertNotEmpty($meta['sub-1']['queries']);
+
+        $parsed = Query::parseQueries($meta['sub-1']['queries']);
+        $this->assertCount(\count($meta['sub-1']['queries']), $parsed);
+        $this->assertTrue(RuntimeQuery::isSelectAll($parsed[0]));
+    }
+
+    public function testTeamEventDoesNotMatchUserOnlySubscription(): void
+    {
+        $realtime = new Realtime();
+        $userRole = Role::user(Id::custom('U'))->toString();
+        $teamRole = Role::team(Id::custom('T'))->toString();
+
+        $realtime->subscribe('1', 1, 'sub-1', [$userRole], ['teams'], [], 'U');
+
+        $event = [
+            'project' => '1',
+            'roles' => [$teamRole],
+            'data' => [
+                'channels' => ['teams', 'teams.T', 'teams.create', 'teams.T.create'],
+                'payload' => ['$id' => 'T'],
+            ],
+        ];
+
+        $this->assertArrayNotHasKey(1, $realtime->getSubscribers($event));
+
+        $realtime->subscribe('1', 1, 'sub-1', [$teamRole], ['teams'], [], 'U');
+
+        $this->assertArrayHasKey(1, $realtime->getSubscribers($event));
     }
 }

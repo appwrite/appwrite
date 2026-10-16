@@ -57,7 +57,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('publisherForCertificates')
             ->inject('queueForEvents')
@@ -102,10 +102,11 @@ class Update extends Action
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs for the associated certificate.
+            // Reset logs and attempts for the associated certificate.
             if (!empty($certificateId)) {
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
                     'logs' => '',
+                    'attempts' => 0,
                 ])));
             }
         } catch (Exception $err) {

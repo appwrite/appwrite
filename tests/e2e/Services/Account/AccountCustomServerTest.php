@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class AccountCustomServerTest extends Scope
@@ -44,7 +44,7 @@ final class AccountCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -118,7 +118,7 @@ final class AccountCustomServerTest extends Scope
             ],
             $this->getHeaders()
         ), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -312,7 +312,7 @@ final class AccountCustomServerTest extends Scope
             ],
             $this->getHeaders()
         ), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -337,6 +337,76 @@ final class AccountCustomServerTest extends Scope
         $userIDTest = strpos($lastEmail['text'], 'userId=' . $response['body']['userId'], 0);
 
         $this->assertNotFalse($userIDTest);
+    }
+
+    public function testCreateTokenWithSessionsKey(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['sessions.write']),
+        ];
+        $email = 'sessions-key-' . uniqid() . '@appwrite.io';
+
+        /**
+         * Test for SUCCESS
+         */
+        $otp = $this->client->call(Client::METHOD_POST, '/account/tokens/email', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $otp['headers']['status-code']);
+        $this->assertNotEmpty($otp['body']['userId']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $otp['body']['expire']));
+        $this->assertEmpty($otp['body']['secret']);
+        $this->assertNotEmpty($this->getLastEmailByAddress($email));
+
+        $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $magicUrl['headers']['status-code']);
+        $this->assertEquals($otp['body']['userId'], $magicUrl['body']['userId']);
+        $this->assertEmpty($magicUrl['body']['secret']);
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+        $this->assertEmpty($recovery['body']['secret']);
+
+        $recoveryOtp = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', $headers, [
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $recoveryOtp['headers']['status-code']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $recoveryOtp['body']['expire']));
+        $this->assertEmpty($recoveryOtp['body']['secret']);
+
+        $usersKeyOtp = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $usersKeyOtp['headers']['status-code']);
+        $this->assertNotEmpty($usersKeyOtp['body']['secret']);
+
+        /**
+         * Test for FAILURE
+         */
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/token', $headers, [
+            'userId' => $otp['body']['userId'],
+            'secret' => $otp['body']['secret'],
+        ]);
+
+        $this->assertEquals(400, $session['headers']['status-code']);
     }
 
     public function testCreateSessionWithMagicUrl(): void

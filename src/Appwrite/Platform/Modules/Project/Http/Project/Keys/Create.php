@@ -16,7 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
 use Utopia\Platform\Enum;
@@ -68,10 +68,11 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('keyId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Key ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
+            ->param('keyId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getMaxUidLength()), 'Key ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, example: '["users.read"]', enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('expire', null, new Nullable(new Datetime()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the key.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -86,6 +87,7 @@ class Create extends Base
         string $name,
         array $scopes,
         ?string $expire,
+        string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -98,7 +100,7 @@ class Create extends Base
             throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
-        $keyId = ($keyId == 'unique()') ? ID::unique() : $keyId;
+        $keyId = ($keyId == 'unique()') ? Id::unique() : $keyId;
 
         $key = new Document([
             '$id' => $keyId,
@@ -107,6 +109,7 @@ class Create extends Base
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
             'name' => $name,
+            'description' => $description,
             'scopes' => $scopes,
             'expire' => $expire,
             'sdks' => [],

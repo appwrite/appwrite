@@ -24,9 +24,24 @@ final class Client implements Adapter
 
     private bool $tracePropagation = false;
 
+    /**
+     * @param Destinations|null $destinations Where requests may connect; when omitted the adapter's own setting stands, which is Anywhere unless it was changed
+     */
     public function __construct(
         private Adapter $adapter,
+        ?Destinations $destinations = null,
     ) {
+        if ($destinations instanceof Destinations) {
+            $this->adapter = $adapter->withDestinations($destinations);
+        }
+    }
+
+    public function withDestinations(Destinations $destinations): static
+    {
+        $clone = clone $this;
+        $clone->adapter = $this->adapter->withDestinations($destinations);
+
+        return $clone;
     }
 
     public function withTimeout(float $seconds): static

@@ -1,6 +1,78 @@
 # Changelog
 
+## 0.17.0 (unreleased) — utopia-php/database 8
+
+### Added
+
+- Events carry an `ordinal` dimension: the replica ordinal of a multi-node
+  resource, `0` for the first member. Counters such as dedicated-database
+  inbound, outbound and compute can now tell members apart the way gauges
+  already could. `setup()` adds the column to an existing event table, and the
+  daily materialized view still groups by resource identity, so billing sums
+  every member.
+- `Usage::migrate()` brings an existing schema up to date (tables, the daily
+  materialized view, columns, skip indexes and projections) without touching
+  an existing table's retention. A table it creates carries the configured
+  retention TTL from its `CREATE TABLE`. `setup()` is now `migrate()`
+  followed by the retention TTL, so a deployment can roll out a new column
+  without re-applying a TTL it has not reviewed. Adapters inherit a `migrate()` that runs `setup()`; the ClickHouse
+  adapter overrides it.
+
+### Fixed
+
+- `migrate()` (and so `setup()`) converges dimension columns that predate
+  their current type or codec, such as a `protocol` column created as
+  `Nullable(String)` before it became `LowCardinality(Nullable(String))`, or
+  `accept` without `CODEC(ZSTD(3))`. Columns it adds now carry their codec,
+  matching a freshly created table. A type change schedules a ClickHouse
+  mutation that rewrites the column. A codec change applies to parts written
+  or merged afterwards. ClickHouse refuses to change a column that a skip
+  index covers, so the covering indexes are dropped first, then added and
+  materialized again once the column is converged.
+- `migrate()` (and so `setup()`) realigns skip indexes that drifted from
+  their definition. Before, it added indexes by name with `IF NOT EXISTS`,
+  so a defined name with another expression or type stayed as it was, and an
+  index kept under an old name, such as `index-resource` on `resourceType`
+  from before the column was renamed, stayed next to the `index-resourceType`
+  that duplicates it. Both are now dropped and the defined index is added and
+  materialized, which schedules a ClickHouse mutation that builds the index
+  for existing parts. A table whose indexes match is not altered.
+- `Accumulator::flush()` writes at most 1,000 entries per `addBatch()` call
+  and drops each batch from the buffer as soon as it is written. Before, it
+  handed the whole buffer to one `addBatch()` call, which inserts in chunks,
+  so when a later chunk failed the next flush wrote the earlier chunks again.
+
+### Breaking
+
+- Requires PHP 8.5 and utopia-php/database 8. The Docker test image builds
+  on `php:8.5.8-cli-alpine`.
+
+### Changed
+
+- The Database adapter creates its collection through the utopia-php/database
+  8 schema API (`Collection`, `Attribute` and `Index` models). The collection
+  is unchanged: the same columns, in the same order, with the same types,
+  sizes, flags and indexes as 0.16 (on MariaDB the table is identical).
+  `setup()` still leaves an existing collection alone, so a collection
+  created by 0.16 is reused as it is.
+- `SQL::getAttributeDocuments()` and `SQL::getIndexDocuments()` return
+  `Utopia\Database\Attribute` and `Utopia\Database\Index` models, which are
+  still `Document`s. The index models no longer carry the ClickHouse-only
+  `indexType` hint; the ClickHouse adapter reads it from
+  `Metric::getEventIndexes()` / `Metric::getGaugeIndexes()` as before.
+- The Database adapter compiles `contains()` through `containsString()`
+  instead of the deprecated `contains()` factory. Matching is unchanged: a
+  substring match on the column.
+- `utopia-php/database` is required as `^8.1.2` (was `^7.0.0`) and
+  `utopia-php/query` as `^0.7` (was `^0.6 || ^0.7`). `minimum-stability`
+  stays `stable`: every dependency, utopia-php/database 8.1.2 included, is
+  tagged.
+
 ## Unreleased — query 0.6.x builder
+
+### Changed
+
+- Require `utopia-php/client` ^0.6.
 
 ### Added
 
@@ -17,7 +89,8 @@
 
 ### Breaking
 
-- Bumped `utopia-php/query` from `0.1.*` to `0.6.*`.
+- Bumped `utopia-php/query` from `0.1.*` to `0.6.*`, then widened to
+  `^0.6 || ^0.7`. Array and object cursors work on both lines.
   `Query::getMethod()` now returns the `Utopia\Query\Method` enum
   instead of a string, and the `Query::TYPE_*` /
   `UsageQuery::TYPE_GROUP_BY_INTERVAL` / `UsageQuery::TYPE_GROUP_BY`

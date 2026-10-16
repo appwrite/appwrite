@@ -8,7 +8,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Lock\Distributed;
 use Utopia\System\System;
 
 final class TeamsConsoleClientTest extends Scope
@@ -46,7 +47,7 @@ final class TeamsConsoleClientTest extends Scope
                         'X-Appwrite-Project: console',
                         'Cookie: a_session_console=' . $accounts[$index]['session'],
                     ],
-                    CURLOPT_POSTFIELDS => json_encode(['teamId' => ID::unique(), 'name' => 'Instance organization']),
+                    CURLOPT_POSTFIELDS => json_encode(['teamId' => Id::unique(), 'name' => 'Instance organization']),
                 ]);
                 curl_multi_add_handle($multi, $handle);
                 $handles[] = [$handle, $index];
@@ -96,7 +97,7 @@ final class TeamsConsoleClientTest extends Scope
 
         foreach ([$ownerHeaders, $outsiderHeaders] as $requestHeaders) {
             $response = $this->client->call(Client::METHOD_POST, '/teams', $requestHeaders, [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Another organization',
             ]);
             $this->assertSame(403, $response['headers']['status-code']);
@@ -105,6 +106,49 @@ final class TeamsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/teams', $ownerHeaders);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame(1, $response['body']['total']);
+    }
+
+    public function testCreateOrganizationRefusalDoesNotWaitForTheCreationLock(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders());
+
+        $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Existing organization',
+        ]);
+
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+
+        $lock = new Distributed($redis, 'console:organizations:create', 30);
+        $this->assertTrue($lock->acquire(10.0), 'Could not hold the organization creation lock');
+
+        try {
+            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+                'teamId' => Id::unique(),
+                'name' => 'Another organization',
+            ]);
+        } finally {
+            $lock->release();
+            $redis->close();
+        }
+
+        // An edition that lifts the organization limit never takes the lock.
+        if ($response['headers']['status-code'] === 201) {
+            $this->assertSame('Another organization', $response['body']['name']);
+            return;
+        }
+
+        $this->assertSame(403, $response['headers']['status-code'], 'A refused organization must be refused while another request holds the creation lock');
+        $this->assertSame('organization_creation_prohibited', $response['body']['type']);
     }
 
     public function testConsoleMembershipPrivacyDefaults(): void
@@ -311,6 +355,111 @@ final class TeamsConsoleClientTest extends Scope
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
     }
 
+    public function testConsoleDeveloperCannotUpdateMembershipRoles(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+
+        $teamUid = $teamData['teamUid'];
+        $developerMembershipUid = $membershipData['membershipUid'];
+        $projectId = $this->getProject()['$id'];
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $memberships['headers']['status-code']);
+        $this->assertEquals(2, $memberships['body']['total']);
+
+        $ownerMembershipUid = null;
+        foreach ($memberships['body']['memberships'] as $membership) {
+            if ($membership['$id'] !== $developerMembershipUid) {
+                $ownerMembershipUid = $membership['$id'];
+                break;
+            }
+        }
+
+        $this->assertNotEmpty($ownerMembershipUid);
+
+        $developerHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-organization' => $teamUid,
+            'cookie' => 'a_session_' . $projectId . '=' . $membershipData['session'],
+        ];
+
+        /**
+         * Test for FAILURE: a confirmed developer cannot self-promote, change
+         * another membership, or invite with owner roles, even with
+         * X-Appwrite-Organization.
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $developerMembershipUid, $developerHeaders, [
+            'roles' => ['owner'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, $developerHeaders, [
+            'roles' => ['owner'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', $developerHeaders, [
+            'email' => uniqid() . 'invitee@localhost.test',
+            'name' => 'Invited User',
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to send invitations for this team', $response['body']['message']);
+
+        /**
+         * Test for SUCCESS: the organization owner can still change roles
+         * and invite members with the same organization header.
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $developerMembershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-organization' => $teamUid,
+        ], $this->getHeaders()), [
+            'roles' => ['developer'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(['developer'], $response['body']['roles']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $developerMembershipUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(['developer'], $response['body']['roles']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-organization' => $teamUid,
+        ], $this->getHeaders()), [
+            'email' => uniqid() . 'invitee@localhost.test',
+            'name' => 'Invited User',
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(['developer'], $response['body']['roles']);
+        $this->assertFalse($response['body']['confirm']);
+    }
+
     public function testDeleteTeamMembership(): void
     {
         $teamData = $this->createTeamHelper();
@@ -490,7 +639,7 @@ final class TeamsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'Other Member',
@@ -516,7 +665,7 @@ final class TeamsConsoleClientTest extends Scope
         ];
 
         $organization = $this->createTeamFixture($memberHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Other organization',
         ]);
 

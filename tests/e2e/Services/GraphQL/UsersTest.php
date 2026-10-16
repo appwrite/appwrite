@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class UsersTest extends Scope
@@ -33,7 +33,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Project User',
@@ -71,7 +71,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'api-key',
                 'domain' => 'domain',
@@ -92,7 +92,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'userId' => $user['_id'],
                 'providerType' => 'email',
                 'providerId' => $providerId,

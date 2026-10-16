@@ -2,7 +2,9 @@
 
 namespace Utopia\Query\Tests\API;
 
+use ArrayObject;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
 
@@ -61,17 +63,41 @@ class SelectionTest extends TestCase
         $this->assertSame([10], $query->getValues());
     }
 
-    public function testCursorAfter(): void
+    public function testCursorAfterArray(): void
     {
-        $query = Query::cursorAfter('doc123');
+        $query = Query::cursorAfter(['id' => 'doc123']);
         $this->assertSame(Method::CursorAfter, $query->getMethod());
-        $this->assertSame(['doc123'], $query->getValues());
+        $this->assertSame([['id' => 'doc123']], $query->getValues());
     }
 
-    public function testCursorBefore(): void
+    public function testCursorAfterObject(): void
     {
-        $query = Query::cursorBefore('doc123');
+        $row = new ArrayObject(['id' => 'doc123']);
+        $query = Query::cursorAfter($row);
+        $this->assertSame(Method::CursorAfter, $query->getMethod());
+        $this->assertSame([$row], $query->getValues());
+    }
+
+    public function testCursorBeforeArray(): void
+    {
+        $query = Query::cursorBefore(['id' => 'doc123']);
         $this->assertSame(Method::CursorBefore, $query->getMethod());
-        $this->assertSame(['doc123'], $query->getValues());
+        $this->assertSame([['id' => 'doc123']], $query->getValues());
+    }
+
+    public function testCursorBeforeObject(): void
+    {
+        $row = new ArrayObject(['id' => 'doc123']);
+        $query = Query::cursorBefore($row);
+        $this->assertSame(Method::CursorBefore, $query->getMethod());
+        $this->assertSame([$row], $query->getValues());
+    }
+
+    public function testCursorRejectsScalar(): void
+    {
+        $this->expectException(TypeError::class);
+
+        /** @phpstan-ignore argument.type */
+        Query::cursorAfter('doc123');
     }
 }

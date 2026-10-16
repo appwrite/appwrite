@@ -3,12 +3,6 @@ parameters:
 		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
-			path: src/Adapter.php
-
-		-
-			message: '#^Method Utopia\\Domains\\Adapter\:\:call\(\) has parameter \$headers with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Adapter.php
 
@@ -31,33 +25,9 @@ parameters:
 			path: src/Adapter.php
 
 		-
-			message: '#^Method Utopia\\Domains\\Adapter\:\:flatten\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Method Utopia\\Domains\\Adapter\:\:flatten\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Adapter.php
-
-		-
 			message: '#^Parameter \#1 \$data of function http_build_query expects array\|object, array\|string given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Domains\\Adapter\:\:flatten\(\) expects array, array\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, bool\|string given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Adapter.php
 
 		-
@@ -68,24 +38,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#3 \$length of function substr expects int\|null, int\<0, max\>\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects array\<int, string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, array\|string\|false\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Adapter.php
-
-		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string\|null, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Adapter.php
@@ -589,12 +541,6 @@ parameters:
 			path: src/Registrar/Adapter/NameCom.php
 
 		-
-			message: '#^Parameter \#5 \$headers of method Utopia\\Psr7\\Request\\Factory\:\:body\(\) expects array\<string, array\<int, string\>\|string\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Registrar/Adapter/NameCom.php
-
-		-
 			message: '#^Parameter \$nameservers of class Utopia\\Domains\\Registrar\\Domain constructor expects array\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -932,12 +878,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#4 \$domain of method Utopia\\Domains\\Registrar\\Adapter\\OpenSRS\:\:buildEnvelop\(\) expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Registrar/Adapter/OpenSRS.php
-
-		-
-			message: '#^Parameter \#4 \$headers of method Utopia\\Psr7\\Request\\Factory\:\:xml\(\) expects array\<string, array\<int, string\>\|string\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Registrar/Adapter/OpenSRS.php

@@ -13,15 +13,16 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
+use Utopia\Database\SetType;
 use Utopia\Emails\Email;
 
 class Base extends Action
 {
-    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ?bool $passwordPwned = null): Document
+    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, ?bool $passwordPwned = null): Document
     {
         $name = $name ?? '';
         $plaintextPassword = $password;
@@ -41,8 +42,8 @@ class Base extends Action
 
         try {
             $userId = $userId == 'unique()'
-                ? ID::unique()
-                : ID::custom($userId);
+                ? Id::unique()
+                : Id::custom($userId);
 
             if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
                 $personalDataValidator = new PersonalData(
@@ -99,17 +100,16 @@ class Base extends Action
 
             $isHashed = !$hash instanceof Plaintext;
 
-            $defaultHash = new ProofsPassword();
             if (!empty($password)) {
-                if (!$isHashed) { // Password was never hashed, hash it with the default hash
-                    $hashedPassword = $defaultHash->hash($password);
-                    $hash = $defaultHash->getHash();
+                if (!$isHashed) { // Password was never hashed, hash it with the configured default
+                    $hashedPassword = $proofForPassword->hash($password);
+                    $hash = $proofForPassword->getHash();
                 } else {
                     $hashedPassword = $password;
                 }
             } else {
                 // when password is not provided, plaintext was set as the default hash causing the issue
-                $hash = $defaultHash->getHash();
+                $hash = $proofForPassword->getHash();
                 $isHashed = !$hash instanceof Plaintext;
             }
 
@@ -172,7 +172,7 @@ class Base extends Action
                         Query::equal('identifier', [$email]),
                     ]);
                     if (!$existingTarget->isEmpty()) {
-                        $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                        $user->setAttribute('targets', $existingTarget, SetType::Append);
                     }
                 }
             }
@@ -196,7 +196,7 @@ class Base extends Action
                         Query::equal('identifier', [$phone]),
                     ]);
                     if (!$existingTarget->isEmpty()) {
-                        $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                        $user->setAttribute('targets', $existingTarget, SetType::Append);
                     }
                 }
             }

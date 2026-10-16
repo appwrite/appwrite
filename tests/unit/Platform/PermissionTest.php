@@ -6,8 +6,8 @@ namespace Tests\Unit\Platform;
 
 use Appwrite\Platform\Permission;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Helpers\Permission as DbPermission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission as DbPermission;
+use Utopia\Database\Role;
 
 final class PermissionTest extends TestCase
 {

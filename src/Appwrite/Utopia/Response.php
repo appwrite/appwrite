@@ -122,6 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';
+    public const MODEL_TOKEN_SECRET = 'tokenSecret';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
@@ -131,6 +132,11 @@ class Response extends SwooleResponse
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
     public const MODEL_MFA_CHALLENGE_SECRET = 'mfaChallengeSecret';
     public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
+
+    // Passkeys
+    public const MODEL_PASSKEY = 'passkey';
+    public const MODEL_PASSKEY_LIST = 'passkeyList';
+    public const MODEL_PASSKEY_CHALLENGE = 'passkeyChallenge';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -263,6 +269,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
     public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
+    public const MODEL_POLICY_PASSWORD_ROTATION = 'policyPasswordRotation';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -274,6 +281,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_DENY_DISPOSABLE_EMAIL = 'policyDenyDisposableEmail';
     public const MODEL_POLICY_DENY_FREE_EMAIL = 'policyDenyFreeEmail';
     public const MODEL_POLICY_DENY_CORPORATE_EMAIL = 'policyDenyCorporateEmail';
+    public const MODEL_POLICY_PASSKEY = 'policyPasskey';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM_APPLE = 'platformApple';
@@ -528,6 +536,12 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
+        foreach ($data as $attribute => $value) {
+            if ($value instanceof \BackedEnum) {
+                $data->setAttribute($attribute, $value->value);
+            }
+        }
+
         $data = $model->filter($data);
 
         if ($model->isAny()) {
@@ -565,20 +579,7 @@ class Response extends SwooleResponse
 
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
-                                $condition = false;
-                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
-
-                                    if (\is_array($val)) {
-                                        $condition = \in_array($item->getAttribute($attribute), $val);
-                                    } else {
-                                        $condition = $item->getAttribute($attribute) === $val;
-                                    }
-
-                                    if (!$condition) {
-                                        break;
-                                    }
-                                }
-                                if ($condition) {
+                                if ($this->getModel($type)->matches($item)) {
                                     $ruleType = $type;
                                     break;
                                 }
@@ -588,7 +589,11 @@ class Response extends SwooleResponse
                         }
 
                         if ($ruleType === null || !self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
+                            $typeValue = $item->getAttribute('type');
+                            if ($typeValue instanceof \BackedEnum) {
+                                $typeValue = $typeValue->value;
+                            }
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ', type: ' . (\is_scalar($typeValue) ? (string) $typeValue : \get_debug_type($typeValue)) . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);
@@ -609,6 +614,12 @@ class Response extends SwooleResponse
                 if ((!$isPrivilegedUser && !$isAppUser) && !$this->showSensitive) {
                     $data->setAttribute($key, '');
                 }
+            }
+
+            if ($rule['type'] === Model::TYPE_DATETIME) {
+                $data->setAttribute($key, $rule['array']
+                    ? \array_map(Model::formatDatetime(...), $data[$key])
+                    : Model::formatDatetime($data[$key]));
             }
 
             $output[$key] = $data[$key];

@@ -14,7 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Platform\Action;
@@ -45,6 +45,7 @@ class Create extends Action
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
             ->label('event', 'webhooks.[webhookId].create')
+            ->label('limits', ['webhooks'])
             ->label('audits.event', 'webhook.create')
             ->label('audits.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
@@ -62,15 +63,16 @@ class Create extends Action
                     )
                 ],
             ))
-            ->param('webhookId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getMaxUidLength()), 'Webhook ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', example: 'https://example.com/webhook')
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', example: '["users.*.create"]')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
-            ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
-            ->param('authPassword', '', new PasswordFormat(new Text(256)), 'Webhook HTTP password. Max length: 256 chars.', true)
+            ->param('authUsername', '', new Text(255), 'Webhook HTTP user. Max length: 255 chars.', true)
+            ->param('authPassword', '', new PasswordFormat(new Text(2048)), 'Webhook HTTP password. Max length: 2048 chars.', true)
             ->param('secret', null, new Nullable(new Text(256, 8)), 'Webhook secret key. If not provided, a new key will be generated automatically. Key must be at least 8 characters long, and at max 256 characters.', optional: true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the webhook.', true)
             ->inject('response')
             ->inject('project')
             ->inject('queueForEvents')
@@ -92,13 +94,14 @@ class Create extends Action
         string $authUsername,
         string $authPassword,
         ?string $secret,
+        string $description,
         Response $response,
         Document $project,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
         Authorization $authorization
     ) {
-        $webhookId = ($webhookId == 'unique()') ? ID::unique() : $webhookId;
+        $webhookId = ($webhookId == 'unique()') ? Id::unique() : $webhookId;
 
         $webhook = new Document([
             '$id' => $webhookId,
@@ -106,6 +109,7 @@ class Create extends Action
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'name' => $name,
+            'description' => $description,
             'events' => $events,
             'url' => $url,
             'security' => $tls,
