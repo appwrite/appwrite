@@ -22,12 +22,10 @@ bus.subscribe(Listener::new("audit").on::<Deployed>().callback(move |event, _| {
     if let Some(deployed) = event.downcast_ref::<Deployed>() {
         seen.lock().unwrap().push(format!("deployed {}", deployed.id));
     }
-    Ok(())
 }));
 let seen = log.clone();
 bus.subscribe(Listener::new("refunds").on::<Cancelled>().callback(move |_, _| {
     seen.lock().unwrap().push("cancelled".to_owned());
-    Ok(())
 }));
 
 bus.dispatch(&Deployed { id: "d1".into() })?;
@@ -84,7 +82,6 @@ bus.set_resolver(|name| match name {
 });
 bus.subscribe(Listener::new("notify").on::<Deployed>().inject("mailer").callback(move |_, deps| {
     out.lock().unwrap().push(deps[0].downcast_ref::<String>().cloned().unwrap_or_default());
-    Ok(())
 }));
 
 bus.dispatch(&Deployed)?;
@@ -133,7 +130,7 @@ let span = Span::init("deploy", None);
 let mut bus = Bus::new();
 bus.set_resolver(|name| Ok(Arc::new(name.to_owned()) as Resource));
 bus.subscribe(Listener::new("mailer").on::<Deployed>().callback(|_, _| Err(Failure::new("SMTP is down").with_code(503))));
-bus.subscribe(Listener::new("audit").on::<Deployed>().callback(|_, _| Ok(())));
+bus.subscribe(Listener::new("audit").on::<Deployed>().callback(|_, _| {}));
 
 bus.dispatch(&Deployed)?;
 assert_eq!(span.get("listener.mailer.success"), Value::from(false));

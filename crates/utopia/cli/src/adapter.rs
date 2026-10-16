@@ -108,14 +108,23 @@ impl Adapter for Generic {
 ///
 /// ```
 /// # futures_util::FutureExt::now_or_never(async {
+/// use std::sync::Arc;
 /// use std::sync::atomic::{AtomicUsize, Ordering};
-/// use utopia_cli::{Adapter, Workers};
+/// use utopia_cli::{Cli, Workers};
 ///
-/// let runs = AtomicUsize::new(0);
-/// let adapter = Workers::new(3);
-/// adapter.start(&|_worker| Box::pin(async { runs.fetch_add(1, Ordering::SeqCst); })).await;
+/// let runs = Arc::new(AtomicUsize::new(0));
+/// let mut cli = Cli::with_adapter(Arc::new(Workers::new(3)), &["app", "build"])?;
+/// let r = runs.clone();
+/// cli.task("build").action(move |_| {
+///     r.fetch_add(1, Ordering::SeqCst);
+///     async {}
+/// });
+///
+/// cli.run().await?;
 /// assert_eq!(runs.load(Ordering::SeqCst), 3);
-/// # }).unwrap();
+/// # Ok::<(), utopia_cli::Error>(())
+/// # }).unwrap()?;
+/// # Ok::<(), utopia_cli::Error>(())
 /// ```
 ///
 /// ```php

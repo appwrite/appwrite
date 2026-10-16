@@ -113,7 +113,6 @@ impl Init {
 /// let mut root = Action::new();
 /// root.set_http_method("GET").set_http_path("/").inject("response").callback(Callback::http(async |scope| {
 ///     scope.response.send(b"Hello World!");
-///     Ok(())
 /// }));
 /// let mut service = Service::new(ServiceType::HTTP);
 /// service.add_action("root", root);

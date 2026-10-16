@@ -39,7 +39,6 @@
 //! bus.set_resolver(|name| Ok(Arc::new(format!("{name}:resolved")) as Resource));
 //! bus.subscribe(Listener::new("mailer").on::<Deployed>().inject("mailer").callback(move |_event, deps| {
 //!     seen.lock().unwrap().push(deps[0].downcast_ref::<String>().cloned().unwrap_or_default());
-//!     Ok(())
 //! }));
 //!
 //! bus.dispatch(&Deployed)?;
@@ -95,6 +94,25 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// PHP: the callable given to `callback()`, called as
 /// `$callback($event, ...$dependencies)`.
 pub type Callback = Arc<dyn Fn(&dyn Event, &[Resource]) -> Result<(), Failure> + Send + Sync>;
+
+/// What a callback returns: nothing when it cannot fail, or a [`Result`]
+/// whose [`Failure`] the bus reports.
+pub trait IntoResult {
+    /// The callback's outcome as a [`Result`].
+    fn into_result(self) -> Result<(), Failure>;
+}
+
+impl IntoResult for () {
+    fn into_result(self) -> Result<(), Failure> {
+        Ok(())
+    }
+}
+
+impl IntoResult for Result<(), Failure> {
+    fn into_result(self) -> Result<(), Failure> {
+        self
+    }
+}
 
 /// Resolves a dependency by name.
 ///
@@ -352,11 +370,12 @@ impl Listener {
     /// Sets the callback.
     ///
     /// PHP: `callback($callback)`.
-    pub fn callback<F>(mut self, f: F) -> Self
+    pub fn callback<F, R>(mut self, f: F) -> Self
     where
-        F: Fn(&dyn Event, &[Resource]) -> Result<(), Failure> + Send + Sync + 'static,
+        F: Fn(&dyn Event, &[Resource]) -> R + Send + Sync + 'static,
+        R: IntoResult,
     {
-        self.callback = Some(Arc::new(f));
+        self.callback = Some(Arc::new(move |event, deps| f(event, deps).into_result()));
         self
     }
 
