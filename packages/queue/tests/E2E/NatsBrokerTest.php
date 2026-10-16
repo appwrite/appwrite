@@ -1497,6 +1497,186 @@ final class NatsBrokerTest extends TestCase
         $broker->close();
     }
 
+    public function testACommitAfterAReconnectStillAcknowledges(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(fn (): Connection => Connection::connect($url), ackWait: 2.0, maxDeliver: 3);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'a']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+
+            $this->assertTrue($broker->reconnect());
+            $broker->commit($queue, $message);
+
+            // Past ackWait: an unacknowledged delivery would be back by now.
+            usleep(3_000_000);
+            $this->assertSame([], $broker->receive($queue, 1), 'the committed message must not be redelivered');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testATopUpFetchThatFailsKeepsTheDeliveriesAlreadyFetched(): void
+    {
+        $state = new PublishFaults(0);
+        $broker = $this->receiveFaultBroker($state, 'stale');
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            foreach (['first', 'second', 'third'] as $task) {
+                $broker->publish($queue, ['task' => $task]);
+            }
+
+            // The first fetch goes through; the top-up fetch after it fails.
+            $state->skip = 1;
+            $state->faults = 1;
+            $batch = $broker->receive($queue, 2, 5);
+
+            $this->assertSame(0, $state->faults, 'the fault fired');
+            $this->assertCount(1, $batch, 'the delivery already fetched is returned');
+            $this->assertSame(['task' => 'first'], $batch[0]->getPayload());
+            $broker->commit($queue, $batch[0]);
+
+            // Past ackWait: a delivery dropped by the failed batch would be back by now.
+            usleep(2_500_000);
+            $rest = [];
+            while (($message = $broker->receive($queue, 1)[0] ?? null) instanceof Message) {
+                $rest[] = $message->getPayload()['task'];
+                $broker->commit($queue, $message);
+            }
+            sort($rest);
+            $this->assertSame(['second', 'third'], $rest, 'nothing is redelivered and nothing is lost');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function lostReceiveConnection(): iterable
+    {
+        // Nothing serviced the receive connection's pings during a long handler.
+        yield 'server reported the connection stale' => ['stale'];
+        yield 'socket closed before the fetch' => ['before'];
+    }
+
+    /**
+     * A broker whose transport fails the receive connection's fetch requests: it lets
+     * `$state->skip` of them through, then fails the next `$state->faults`.
+     */
+    private function receiveFaultBroker(PublishFaults $state, string $fault): Nats
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $fire = (static fn (TcpTransport $transport): Transport => new readonly class ($transport, $state, $fault) implements Transport {
+            public function __construct(private TcpTransport $inner, private PublishFaults $state, private string $fault)
+            {
+            }
+
+            public function connect(string $host, int $port, float $timeout): void
+            {
+                ++$this->state->connects;
+                $this->inner->connect($host, $port, $timeout);
+            }
+
+            public function write(string $data): int
+            {
+                if ($this->state->faults > 0 && str_contains($data, '.CONSUMER.MSG.NEXT.')) {
+                    if ($this->state->skip > 0) {
+                        --$this->state->skip;
+
+                        return $this->inner->write($data);
+                    }
+                    --$this->state->faults;
+                    $this->inner->close();
+                    if ($this->fault === 'before') {
+                        throw new ConnectionException('Connection closed by server');
+                    }
+                    $this->state->stale = true;
+
+                    return \strlen($data);
+                }
+
+                return $this->inner->write($data);
+            }
+
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                if ($this->state->stale) {
+                    $this->state->stale = false;
+
+                    return "-ERR 'Stale Connection'\r\n";
+                }
+
+                return $this->inner->read($maxBytes, $timeout);
+            }
+
+            public function readLine(?float $timeout = null): string
+            {
+                if ($this->state->stale) {
+                    $this->state->stale = false;
+
+                    return "-ERR 'Stale Connection'";
+                }
+
+                return $this->inner->readLine($timeout);
+            }
+
+            /** @param array<string, mixed> $options */
+            public function upgradeTls(array $options): void
+            {
+                $this->inner->upgradeTls($options);
+            }
+
+            public function isConnected(): bool
+            {
+                return $this->inner->isConnected();
+            }
+
+            public function close(): void
+            {
+                $this->inner->close();
+            }
+        });
+
+        return new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: static fn (): Transport => $fire(new TcpTransport()),
+        )), ackWait: 2.0, maxDeliver: 3);
+    }
+
+    #[DataProvider('lostReceiveConnection')]
+    public function testAReceiveSurvivesTheServerHavingClosedItsConnection(string $fault): void
+    {
+        $state = new PublishFaults(0);
+        $broker = $this->receiveFaultBroker($state, $fault);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'first']);
+            $broker->publish($queue, ['task' => 'second']);
+
+            $first = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $broker->commit($queue, $first);
+
+            // The long handler is over; the server dropped the idle receive socket.
+            $state->faults = 1;
+            $second = $broker->receive($queue, 2)[0] ?? null;
+
+            $this->assertSame(0, $state->faults, 'the fault fired');
+            $this->assertInstanceOf(Message::class, $second, 'the next message is still received');
+            $this->assertSame(['task' => 'second'], $second->getPayload());
+            $connects = $state->connects;
+            $broker->commit($queue, $second);
+            $this->assertSame($connects, $state->connects, 'the commit rides the commands connection the reconnect left alone');
+        } finally {
+            $broker->close();
+        }
+    }
+
     public function testReconnectDeclinesWhenThereIsNothingToRebuildFrom(): void
     {
         // Handed a live Connection rather than a factory, the broker cannot

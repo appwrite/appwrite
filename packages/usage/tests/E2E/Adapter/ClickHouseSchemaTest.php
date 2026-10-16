@@ -363,6 +363,90 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
         $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A converged table must not be altered again');
     }
 
+    public function testMigrateRealignsSkipIndexesWhoseExpressionOrTypeDrifted(): void
+    {
+        $adapter = $this->migrationAdapter('utopia_usage_schema_index_drift');
+        $table = $this->resolveTableName($adapter, 'getGaugesTableName');
+        $gaugesTable = "`{$this->databaseName($adapter)}`.`{$table}`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$gaugesTable}");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+        $this->assertTrue($usage->addBatch([[
+            'tenant' => '1',
+            'metric' => 'storage',
+            'value' => 1,
+            'tags' => ['service' => 'storage', 'resourceType' => 'bucket', 'resourceId' => 'b1'],
+        ]], Usage::TYPE_GAUGE));
+
+        $this->queryRaw($adapter, "ALTER TABLE {$gaugesTable} DROP INDEX `index-resourceType`, DROP INDEX `index-resourceId`");
+        $this->queryRaw($adapter, "ALTER TABLE {$gaugesTable} ADD INDEX `index-resourceType` (`service`) TYPE set(0) GRANULARITY 1, ADD INDEX `index-resourceId` (`resourceId`) TYPE set(0) GRANULARITY 1");
+        $this->assertSame(['expression' => 'service', 'type' => 'set(0)'], $this->skipIndexes($adapter, $table)['index-resourceType']);
+        $this->assertSame(['expression' => 'resourceId', 'type' => 'set(0)'], $this->skipIndexes($adapter, $table)['index-resourceId']);
+
+        $usage->migrate();
+
+        $indexes = $this->skipIndexes($adapter, $table);
+        $realigned = $indexes;
+        $this->assertSame(['expression' => 'resourceType', 'type' => 'set(0)'], $indexes['index-resourceType'], 'An index whose expression drifted must be recreated on the defined column');
+        $this->assertSame(['expression' => 'resourceId', 'type' => 'bloom_filter'], $indexes['index-resourceId'], 'An index whose type drifted must be recreated with the defined type');
+        $this->assertSame(['expression' => 'service', 'type' => 'set(0)'], $indexes['index-service'], 'An index that matches its definition must be left as it is');
+        $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceType`', $this->mutationCommands($adapter, $table));
+        $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceId`', $this->mutationCommands($adapter, $table));
+        $this->assertStringNotContainsString('MATERIALIZE INDEX `index-service`', $this->mutationCommands($adapter, $table));
+
+        $mutations = $this->mutationCount($adapter, $table);
+        $usage->migrate();
+        $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A realigned table must not be altered again');
+        $this->assertSame($realigned, $this->skipIndexes($adapter, $table));
+    }
+
+    /**
+     * Production tables predate the `resource` -> `resourceType` rename: their
+     * index on `resourceType` is still named `index-resource`, which the
+     * definition no longer has, so `index-resourceType` duplicates it.
+     */
+    public function testMigrateDropsAnIndexThatDuplicatesADefinedIndexUnderAnotherName(): void
+    {
+        $adapter = $this->migrationAdapter('utopia_usage_schema_index_renamed');
+        $database = $this->databaseName($adapter);
+        $tables = [
+            $this->resolveTableName($adapter, 'getGaugesTableName') => 'set(0)',
+            $this->resolveTableName($adapter, 'getEventsTableName') => 'bloom_filter',
+        ];
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        foreach ($tables as $table => $type) {
+            $this->queryRaw($adapter, "DROP TABLE IF EXISTS `{$database}`.`{$table}`");
+        }
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        foreach ($tables as $table => $type) {
+            $this->queryRaw($adapter, "ALTER TABLE `{$database}`.`{$table}` DROP INDEX `index-resourceType`");
+            $this->queryRaw($adapter, "ALTER TABLE `{$database}`.`{$table}` ADD INDEX `index-resource` (`resourceType`) TYPE {$type} GRANULARITY 1, ADD INDEX `index-custom` (`metric`) TYPE bloom_filter GRANULARITY 1");
+            $this->assertArrayNotHasKey('index-resourceType', $this->skipIndexes($adapter, $table));
+        }
+
+        $usage->migrate();
+
+        foreach ($tables as $table => $type) {
+            $indexes = $this->skipIndexes($adapter, $table);
+            $this->assertArrayNotHasKey('index-resource', $indexes, "{$table}: the stale duplicate of index-resourceType must be dropped");
+            $this->assertSame(['expression' => 'resourceType', 'type' => $type], $indexes['index-resourceType'], "{$table}: the defined index must replace it");
+            $this->assertSame(['expression' => 'metric', 'type' => 'bloom_filter'], $indexes['index-custom'], "{$table}: an index that duplicates nothing must be left as it is");
+            $this->assertStringContainsString('MATERIALIZE INDEX `index-resourceType`', $this->mutationCommands($adapter, $table), "{$table}: the replacement must be built for the parts the duplicate covered");
+
+            $mutations = $this->mutationCount($adapter, $table);
+            $usage->migrate();
+            $this->assertSame($mutations, $this->mutationCount($adapter, $table), "{$table}: a realigned table must not be altered again");
+            $this->assertSame($indexes, $this->skipIndexes($adapter, $table));
+        }
+    }
+
     public function testMigrateCreatesNewTablesWithTheRetention(): void
     {
         $adapter = new ClickHouseAdapter(
@@ -495,6 +579,64 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
             'type' => is_string($row['type'] ?? null) ? $row['type'] : '',
             'codec' => is_string($row['codec'] ?? null) ? $row['codec'] : '',
         ];
+    }
+
+    private function migrationAdapter(string $namespace): ClickHouseAdapter
+    {
+        return new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: $namespace,
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+        );
+    }
+
+    /**
+     * @return array<string, array{expression: string, type: string}>
+     */
+    private function skipIndexes(ClickHouseAdapter $adapter, string $table): array
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $json = json_decode($raw, true);
+        $rows = is_array($json) && is_array($json['data'] ?? null) ? $json['data'] : [];
+
+        $indexes = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['name'] ?? null) && is_string($row['expr'] ?? null) && is_string($row['type_full'] ?? null)) {
+                $indexes[$row['name']] = ['expression' => $row['expr'], 'type' => $row['type_full']];
+            }
+        }
+        ksort($indexes);
+
+        return $indexes;
+    }
+
+    private function mutationCommands(ClickHouseAdapter $adapter, string $table): string
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT command FROM system.mutations WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $json = json_decode($raw, true);
+        $rows = is_array($json) && is_array($json['data'] ?? null) ? $json['data'] : [];
+
+        $commands = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['command'] ?? null)) {
+                $commands[] = $row['command'];
+            }
+        }
+
+        return implode(PHP_EOL, $commands);
     }
 
     private function mutationCount(ClickHouseAdapter $adapter, string $table): int
