@@ -362,6 +362,358 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    public function testADelayedRetryFreesItsInFlightSlotForTheNextOne(): void
+    {
+        // One slot, as above, but the failure is an ordinary one. A NAK keeps it in the
+        // consumer's pending set for the whole 30s backoff; scheduled onto the delay
+        // stream, the original is acknowledged and the slot is free at once.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(
+            Connection::connect($url),
+            ackWait: 30.0,
+            maxDeliver: 5,
+            backoff: [30.0, 60.0],
+            maxAckPending: 1,
+            delayedRetries: true,
+        );
+        $admin = Connection::connect($url);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'flaky']);
+            $broker->publish($queue, ['task' => 'good']);
+
+            $flaky = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $flaky);
+            $this->assertSame('flaky', $flaky->getPayload()['task']);
+            $broker->reject($queue, $flaky);
+
+            $good = $broker->receive($queue, 3)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $good, 'the slot must come back while the retry waits out its backoff');
+            $this->assertSame('good', $good->getPayload()['task']);
+            $broker->commit($queue, $good);
+
+            // Waiting, not lost.
+            $delay = $admin->jetStream()->getStreamInfo('Q_' . strtoupper($queue->name) . '_DELAY');
+            $this->assertSame(1, $delay->state->messages, 'the retry is held on the delay stream');
+            $this->assertSame(0, $broker->getQueueSize($queue), 'and nothing is left pending on the work stream');
+        } finally {
+            $broker->close();
+            $admin->close();
+        }
+    }
+
+    public function testADelayedRetryArrivesAfterItsBackoffWithItsAttemptCounted(): void
+    {
+        $broker = new Nats(
+            Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'),
+            ackWait: 1.0,
+            maxDeliver: 5,
+            backoff: [1.0, 3.0],
+            delayedRetries: true,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'flaky']);
+
+            $first = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $this->assertSame(0, $first->getAttempts());
+            $broker->reject($queue, $first);
+
+            $second = $broker->receive($queue, 4)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $second);
+            $this->assertSame('flaky', $second->getPayload()['task']);
+            $this->assertNotSame($first->getSequence(), $second->getSequence(), 'a scheduled copy, not a redelivery of the original');
+            $this->assertSame(1, $second->getAttempts());
+
+            // The second entry, 3s: nothing inside one second, then the retry.
+            $rejected = microtime(true);
+            $broker->reject($queue, $second);
+            $this->assertSame([], $broker->receive($queue, 1), 'the retry arrived before its 3s backoff');
+
+            $third = $broker->receive($queue, 4)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $third);
+            $this->assertGreaterThanOrEqual(3.0, microtime(true) - $rejected);
+            $this->assertSame(2, $third->getAttempts());
+            $broker->commit($queue, $third);
+
+            $this->assertSame(0, $broker->getQueueSize($queue));
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testADelayedRetryIsDeadLetteredOnceItsAttemptsAreSpent(): void
+    {
+        // Every copy starts JetStream's count at one, so only the header can say a copy
+        // is the last attempt: without it the job would be rescheduled forever.
+        $broker = new Nats(
+            Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'),
+            ackWait: 1.0,
+            maxDeliver: 3,
+            backoff: [1.0],
+            delayedRetries: true,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'doomed']);
+
+            $sequences = [];
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                $message = $broker->receive($queue, 4)[0] ?? null;
+                $this->assertInstanceOf(Message::class, $message, "attempt {$attempt} never arrived");
+                $this->assertSame($attempt, $message->getAttempts());
+                $sequences[] = $message->getSequence();
+                $broker->reject($queue, $message);
+            }
+
+            $this->assertCount(3, array_unique($sequences), 'each attempt after the first is a scheduled copy');
+            $this->assertSame(1, $broker->getQueueSize($queue, true), 'the third failure is dead-lettered');
+            $this->assertSame([], $broker->receive($queue, 3), 'and not scheduled again');
+            $this->assertSame(0, $broker->getQueueSize($queue));
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testARetryWhoseAckWasLostIsScheduledOnce(): void
+    {
+        // The schedule is stored and the ack of the original is lost on the way out, so
+        // the original comes back after ackWait and fails again. Its reject has to find
+        // the schedule already made -- by then fired, so only its id can tell.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $transport = new TcpTransport();
+        $fault = $this->createStub(Transport::class);
+        foreach (['connect', 'read', 'readLine', 'upgradeTls', 'isConnected', 'close'] as $method) {
+            $fault->method($method)->willReturnCallback($transport->$method(...));
+        }
+        $state = new class () {
+            public bool $fail = false;
+        };
+        $failure = new ConnectionException('Lost acknowledgement');
+        $fault->method('write')->willReturnCallback(static function (string $data) use ($transport, $state, $failure): int {
+            if ($state->fail && str_contains($data, '$JS.ACK.')) {
+                $state->fail = false;
+                throw $failure;
+            }
+
+            return $transport->write($data);
+        });
+        $connections = 0;
+        $reported = [];
+        $broker = new Nats(
+            function () use ($url, $fault, &$connections): Connection {
+                $connections++;
+
+                // The second connection is the commands connection, which carries the acks.
+                return Connection::connect(new ConnectionOptions(
+                    servers: $url,
+                    transportFactory: fn (): Transport => $connections === 2 ? $fault : new TcpTransport(),
+                ));
+            },
+            ackWait: 2.0,
+            maxDeliver: 5,
+            backoff: [2.0, 4.0],
+            onError: static function (\Throwable $error) use (&$reported): void {
+                $reported[] = $error;
+            },
+            delayedRetries: true,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'flaky']);
+            $original = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $original);
+
+            $state->fail = true;
+            $broker->reject($queue, $original);
+            $this->assertFalse($state->fail, 'the ack was sent, and lost');
+
+            // The retry fires at 2s and the original is redelivered at 2s. The original
+            // is rejected again only after the retry has fired, so the second reject
+            // cannot be absorbed by replacing a schedule that is still waiting. A second
+            // schedule would be due 4s later, inside this window.
+            $retries = [];
+            $redeliveries = 0;
+            $deadline = microtime(true) + 10.0;
+            while (microtime(true) < $deadline) {
+                $message = $broker->receive($queue, 1)[0] ?? null;
+                if (!$message instanceof Message) {
+                    continue;
+                }
+                if ($message->getSequence() === $original->getSequence()) {
+                    $redeliveries++;
+                    usleep(1_000_000);
+                    $broker->reject($queue, $message);
+
+                    continue;
+                }
+                $retries[] = $message->getAttempts();
+                $broker->commit($queue, $message);
+            }
+
+            $this->assertSame(1, $redeliveries, 'the original came back once its ack was lost');
+            $this->assertSame([1], $retries, 'one retry, however many times the original was rejected');
+            $this->assertContains($failure, $reported, 'the lost ack is reported');
+            $this->assertSame(0, $broker->getQueueSize($queue));
+        } finally {
+            $broker->close();
+        }
+    }
+
+    public function testWithoutDelayedRetriesARejectIsNakdAsBefore(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $broker = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 3, backoff: [1.0]);
+        $admin = Connection::connect($url);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'flaky']);
+            $first = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $broker->reject($queue, $first);
+
+            $second = $broker->receive($queue, 3)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $second);
+            $this->assertSame($first->getSequence(), $second->getSequence(), 'redelivered by the NAK, not copied');
+            $this->assertSame(1, $second->getAttempts());
+            $broker->commit($queue, $second);
+
+            $js = $admin->jetStream();
+            $this->assertNull($js->getStreamInfo('Q_' . strtoupper($queue->name))->config->sources, 'the work stream sources nothing');
+            try {
+                $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DELAY');
+                $this->fail('a broker without delayedRetries created a delay stream');
+            } catch (JetStreamException $e) {
+                $this->assertSame(404, $e->apiError?->code);
+            }
+        } finally {
+            $broker->close();
+            $admin->close();
+        }
+    }
+
+    public function testABrokerWithoutDelayedRetriesKeepsTheDelaySource(): void
+    {
+        // A fleet part-way through enabling the flag, or turning it off: a process
+        // without it rewrites the work stream, and the retries already waiting must
+        // still come back.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $enabled = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5, backoff: [1.0, 3.0], delayedRetries: true);
+        $disabled = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5, backoff: [1.0, 3.0]);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $enabled->publish($queue, ['task' => 'flaky']);
+            $message = $enabled->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+            $enabled->reject($queue, $message);
+
+            $disabled->provision($queue);
+
+            $retry = $disabled->receive($queue, 4)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $retry, 'the retry must still be sourced back after the rewrite');
+            $this->assertSame('flaky', $retry->getPayload()['task']);
+            $this->assertSame(1, $retry->getAttempts());
+            $disabled->commit($queue, $retry);
+        } finally {
+            $enabled->close();
+            $disabled->close();
+        }
+    }
+
+    public function testARequireBrokerNaksWhenTheWorkStreamDoesNotSourceTheDelayStream(): void
+    {
+        // What a broker from before delayed retries leaves behind: the delay stream is
+        // there, but its own provisioning rewrote the work stream without the source. A
+        // schedule stored there would never come back.
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $owner = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 3, backoff: [1.0], delayedRetries: true);
+        $admin = Connection::connect($url);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $reported = [];
+        $adopter = new Nats(
+            Connection::connect($url),
+            ackWait: 1.0,
+            maxDeliver: 3,
+            backoff: [1.0],
+            onError: static function (\Throwable $error) use (&$reported): void {
+                $reported[] = $error;
+            },
+            provisioning: Provisioning::Require,
+            delayedRetries: true,
+        );
+
+        try {
+            $owner->provision($queue);
+            $js = $admin->jetStream();
+            $config = $js->getStreamInfo('Q_' . strtoupper($queue->name))->config;
+            $js->updateStream(new \Utopia\NATS\JetStream\StreamConfig(
+                name: $config->name,
+                subjects: $config->subjects,
+                retention: \Utopia\NATS\JetStream\RetentionPolicy::WorkQueue,
+                duplicateWindow: $config->duplicateWindow,
+                metadata: $config->metadata,
+            ));
+
+            $owner->publish($queue, ['task' => 'flaky']);
+            $first = $adopter->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $adopter->reject($queue, $first);
+
+            $second = $adopter->receive($queue, 3)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $second, 'the reject must not schedule where nothing brings it back');
+            $this->assertSame($first->getSequence(), $second->getSequence(), 'NAK\'d, as before delayed retries');
+            $adopter->commit($queue, $second);
+
+            $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DELAY')->state->messages);
+            $this->assertCount(1, $reported, 'the fallback is reported');
+        } finally {
+            $owner->close();
+            $adopter->close();
+            $admin->close();
+        }
+    }
+
+    public function testAReleasedRetryKeepsTheAttemptsBeforeIt(): void
+    {
+        $broker = new Nats(
+            Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'),
+            ackWait: 1.0,
+            maxDeliver: 5,
+            backoff: [1.0, 3.0],
+            delayedRetries: true,
+        );
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            $broker->publish($queue, ['task' => 'flaky']);
+            $first = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $first);
+            $broker->reject($queue, $first);
+
+            $retry = $broker->receive($queue, 4)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $retry);
+            $this->assertSame(1, $retry->getAttempts());
+
+            // A stopping worker hands it back unrun; the failure before it still counts.
+            $broker->release($queue, $retry);
+
+            $back = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $back);
+            $this->assertNotSame($retry->getSequence(), $back->getSequence(), 'requeued as a new message');
+            $this->assertSame(1, $back->getAttempts());
+            $broker->commit($queue, $back);
+        } finally {
+            $broker->close();
+        }
+    }
+
     public function testUncommittedMessageIsRedeliveredAfterAckWait(): void
     {
         // A worker that receives but never commits (crash/OOM) must not lose the
