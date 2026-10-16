@@ -365,6 +365,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
         "packages/vcs/",
         "packages/detector/"
       ]
@@ -455,7 +456,9 @@
       "paths": [
         "app/mqtt.php",
         "src/Appwrite/Mqtt/",
-        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+        "src/Appwrite/Messaging/Adapter/Mqtt.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "src/Appwrite/Platform/Workers/Messaging.php"
       ]
     }
   ],

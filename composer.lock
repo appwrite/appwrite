@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52a2ace4286f9a0e74fab03c94cb3bc5",
+    "content-hash": "052d764d2d2bb57950daeb7a017c9e3d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4426,16 +4426,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.1.4",
+            "version": "8.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "77906eb2bcf78c664c43b3680e9cd082e3c59938"
+                "reference": "71540530f91d4932ece91ee87c5d1869205dde7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/77906eb2bcf78c664c43b3680e9cd082e3c59938",
-                "reference": "77906eb2bcf78c664c43b3680e9cd082e3c59938",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/71540530f91d4932ece91ee87c5d1869205dde7a",
+                "reference": "71540530f91d4932ece91ee87c5d1869205dde7a",
                 "shasum": ""
             },
             "require": {
@@ -4449,8 +4449,8 @@
                 "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "^1.5.4",
                 "utopia-php/pools": "^2.0",
-                "utopia-php/query": "^0.7",
-                "utopia-php/validators": "^1.0"
+                "utopia-php/query": "^0.7.1",
+                "utopia-php/validators": "^1.0 || ^2.0"
             },
             "require-dev": {
                 "brianium/paratest": "^7.20",
@@ -4493,9 +4493,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.1.4"
+                "source": "https://github.com/utopia-php/database/tree/8.3.4"
             },
-            "time": "2026-10-15T06:04:06+00:00"
+            "time": "2026-10-16T05:50:10+00:00"
         },
         {
             "name": "utopia-php/mongo",

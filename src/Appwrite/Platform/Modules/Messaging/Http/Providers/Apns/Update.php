@@ -117,7 +117,9 @@ class Update extends Action
         }
 
         if (!empty($bundleId)) {
-            $credentials['bundle'] = $bundleId;
+            // Delivery and target routing read bundleId; drop the stale key earlier updates wrote instead.
+            $credentials['bundleId'] = $bundleId;
+            unset($credentials['bundle']);
         }
 
         $provider->setAttribute('credentials', $credentials);

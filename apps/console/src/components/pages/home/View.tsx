@@ -53,6 +53,8 @@ import {
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
 import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
+import { getOrganizationSchema, getWebSiteSchema } from '@/lib/seo/organization'
 
 const HOME_COPY = getEnglishCatalog().website.home
 
@@ -267,6 +269,15 @@ export function getHomePageHead() {
         as: 'image',
         href: HOME_HERO_DARK_SRC,
         media: '(prefers-color-scheme: dark)',
+      },
+    ],
+    scripts: [
+      {
+        type: 'application/ld+json',
+        children: stringifyJsonLd({
+          '@context': 'https://schema.org',
+          '@graph': [getOrganizationSchema(), getWebSiteSchema()],
+        }),
       },
     ],
   }

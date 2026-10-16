@@ -261,6 +261,139 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
         }
     }
 
+    public function testMigrateAddsMissingColumnsWithoutApplyingRetention(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_migrate',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+            retention: 30,
+        );
+        $database = $this->databaseName($adapter);
+        $eventsTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsTableName')}`";
+        $dailyTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsDailyTableName')}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+        $this->queryRaw($adapter, "
+            CREATE TABLE {$eventsTable} (
+                id String,
+                metric String,
+                value Int64,
+                time DateTime64(3, 'UTC'),
+                tenant Nullable(String)
+            )
+            ENGINE = MergeTree()
+            ORDER BY (tenant, metric, time, id)
+            PARTITION BY toYYYYMM(time)
+            SETTINGS allow_nullable_key = 1
+        ");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        $eventsDdl = $this->showCreateFor($adapter, $eventsTable);
+        foreach ($this->expectedDimAssertions(Metric::EVENT_COLUMNS, 'event') as $expected) {
+            $this->assertStringContainsString($expected, $eventsDdl);
+        }
+        $this->assertStringNotContainsString('TTL', $eventsDdl, 'migrate() must leave an existing table\'s retention as it is');
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $dailyTable), 'A table migrate() creates must carry the retention');
+
+        $this->assertTrue($usage->addBatch([[
+            'tenant' => '1',
+            'metric' => 'requests',
+            'value' => 1,
+            'tags' => ['ordinal' => '1'],
+        ]], Usage::TYPE_EVENT));
+
+        $usage->setup();
+
+        $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $eventsTable));
+        $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $dailyTable));
+    }
+
+    public function testMigrateConvergesColumnsThatPredateTheirTypeAndCodec(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_converge',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+        );
+        $database = $this->databaseName($adapter);
+        $table = $this->resolveTableName($adapter, 'getEventsTableName');
+        $eventsTable = "`{$database}`.`{$table}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} DROP INDEX `index-protocol`");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `protocol` Nullable(String) SETTINGS mutations_sync = 2");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} ADD INDEX `index-protocol` (`protocol`) TYPE set(0) GRANULARITY 1");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `accept` REMOVE CODEC");
+        $this->assertSame(['type' => 'Nullable(String)', 'codec' => ''], $this->columnShape($adapter, $table, 'protocol'));
+        $this->assertSame('', $this->columnShape($adapter, $table, 'accept')['codec']);
+        $this->assertStringContainsString('INDEX `index-accept` accept TYPE bloom_filter', $this->showCreateFor($adapter, $eventsTable));
+
+        $usage->migrate();
+
+        $this->assertSame('LowCardinality(Nullable(String))', $this->columnShape($adapter, $table, 'protocol')['type']);
+        $this->assertSame('CODEC(ZSTD(3))', $this->columnShape($adapter, $table, 'accept')['codec']);
+        $ddl = $this->showCreateFor($adapter, $eventsTable);
+        $this->assertStringContainsString('INDEX `index-protocol` protocol TYPE set(0) GRANULARITY 1', $ddl);
+        $this->assertStringContainsString('INDEX `index-accept` accept TYPE bloom_filter GRANULARITY 1', $ddl);
+
+        $mutations = $this->mutationCount($adapter, $table);
+        $usage->migrate();
+        $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A converged table must not be altered again');
+    }
+
+    public function testMigrateCreatesNewTablesWithTheRetention(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_migrate_retention',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+            retention: 30,
+        );
+        $database = $this->databaseName($adapter);
+        $eventsTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsTableName')}`";
+        $dailyTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getEventsDailyTableName')}`";
+        $gaugesTable = "`{$database}`.`{$this->resolveTableName($adapter, 'getGaugesTableName')}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$gaugesTable}");
+
+        new Usage($adapter)->migrate();
+
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $eventsTable));
+        $this->assertStringContainsString('TTL toDateTime(time) + toIntervalDay(30)', $this->showCreateFor($adapter, $dailyTable));
+        $this->assertStringNotContainsString('TTL', $this->showCreateFor($adapter, $gaugesTable));
+    }
+
     public function testRetentionAppliesTtlToEventsAndDailyTables(): void
     {
         $adapter = new ClickHouseAdapter(
@@ -344,6 +477,49 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
             $expected[] = "`{$column}` {$suffix}";
         }
         return $expected;
+    }
+
+    /**
+     * @return array{type: string, codec: string}
+     */
+    private function columnShape(ClickHouseAdapter $adapter, string $table, string $column): array
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT type, compression_codec AS codec FROM system.columns WHERE database = {database:String} AND table = {table:String} AND name = {column:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table, 'column' => $column],
+        );
+        $row = $this->firstRow($raw);
+
+        return [
+            'type' => is_string($row['type'] ?? null) ? $row['type'] : '',
+            'codec' => is_string($row['codec'] ?? null) ? $row['codec'] : '',
+        ];
+    }
+
+    private function mutationCount(ClickHouseAdapter $adapter, string $table): int
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $total = $this->firstRow($raw)['total'] ?? 0;
+
+        return is_numeric($total) ? (int) $total : 0;
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function firstRow(string $raw): array
+    {
+        $json = json_decode($raw, true);
+        if (!is_array($json) || !is_array($json['data'] ?? null) || !is_array($json['data'][0] ?? null)) {
+            return [];
+        }
+
+        return $json['data'][0];
     }
 
     private function showCreateFor(ClickHouseAdapter $adapter, string $fullName): string
