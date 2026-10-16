@@ -70,7 +70,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Daily at midnight': '毎日 0 時',
   'Daily at noon': '毎日 12 時',
   'Data sovereignty, compliance': 'データ主権、コンプライアンス',
-  'Default': 'デフォルト',
+  Default: 'デフォルト',
   'DDoS Mitigation': 'DDoS 対策',
   'DDoS protection': 'DDoS 保護',
   'Delete deployment': 'デプロイを削除',
@@ -488,8 +488,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'リポジトリの URL または owner/name は必須です',
   'Return immediately and run in the background. View the response on the executions tab when it completes.':
     '即座にレスポンスを返し、バックグラウンドで実行されます。完了したら実行タブでレスポンスを確認できます。',
-  'Run this function on a schedule using cron expressions.':
-    'Cron 式を使って、この関数をスケジュール実行できます。',
   'Run your function or connect a repository for deployments':
     '関数を実行するか、リポジトリを接続してデプロイできます',
   'Runs every 6 hours (00:00, 06:00, 12:00, 18:00)':
@@ -696,4 +694,77 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Trigger it': '実行する',
   'Run it over HTTP, on events in your project, or on a schedule.':
     'HTTP 経由、プロジェクト内のイベント、またはスケジュールで実行します。',
+  'Run this function on a schedule, every few minutes or with a cron expression.':
+    '数分ごとの間隔または Cron 式で、この関数をスケジュール実行します。',
+  'Schedule type': 'スケジュールの種類',
+  'Interval below your plan minimum': '間隔がプランの最小値を下回っています',
+  'This function keeps running on its current interval. A new interval must be {minutes} minutes or longer.':
+    'この関数は現在の間隔で引き続き実行されます。新しい間隔は {minutes} 分以上にする必要があります。',
+  'to use shorter intervals.': 'すると、より短い間隔を使用できます。',
+  'Your plan supports intervals of {minutes} minutes or longer.':
+    'ご利用のプランでは {minutes} 分以上の間隔を設定できます。',
+  'Upgrade to unlock': 'アップグレードで利用可能',
+  'Cron schedules are available on paid plans.':
+    'Cron スケジュールは有料プランで利用できます。',
+  'to use cron.': 'すると、Cron を使用できます。',
+  'Cron schedules are not available on your plan':
+    'ご利用のプランでは Cron スケジュールを利用できません',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'この関数は、間隔に切り替えるまで現在の Cron で引き続き実行されます。',
+  'to edit cron schedules.': 'すると、Cron スケジュールを編集できます。',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。',
+  'Interval length': '間隔の長さ',
+  'Interval unit': '間隔の単位',
+  'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。正確な時刻を指定する場合は Cron を使用してください。',
+  'Every day': '1 日ごと',
+  'Every {count} minutes': '{count} 分ごと',
+  'Every {count} hours': '{count} 時間ごと',
+  'Every {count} days': '{count} 日ごと',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'メールトリガーを有効にしました',
+  'Email trigger disabled': 'メールトリガーを無効にしました',
+  'Failed to update email trigger': 'メールトリガーの更新に失敗しました',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    '受信メールでこの関数をトリガーできるようにします。デフォルトはオフのため、有効にするまでメールは受け付けません。',
+  'Email trigger': 'メールトリガー',
+  'Inbound mail for this function is accepted.':
+    'この関数宛ての受信メールを受け付けます。',
+  'Inbound mail for this function is rejected.':
+    'この関数宛ての受信メールは拒否されます。',
+  'Default address': 'デフォルトアドレス',
+  'Enable the email trigger to receive mail at this address.':
+    'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
+  'Mail is delivered when this function has an active deployment.':
+    'この関数にアクティブなデプロイがある場合にメールが配信されます。',
+  // Inbound email (SMTP) custom domains
+  'Enable the email trigger under Settings → Executions before adding an email domain.':
+    'メールドメインを追加する前に、設定 → 実行 でメールトリガーを有効にしてください。',
+  'Email domain verified': 'メールドメインを検証しました',
+  'Failed to add email domain': 'メールドメインの追加に失敗しました',
+  'Verify email domain': 'メールドメインを検証',
+  'Add email domain': 'メールドメインを追加',
+  'Email domain': 'メールドメイン',
+  'Mail sent to any address on this domain runs this function. This is separate from HTTP domains and from outbound SMTP for the project.':
+    'このドメインの任意のアドレスに送信されたメールでこの関数が実行されます。HTTP ドメインやプロジェクトの送信 SMTP とは別の設定です。',
+  'After adding the domain, publish an MX record and a TXT ownership record, then verify.':
+    'ドメインを追加したら、MX レコードと所有権確認用の TXT レコードを公開してから検証してください。',
+  'Email domains': 'メールドメイン',
+  'Receive mail for this function on domains you own. The default address is on the Email card under Settings → Executions.':
+    '所有しているドメインでこの関数宛てのメールを受信します。デフォルトアドレスは 設定 → 実行 のメールカードに表示されます。',
+  'Enable the email trigger under Settings → Executions to add email domains.':
+    'メールドメインを追加するには、設定 → 実行 でメールトリガーを有効にしてください。',
+  'No email domains yet': 'メールドメインはまだありません',
+  'Add a domain you own, publish MX and TXT records, then verify to accept inbound mail.':
+    '所有しているドメインを追加し、MX と TXT レコードを公開して検証すると、受信メールを受け付けます。',
+  'Email domain has been deleted': 'メールドメインを削除しました',
+  'Point MX at Appwrite SMTP and prove ownership with a TXT record. No TLS certificate is issued for email domains.':
+    'MX を Appwrite SMTP に向け、TXT レコードで所有権を証明してください。メールドメインには TLS 証明書は発行されません。',
+  'MX target unavailable': 'MX ターゲットを取得できません',
+  'This region does not report its mail server target yet, so the MX record cannot be shown here.':
+    'このリージョンはまだメールサーバーのターゲットを公開していないため、ここに MX レコードを表示できません。',
+  Propagation: '反映',
+  'DNS changes can take up to 48 hours. The MX record must point straight at Appwrite on TCP port 25, not through a proxy.':
+    'DNS の変更が反映されるまで最大 48 時間かかることがあります。MX レコードはプロキシを経由せず、TCP ポート 25 の Appwrite を直接指す必要があります。',
 }

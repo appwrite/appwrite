@@ -35,7 +35,13 @@
       "src/Appwrite/Platform/Tasks/Version.php",
       "src/Appwrite/Platform/Tasks/Migrate.php",
       "src/Appwrite/Platform/Installer/",
-      "app/views/install/"
+      "app/views/install/",
+      "src/Appwrite/Migration/",
+      "src/Appwrite/SDK/Specification/Format",
+      "packages/openapi/",
+      "packages/nats/",
+      "packages/orchestration/",
+      "packages/queue/src/Broker/Nats.php"
     ]
   },
   "services": [
@@ -47,6 +53,8 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
         "app/controllers/api/account.php",
+        "src/Appwrite/Network/Validator/Origin.php",
+        "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
         "src/Appwrite/Auth/OIDC/",
         "src/Appwrite/Auth/Passkey/",
@@ -54,7 +62,8 @@
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/oAuthProviders.php",
         "packages/messaging/",
-        "app/config/locale/"
+        "app/config/locale/",
+        "packages/smtp/"
       ]
     },
     {
@@ -78,14 +87,24 @@
       "processes": 3,
       "documentsdb": true,
       "embedding": true,
-      "paths": ["src/Appwrite/Platform/Modules/Databases/"]
+      "paths": [
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php",
+        "packages/agents/"
+      ]
     },
     {
       "name": "TablesDB",
       "runner": "e2e-large",
       "functional": false,
       "processes": 3,
-      "paths": ["src/Appwrite/Platform/Modules/Databases/"]
+      "paths": [
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php",
+        "packages/agents/"
+      ]
     },
     {
       "name": "Functions",
@@ -101,7 +120,9 @@
         "src/Appwrite/Platform/Tasks/ScheduleFunctions.php",
         "src/Appwrite/Platform/Tasks/ScheduleExecutions.php",
         "src/Appwrite/Platform/Tasks/QueueRetry.php",
-        "packages/vcs/"
+        "packages/vcs/",
+        "src/Appwrite/Certificates/",
+        "packages/detector/"
       ]
     },
     {
@@ -138,7 +159,9 @@
         "src/Appwrite/Platform/Modules/Teams/",
         "src/Appwrite/Platform/Modules/Users/",
         "app/config/locale/",
-        "src/Appwrite/GraphQL/"
+        "src/Appwrite/GraphQL/",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php"
       ]
     },
     {
@@ -173,7 +196,8 @@
         "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
-        "src/Appwrite/Platform/Workers/Certificates.php"
+        "src/Appwrite/Platform/Workers/Certificates.php",
+        "src/Appwrite/Certificates/"
       ]
     },
     {
@@ -195,7 +219,9 @@
         "src/Appwrite/Platform/Modules/Teams/",
         "src/Appwrite/Platform/Modules/Users/",
         "src/Appwrite/Platform/Workers/Functions.php",
-        "src/Appwrite/Messaging/Adapter/Realtime.php"
+        "src/Appwrite/Messaging/Adapter/Realtime.php",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php"
       ]
     },
     {
@@ -208,7 +234,8 @@
         "src/Appwrite/Platform/Modules/Compute/",
         "src/Appwrite/Platform/Modules/VCS/",
         "src/Appwrite/Platform/Tasks/Screenshot.php",
-        "packages/vcs/"
+        "packages/vcs/",
+        "packages/detector/"
       ]
     },
     {
@@ -218,7 +245,8 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Proxy/",
-        "src/Appwrite/Platform/Workers/Certificates.php"
+        "src/Appwrite/Platform/Workers/Certificates.php",
+        "src/Appwrite/Certificates/"
       ]
     },
     {
@@ -251,7 +279,8 @@
         "src/Appwrite/Platform/Modules/Teams/",
         "src/Appwrite/Platform/Modules/Organization/",
         "src/Appwrite/Platform/Workers/Mails.php",
-        "app/config/locale/"
+        "app/config/locale/",
+        "packages/smtp/"
       ]
     },
     {
@@ -269,7 +298,9 @@
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Tasks/StatsResources.php",
         "src/Appwrite/Platform/Tasks/UsageSetup.php",
-        "src/Appwrite/Platform/Workers/Executions.php"
+        "src/Appwrite/Platform/Workers/Executions.php",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php"
       ]
     },
     {
@@ -281,7 +312,8 @@
         "src/Appwrite/Platform/Modules/Users/",
         "src/Appwrite/Auth/MFA/",
         "src/Appwrite/Auth/Passkey/",
-        "src/Appwrite/Platform/Workers/Mails.php"
+        "src/Appwrite/Platform/Workers/Mails.php",
+        "packages/smtp/"
       ]
     },
     {
@@ -310,7 +342,9 @@
         "src/Appwrite/Platform/Modules/Teams/",
         "src/Appwrite/Platform/Modules/Users/",
         "src/Appwrite/Platform/Workers/Webhooks.php",
-        "src/Appwrite/Platform/Tasks/QueueRetry.php"
+        "src/Appwrite/Platform/Tasks/QueueRetry.php",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php"
       ]
     },
     {
@@ -318,14 +352,23 @@
       "runner": "e2e",
       "functional": true,
       "processes": null,
-      "paths": ["src/Appwrite/Platform/Modules/VCS/", "packages/vcs/"]
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "packages/vcs/",
+        "packages/detector/"
+      ]
     },
     {
       "name": "VCSGitea",
       "runner": "e2e",
       "functional": false,
       "processes": null,
-      "paths": ["src/Appwrite/Platform/Modules/VCS/", "packages/vcs/"]
+      "paths": [
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
+        "packages/vcs/",
+        "packages/detector/"
+      ]
     },
     {
       "name": "Messaging",
@@ -337,7 +380,8 @@
         "src/Appwrite/Platform/Workers/Messaging.php",
         "src/Appwrite/Platform/Tasks/ScheduleMessages.php",
         "src/Appwrite/Messaging/Adapter/Push/",
-        "packages/messaging/"
+        "packages/messaging/",
+        "packages/smtp/"
       ]
     },
     {
@@ -350,7 +394,8 @@
         "src/Appwrite/Platform/Modules/Messaging/",
         "src/Appwrite/Platform/Workers/Notifications.php",
         "src/Appwrite/Messaging/Adapter/Push/",
-        "packages/messaging/"
+        "packages/messaging/",
+        "packages/smtp/"
       ]
     },
     {
@@ -362,7 +407,9 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Migrations/",
         "src/Appwrite/Platform/Modules/Databases/",
-        "src/Appwrite/Platform/Workers/Migrations.php"
+        "src/Appwrite/Platform/Workers/Migrations.php",
+        "src/Appwrite/Databases/",
+        "src/Appwrite/Utopia/Database/Validator/Indexes.php"
       ]
     },
     {
@@ -374,7 +421,8 @@
         "src/Appwrite/Platform/Modules/Project/",
         "app/controllers/api/project.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
-        "src/Appwrite/Platform/Workers/StatsUsage.php"
+        "src/Appwrite/Platform/Workers/StatsUsage.php",
+        "packages/smtp/"
       ]
     },
     {
@@ -408,7 +456,9 @@
       "paths": [
         "app/mqtt.php",
         "src/Appwrite/Mqtt/",
-        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+        "src/Appwrite/Messaging/Adapter/Mqtt.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "src/Appwrite/Platform/Workers/Messaging.php"
       ]
     }
   ],

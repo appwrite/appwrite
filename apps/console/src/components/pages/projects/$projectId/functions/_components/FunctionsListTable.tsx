@@ -26,6 +26,7 @@ import {
   resourceHasInProgressDeployment,
 } from '../../shared/DeploymentResourceStatusBadges'
 import { formatCronExpression } from '../CronScheduleEditor'
+import { formatInterval } from '@/lib/function-interval'
 import { FunctionContextMenu } from './FunctionContextMenu'
 import { useT } from '@/lib/i18n/translate'
 
@@ -34,7 +35,13 @@ function formatRuntimeLabel(runtime: string) {
   return runtime.split('-').join(' ')
 }
 
-export function FunctionCronBadge({ schedule }: { schedule: string }) {
+function FunctionScheduleBadge({
+  schedule,
+  interval,
+}: {
+  schedule?: string
+  interval: number
+}) {
   const t = useT()
 
   return (
@@ -42,11 +49,15 @@ export function FunctionCronBadge({ schedule }: { schedule: string }) {
       <TooltipTrigger asChild>
         <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3 shrink-0" />
-          {t('Cron')}
+          {interval > 0 ? t('Interval') : t('Cron')}
         </span>
       </TooltipTrigger>
       <TooltipContent>
-        <p>{t(formatCronExpression(schedule))}</p>
+        <p>
+          {interval > 0
+            ? formatInterval(interval, t)
+            : t(formatCronExpression(schedule ?? ''))}
+        </p>
       </TooltipContent>
     </Tooltip>
   )
@@ -54,20 +65,24 @@ export function FunctionCronBadge({ schedule }: { schedule: string }) {
 
 function FunctionListTriggers({
   schedule,
+  interval,
   eventCount,
 }: {
   schedule?: string
+  interval: number
   eventCount: number
 }) {
   const t = useT()
-  if (!schedule && eventCount === 0) {
+  if (!schedule && interval <= 0 && eventCount === 0) {
     return <span className="text-[12px] text-muted-foreground/50">-</span>
   }
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex items-center gap-1.5">
-        {schedule ? <FunctionCronBadge schedule={schedule} /> : null}
+        {schedule || interval > 0 ? (
+          <FunctionScheduleBadge schedule={schedule} interval={interval} />
+        ) : null}
         {eventCount > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -233,6 +248,7 @@ export function FunctionsListTable({
                   <TableCell className="px-4 py-3">
                     <FunctionListTriggers
                       schedule={func.schedule || undefined}
+                      interval={func.interval ?? 0}
                       eventCount={func.events?.length ?? 0}
                     />
                   </TableCell>

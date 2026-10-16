@@ -39,6 +39,11 @@ import {
 } from './constants'
 import { Dependencies } from './dependencies'
 import { keepNewerLatestDeployment } from '@/lib/utils/deployment-status'
+import { isFeatureEnabled } from '@/lib/console-profiles'
+import {
+  proxyRuleProtocolQuery,
+  type SmtpProxyRule,
+} from '@/lib/function-smtp-domain'
 
 const EMPTY_PROXY_RULES: Models.ProxyRule[] = []
 
@@ -141,6 +146,15 @@ export function buildFunctionUpdateParams(
   func: Models.Function,
   updates: Partial<Models.Function>,
 ): FunctionUpdateParams {
+  // Schedule and interval are mutually exclusive, so setting one clears the other.
+  const scheduleUpdates: Partial<Models.Function> = {}
+  if (updates.schedule && updates.interval === undefined) {
+    scheduleUpdates.interval = 0
+  }
+  if (updates.interval && updates.schedule === undefined) {
+    scheduleUpdates.schedule = ''
+  }
+
   return {
     functionId: func.$id,
     name: func.name,
@@ -148,6 +162,7 @@ export function buildFunctionUpdateParams(
     execute: func.execute || undefined,
     events: func.events || undefined,
     schedule: func.schedule || undefined,
+    interval: func.interval ?? 0,
     timeout: func.timeout || undefined,
     enabled: func.enabled ?? undefined,
     logging: func.logging ?? undefined,
@@ -167,6 +182,7 @@ export function buildFunctionUpdateParams(
     runtimeSpecification: func.runtimeSpecification,
     deploymentRetention: func.deploymentRetention,
     ...updates,
+    ...scheduleUpdates,
   } as unknown as FunctionUpdateParams
 }
 
@@ -551,6 +567,11 @@ export async function fetchFunctionDomains(
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
+    // SMTP rules share type=deployment; filter them out on the server so
+    // pagination and totals stay correct (see proxyRuleProtocolQuery).
+    ...(isFeatureEnabled('functionEmailDomains')
+      ? [proxyRuleProtocolQuery('http')]
+      : []),
     ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
@@ -831,6 +852,8 @@ export function functionDomainsQueryOptions(
   filterQueries?: string[],
 ) {
   const hasFilters = filterQueries !== undefined && filterQueries.length > 0
+  // The email domains flag adds a protocol filter, so toggling it must refetch.
+  const emailDomains = isFeatureEnabled('functionEmailDomains')
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -841,6 +864,7 @@ export function functionDomainsQueryOptions(
       limit,
       search,
       ...(hasFilters ? [filterQueries] : []),
+      ...(emailDomains ? ['email-domains'] : []),
     ],
     queryFn: () =>
       fetchFunctionDomains(
@@ -1528,6 +1552,149 @@ export function useCreateFunctionDomainRule(
         domain: domainNorm,
         functionId,
       })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}
+
+/**
+ * Query function to fetch SMTP (inbound email) proxy rules for a function.
+ * Only `protocol=smtp` rows, not HTTP function domains.
+ */
+export async function fetchFunctionSmtpDomains(
+  projectId: string,
+  functionId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  if (!projectId || !functionId) {
+    return { rules: [] as SmtpProxyRule[], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  // Filter on `protocol` server-side so pagination and totals only count SMTP
+  // rules (see proxyRuleProtocolQuery).
+  const queries = [
+    Query.equal('type', ['deployment']),
+    Query.equal('deploymentResourceType', 'function'),
+    Query.equal('deploymentResourceId', functionId),
+    Query.equal('trigger', 'manual'),
+    proxyRuleProtocolQuery('smtp'),
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+
+  const response = await projectSdk.proxy.listRules({ queries })
+
+  return {
+    rules: (response.rules || []) as SmtpProxyRule[],
+    total: response.total || 0,
+  }
+}
+
+export function functionSmtpDomainsQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: [
+      'proxy-rules',
+      'smtp',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+    ],
+    queryFn: () =>
+      fetchFunctionSmtpDomains(projectId!, functionId!, page, limit),
+    enabled:
+      !!projectId && !!functionId && isFeatureEnabled('functionEmailDomains'),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
+  })
+}
+
+/**
+ * Hook to fetch inbound email (SMTP) domains for a function.
+ */
+export function useFunctionSmtpDomains(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return useQuery(
+    functionSmtpDomainsQueryOptions(projectId, functionId, page, limit),
+  )
+}
+
+/**
+ * Create an SMTP rule with a raw POST: the console SDK has no method for it yet.
+ */
+export async function createSmtpDomainRule(
+  projectId: string,
+  params: { domain: string; functionId: string; branch?: string },
+): Promise<SmtpProxyRule> {
+  if (!projectId) {
+    throw new Error('Project ID is required')
+  }
+  const domain = params.domain.trim().toLowerCase()
+  const functionId = params.functionId.trim()
+  if (!domain || !functionId) {
+    throw new Error('Domain and Function ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const uri = new URL(`${projectSdk.client.config.endpoint}/proxy/rules/smtp`)
+  const payload: Record<string, string> = {
+    domain,
+    functionId,
+  }
+  if (params.branch?.trim()) {
+    payload.branch = params.branch.trim()
+  }
+
+  return (await projectSdk.client.call(
+    'post',
+    uri,
+    {
+      'X-Appwrite-Project': projectSdk.client.config.project,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    payload,
+  )) as SmtpProxyRule
+}
+
+/**
+ * Hook to create a custom inbound email (SMTP) domain for a function.
+ */
+export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      domain: string
+      functionId: string
+      branch?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await createSmtpDomainRule(projectId, params)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

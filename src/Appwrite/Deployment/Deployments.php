@@ -23,9 +23,9 @@ use Utopia\Console\Command;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\DSN\DSN;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -839,14 +839,15 @@ readonly class Deployments
     }
 
     /**
+     * Deployments are written only by the console, project keys and workers, which all run with authorization
+     * disabled, so no role is granted write access.
+     *
      * @return array<string>
      */
-    private static function permissions(): array
+    public static function permissions(): array
     {
         return [
             Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
         ];
     }
 

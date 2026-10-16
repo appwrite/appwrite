@@ -45,6 +45,7 @@ final class HandlerTest extends TestCase
             new Mqtt(new NoTelemetry(), new NullPubSub()),
             fn () => throw new \LogicException('deliver() must not touch the cache'),
             fn () => 5,
+            fn () => throw new \LogicException('deliver() must not read the clock'),
         );
     }
 

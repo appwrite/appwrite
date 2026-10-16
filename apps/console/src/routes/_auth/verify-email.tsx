@@ -62,8 +62,8 @@ function isInvalidTokenError(error: unknown): boolean {
  */
 const attemptedSecrets = new Set<string>()
 
-/** Accounts already sent a link by this page, so a remount does not mail another. */
-const sentVerifications = new Set<string>()
+/** Kept per tab, so a remount or reload does not mail another link. */
+const sentKey = (accountId: string) => `verify-email-sent:${accountId}`
 const RESEND_MUTATION_KEY = ['account', 'verification', 'email']
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
@@ -242,9 +242,9 @@ function VerifyEmailPage() {
   // Sign-up, OAuth2 and sign-in all land here, so this page sends the link;
   // impersonators cannot write to the account.
   useEffect(() => {
-    if (!accountId || sentVerifications.has(accountId)) return
+    if (!accountId || sessionStorage.getItem(sentKey(accountId))) return
     if (hasConsoleImpersonationSessionTarget()) return
-    sentVerifications.add(accountId)
+    sessionStorage.setItem(sentKey(accountId), '1')
     resendMutation.mutate()
   }, [accountId])
 

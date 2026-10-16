@@ -179,6 +179,7 @@ export const jaProjectMiscTranslations: Record<string, string> = {
   'Activity retention': 'アクティビティ保持',
   'Limited activity history': '制限されたアクティビティ履歴',
   'Open activity details': 'アクティビティの詳細を開く',
+  'View event': 'イベントを表示',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',

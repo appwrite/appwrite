@@ -437,4 +437,44 @@ final class RedisBrokerRecoveryTest extends RedisTestCase
         $this->assertSame([1, 2, 3, 4], $recovered);
     }
 
+    /**
+     * A claim that still has its owner record but whose payload is gone has
+     * nothing left to requeue. The sweep used to throw on it -- before saving its
+     * cursor -- so every sweep stopped at the same orphan and nothing behind it
+     * was ever reaped (production: one error a minute per worker, for weeks).
+     */
+    public function testReapDropsAnOwnedClaimWhosePayloadIsGoneAndKeepsSweeping(): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $this->broker->publish($this->queue, ['n' => 2]);
+        $orphan = $this->broker->receive($this->queue, 0)[0] ?? null;
+        $stranded = $this->broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $orphan);
+        $this->assertInstanceOf(Message::class, $stranded);
+        $this->expire('.claims.*');
+        $this->connection->remove($this->namespace . '.jobs.recovery.' . $orphan->getPid());
+
+        $requeued = $this->broker->reap($this->queue, olderThan: 0);
+
+        $this->assertSame(1, $requeued, 'the sweep reaches the claim behind the orphan');
+        $this->assertSame(0, $this->processingSize(), 'the orphan is dropped, not left to block the next sweep');
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue), 'only the recoverable message is back on the queue');
+        $this->assertNull($this->connection->get($this->namespace . '.owners.recovery.' . $orphan->getPid()));
+        $this->assertSame('0', $this->connection->get($this->namespace . '.stats.recovery.processing'));
+    }
+
+    /** A payload-less claim whose handler still heartbeats is that handler's to settle. */
+    public function testReapLeavesAPayloadlessClaimWhoseHandlerIsAlive(): void
+    {
+        $this->broker->publish($this->queue, ['n' => 1]);
+        $claimed = $this->broker->receive($this->queue, 0)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $claimed);
+        $this->connection->remove($this->namespace . '.jobs.recovery.' . $claimed->getPid());
+
+        $this->assertSame(0, $this->broker->reap($this->queue, olderThan: 0));
+        $this->assertSame(1, $this->processingSize(), 'a live handler keeps its claim');
+
+        $this->broker->commit($this->queue, $claimed);
+        $this->assertSame(0, $this->processingSize(), 'and settles it itself');
+    }
 }

@@ -35,11 +35,10 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
-  /**
-   * Project passkey settings show only to console users whose prefs carry Cloud's rollout flag
-   * (`flags-passkeys`). Off on self-hosted, where passkeys always show.
-   */
-  passkeysFlag: boolean
+  /** Console sign-in and sign-up with OAuth providers (GitHub, Google, GitLab, Bitbucket). */
+  accountOAuth: boolean
+  /** Console account passkeys (Account › Security card and the passkey sign-in button and autofill). */
+  accountPasskeys: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
@@ -100,6 +99,12 @@ export type ConsoleProfileFeatures = {
    * Off until that's confirmed.
    */
   analyticsTrafficFilter: boolean
+  /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
+  appwritePush: boolean
+  /** Inbound email (SMTP) trigger card in function Executions settings. */
+  functionEmail: boolean
+  /** Custom inbound email (SMTP) domains on the function Domains tab. */
+  functionEmailDomains: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -118,7 +123,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
-  passkeysFlag: 'Passkeys flag',
+  accountOAuth: 'Account OAuth sign-in',
+  accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
@@ -139,6 +145,9 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
+  appwritePush: 'Appwrite push',
+  functionEmail: 'Function email trigger',
+  functionEmailDomains: 'Function email domains',
 }
 
 export type ConsoleProfile = {
@@ -169,7 +178,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      passkeysFlag: true,
+      accountOAuth: true,
+      accountPasskeys: true,
       accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
@@ -191,6 +201,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      // Off until launch; enable from Debug → Feature flags.
+      functionEmail: false,
+      functionEmailDomains: false,
     },
   },
   'self-hosted': {
@@ -209,7 +223,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      passkeysFlag: false,
+      accountOAuth: false,
+      accountPasskeys: false,
       accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,
@@ -230,6 +245,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      functionEmail: false,
+      functionEmailDomains: false,
     },
   },
 }

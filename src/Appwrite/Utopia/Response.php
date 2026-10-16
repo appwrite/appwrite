@@ -269,6 +269,7 @@ class Response extends SwooleResponse
     public const MODEL_POLICY_PASSWORD_STRENGTH = 'policyPasswordStrength';
     public const MODEL_POLICY_PASSWORD_PERSONAL_DATA = 'policyPasswordPersonalData';
     public const MODEL_POLICY_PASSWORD_PWNED = 'policyPasswordPwned';
+    public const MODEL_POLICY_PASSWORD_ROTATION = 'policyPasswordRotation';
     public const MODEL_POLICY_SESSION_ALERT = 'policySessionAlert';
     public const MODEL_POLICY_SESSION_DURATION = 'policySessionDuration';
     public const MODEL_POLICY_SESSION_INVALIDATION = 'policySessionInvalidation';
@@ -535,6 +536,12 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
+        foreach ($data as $attribute => $value) {
+            if ($value instanceof \BackedEnum) {
+                $data->setAttribute($attribute, $value->value);
+            }
+        }
+
         $data = $model->filter($data);
 
         if ($model->isAny()) {
@@ -572,20 +579,7 @@ class Response extends SwooleResponse
 
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
-                                $condition = false;
-                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
-
-                                    if (\is_array($val)) {
-                                        $condition = \in_array($item->getAttribute($attribute), $val);
-                                    } else {
-                                        $condition = $item->getAttribute($attribute) === $val;
-                                    }
-
-                                    if (!$condition) {
-                                        break;
-                                    }
-                                }
-                                if ($condition) {
+                                if ($this->getModel($type)->matches($item)) {
                                     $ruleType = $type;
                                     break;
                                 }
@@ -595,7 +589,11 @@ class Response extends SwooleResponse
                         }
 
                         if ($ruleType === null || !self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
+                            $typeValue = $item->getAttribute('type');
+                            if ($typeValue instanceof \BackedEnum) {
+                                $typeValue = $typeValue->value;
+                            }
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ', type: ' . (\is_scalar($typeValue) ? (string) $typeValue : \get_debug_type($typeValue)) . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);

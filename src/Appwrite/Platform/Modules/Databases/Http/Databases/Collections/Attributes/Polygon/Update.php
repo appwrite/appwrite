@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 
@@ -63,12 +64,12 @@ class Update extends Action
                     replaceWith: 'tablesDB.updatePolygonColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#createCollection).', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], …], …], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.', true)
-            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New attribute key.', true, ['dbForProject'])
+            ->param('default', null, new Nullable(new Spatial(ColumnType::Polygon->value)), 'Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], …], …], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.', true)
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New attribute key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -79,7 +80,7 @@ class Update extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
-        if (!$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+        if (!$this->supportsSpatial($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
         }
 
@@ -91,7 +92,7 @@ class Update extends Action
             getDatabasesDB: $getDatabasesDB,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: Database::VAR_POLYGON,
+            type: ColumnType::Polygon->value,
             default: $default,
             required: $required,
             newKey: $newKey

@@ -1,8 +1,8 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
-import { getPublisherSchema } from '@/lib/blog/seo'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
+import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
 import type { ChangelogEntry } from './types'
@@ -96,8 +96,10 @@ export function getChangelogEntrySchema(entry: ChangelogEntry) {
       '@type': 'WebPage',
       '@id': canonical,
     },
-    ...(entry.cover ? { image: [entry.cover] } : {}),
-    author: getPublisherSchema(),
-    publisher: getPublisherSchema(),
+    ...(entry.cover
+      ? { image: [getChangelogEntryOgImage(entry, MARKETING_SITE_ORIGIN)] }
+      : {}),
+    author: getOrganizationSchema(),
+    publisher: getOrganizationSchema(),
   }
 }

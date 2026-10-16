@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 21
+    "readingTimeMinutes": 22
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -428,6 +428,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Deploy Appwrite on Google Cloud Platform using Compute Engine. Learn how to set up a production-ready Appwrite instance on GCP.",
     "layout": "article",
     "readingTimeMinutes": 1
+  },
+  {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "layout": "article",
+    "readingTimeMinutes": 15
   },
   {
     "slug": "advanced/self-hosting/production",
@@ -490,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "apis",
@@ -1433,6 +1440,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "layout": "article",
+    "readingTimeMinutes": 9
   },
   {
     "slug": "products/auth/phone-sms",
@@ -2895,7 +2909,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/executions",
@@ -3329,7 +3343,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites/quick-start/vanilla",
@@ -4078,7 +4092,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/command-center/shortcuts",

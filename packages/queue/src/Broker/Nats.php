@@ -55,7 +55,8 @@ use Utopia\Queue\Queue;
  * So the broker is wired the way Broker\Redis is: a connection dedicated to the
  * blocking receive, and a second, lock-guarded connection carrying the commands.
  *
- *   receive connection  — fetch, provisioning, the dead-letter advisory, publishing.
+ *   receive connection  — fetch, provisioning, the dead-letter advisory (consumers
+ *     only), publishing.
  *     Driven by the consume loop, behind {@see self::synchronize()}. The fetch parks
  *     here for the whole receive timeout, and nothing on the hot path waits for it.
  *   commands connection — commit, reject, extend, getQueueSize. Driven by the handler
@@ -464,8 +465,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $envelope = $this->envelope($queue, $payload);
 
         return $this->synchronize(function () use ($queue, $subject, $envelope): bool {
-            $this->ensure($queue);
-            $this->publishEnvelope($subject, $envelope);
+            $this->publishEnvelope($queue, $subject, $envelope);
 
             return true;
         });
@@ -495,15 +495,18 @@ class Nats implements Synchronous, Consumer, Bounded
         }
 
         return $this->synchronize(function () use ($queue, $messages): bool {
-            $this->ensure($queue);
-
             // One round trip per window rather than one per payload: the whole batch is
             // written before any acknowledgment is read. Each payload still carries its
             // own message id, so deduplication works exactly as it does on the single
             // publish, and a payload the server rejects still throws.
             // Republished whole, for the reason republishing() gives: every payload
-            // keeps its id, so the ones that did land collapse.
-            $acks = $this->republishing(fn (): array => $this->js()->publishMany($messages));
+            // keeps its id, so the ones that did land collapse. Provisioned inside the
+            // republish, for the reason publishEnvelope() gives.
+            $acks = $this->republishing(function () use ($queue, $messages): array {
+                $this->ensure($queue);
+
+                return $this->js()->publishMany($messages);
+            });
 
             foreach ($acks as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
@@ -528,15 +531,25 @@ class Nats implements Synchronous, Consumer, Bounded
      * gave up on the ack — can only be retried by creating a second copy that
      * nothing downstream can tell from a genuine second message.
      *
+     * The queue is provisioned inside the republish, not before it. A reconnect
+     * forgets what was provisioned, so in a rolling restart the first publish after
+     * one server went away re-provisions -- and that request is what meets the next
+     * server going away. Outside the republish it threw to the caller: a lost
+     * execution log, a failed API call, a dead-lettered function run.
+     *
      * @param array<string, mixed> $envelope
      */
-    private function publishEnvelope(string $subject, array $envelope): void
+    private function publishEnvelope(Queue $queue, string $subject, array $envelope): void
     {
         /** @var string $id */
         $id = $envelope['pid'];
         $data = $this->codec->encode($envelope);
 
-        $ack = $this->republishing(fn (): PubAck => $this->publishOnce($subject, $data, $id));
+        $ack = $this->republishing(function () use ($queue, $subject, $data, $id): PubAck {
+            $this->ensure($queue);
+
+            return $this->publishOnce($subject, $data, $id);
+        });
 
         // Not discarded: a duplicate ack means the stream already held this id,
         // so the retry collapsed instead of double-delivering. That is the
@@ -747,7 +760,18 @@ class Nats implements Synchronous, Consumer, Bounded
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         try {
-            return $this->synchronize(fn (): array => $this->pull($queue, $timeout, max(1, $n)));
+            return $this->synchronize(function () use ($queue, $timeout, $n): array {
+                try {
+                    return $this->pull($queue, $timeout, max(1, $n));
+                } catch (ConnectionException|ProtocolException $error) {
+                    // Once. Only pull()'s first fetch fails here, and it handed nothing over.
+                    if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
+                        throw $error;
+                    }
+
+                    return $this->pull($queue, $timeout, max(1, $n));
+                }
+            });
         } finally {
             // Off the lock, and on the way out however pull() ended.
             $this->flushReports();
@@ -764,6 +788,27 @@ class Nats implements Synchronous, Consumer, Bounded
     {
         $this->ensure($queue);
         $key = $this->identity($queue);
+
+        // The fallback for the spare delivery dying too: JetStream then stops delivering
+        // and emits this advisory, which drainDeadLetters() reads to move the message to
+        // the dead stream. Only a fallback, because core advisories are ephemeral: one
+        // emitted while no broker is subscribed is lost, and the message stays on the
+        // work stream reading as neither pending nor in flight.
+        //
+        // The queue group is what keeps this to one dead-letter copy: without it every
+        // worker publishes its own copy of the exhausted message. But the server hands
+        // each advisory to one member at random, so only a broker that drains it may
+        // join. Subscribed here, on the first receive, rather than in provisioning,
+        // which a publisher also runs and would join the group without ever reading it.
+        //
+        // Subscribed before this broker's first fetch, on the same connection. The
+        // server processes a connection's protocol in order, so the subscription is in
+        // place before any delivery this broker takes can exhaust. A reconnect clears
+        // it with the socket, and the next receive takes it again.
+        $this->advisories[$key] ??= $this->connection()->subscribe(
+            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
+            queue: self::ADVISORY_GROUP,
+        );
         $this->drainDeadLetters($queue, $key);
 
         // Fetch one message first so a sparse queue never waits for a batch to fill.
@@ -771,7 +816,11 @@ class Nats implements Synchronous, Consumer, Bounded
 
         // Whatever else is already waiting, on a poll that cannot block.
         if ($deliveries !== [] && \count($deliveries) < $max) {
-            $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            try {
+                $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            } catch (ConnectionException|ProtocolException $error) {
+                $this->report($error);
+            }
         }
 
         $messages = [];
@@ -802,6 +851,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 }
             }
 
+            Message::warnIfLarge($queue->name, \strlen($jsMessage->getData()));
             try {
                 $data = $this->codec->decode($jsMessage->getData());
             } catch (\Throwable) {
@@ -823,7 +873,8 @@ class Nats implements Synchronous, Consumer, Bounded
             $messages[] = new Message($data)
                 // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
                 ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
-                ->setSequence($jsMessage->metadata()->streamSequence);
+                ->setSequence($jsMessage->metadata()->streamSequence)
+                ->setSize(\strlen($jsMessage->getData()));
         }
 
         return $messages;
@@ -1006,10 +1057,8 @@ class Nats implements Synchronous, Consumer, Bounded
      *
      * Everything derived from the old sockets is dropped rather than reused:
      * consumer handles and subscriptions belong to the connection that created
-     * them. In-flight messages are deliberately not carried over — their ack
-     * subjects died with the connection, so the honest outcome is to let the
-     * server redeliver them on ackWait rather than pretend they can still be
-     * acknowledged.
+     * them. In-flight deliveries are kept: every ack goes out on the current
+     * commands connection, so a handler still running can still acknowledge.
      */
     public function reconnect(): bool
     {
@@ -1037,7 +1086,33 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->advisories = [];
         $this->spareDelivery = [];
         $this->provisioned = [];
-        $this->inFlight = [];
+
+        return true;
+    }
+
+    /**
+     * Rebuild only the receive connection. The commands connection may be mid-ack
+     * under a lock this path does not hold; command() rebuilds it if it fails.
+     */
+    private function reconnectReceive(): bool
+    {
+        // One socket serves both roles here; rebuilding it is reconnect()'s job.
+        if (!$this->source instanceof \Closure) {
+            return false;
+        }
+
+        try {
+            $this->connection?->close();
+        } catch (\Throwable) {
+            // Already gone.
+        }
+
+        $this->connection = null;
+        $this->js = null;
+        $this->consumers = [];
+        $this->advisories = [];
+        $this->spareDelivery = [];
+        $this->provisioned = [];
 
         return true;
     }
@@ -1490,21 +1565,8 @@ class Nats implements Synchronous, Consumer, Bounded
             backoff: $this->backoff,
         ));
 
-        // The fallback for the spare delivery above dying too: JetStream then stops
-        // delivering and emits this advisory, which receive() drains to move the
-        // message to the dead stream. Only a fallback, because core advisories are
-        // ephemeral: one emitted while no broker is subscribed is lost, and the
-        // message stays on the work stream reading as neither pending nor in flight.
-        // The queue group is what keeps this to one dead-letter copy. A plain
-        // subscription delivers the advisory to every worker process, and each
-        // of them then publishes its own copy of the exhausted message onto the
-        // dead stream — so the dead letter multiplies by the worker count, on
-        // exactly the messages an operator is trying to read. With a group the
-        // server picks one subscriber.
-        $this->advisories[$key] = $this->connection()->subscribe(
-            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
-            queue: self::ADVISORY_GROUP,
-        );
+        // The max-deliveries advisory is subscribed by pull(), not here: provisioning
+        // also runs on a publisher's first publish, and a publisher never drains it.
 
         $this->spareDelivery[$key] = $this->maxDeliver + 1;
         $this->provisioned[$key] = true;
@@ -1553,14 +1615,6 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->spareDelivery[$key] === null && $allowed >= 1) {
             $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
         }
-
-        // Same advisory subscription provisionOnce() takes: a core subscription carries no
-        // configuration, and a broker consuming a pre-provisioned queue still owes its
-        // exhausted messages a dead letter.
-        $this->advisories[$key] = $this->connection()->subscribe(
-            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
-            queue: self::ADVISORY_GROUP,
-        );
 
         $this->provisioned[$key] = true;
     }

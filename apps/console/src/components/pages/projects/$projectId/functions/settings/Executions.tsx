@@ -4,16 +4,30 @@ import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import {
   useProjectFunction,
+  useProject,
+  useOrganizationPlan,
   buildFunctionUpdateParams,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { DOCS_LINK as EVENTS_DOCS_LINK } from '@/lib/events-editor/events-model'
-import { CronScheduleEditor } from '../CronScheduleEditor'
+import { FunctionScheduleEditor } from '../_components/FunctionScheduleEditor'
+import {
+  getFunctionIntervalMinimum,
+  getFunctionScheduleMode,
+  isCronAllowed,
+  isCronScheduleAllowed,
+  isIntervalAllowed,
+} from '@/lib/function-interval'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   SettingsCardsList,
@@ -22,17 +36,34 @@ import {
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  FunctionEmailCard,
+  functionEmailMutationKey,
+} from './FunctionEmailCard'
 
 export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
+  const { features } = useConsoleProfile()
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
     functionId,
   )
 
+  const { project } = useProject(projectId)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const intervalMinimum = getFunctionIntervalMinimum(plan)
+  const cronAllowed = isCronAllowed(plan, getActiveProfileFeatures().billing)
+
+  const savedScheduleMode = getFunctionScheduleMode(func ?? {})
+  const savedInterval = func?.interval ?? 0
+  const [scheduleMode, setScheduleMode] =
+    useSyncStateFromServer(savedScheduleMode)
+  const [intervalMinutes, setIntervalMinutes] =
+    useSyncStateFromServer(savedInterval)
   const [schedule, setSchedule] = useSyncStateFromServer(func?.schedule || '')
   const [events, setEvents] = useSyncStateFromServer(func?.events || [])
   const [scopes, setScopes] = useSyncStateFromServer(func?.scopes || [])
@@ -103,7 +134,15 @@ export function View() {
   })
 
   const handleSaveSchedule = () => {
-    scheduleMutation.mutate({ schedule: schedule || undefined })
+    if (scheduleMode === 'interval') {
+      scheduleMutation.mutate({ interval: intervalMinutes, schedule: '' })
+      return
+    }
+    if (scheduleMode === 'cron') {
+      scheduleMutation.mutate({ schedule, interval: 0 })
+      return
+    }
+    scheduleMutation.mutate({ schedule: '', interval: 0 })
   }
 
   const handleSaveEvents = () => {
@@ -143,10 +182,13 @@ export function View() {
 
   // Each save sends the whole function, so only one may be in flight or the
   // later request would restore the other card's old value.
+  const emailPending =
+    useIsMutating({ mutationKey: functionEmailMutationKey(functionId) }) > 0
   const executionsPending =
     scheduleMutation.isPending ||
     eventsMutation.isPending ||
-    scopesMutation.isPending
+    scopesMutation.isPending ||
+    emailPending
 
   if (funcLoading) {
     return (
@@ -160,13 +202,25 @@ export function View() {
 
   if (!func) return null
 
+  const scheduleChanged =
+    scheduleMode !== savedScheduleMode ||
+    (scheduleMode === 'interval' && intervalMinutes !== savedInterval) ||
+    (scheduleMode === 'cron' && schedule !== (func.schedule || ''))
+  const scheduleValid =
+    scheduleMode === 'none' ||
+    (scheduleMode === 'interval' &&
+      isIntervalAllowed(intervalMinutes, intervalMinimum, savedInterval)) ||
+    (scheduleMode === 'cron' &&
+      isCronScheduleAllowed(schedule, cronAllowed, func.schedule || ''))
+
   const cards: SettingsCardItem[] = [
     {
       id: 'schedule',
       search: {
         title: 'Schedule',
-        description: 'Run this function on a schedule using cron expressions.',
-        keywords: ['cron', 'scheduled', 'recurring'],
+        description:
+          'Run this function on a schedule, every few minutes or with a cron expression.',
+        keywords: ['cron', 'interval', 'scheduled', 'recurring'],
       },
       node: (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -175,14 +229,25 @@ export function View() {
               {t('Schedule')}
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              {t('Run this function on a schedule using cron expressions.')}
+              {t(
+                'Run this function on a schedule, every few minutes or with a cron expression.',
+              )}
             </p>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
-            <CronScheduleEditor
-              value={schedule}
-              onChange={setSchedule}
+            <FunctionScheduleEditor
+              mode={scheduleMode}
+              onModeChange={setScheduleMode}
+              interval={intervalMinutes}
+              onIntervalChange={setIntervalMinutes}
+              schedule={schedule}
+              onScheduleChange={setSchedule}
+              savedInterval={savedInterval}
+              intervalMinimum={intervalMinimum}
+              cronAllowed={cronAllowed}
+              savedSchedule={func.schedule || ''}
+              orgId={project?.teamId}
               disabled={executionsPending}
             />
           </div>
@@ -190,7 +255,7 @@ export function View() {
             <Button
               size="sm"
               className="h-9 text-[13px]"
-              disabled={schedule === (func.schedule || '') || executionsPending}
+              disabled={!scheduleChanged || !scheduleValid || executionsPending}
               onClick={handleSaveSchedule}
             >
               {t('Update')}
@@ -199,6 +264,27 @@ export function View() {
         </div>
       ),
     },
+    ...(features.functionEmail
+      ? [
+          {
+            id: 'email',
+            search: {
+              title: 'Email',
+              description: 'Allow inbound email to trigger this function.',
+              keywords: ['email', 'smtp', 'mail', 'inbound', 'trigger'],
+            },
+            node: (
+              <FunctionEmailCard
+                projectId={projectId}
+                functionId={functionId}
+                region={project?.region}
+                func={func}
+                disabled={executionsPending}
+              />
+            ),
+          } satisfies SettingsCardItem,
+        ]
+      : []),
     {
       id: 'events',
       search: {

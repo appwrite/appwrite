@@ -19,7 +19,7 @@ Account account = Account(client);
 
 final user = await account.create(userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien");
  
-final session = await account.createEmailSession(email: 'me@appwrite.io', password: 'password');
+final session = await account.createEmailPasswordSession(email: 'me@appwrite.io', password: 'password');
 
 ```
 
@@ -39,14 +39,14 @@ Storage storage = Storage(client);
 late InputFile file;
 
 if(kIsWeb) {
-    file = InputFile(bytes: pickedFile.bytes, filename: 'image.jpg');
+    file = InputFile.fromBytes(bytes: pickedFile.bytes!, filename: 'image.jpg');
 } else {
-    file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
+    file = InputFile.fromPath(path: './path-to-file/image.jpg', filename: 'image.jpg');
 }
 
 storage.createFile(
     bucketId: '[BUCKET_ID]',
-    fileId: '[FILE_ID]', // use 'unique()' to automatically generate a unique ID
+    fileId: ID.unique(),
     file: file,
     permissions: [
       Permission.read(Role.any()),

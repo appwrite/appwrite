@@ -57,6 +57,31 @@ abstract class Model
     }
 
     /**
+     * Whether a document of a union rule is rendered with this model.
+     * A model without conditions never matches.
+     */
+    public function matches(Document $document): bool
+    {
+        if ($this->conditions === []) {
+            return false;
+        }
+
+        foreach ($this->conditions as $attribute => $expected) {
+            $actual = $document->getAttribute($attribute);
+            if ($actual instanceof \BackedEnum) {
+                $actual = $actual->value;
+            }
+
+            $matched = \is_array($expected) ? \in_array($actual, $expected) : $actual === $expected;
+            if (!$matched) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Shape a document as this model for an event payload published outside a response,
      * such as from a worker: the model filter, only the model's keys, and datetimes in
      * the same ISO 8601 format the response renders.
@@ -67,7 +92,7 @@ abstract class Model
     {
         $rules = $this->getRules();
         $payload = $this->filter(new Document($document->getArrayCopy()))
-            ->getArrayCopy(\array_keys($rules));
+            ->only(\array_keys($rules));
 
         foreach ($rules as $key => $rule) {
             if ($rule['type'] !== self::TYPE_DATETIME || !\array_key_exists($key, $payload)) {
@@ -151,7 +176,8 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['required'] ?? false) {
+            // A hidden rule is left out of the schema, so it cannot be required by it either.
+            if (($rule['required'] ?? false) && !($rule['hidden'] ?? false)) {
                 $list[] = $key;
             }
         }

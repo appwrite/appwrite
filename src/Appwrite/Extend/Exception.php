@@ -147,6 +147,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const string MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    public const string MEMBERSHIP_ALREADY_EXISTS = 'membership_already_exists';
     public const string MEMBERSHIP_ALREADY_CONFIRMED = 'membership_already_confirmed';
     public const string MEMBERSHIP_DELETION_PROHIBITED = 'membership_deletion_prohibited';
     public const string MEMBERSHIP_DOWNGRADE_PROHIBITED = 'membership_downgrade_prohibited';
@@ -228,6 +229,7 @@ class Exception extends \Exception
     public const string DATABASE_ALREADY_EXISTS = 'database_already_exists';
     public const string DATABASE_TIMEOUT = 'database_timeout';
     public const string DATABASE_QUERY_ORDER_NULL = 'database_query_order_null';
+    public const string DATABASE_QUERY_OUT_OF_RANGE = 'database_query_out_of_range';
 
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
@@ -336,6 +338,7 @@ class Exception extends \Exception
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
+    public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

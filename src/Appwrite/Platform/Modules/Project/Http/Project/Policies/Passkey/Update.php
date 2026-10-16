@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\RegistrableDomain;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\AnyOf;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -48,7 +47,7 @@ class Update extends Action
                 group: 'policies',
                 name: 'updatePasskeyPolicy',
                 description: <<<EOT
-                Configure the relying party passkeys are bound to. The relying party ID is the domain of your application, and origins are the exact web origins allowed to register and sign in with passkeys. Passkeys stay unavailable until both are set and the passkey auth method is enabled. The relying party ID cannot change while users have passkeys, and any change invalidates ceremonies in progress.
+                Set the relying party ID passkeys are bound to: the domain of your application. Passkeys work on the project's web platforms on that domain or its subdomains, and on the domain itself for Apple apps. A localhost web platform enables passkeys for local development without a relying party ID. The relying party ID cannot change while users have passkeys, and any change invalidates ceremonies in progress.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -58,8 +57,7 @@ class Update extends Action
                     )
                 ],
             ))
-            ->param('rpId', null, new Text(253, 0), 'Relying party ID: the domain of your application, such as `example.com`. Use `localhost` for local development.', optional: true)
-            ->param('origins', null, new ArrayList(new Text(2048), 10), 'Web origins allowed to use passkeys, such as `https://example.com` or `https://app.example.com`. Each must be HTTPS on the relying party ID or one of its subdomains, without a path. HTTP is only allowed for `localhost`. Maximum of 10 origins.', optional: true)
+            ->param('rpId', '', new Text(253, 0), 'Relying party ID: the domain of your application, such as `example.com`. Use `localhost` for local development, or an empty string to unset it.')
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -69,12 +67,8 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    /**
-     * @param ?array<string> $origins
-     */
     public function action(
-        ?string $rpId,
-        ?array $origins,
+        string $rpId,
         Response $response,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -85,29 +79,11 @@ class Update extends Action
         $auths = $project->getAttribute('auths', []);
         $current = $auths['passkeyRpId'] ?? '';
 
-        $rpId ??= $current;
-        $origins ??= $auths['passkeyOrigins'] ?? [];
-
         // WebAuthn also allows `localhost` as the relying party for local development
         $host = new AnyOf([new WhiteList([Origin::LOCALHOST], true), new RegistrableDomain()]);
         if ($rpId !== '' && !$host->isValid($rpId)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `rpId` param: ' . $host->getDescription() . ' Use "localhost" for local development.');
         }
-
-        if ($rpId === '' && !empty($origins)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set `rpId` before adding origins.');
-        }
-
-        $validator = new Origin($rpId);
-        $normalized = [];
-        foreach ($origins as $origin) {
-            $value = $validator->normalize($origin);
-            if ($value === null) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid origin "' . $origin . '": ' . $validator->getDescription());
-            }
-            $normalized[] = $value;
-        }
-        $normalized = \array_values(\array_unique($normalized));
 
         // Passkeys are bound to the RP ID they were created for, so changing it would strand them. Registrations
         // still inside their ceremony window count too: one could complete right after this check.
@@ -125,7 +101,6 @@ class Update extends Action
         }
 
         $auths['passkeyRpId'] = $rpId;
-        $auths['passkeyOrigins'] = $normalized;
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,

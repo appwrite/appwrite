@@ -48,7 +48,12 @@ Once your SDK object is set, access any of the Appwrite services and choose any 
 const account = new Account(client);
 
 // Register User
-account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
+account.create({
+    userId: ID.unique(),
+    email: 'me@example.com',
+    password: 'password',
+    name: 'Jane Doe'
+})
     .then(function (response) {
         console.log(response);
     }, function (error) {
@@ -60,7 +65,7 @@ account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
 ### Full Example
 
 ```js
-import { Client, Account } from 'react-native-appwrite';
+import { Client, Account, ID } from 'react-native-appwrite';
 // Init your React Native SDK
 const client = new Client();
 
@@ -73,7 +78,12 @@ client
 const account = new Account(client);
 
 // Register User
-account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
+account.create({
+    userId: ID.unique(),
+    email: 'me@example.com',
+    password: 'password',
+    name: 'Jane Doe'
+})
     .then(function (response) {
         console.log(response);
     }, function (error) {
@@ -83,11 +93,11 @@ account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
 
 ### Type Safety with Models
 
-The Appwrite React Native SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
+The Appwrite React Native SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
 
 **TypeScript:**
 ```typescript
-interface Book {
+interface Book extends Models.Row {
     name: string;
     author: string;
     releaseYear?: string;
@@ -96,15 +106,15 @@ interface Book {
     isCheckedOut: boolean;
 }
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 try {
-    const documents = await databases.listDocuments<Book>(
-        'your-database-id',
-        'your-collection-id'
-    );
+    const result = await tablesDB.listRows<Book>({
+        databaseId: 'your-database-id',
+        tableId: 'your-table-id'
+    });
     
-    documents.documents.forEach(book => {
+    result.rows.forEach(book => {
         console.log(`Book: ${book.name} by ${book.author}`); // Now you have full type safety
     });
 } catch (error) {
@@ -124,16 +134,16 @@ try {
  * @property {boolean} isCheckedOut
  */
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 try {
-    /** @type {Models.DocumentList<Book>} */
-    const documents = await databases.listDocuments(
-        'your-database-id',
-        'your-collection-id'
-    );
+    /** @type {Models.RowList<Book>} */
+    const result = await tablesDB.listRows({
+        databaseId: 'your-database-id',
+        tableId: 'your-table-id'
+    });
     
-    documents.documents.forEach(book => {
+    result.rows.forEach(book => {
         console.log(`Book: ${book.name} by ${book.author}`); // Type hints available in IDE
     });
 } catch (error) {
@@ -149,7 +159,12 @@ The Appwrite React Native SDK raises an `AppwriteException` object with `message
 
 ```javascript
 try {
-    const user = await account.create(ID.unique(), "email@example.com", "password", "Walter O'Brien");
+    const user = await account.create({
+    userId: ID.unique(),
+    email: "email@example.com",
+    password: "password",
+    name: "Walter O'Brien"
+});
     console.log('User created:', user);
 } catch (error) {
     console.error('Appwrite error:', error.message);

@@ -344,9 +344,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Block hosting provider traffic': 'ホスティング事業者トラフィックをブロック',
   'Deny API requests from hosting provider networks.':
     'ホスティング事業者ネットワークからの API リクエストを拒否します。',
-  'Block datacenter connection traffic': 'データセンター接続トラフィックをブロック',
-  'Deny API requests from datacenter connection types.':
-    'データセンター接続タイプからの API リクエストを拒否します。',
   'Add-on required': 'アドオンが必要',
   'Premium Geo DB': 'Premium Geo DB',
   'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
@@ -510,6 +507,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'のアクティビティ履歴。より長い保持期間にアップグレードしてください。',
   '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
+  'View event': 'イベントを表示',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',
@@ -532,6 +530,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Actor email': 'アクターのメール',
   'Actor type': 'アクタータイプ',
   'Via MCP': 'MCP 経由',
+  'Via CLI': 'CLI 経由',
+  'No matching activities on this page': 'このページに一致するアクティビティはありません',
+  Identity: 'アイデンティティ',
+  Topic: 'トピック',
+  Token: 'トークン',
+  Labels: 'ラベル',
+  'Mock phone': 'モック電話',
+  'Email template': 'メールテンプレート',
+  'Analytics property': 'アナリティクスプロパティ',
+  'Affiliate link': 'アフィリエイトリンク',
+  'Affiliate reward': 'アフィリエイト報酬',
+  'Backup archive': 'バックアップアーカイブ',
+  'Backup policy': 'バックアップポリシー',
+  'Dedicated backup': '専用バックアップ',
+  'Dedicated restoration': '専用リストア',
+  'Git installation': 'Git インストール',
+  Membership: 'メンバーシップ',
+  'Organization API key': '組織 API キー',
+  Restoration: 'リストア',
+  Threat: '脅威',
+  Cache: 'キャッシュ',
   'Resource type (API)': 'リソースタイプ (API)',
   'Resource path': 'リソースパス',
   'Resource parent': 'リソース親',
@@ -2444,6 +2463,19 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'APNS (iOS) 経由でプッシュ通知を送信します。',
   'Send push notifications via FCM (Android, iOS, web).':
     'FCM (Android、iOS、Web) 経由でプッシュ通知を送信します。',
+  'Send push notifications through the Appwrite push service.':
+    'Appwrite のプッシュサービス経由でプッシュ通知を送信します。',
+  'Quality of service': 'QoS',
+  'Let the subscriber choose': 'サブスクライバーに選択させる',
+  'At most once (QoS 0)': '最大1回 (QoS 0)',
+  'At least once (QoS 1)': '最低1回 (QoS 1)',
+  'Default delivery guarantee for topics on this provider.':
+    'このプロバイダーのトピックに対するデフォルトの配信保証です。',
+  'Message expiry (seconds)': 'メッセージの有効期限 (秒)',
+  'Message expiry must be a whole number of seconds, up to 604800.':
+    'メッセージの有効期限は 604800 以下の秒単位の整数で指定してください。',
+  'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
+    'オフラインデバイス向けに未配信メッセージを保持する期間です。最大7日 (604800)。',
   'Send transactional email through Amazon SES.':
     'Amazon SES 経由でトランザクションメールを送信します。',
   'Send transactional email through Mailgun.':
@@ -2902,6 +2934,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Hide: '非表示',
   Show: '表示',
   Database: 'データベース',
+  Table: 'テーブル',
   Function: '関数',
   File: 'ファイル',
   Bucket: 'バケット',

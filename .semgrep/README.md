@@ -81,7 +81,7 @@ Review the `baseline.json` diff like code: an added ERROR entry should come with
 | --- | --- |
 | Ungated `$auth->skip` / `Authorization::skip` + `getDocument`/`find`/`findOne` of a non-allowlisted name (`files`, `transactions`, or any new name) | **ERROR** `skip-ungated-load` |
 | Same skip gated on API-key / privileged callers (ternary or `if`), of allowlisted metadata / lookup / subquery collections, or of a variable collection | ok |
-| `$authorization->disable()` / `setDefaultStatus(false)` in a module or `app/controllers/api` handler | **ERROR** `global-authorization-disable` |
+| `$authorization->disable()` / `setStatus(false)` in a module or `app/controllers/api` handler | **ERROR** `global-authorization-disable` |
 | `/v1` route (module or `Http::*`) with no `->label('scope', …)` | **ERROR** `route-without-scope` |
 | `/v1` route with a non-public scope and no `api` (or `graphql`) group | **ERROR** `route-without-api-group` |
 | Public-scope forwarders, `mock`, `graphql`, non-`/v1` paths | ok |

@@ -50,7 +50,7 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteTransaction',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')

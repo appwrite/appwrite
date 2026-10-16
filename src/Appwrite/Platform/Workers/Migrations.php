@@ -24,10 +24,10 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
@@ -45,6 +45,7 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -344,6 +345,8 @@ class Migrations extends Action
                 ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
                 ->setProject($projectId)
                 ->setKey($key)
+                ->setConnectTimeout(Target::CONNECT_TIMEOUT)
+                ->setTimeout(Target::REQUEST_TIMEOUT)
         );
 
         try {
@@ -357,7 +360,12 @@ class Migrations extends Action
                 $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
             }
         } catch (AppwriteException $error) {
-            throw new Exception(Exception::MIGRATION_SOURCE_UNAUTHORIZED, previous: $error);
+            // No status means no response came back, which says nothing about the key.
+            $type = $error->getCode() === 0
+                ? Exception::MIGRATION_PROVIDER_ERROR
+                : Exception::MIGRATION_SOURCE_UNAUTHORIZED;
+
+            throw new Exception($type, previous: $error);
         }
     }
 
@@ -647,6 +655,13 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
+            // Sources wrap what failed; the innermost cause names the request that failed.
+            for ($previous = $th->getPrevious(); $previous !== null; $previous = $previous->getPrevious()) {
+                Console::error('Caused by: ' . $previous::class . ': ' . $previous->getMessage());
+                Console::error('File: ' . $previous->getFile() . ':' . $previous->getLine());
+                Console::error($previous->getTraceAsString());
+            }
+
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');
 
@@ -827,7 +842,7 @@ class Migrations extends Action
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
         $algorithm = Compression::NONE;
-        $fileId = ID::unique();
+        $fileId = Id::unique();
 
         $sizeMB = \round($size / (1000 * 1000), 2);
 

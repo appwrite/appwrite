@@ -1,0 +1,1339 @@
+{
+  "uuid": "d9c54163-f7fd-499a-b67f-1243dd8bbd23",
+  "lastMigration": 27,
+  "name": "Supabase Storage API",
+  "endpointPrefix": "storage/v1",
+  "latency": 0,
+  "port": 80,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "63e28c16-b61e-443c-9635-c83b5b039229",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "metrics",
+      "responses": [
+        {
+          "uuid": "75f611d2-2de9-4b30-aa30-92dadc8903c2",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "d1a447eb-af06-4268-8f0f-31befa77b499",
+      "type": "http",
+      "documentation": "Handle POST request for TUS Resumable uploads",
+      "method": "post",
+      "endpoint": "upload/resumable/",
+      "responses": [
+        {
+          "uuid": "bb1333cd-4a6c-41a3-9005-18fa01d096fa",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "9540d8f5-0b06-4c7c-af8d-f91035357a48",
+      "type": "http",
+      "documentation": "Handle OPTIONS request for TUS Resumable uploads",
+      "method": "options",
+      "endpoint": "upload/resumable/",
+      "responses": [
+        {
+          "uuid": "870e0286-fdf7-4fc5-8592-61c747cfbd3e",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "4411e477-06ea-4715-a114-e3e121176dbd",
+      "type": "http",
+      "documentation": "Handle POST request for TUS Resumable uploads",
+      "method": "post",
+      "endpoint": "upload/resumable/:wildcard",
+      "responses": [
+        {
+          "uuid": "70fe0830-4cb0-4270-88d4-058c1263c987",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "0e8bffeb-d499-4d37-8b92-a41fcedc4c62",
+      "type": "http",
+      "documentation": "Handle PUT request for TUS Resumable uploads",
+      "method": "put",
+      "endpoint": "upload/resumable/:wildcard",
+      "responses": [
+        {
+          "uuid": "99efdb5f-ce5f-42f0-9f30-7fa4893e4e51",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "8102ef27-9c16-41d2-8232-44cdaa612da7",
+      "type": "http",
+      "documentation": "Handle PATCH request for TUS Resumable uploads",
+      "method": "patch",
+      "endpoint": "upload/resumable/:wildcard",
+      "responses": [
+        {
+          "uuid": "ee9029a6-b705-4ba7-890f-0bdba5f33995",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "e9d260ac-dbc4-4fcd-b972-61aa98347b90",
+      "type": "http",
+      "documentation": "Handle OPTIONS request for TUS Resumable uploads",
+      "method": "options",
+      "endpoint": "upload/resumable/:wildcard",
+      "responses": [
+        {
+          "uuid": "daadb125-8a69-40b0-95ba-8a5ece5ca5b4",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Default Response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "13271d9c-ca44-408d-8f84-f2335620b7e1",
+      "type": "http",
+      "documentation": "Create a bucket",
+      "method": "post",
+      "endpoint": "bucket/",
+      "responses": [
+        {
+          "uuid": "fb255b1e-ef2a-46a2-8587-0e3ee5c9721f",
+          "body": "{\n  \"name\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "7cec2368-22a0-488c-aee6-ab0b48a62d66",
+      "type": "http",
+      "documentation": "Gets all buckets",
+      "method": "get",
+      "endpoint": "bucket/",
+      "responses": [
+        {
+          "uuid": "8601306d-88b2-46fc-a5f3-bbdb8eec5716",
+          "body": "[\n  {\n    \"id\": \"\",\n    \"name\": \"\",\n    \"owner\": \"\",\n    \"public\": {{faker 'datatype.boolean'}},\n    \"file_size_limit\": \"\",\n    \"allowed_mime_types\": \"\",\n    \"created_at\": \"\",\n    \"updated_at\": \"\"\n  }\n]",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "61e76e46-b390-4acc-8731-dc3233cae4a2",
+      "type": "http",
+      "documentation": "Empty a bucket",
+      "method": "post",
+      "endpoint": "bucket/:bucketId/empty",
+      "responses": [
+        {
+          "uuid": "41b4663e-31d9-47ea-8d73-6ce272c49252",
+          "body": "{\n  \"message\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "a9cda983-2620-48ad-8ddb-eb6fbb9d2435",
+      "type": "http",
+      "documentation": "Get details of a bucket",
+      "method": "get",
+      "endpoint": "bucket/:bucketId",
+      "responses": [
+        {
+          "uuid": "37305d4e-2365-481e-99b8-6808c61b20a7",
+          "body": "{\n  \"id\": \"\",\n  \"name\": \"\",\n  \"owner\": \"\",\n  \"public\": {{faker 'datatype.boolean'}},\n  \"file_size_limit\": \"\",\n  \"allowed_mime_types\": \"\",\n  \"created_at\": \"\",\n  \"updated_at\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "21848d44-988b-4ff7-953e-eb162cfd5bc0",
+      "type": "http",
+      "documentation": "Update properties of a bucket",
+      "method": "put",
+      "endpoint": "bucket/:bucketId",
+      "responses": [
+        {
+          "uuid": "ac71a6c8-d498-4ae3-acff-a7ea5a6431f6",
+          "body": "{\n  \"message\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "2e753b7d-9204-443a-a13b-1e90f76713f9",
+      "type": "http",
+      "documentation": "Delete a bucket",
+      "method": "delete",
+      "endpoint": "bucket/:bucketId",
+      "responses": [
+        {
+          "uuid": "eab49831-6274-4d13-9a72-6371b1097100",
+          "body": "{\n  \"message\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "c1b7ca51-0257-426d-96a1-3660a4086b26",
+      "type": "http",
+      "documentation": "Delete an object",
+      "method": "delete",
+      "endpoint": "object/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "79b24a52-a51b-43a4-93a0-ca6d328c4d35",
+          "body": "{\n  \"message\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "6cf60379-78e1-4765-8113-3a314cc2f8ad",
+      "type": "http",
+      "documentation": "Get object",
+      "method": "get",
+      "endpoint": "object/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "786caea0-43d3-4a8e-af20-74e9e791bbd1",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "FILE",
+          "filePath": "./tulips.png",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "apiKey",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            },
+            {
+              "target": "header",
+              "modifier": "Authorization",
+              "value": "",
+              "invert": true,
+              "operator": "null"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        },
+        {
+          "uuid": "45c78e9e-853e-439b-96a5-446c7a931e4f",
+          "body": "{\n    \"statusCode\": \"400\",\n    \"error\": \"Error\",\n    \"message\": \"headers must have required property 'authorization'\"\n}",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "Authorization",
+              "value": "",
+              "invert": false,
+              "operator": "null"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "4864d8ee-d1d1-48c0-aacb-7e1b5739850b",
+      "type": "http",
+      "documentation": "Update the object at an existing key",
+      "method": "put",
+      "endpoint": "object/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "66390d64-87f9-4b28-85b1-b71c8b4f5a7b",
+          "body": "{\n  \"Id\": \"\",\n  \"Key\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "ce2ef870-97e4-4ede-9690-623647b584ca",
+      "type": "http",
+      "documentation": "Upload a new object",
+      "method": "post",
+      "endpoint": "object/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "b92c745e-2f32-4721-9648-9346d36ffba0",
+          "body": "{\n  \"Id\": \"\",\n  \"Key\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "0a1a8956-d288-4c5b-ac55-ce285f9e6c85",
+      "type": "http",
+      "documentation": "Delete multiple objects",
+      "method": "delete",
+      "endpoint": "object/:bucketName",
+      "responses": [
+        {
+          "uuid": "c4e34f2f-4690-41f2-8421-df35b4d2d80e",
+          "body": "[\n  {\n    \"name\": \"\",\n    \"bucket_id\": \"\",\n    \"owner\": \"\",\n    \"owner_id\": \"\",\n    \"version\": \"\",\n    \"id\": \"\",\n    \"updated_at\": \"\",\n    \"created_at\": \"\",\n    \"last_accessed_at\": \"\",\n    \"metadata\": {},\n    \"buckets\": {\n      \"id\": \"\",\n      \"name\": \"\",\n      \"owner\": \"\",\n      \"public\": {{faker 'datatype.boolean'}},\n      \"file_size_limit\": \"\",\n      \"allowed_mime_types\": \"\",\n      \"created_at\": \"\",\n      \"updated_at\": \"\"\n    }\n  }\n]",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "e3d3f3bc-38e5-401c-ad35-7151f5938961",
+      "type": "http",
+      "documentation": "Retrieve an object",
+      "method": "get",
+      "endpoint": "object/authenticated/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "94a24d3a-6987-4981-b679-6df191da7b1f",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "bd9f93bd-b91e-4e59-a27e-1fba3f7ea9c7",
+      "type": "http",
+      "documentation": "Generate a presigned url to upload an object",
+      "method": "post",
+      "endpoint": "object/upload/sign/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "f0fbdc6f-f816-4bc0-9070-e6b7cc44c0e9",
+          "body": "{\n  \"url\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "e351a4b3-ae24-4425-bdea-61121d2faeb2",
+      "type": "http",
+      "documentation": "Uploads an object via a presigned URL",
+      "method": "put",
+      "endpoint": "object/upload/sign/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "fe6141a4-689e-40a1-b172-5bc71800f407",
+          "body": "{\n  \"Key\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "1e0bdf63-7610-467b-bdba-c3cb7736fcb5",
+      "type": "http",
+      "documentation": "Generate a presigned url to retrieve an object",
+      "method": "post",
+      "endpoint": "object/sign/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "79f3aaf6-05c3-4649-b9f1-73181ac38fb4",
+          "body": "{\n  \"signedURL\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "279b3116-4d72-4aa7-90d7-4fbeb293e722",
+      "type": "http",
+      "documentation": "Retrieve an object via a presigned URL",
+      "method": "get",
+      "endpoint": "object/sign/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "80fca685-82ca-474f-ac74-0f1ecb52c885",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "93d1e18c-7fe9-497d-9256-8a37058536ec",
+      "type": "http",
+      "documentation": "Generate presigned urls to retrieve objects",
+      "method": "post",
+      "endpoint": "object/sign/:bucketName",
+      "responses": [
+        {
+          "uuid": "73654f64-97f7-4ce5-b5d5-7f84040c48d0",
+          "body": "[\n  {\n    \"error\": \"\",\n    \"version\": \"\",\n    \"signedURL\": \"\"\n  }\n]",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "4e803d50-ceae-485e-ba30-ca7849796f7c",
+      "type": "http",
+      "documentation": "Moves an object",
+      "method": "post",
+      "endpoint": "object/move",
+      "responses": [
+        {
+          "uuid": "b3058469-fecb-4799-8694-cce2774769f9",
+          "body": "{\n  \"message\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "5be75f51-df4a-4b59-89a4-b1ac65a6dc80",
+      "type": "http",
+      "documentation": "Search for objects under a prefix",
+      "method": "post",
+      "endpoint": "object/list/:bucketName",
+      "responses": [
+        {
+          "uuid": "731144ec-d427-4f5a-8d12-b70c7a3dd221",
+          "body": "[\n  {\n    \"name\": \"\",\n    \"bucket_id\": \"\",\n    \"owner\": \"\",\n    \"owner_id\": \"\",\n    \"version\": \"\",\n    \"id\": \"\",\n    \"updated_at\": \"\",\n    \"created_at\": \"\",\n    \"last_accessed_at\": \"\",\n    \"metadata\": {},\n    \"buckets\": {\n      \"id\": \"\",\n      \"name\": \"\",\n      \"owner\": \"\",\n      \"public\": {{faker 'datatype.boolean'}},\n      \"file_size_limit\": \"\",\n      \"allowed_mime_types\": \"\",\n      \"created_at\": \"\",\n      \"updated_at\": \"\"\n    }\n  }\n]",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "e1ce3bb0-bf21-4746-b184-94bed1cca5e2",
+      "type": "http",
+      "documentation": "Retrieve object info",
+      "method": "get",
+      "endpoint": "object/info/authenticated/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "9d3abd16-2c48-4a97-b467-da8510767cdd",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "a8a0f080-a810-4c81-b60d-36794d75a42d",
+      "type": "http",
+      "documentation": "Retrieve object info",
+      "method": "get",
+      "endpoint": "object/info/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "9b469fb0-28a4-4759-b7e3-37e9a63bc424",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "6afa36a9-8697-49f4-a753-53d47bf4c585",
+      "type": "http",
+      "documentation": "Copies an object",
+      "method": "post",
+      "endpoint": "object/copy",
+      "responses": [
+        {
+          "uuid": "62a52180-aa2b-4ddf-9937-f3016fa142f5",
+          "body": "{\n  \"Key\": \"\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Successful response",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "3fe77822-6d08-416e-81e9-d7af319a318a",
+      "type": "http",
+      "documentation": "Retrieve an object from a public bucket",
+      "method": "get",
+      "endpoint": "object/public/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "d5063379-859a-4ca4-98b7-fc43f3c0addb",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "a9c5a40e-6ef2-415a-83e4-287f2ef6648b",
+      "type": "http",
+      "documentation": "Get object info",
+      "method": "get",
+      "endpoint": "object/info/public/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "1511e7ef-669a-4bd3-a733-e2b7618bb8ce",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "c030739d-e155-45ce-b42a-3be8e8a86054",
+      "type": "http",
+      "documentation": "Render an authenticated image with the given transformations",
+      "method": "get",
+      "endpoint": "render/image/authenticated/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "59c37e1b-2a61-402c-8061-b137b76b7518",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "81be8924-09eb-4d8a-bbe9-7d6ad498fde1",
+      "type": "http",
+      "documentation": "Render an authenticated image with the given transformations",
+      "method": "get",
+      "endpoint": "render/image/sign/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "b9fec83b-e2be-4376-9329-921f6697da32",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "88f2739a-8bf6-4e5d-8715-9f987052389e",
+      "type": "http",
+      "documentation": "Render a public image with the given transformations",
+      "method": "get",
+      "endpoint": "render/image/public/:bucketName/:wildcard",
+      "responses": [
+        {
+          "uuid": "cc201a52-81c8-4727-9740-87b73266fd86",
+          "body": "",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "63e28c16-b61e-443c-9635-c83b5b039229"
+    },
+    {
+      "type": "route",
+      "uuid": "d1a447eb-af06-4268-8f0f-31befa77b499"
+    },
+    {
+      "type": "route",
+      "uuid": "9540d8f5-0b06-4c7c-af8d-f91035357a48"
+    },
+    {
+      "type": "route",
+      "uuid": "4411e477-06ea-4715-a114-e3e121176dbd"
+    },
+    {
+      "type": "route",
+      "uuid": "0e8bffeb-d499-4d37-8b92-a41fcedc4c62"
+    },
+    {
+      "type": "route",
+      "uuid": "8102ef27-9c16-41d2-8232-44cdaa612da7"
+    },
+    {
+      "type": "route",
+      "uuid": "e9d260ac-dbc4-4fcd-b972-61aa98347b90"
+    },
+    {
+      "type": "route",
+      "uuid": "13271d9c-ca44-408d-8f84-f2335620b7e1"
+    },
+    {
+      "type": "route",
+      "uuid": "7cec2368-22a0-488c-aee6-ab0b48a62d66"
+    },
+    {
+      "type": "route",
+      "uuid": "61e76e46-b390-4acc-8731-dc3233cae4a2"
+    },
+    {
+      "type": "route",
+      "uuid": "a9cda983-2620-48ad-8ddb-eb6fbb9d2435"
+    },
+    {
+      "type": "route",
+      "uuid": "21848d44-988b-4ff7-953e-eb162cfd5bc0"
+    },
+    {
+      "type": "route",
+      "uuid": "2e753b7d-9204-443a-a13b-1e90f76713f9"
+    },
+    {
+      "type": "route",
+      "uuid": "c1b7ca51-0257-426d-96a1-3660a4086b26"
+    },
+    {
+      "type": "route",
+      "uuid": "6cf60379-78e1-4765-8113-3a314cc2f8ad"
+    },
+    {
+      "type": "route",
+      "uuid": "4864d8ee-d1d1-48c0-aacb-7e1b5739850b"
+    },
+    {
+      "type": "route",
+      "uuid": "ce2ef870-97e4-4ede-9690-623647b584ca"
+    },
+    {
+      "type": "route",
+      "uuid": "0a1a8956-d288-4c5b-ac55-ce285f9e6c85"
+    },
+    {
+      "type": "route",
+      "uuid": "e3d3f3bc-38e5-401c-ad35-7151f5938961"
+    },
+    {
+      "type": "route",
+      "uuid": "bd9f93bd-b91e-4e59-a27e-1fba3f7ea9c7"
+    },
+    {
+      "type": "route",
+      "uuid": "e351a4b3-ae24-4425-bdea-61121d2faeb2"
+    },
+    {
+      "type": "route",
+      "uuid": "1e0bdf63-7610-467b-bdba-c3cb7736fcb5"
+    },
+    {
+      "type": "route",
+      "uuid": "279b3116-4d72-4aa7-90d7-4fbeb293e722"
+    },
+    {
+      "type": "route",
+      "uuid": "93d1e18c-7fe9-497d-9256-8a37058536ec"
+    },
+    {
+      "type": "route",
+      "uuid": "4e803d50-ceae-485e-ba30-ca7849796f7c"
+    },
+    {
+      "type": "route",
+      "uuid": "5be75f51-df4a-4b59-89a4-b1ac65a6dc80"
+    },
+    {
+      "type": "route",
+      "uuid": "e1ce3bb0-bf21-4746-b184-94bed1cca5e2"
+    },
+    {
+      "type": "route",
+      "uuid": "a8a0f080-a810-4c81-b60d-36794d75a42d"
+    },
+    {
+      "type": "route",
+      "uuid": "6afa36a9-8697-49f4-a753-53d47bf4c585"
+    },
+    {
+      "type": "route",
+      "uuid": "3fe77822-6d08-416e-81e9-d7af319a318a"
+    },
+    {
+      "type": "route",
+      "uuid": "a9c5a40e-6ef2-415a-83e4-287f2ef6648b"
+    },
+    {
+      "type": "route",
+      "uuid": "c030739d-e155-45ce-b42a-3be8e8a86054"
+    },
+    {
+      "type": "route",
+      "uuid": "81be8924-09eb-4d8a-bbe9-7d6ad498fde1"
+    },
+    {
+      "type": "route",
+      "uuid": "88f2739a-8bf6-4e5d-8715-9f987052389e"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": []
+}

@@ -5,21 +5,48 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\Queries\AggregateShape;
+use Tests\E2E\Services\Databases\Queries\DottedPaths;
+use Tests\E2E\Services\Databases\Queries\JoinCombos;
+use Tests\E2E\Services\Databases\Queries\JoinOperators;
+use Tests\E2E\Services\Databases\Queries\JoinPermissions;
+use Tests\E2E\Services\Databases\Queries\JoinProjection;
+use Tests\E2E\Services\Databases\Queries\JoinTypes;
+use Tests\E2E\Services\Databases\Queries\RejectedMethods;
+use Tests\E2E\Services\Databases\Queries\RejectedValues;
+use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
+use Tests\E2E\Services\Databases\Queries\Totals;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Operator;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 
 trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
+    use AggregateShape;
+    use JoinTypes;
+    use JoinOperators;
+    use JoinPermissions;
+    use JoinCombos;
+    use JoinProjection;
+    use StatisticalAggregates;
+    use RejectedMethods;
+    use RejectedValues;
+    use Totals;
+    use DottedPaths;
+    use ErrorMessages;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
@@ -32,6 +59,7 @@ trait DatabasesBase
     private static array $oneToOneCache = [];
     private static array $oneToManyCache = [];
     private static array $fulltextDocsCache = [];
+    private static array $analyticsCache = [];
 
     /**
      * Get cache key for current test instance (based on project ID)
@@ -57,7 +85,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -112,7 +140,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Movies',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -127,7 +155,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Actors',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -142,7 +170,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Books',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -354,7 +382,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'fts_description',
-            'type' => Database::INDEX_FULLTEXT,
+            'type' => IndexType::Fulltext->value,
             $this->getIndexAttributesParam() => ['description'],
         ]);
 
@@ -392,7 +420,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -413,7 +441,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
@@ -436,7 +464,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
@@ -488,7 +516,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'person',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -506,7 +534,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'library',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -543,6 +571,54 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $library['body']['$id'], 'libraryName');
         $this->assertEquals(202, $libraryName['headers']['status-code']);
 
+        if ($this->getSupportForRelationships()) {
+            $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                $this->getRelatedIdParam() => $library['body']['$id'],
+                'type' => RelationshipType::OneToOne->value,
+                'twoWay' => false,
+                'key' => 'library',
+            ]);
+
+            if ($relation['headers']['status-code'] !== 409) {
+                $this->assertEquals(202, $relation['headers']['status-code'], 'One-to-one relationship creation failed: ' . \json_encode($relation['body'] ?? 'no body'));
+            }
+
+            $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
+
+            $serverHeaders = [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ];
+
+            $libraryDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $library['body']['$id']), $serverHeaders, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => [
+                    'libraryName' => 'Central Library',
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $libraryDocument['headers']['status-code'], 'Library document creation failed: ' . \json_encode($libraryDocument['body'] ?? 'no body'));
+
+            $personDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $person['body']['$id']), $serverHeaders, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => [
+                    'fullName' => 'Ada Lovelace',
+                    'library' => $libraryDocument['body']['$id'],
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertEquals(201, $personDocument['headers']['status-code'], 'Person document creation failed: ' . \json_encode($personDocument['body'] ?? 'no body'));
+        }
+
         self::$oneToOneCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'personCollection' => $person['body']['$id'],
@@ -574,7 +650,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $libraryCollection,
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'libraries',
             'twoWayKey' => 'person_one_to_many',
@@ -599,12 +675,12 @@ trait DatabasesBase
 
         // Create a person with libraries
         $person = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'fullName' => 'Stevie Wonder',
                 'libraries' => [
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         '$permissions' => [
                             Permission::read(Role::any()),
                             Permission::update(Role::any()),
@@ -613,7 +689,7 @@ trait DatabasesBase
                         'libraryName' => 'Library 10',
                     ],
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         '$permissions' => [
                             Permission::read(Role::any()),
                             Permission::update(Role::any()),
@@ -634,7 +710,7 @@ trait DatabasesBase
 
         // Create two person documents with null fullName for isNull query testing
         $nullPerson1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'fullName' => null,
             ],
@@ -647,7 +723,7 @@ trait DatabasesBase
         $this->assertEquals(201, $nullPerson1['headers']['status-code'], 'Null person 1 creation failed: ' . \json_encode($nullPerson1['body'] ?? 'no body'));
 
         $nullPerson2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'fullName' => null,
             ],
@@ -661,7 +737,7 @@ trait DatabasesBase
 
         // Update onDelete to cascade
         $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), $serverHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection, 'libraryCollection' => $libraryCollection];
@@ -689,7 +765,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Science Fiction Adventures',
                 'description' => 'A thrilling journey through space and time',
@@ -705,7 +781,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Romance Novel',
                 'description' => 'A love story set in modern times',
@@ -721,7 +797,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Mystery Thriller',
                 'description' => 'A detective solves complex crimes',
@@ -734,6 +810,269 @@ trait DatabasesBase
 
         self::$fulltextDocsCache[$cacheKey] = $data;
         return self::$fulltextDocsCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Isolated customers/orders/payments fixture for join and aggregate queries
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupAnalyticsFixture(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$analyticsCache[$cacheKey])) {
+            return self::$analyticsCache[$cacheKey];
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => Id::unique(),
+            'name' => 'Analytics Database'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        $databaseId = $database['body']['$id'];
+
+        $customers = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'customers',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $customers['headers']['status-code']);
+
+        $orders = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'orders',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $orders['headers']['status-code']);
+
+        $payments = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'payments',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $payments['headers']['status-code']);
+
+        $customersId = $customers['body']['$id'];
+        $ordersId = $orders['body']['$id'];
+        $paymentsId = $payments['body']['$id'];
+
+        $customerName = $this->createAttribute($databaseId, $customersId, 'string', [
+            'key' => 'name',
+            'size' => 64,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $customerName['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $customersId, 'name');
+
+        $customerFlags = $this->createAttribute($databaseId, $customersId, 'integer', [
+            'key' => 'flags',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $customerFlags['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $customersId, 'flags');
+
+        $orderCustomerId = $this->createAttribute($databaseId, $ordersId, 'string', [
+            'key' => 'customerId',
+            'size' => 36,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderCustomerId['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'customerId');
+
+        $orderAmount = $this->createAttribute($databaseId, $ordersId, 'integer', [
+            'key' => 'amount',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderAmount['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'amount');
+
+        $orderStatus = $this->createAttribute($databaseId, $ordersId, 'string', [
+            'key' => 'status',
+            'size' => 16,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $orderStatus['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ordersId, 'status');
+
+        $paymentOrderId = $this->createAttribute($databaseId, $paymentsId, 'string', [
+            'key' => 'orderId',
+            'size' => 36,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $paymentOrderId['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $paymentsId, 'orderId');
+
+        $paymentAmount = $this->createAttribute($databaseId, $paymentsId, 'integer', [
+            'key' => 'amount',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $paymentAmount['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $paymentsId, 'amount');
+
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $alice = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'alice',
+            'data' => [
+                'name' => 'Alice',
+                'flags' => 7,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $alice['headers']['status-code']);
+
+        $bob = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'bob',
+            'data' => [
+                'name' => 'Bob',
+                'flags' => 3,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bob['headers']['status-code']);
+
+        $carol = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $customersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'carol',
+            'data' => [
+                'name' => 'Carol',
+                'flags' => 5,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $carol['headers']['status-code']);
+
+        $order1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o1',
+            'data' => [
+                'customerId' => 'alice',
+                'amount' => 100,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order1['headers']['status-code']);
+
+        $order2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o2',
+            'data' => [
+                'customerId' => 'alice',
+                'amount' => 50,
+                'status' => 'pending',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order2['headers']['status-code']);
+
+        $order3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o3',
+            'data' => [
+                'customerId' => 'bob',
+                'amount' => 200,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order3['headers']['status-code']);
+
+        $order4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), $serverHeaders, [
+            $this->getRecordIdParam() => 'o4',
+            'data' => [
+                'amount' => 25,
+                'status' => 'paid',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $order4['headers']['status-code']);
+
+        $payment1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), $serverHeaders, [
+            $this->getRecordIdParam() => 'p1',
+            'data' => [
+                'orderId' => 'o1',
+                'amount' => 100,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $payment1['headers']['status-code']);
+
+        $payment2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), $serverHeaders, [
+            $this->getRecordIdParam() => 'p2',
+            'data' => [
+                'orderId' => 'o3',
+                'amount' => 200,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $payment2['headers']['status-code']);
+
+        self::$analyticsCache[$cacheKey] = [
+            'databaseId' => $databaseId,
+            'customersId' => $customersId,
+            'ordersId' => $ordersId,
+            'paymentsId' => $paymentsId,
+        ];
+
+        return self::$analyticsCache[$cacheKey];
     }
 
     /**
@@ -766,7 +1105,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -795,7 +1134,7 @@ trait DatabasesBase
          * A newly created database defaults to the "ready" status.
          */
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Status Database',
         ]);
 
@@ -827,7 +1166,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Movies',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -849,7 +1188,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Actors',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -929,7 +1268,7 @@ trait DatabasesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Captain America',
                 ],
@@ -986,7 +1325,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'AttribTestMovies',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -1001,7 +1340,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'AttribTestActors',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -1244,20 +1583,20 @@ trait DatabasesBase
         $schemaResource = $this->getSchemaResource();
 
         $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Counters',
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
             ],
             $schemaResource => [
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER],
-                ['key' => 'total', 'type' => Database::VAR_BIGINT],
-                ['key' => 'ratio', 'type' => Database::VAR_FLOAT],
-                ['key' => 'bounded', 'type' => Database::VAR_INTEGER, 'min' => 0, 'max' => 100],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value],
+                ['key' => 'total', 'type' => ColumnType::BigInteger->value],
+                ['key' => 'ratio', 'type' => ColumnType::Double->value],
+                ['key' => 'bounded', 'type' => ColumnType::Integer->value, 'min' => 0, 'max' => 100],
                 // The numeric endpoints take no size, so this one cannot narrow the
                 // column below the int64 range the definition still declares
-                ['key' => 'sized', 'type' => Database::VAR_INTEGER, 'size' => 4],
+                ['key' => 'sized', 'type' => ColumnType::Integer->value, 'size' => 4],
             ],
         ]);
 
@@ -1289,7 +1628,7 @@ trait DatabasesBase
         // The bounds are only honest if the column is that wide. 5e9 overflows the
         // 4 byte column an implied INT32 range would have produced.
         $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'counter' => 5000000000,
                 'total' => \PHP_INT_MAX,
@@ -1304,7 +1643,7 @@ trait DatabasesBase
 
         // A value outside a declared bound is still refused
         $rejected = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['bounded' => 101],
         ]);
 
@@ -1341,7 +1680,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $schemaResource = $this->getSchemaResource();
-        $containerId = ID::unique();
+        $containerId = Id::unique();
 
         $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
             $this->getContainerIdParam() => $containerId,
@@ -1349,7 +1688,7 @@ trait DatabasesBase
             $schemaResource => [
                 // What a client that cannot hold an int64 sends back after reading
                 // the default bounds off an existing column
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value, 'min' => -9223372036854776000, 'max' => 9223372036854776000],
             ],
         ]);
 
@@ -1362,10 +1701,10 @@ trait DatabasesBase
 
         // A bound sent as a string is not an integer either
         $stringBound = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'String Bounds',
             $schemaResource => [
-                ['key' => 'counter', 'type' => Database::VAR_INTEGER, 'max' => '9223372036854776000'],
+                ['key' => 'counter', 'type' => ColumnType::Integer->value, 'max' => '9223372036854776000'],
             ],
         ]);
 
@@ -1374,7 +1713,7 @@ trait DatabasesBase
 
         // The dedicated endpoint is the reference: it refuses the same bound
         $valid = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Dedicated Bounds',
         ]);
 
@@ -1392,6 +1731,237 @@ trait DatabasesBase
 
         $this->assertEquals(200, $schema['headers']['status-code']);
         $this->assertEquals(0, $schema['body']['total']);
+    }
+
+    /**
+     * The dedicated float endpoint takes no size and stores a double with size 0,
+     * so an inline double has to be stored the same way whatever size it was sent
+     * with. The size is not part of the response model, only of the stored
+     * attribute, so it is read back through a query on it.
+     */
+    public function testCreateCollectionInlineDoubleIgnoresSize(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Scores',
+            $schemaResource => [
+                ['key' => 'score', 'type' => ColumnType::Double->value, 'size' => 5],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $dedicated = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId, 'float'), $headers, [
+            'key' => 'ratio',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $dedicated['headers']['status-code']);
+
+        $unsized = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('size', [0])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $unsized['headers']['status-code']);
+        $this->assertSame(2, $unsized['body']['total']);
+
+        $keys = \array_column($unsized['body'][$schemaResource], 'key');
+        \sort($keys);
+
+        $this->assertSame(['ratio', 'score'], $keys);
+    }
+
+    public function testCreateCollectionInlineInternalFiltersAreRefused(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+        $containerId = Id::unique();
+
+        $internal = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Internal Filters',
+            $schemaResource => [
+                ['key' => 'name', 'type' => ColumnType::String->value, 'size' => 128, 'filters' => ['subQueryAttributes']],
+            ],
+        ]);
+
+        $this->assertSame(400, $internal['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $internal['body']['type']);
+        $this->assertSame("Invalid filter for attribute 'name': subQueryAttributes", $internal['body']['message']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        foreach ([
+            'range on a datetime' => ['key' => 'published', 'type' => ColumnType::Datetime->value, 'filters' => ['range']],
+            'a search filter beside encrypt' => ['key' => 'label', 'type' => ColumnType::String->value, 'size' => 256, 'filters' => ['encrypt', 'userSearch']],
+            'a subquery filter on an integer' => ['key' => 'count', 'type' => ColumnType::Integer->value, 'filters' => ['subQueryKeys']],
+        ] as $case => $attribute) {
+            $rejected = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => Id::unique(),
+                'name' => 'Rejected Filters',
+                $schemaResource => [$attribute],
+            ]);
+
+            $this->assertSame(400, $rejected['headers']['status-code'], $case);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $rejected['body']['type'], $case);
+            $this->assertStringContainsString("attribute '" . $attribute['key'] . "'", $rejected['body']['message'], $case);
+        }
+    }
+
+    /**
+     * The filters the endpoints set still work inline: an encrypted string reads
+     * back in plain text and cannot be queried, like one the string endpoint made.
+     */
+    public function testCreateCollectionInlineEncryptedString(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Inline Encrypted',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+            $schemaResource => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN, 'filters' => ['encrypt']],
+                ['key' => 'published', 'type' => ColumnType::Datetime->value, 'filters' => ['datetime']],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $secret = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId, '', 'secret'), $headers);
+
+        $this->assertSame(200, $secret['headers']['status-code']);
+        $this->assertTrue($secret['body']['encrypt']);
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['secret' => 'hunter2'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code']);
+        $this->assertSame('hunter2', $record['body']['secret']);
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $record['body']['$id']), $headers);
+
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame('hunter2', $read['body']['secret']);
+
+        $queried = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('secret', ['hunter2'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(400, $queried['headers']['status-code']);
+        $this->assertStringContainsString('Cannot query encrypted attribute', $queried['body']['message']);
+    }
+
+    /**
+     * A bigint carries one stored type whichever path created it, so it is
+     * updatable and listed by a type filter from either one.
+     */
+    public function testUpdateBigIntFromEveryCreationPath(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Totals',
+            $schemaResource => [
+                ['key' => 'inline', 'type' => ColumnType::BigInteger->value],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $dedicated = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containerId, 'bigint'), $headers, [
+            'key' => 'dedicated',
+            'required' => false,
+        ]);
+
+        $this->assertSame(202, $dedicated['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $containerId, 'inline');
+        $this->waitForAttribute($databaseId, $containerId, 'dedicated');
+
+        foreach (['inline', 'dedicated'] as $key) {
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'bigint', $key), $headers, [
+                'required' => false,
+                'min' => 10,
+                'max' => 5000,
+                'default' => 20,
+            ]);
+
+            $this->assertSame(200, $updated['headers']['status-code'], "Updating the '{$key}' bigint failed: " . ($updated['body']['message'] ?? ''));
+            $this->assertSame('bigint', $updated['body']['type']);
+            $this->assertSame(10, $updated['body']['min']);
+            $this->assertSame(5000, $updated['body']['max']);
+            $this->assertSame(20, $updated['body']['default']);
+        }
+
+        $listed = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers, [
+            'queries' => [
+                Query::equal('type', ['bigint'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+
+        $keys = \array_column($listed['body'][$schemaResource], 'key');
+        \sort($keys);
+
+        $this->assertSame(['dedicated', 'inline'], $keys);
     }
 
     public function testListAttributes(): void
@@ -1438,7 +2008,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'patch',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -1507,7 +2077,7 @@ trait DatabasesBase
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Index on available attribute',
             $this->getSecurityParam() => true,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
@@ -1531,7 +2101,7 @@ trait DatabasesBase
 
             $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $headers, [
                 'key' => $key . 'Index',
-                'type' => Database::INDEX_KEY,
+                'type' => IndexType::Key->value,
                 $this->getIndexAttributesParam() => [$key],
             ]);
             $this->assertSame(202, $index['headers']['status-code'], "Index on '{$key}' was rejected right after the attribute reported available: " . ($index['body']['message'] ?? ''));
@@ -1555,7 +2125,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Encrypted sizes',
             $this->getSecurityParam() => true,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
@@ -1604,7 +2174,7 @@ trait DatabasesBase
             $this->assertEquals(150, $encrypted['body']['size']);
 
             $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [$type => 'a'],
             ]);
             $this->assertEquals(201, $document['headers']['status-code']);
@@ -1636,7 +2206,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Clear defaults',
         ]);
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -1658,7 +2228,7 @@ trait DatabasesBase
         }
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['string' => null, 'boolean' => null],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1677,7 +2247,7 @@ trait DatabasesBase
         }
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['renamed' => null, 'boolean' => null],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1698,7 +2268,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Required later',
         ]);
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -1715,14 +2285,14 @@ trait DatabasesBase
         }
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'original'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
         $documentId = $document['body']['$id'];
 
         $second = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'original'],
         ]);
         $this->assertEquals(201, $second['headers']['status-code']);
@@ -1768,7 +2338,7 @@ trait DatabasesBase
          * Test for FAILURE
          */
         $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'missing note'],
         ]);
         $this->assertEquals(400, $created['headers']['status-code']);
@@ -1791,7 +2361,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database 2'
         ]);
 
@@ -1800,7 +2370,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Players',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -1852,7 +2422,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mismatched Type Database'
         ]);
 
@@ -1863,7 +2433,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'MismatchedType',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1967,7 +2537,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Alias Precedence Database'
         ]);
 
@@ -1978,7 +2548,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'AliasPrecedence',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -2023,6 +2593,147 @@ trait DatabasesBase
         $this->assertEquals('plain', $response['body']['default']);
     }
 
+    /**
+     * onDelete is optional when updating a relationship, and leaving it out keeps
+     * the action the relationship already has, on both of its sides.
+     */
+    public function testUpdateRelationshipAttributeWithoutOnDelete(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Books',
+        ]);
+
+        $this->assertEquals(201, $books['headers']['status-code']);
+        $booksId = $books['body']['$id'];
+
+        $authors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Authors',
+        ]);
+
+        $this->assertEquals(201, $authors['headers']['status-code']);
+        $authorsId = $authors['body']['$id'];
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $booksId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $authorsId,
+            'type' => RelationshipType::OneToOne->value,
+            'key' => 'author',
+            'twoWay' => true,
+            'twoWayKey' => 'book',
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
+        ]);
+
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $booksId, 'author');
+        $this->waitForAttribute($databaseId, $authorsId, 'book');
+
+        $renamed = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $booksId, 'relationship', 'author'), $headers, [
+            'newKey' => 'writer',
+        ]);
+
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+        $this->assertSame('writer', $renamed['body']['key']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $renamed['body']['onDelete']);
+
+        $writer = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $booksId, '', 'writer'), $headers);
+
+        $this->assertEquals(200, $writer['headers']['status-code']);
+        $this->assertSame('book', $writer['body']['twoWayKey']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $writer['body']['onDelete']);
+
+        $book = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $authorsId, '', 'book'), $headers);
+
+        $this->assertEquals(200, $book['headers']['status-code']);
+        $this->assertSame('writer', $book['body']['twoWayKey']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $book['body']['onDelete']);
+
+        $legacyAliasUrl = $this->getSchemaUrl($databaseId, $booksId) . '/writer/relationship';
+        $emptyUpdate = $this->client->call(Client::METHOD_PATCH, $legacyAliasUrl, $headers);
+
+        $this->assertEquals(200, $emptyUpdate['headers']['status-code']);
+        $this->assertSame('writer', $emptyUpdate['body']['key']);
+        $this->assertSame(RelationshipDeleteAction::Cascade->value, $emptyUpdate['body']['onDelete']);
+    }
+
+    public function testUpdateRelationshipAttributeOnDeleteReachesBothSides(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Books',
+        ]);
+
+        $this->assertSame(201, $books['headers']['status-code']);
+        $booksId = $books['body']['$id'];
+
+        $authors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Authors',
+        ]);
+
+        $this->assertSame(201, $authors['headers']['status-code']);
+        $authorsId = $authors['body']['$id'];
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $booksId, 'relationship'), $headers, [
+            $this->getRelatedIdParam() => $authorsId,
+            'type' => RelationshipType::OneToOne->value,
+            'key' => 'author',
+            'twoWay' => true,
+            'twoWayKey' => 'book',
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
+        ]);
+
+        $this->assertSame(202, $relationship['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $booksId, 'author');
+        $this->waitForAttribute($databaseId, $authorsId, 'book');
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $booksId, 'relationship', 'author'), $headers, [
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $updated['body']['onDelete']);
+
+        $author = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $booksId, '', 'author'), $headers);
+
+        $this->assertSame(200, $author['headers']['status-code']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $author['body']['onDelete']);
+
+        $book = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $authorsId, '', 'book'), $headers);
+
+        $this->assertSame(200, $book['headers']['status-code']);
+        $this->assertSame(RelationshipDeleteAction::SetNull->value, $book['body']['onDelete']);
+    }
+
     public function testAttributeResponseModels(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -2035,7 +2746,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Response Models',
             // 'permissions' missing on purpose to make sure it's optional
             $this->getSecurityParam() => true,
@@ -2729,7 +3440,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'IndexTestCollection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -3061,6 +3772,92 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * Adapters without trigram support have to refuse the type before anything is queued.
+     */
+    public function testCreateTrigramIndex(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Trigram',
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 128],
+                ['key' => 'year', 'type' => ColumnType::Integer->value],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'titleTrigram',
+            'type' => IndexType::Trigram->value,
+            $this->getIndexAttributesParam() => ['title'],
+        ]);
+
+        $inline = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Trigram Inline',
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 128],
+            ],
+            'indexes' => [
+                ['key' => 'titleTrigram', 'type' => IndexType::Trigram->value, 'attributes' => ['title']],
+            ],
+        ]);
+
+        if (!$this->getSupportForTrigramIndex()) {
+            $this->assertEquals(400, $index['headers']['status-code']);
+            $this->assertEquals('Trigram indexes are not supported', $index['body']['message']);
+            $this->assertEquals(400, $inline['headers']['status-code']);
+            $this->assertEquals('Trigram indexes are not supported', $inline['body']['message']);
+            return;
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->waitForIndex($databaseId, $containerId, 'titleTrigram');
+
+        $this->assertEquals(201, $inline['headers']['status-code']);
+        $this->assertEquals('available', $inline['body']['indexes'][0]['status']);
+
+        /**
+         * Test for FAILURE
+         */
+        $integer = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'yearTrigram',
+            'type' => IndexType::Trigram->value,
+            $this->getIndexAttributesParam() => ['year'],
+        ]);
+
+        $this->assertEquals(400, $integer['headers']['status-code']);
+        $this->assertEquals('Trigram index can only be created on string type attributes', $integer['body']['message']);
+
+        $ordered = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'titleTrigramOrdered',
+            'type' => IndexType::Trigram->value,
+            $this->getIndexAttributesParam() => ['title'],
+            'orders' => ['ASC'],
+        ]);
+
+        $this->assertEquals(400, $ordered['headers']['status-code']);
+        $this->assertEquals('Trigram indexes do not support orders or lengths', $ordered['body']['message']);
+    }
+
     public function testGetIndexByKeyWithLengths(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -3186,7 +3983,7 @@ trait DatabasesBase
     {
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
-        $recordId = ID::unique();
+        $recordId = Id::unique();
 
         $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -3231,7 +4028,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -3252,7 +4049,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
@@ -3275,7 +4072,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
@@ -3298,7 +4095,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
                 'birthDay' => null // adding null here as documentsdb will require it as for documentsdb this document will be created
@@ -3406,10 +4203,10 @@ trait DatabasesBase
          */
         $missingDataCases = [
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => null,
             ],
         ];
@@ -3434,7 +4231,7 @@ trait DatabasesBase
             }
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $invalid = $this->client->call(
             Client::METHOD_POST,
             $this->getRecordUrl($databaseId, $data['moviesId']),
@@ -3463,7 +4260,7 @@ trait DatabasesBase
             $this->getRecordUrl($databaseId, $data['moviesId']),
             $headers,
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => \json_encode([]),
             ]
         );
@@ -3476,7 +4273,7 @@ trait DatabasesBase
             $this->getRecordUrl($databaseId, $data['moviesId']),
             $headers,
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => \json_encode([
                     'title' => 'Encoded object',
                     'releaseYear' => 2000,
@@ -3491,7 +4288,7 @@ trait DatabasesBase
             return;
         }
 
-        $bulkDocumentId = ID::unique();
+        $bulkDocumentId = Id::unique();
         $invalidBulk = $this->client->call(
             Client::METHOD_POST,
             $this->getRecordUrl($databaseId, $data['moviesId']),
@@ -3532,7 +4329,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Bulk without data key',
             $this->getSecurityParam() => false,
             'permissions' => [
@@ -3553,7 +4350,7 @@ trait DatabasesBase
             $this->waitForAllAttributes($databaseId, $bulkCollectionId);
         }
 
-        $bulkDocumentId = ID::unique();
+        $bulkDocumentId = Id::unique();
         $bulkCreated = $this->client->call(
             Client::METHOD_POST,
             $this->getRecordUrl($databaseId, $bulkCollectionId),
@@ -3577,7 +4374,7 @@ trait DatabasesBase
     {
         $data = $this->setupIndexes();
         $databaseId = $data['databaseId'];
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $data['moviesId'], $documentId), array_merge([
             'content-type' => 'application/json',
@@ -3780,10 +4577,10 @@ trait DatabasesBase
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 $this->getRelatedIdParam() => 'library-upsert',
-                'type' => Database::RELATION_ONE_TO_ONE,
+                'type' => RelationshipType::OneToOne->value,
                 'key' => 'library',
                 'twoWay' => true,
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
             ]);
 
             $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
@@ -3803,7 +4600,7 @@ trait DatabasesBase
             $this->assertEquals(202, $libraryName['headers']['status-code']);
 
             // upserting values
-            $documentId = ID::unique();
+            $documentId = Id::unique();
             $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $documentId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -3880,7 +4677,7 @@ trait DatabasesBase
 
 
             // data should get added
-            $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], ID::unique()), array_merge([
+            $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], Id::unique()), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -4048,7 +4845,7 @@ trait DatabasesBase
             // upsertion for the related document without passing permissions - only for databases that support relationships
             if ($this->getSupportForRelationships() && $person !== null && $library !== null) {
                 // data should get added
-                $newPersonId = ID::unique();
+                $newPersonId = Id::unique();
                 $personNoPerm = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $newPersonId), array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -4203,7 +5000,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Dummy',
                 'releaseYear' => 1944,
@@ -4233,6 +5030,82 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+    }
+
+    public function testCreateQuery(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $documentIds = $data['documentIds'];
+        $url = $this->getRecordUrl($databaseId, $data['moviesId']);
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $queries = [
+            Query::equal('$id', $documentIds)->toString(),
+            Query::limit(10)->toString(),
+        ];
+
+        $list = $this->client->call(Client::METHOD_GET, $url, $headers, [
+            'queries' => $queries,
+        ]);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        $created = $this->client->call(Client::METHOD_POST, $url . '/query', $headers, [
+            'queries' => $queries,
+        ]);
+
+        $this->assertSame(200, $created['headers']['status-code']);
+        $this->assertSame($list['body']['total'], $created['body']['total']);
+
+        $resource = $this->getRecordResource();
+        $this->assertSame(
+            array_column($list['body'][$resource], '$id'),
+            array_column($created['body'][$resource], '$id'),
+        );
+
+        $values = $documentIds;
+        for ($index = 0; $index < 80; $index++) {
+            $values[] = Id::unique();
+        }
+
+        $large = $this->client->call(Client::METHOD_POST, $url . '/query', $headers, [
+            'queries' => [
+                Query::equal('$id', $values)->toString(),
+                Query::limit(10)->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $large['headers']['status-code']);
+        $this->assertSame($list['body']['total'], $large['body']['total']);
+        $this->assertSame(
+            array_column($list['body'][$resource], '$id'),
+            array_column($large['body'][$resource], '$id'),
+        );
+    }
+
+    public function testListDocumentsTotalAcceptsBooleanStrings(): void
+    {
+        $data = $this->setupDocuments();
+        $documentIds = $data['documentIds'];
+
+        foreach (['false' => 0, '0' => 0, 'true' => \count($documentIds), '1' => \count($documentIds)] as $total => $expected) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', $documentIds)->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $documents['headers']['status-code']);
+            $this->assertCount(\count($documentIds), $documents['body'][$this->getRecordResource()]);
+            $this->assertSame($expected, $documents['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
     }
 
     public function testListDocumentsWithCache(): void
@@ -4624,7 +5497,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'CacheEmpty',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -4644,7 +5517,7 @@ trait DatabasesBase
             $this->waitForAttribute($databaseId, $containerId, 'title');
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
 
         // Read a document that does not exist yet -> negatively caches the miss.
         $missing = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $documentId), array_merge([
@@ -5041,6 +5914,103 @@ trait DatabasesBase
         $this->assertCount(1, $documents['body'][$this->getRecordResource()]);
     }
 
+    public function testListDocumentsWithJoinPagesPastAnUnreadableCursor(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $userId = $this->getUser()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $posts = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Cursor posts',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($userId))],
+        ]);
+        $this->assertSame(201, $posts['headers']['status-code']);
+        $postsId = $posts['body']['$id'];
+
+        $authors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Cursor authors',
+            $this->getSecurityParam() => false,
+            'permissions' => [Permission::read(Role::user($userId))],
+        ]);
+        $this->assertSame(201, $authors['headers']['status-code']);
+        $authorsId = $authors['body']['$id'];
+
+        $this->createAttribute($databaseId, $postsId, 'string', ['key' => 'title', 'size' => 128, 'required' => false]);
+        $this->createAttribute($databaseId, $postsId, 'string', ['key' => 'authorId', 'size' => 36, 'required' => false]);
+        $this->createAttribute($databaseId, $authorsId, 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+        $this->waitForAttribute($databaseId, $postsId, 'title');
+        $this->waitForAttribute($databaseId, $postsId, 'authorId');
+        $this->waitForAttribute($databaseId, $authorsId, 'name');
+
+        $author = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $authorsId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'Author'],
+        ]);
+        $this->assertSame(201, $author['headers']['status-code']);
+
+        $postIds = [];
+        foreach (['Post 1' => $userId, 'Post 2' => 'someone-else', 'Post 3' => $userId, 'Post 4' => $userId] as $title => $reader) {
+            $post = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $postsId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['title' => $title, 'authorId' => $author['body']['$id']],
+                'permissions' => [Permission::read(Role::user($reader))],
+            ]);
+            $this->assertSame(201, $post['headers']['status-code']);
+            $postIds[$title] = $post['body']['$id'];
+        }
+
+        $page = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $postsId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($authorsId, 'author', [Query::on('authorId', '$id')])->toString(),
+                Query::select(['authorId'])->toString(),
+                Query::orderAsc('title')->toString(),
+                Query::cursorAfter(new Document(['$id' => $postIds['Post 2']]))->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $page['headers']['status-code'], 'a cursor the caller cannot read, or a select without the order attribute, must not break the next page');
+        $this->assertSame(
+            [$postIds['Post 3'], $postIds['Post 4']],
+            \array_column($page['body'][$this->getRecordResource()], '$id'),
+        );
+    }
+
+    public function testListDocumentsRejectsOrderByRelationshipWithoutColumn(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDocuments();
+
+        foreach ([Query::orderAsc('starringActors'), Query::orderDesc('starringActors')] as $order) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [$order->toString()],
+            ]);
+
+            $this->assertSame(400, $documents['headers']['status-code'], \json_encode($documents['body']));
+            $this->assertSame(Exception::GENERAL_QUERY_INVALID, $documents['body']['type']);
+            $this->assertStringContainsString('starringActors', $documents['body']['message']);
+        }
+    }
+
     public function testListDocumentsLimitAndOffset(): void
     {
         $data = $this->setupDocuments();
@@ -5337,7 +6307,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
@@ -5448,6 +6418,139 @@ trait DatabasesBase
         }
     }
 
+    public function testFractionalOperandsOnAnIntegerColumnRoundOnceForEveryEngine(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $userHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Fractional operands',
+            $this->getSecurityParam() => false,
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+            ],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'count', 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'counts', 'required' => false, 'array' => true]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $record = fn (array $data): string => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $userHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => $data,
+        ])['body']['$id'];
+        $read = fn (string $recordId): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders)['body'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // [stored, operator, expected]
+        $rounded = [
+            'increment rounds a half away from zero' => [11, Operator::increment(1.5), 13],
+            'increment rounds a half away from zero on an even count' => [10, Operator::increment(1.5), 12],
+            'increment of a half onto a negative count' => [-12, Operator::increment(0.5), -11],
+            'negative increment rounds a half away from zero' => [10, Operator::increment(-2.5), 7],
+            'decrement rounds a half away from zero' => [11, Operator::decrement(0.5), 10],
+            'increment below a half changes nothing' => [10, Operator::increment(0.4), 10],
+            'decrement below a half changes nothing' => [10, Operator::decrement(0.4), 10],
+            'increment below a half ignores its limit' => [10, Operator::increment(0.4, 5), 10],
+            'increment within a limit' => [11, Operator::increment(1.5, 20), 13],
+            'decrement within a limit' => [11, Operator::decrement(0.5, 0), 10],
+            'increment onto a floored limit' => [11, Operator::increment(1.5, 13.5), 13],
+            'increment past a floored limit' => [12, Operator::increment(1.5, 13.9), 12],
+            'decrement onto a ceiled limit' => [5, Operator::decrement(2, 2.1), 3],
+            'decrement past a ceiled limit' => [4, Operator::decrement(1.5, 2.1), 4],
+        ];
+        foreach ($rounded as $name => [$stored, $operator, $expected]) {
+            $recordId = $record(['count' => $stored]);
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+                'data' => ['count' => $operator->toString()],
+            ]);
+
+            $this->assertSame(200, $updated['headers']['status-code'], "{$name}: " . ($updated['body']['message'] ?? ''));
+            $this->assertSame($expected, $updated['body']['count'], $name);
+            $this->assertSame($expected, $read($recordId)['count'], $name);
+        }
+
+        $recordId = $record(['count' => 11]);
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['count' => Operator::increment(1.5, 20)->toString()],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code'], $upserted['body']['message'] ?? '');
+        $this->assertSame(13, $read($recordId)['count'], 'An upsert rounds the amount as an update does');
+
+        $even = $record(['count' => 10]);
+        $odd = $record(['count' => 11]);
+        $bulk = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
+            'data' => ['count' => Operator::increment(1.5, 100)->toString()],
+            'queries' => [Query::equal('$id', [$even, $odd])->toString()],
+        ]);
+        $this->assertSame(200, $bulk['headers']['status-code'], $bulk['body']['message'] ?? '');
+        $this->assertSame(2, $bulk['body']['total']);
+        $this->assertSame(12, $read($even)['count'], 'A bulk update adds the rounded amount to every document');
+        $this->assertSame(13, $read($odd)['count'], 'A bulk update adds the rounded amount to every document');
+
+        $recordId = $record(['count' => 10]);
+        $increased = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId) . '/count/increment', $userHeaders, [
+            'value' => 1.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
+        $this->assertSame(12, $increased['body']['count']);
+        $this->assertSame(12, $read($recordId)['count'], 'A counter rounds its change as the operator does');
+
+        /**
+         * Test for FAILURE
+         */
+        $refused = [
+            'multiply by a fraction' => [5, Operator::multiply(2.5)],
+            'multiply by a fraction within a limit' => [5, Operator::multiply(2.5, 100)],
+            'multiply with a fractional limit' => [13, Operator::multiply(2, 25.5)],
+            'divide by a fraction' => [10, Operator::divide(1.5)],
+            'divide by a fraction with a limit' => [5, Operator::divide(0.4, 0)],
+            'divide with a fractional limit' => [5, Operator::divide(2, 0.5)],
+            'modulo by a fraction' => [13, Operator::modulo(3.5)],
+            'power by a fraction' => [2, Operator::power(2.5)],
+            'power with a fractional limit' => [3, Operator::power(2, 8.5)],
+            'power by a negative fraction' => [4, Operator::power(-0.5)],
+        ];
+        foreach ($refused as $name => [$stored, $operator]) {
+            $recordId = $record(['count' => $stored]);
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+                'data' => ['count' => $operator->toString()],
+            ]);
+
+            $this->assertSame(400, $updated['headers']['status-code'], "{$name}: a fractional operand of this operator on an integer is refused");
+            $this->assertSame($stored, $read($recordId)['count'], $name);
+        }
+
+        $recordId = $record(['counts' => [1]]);
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['counts' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toString()],
+        ]);
+        $this->assertSame(400, $updated['headers']['status-code'], 'A fractional item added to an integer array is refused');
+        $this->assertSame([1], $read($recordId)['counts']);
+    }
+
     public function testOperators(): void
     {
         if (!$this->getSupportForOperators()) {
@@ -5461,7 +6564,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database for Operators'
         ]);
 
@@ -5474,7 +6577,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Operator Tests',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -5563,7 +6666,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Operator Test',
                 'releaseYear' => 2020,
@@ -5666,7 +6769,7 @@ trait DatabasesBase
         $this->assertEquals([10, 20, 30], $updated['body']['integers']);
 
         // Test upsert with operators
-        $upsertId = ID::unique();
+        $upsertId = Id::unique();
         $upserted = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $upsertId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5715,7 +6818,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database for Bulk Operators'
         ]);
 
@@ -5728,7 +6831,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Bulk Operator Tests',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -5788,7 +6891,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Bulk Test 1',
                 'releaseYear' => 2020,
@@ -5806,7 +6909,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Bulk Test 2',
                 'releaseYear' => 2021,
@@ -5858,6 +6961,60 @@ trait DatabasesBase
         $this->assertEquals(2031, $verify2['body']['releaseYear']);
     }
 
+    public function testEncryptedAttributeOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Encrypted operators',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $secret = $this->createAttribute($databaseId, $collectionId, 'varchar', [
+            'key' => 'secret',
+            'required' => false,
+            'size' => 200,
+            'encrypt' => true,
+        ]);
+        $this->assertEquals(202, $secret['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $collectionId, 'secret');
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['secret' => 'banana'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => Operator::stringReplace('a', 'o')->toString()],
+        ]);
+        $this->assertEquals(400, $document['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => 'cherry'],
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertSame('cherry', $document['body']['secret']);
+    }
+
     public function testDeleteDocument(): void
     {
         $data = $this->setupDocuments();
@@ -5866,7 +7023,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2017,
@@ -5916,7 +7073,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -5928,7 +7085,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'invalidDocumentStructure',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -6064,7 +7221,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => ID::custom('defaultRequired'),
+            'attributeId' => Id::custom('defaultRequired'),
             'required' => true,
             'default' => 12
         ]);
@@ -6074,7 +7231,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => ID::custom('enumDefault'),
+            'attributeId' => Id::custom('enumDefault'),
             'elements' => ['north', 'west'],
             'default' => 'south'
         ]);
@@ -6084,7 +7241,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => ID::custom('enumDefault'),
+            'attributeId' => Id::custom('enumDefault'),
             'elements' => ['north', 'west'],
             'default' => 'NORTH'
         ]);
@@ -6113,7 +7270,7 @@ trait DatabasesBase
         $this->assertEquals(202, $ip['headers']['status-code']);
         $this->assertEquals(202, $url['headers']['status-code']);
         $this->assertEquals(202, $range['headers']['status-code']);
-        $this->assertEquals(202, $floatRange['headers']['status-code']);
+        $this->assertEquals(202, $floatRange['headers']['status-code'], 'Float range creation failed: ' . \json_encode($floatRange['body'] ?? []));
         $this->assertEquals(202, $probability['headers']['status-code']);
         $this->assertEquals(202, $upperBound['headers']['status-code']);
         $this->assertEquals(202, $lowerBound['headers']['status-code']);
@@ -6146,14 +7303,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'email' => 'user@example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6161,14 +7318,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'enum' => 'yes',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6176,14 +7333,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'ip' => '1.1.1.1',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6191,14 +7348,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'url' => 'http://www.example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6206,14 +7363,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'range' => 3,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6221,14 +7378,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'floatRange' => 1.4,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6236,14 +7393,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'probability' => 0.99999,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6251,14 +7408,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'upperBound' => 8,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6266,14 +7423,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'lowerBound' => 8,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6295,14 +7452,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'email' => 'user@@example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6310,14 +7467,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'enum' => 'badEnum',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6325,14 +7482,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'ip' => '1.1.1.1.1',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6340,14 +7497,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'url' => 'example...com',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6355,14 +7512,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'range' => 11,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6370,14 +7527,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'floatRange' => 2.5,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6385,14 +7542,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'probability' => 1.1,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6400,14 +7557,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'upperBound' => 11,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6415,14 +7572,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'lowerBound' => 3,
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -6467,7 +7624,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -6582,7 +7739,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'EnforceCollectionAndDocumentPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -6595,7 +7752,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'enforceCollectionAndDocumentPermissions',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -6644,7 +7801,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
@@ -6661,7 +7818,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
@@ -6678,13 +7835,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom('other'))),
-                Permission::update(Role::user(ID::custom('other'))),
+                Permission::read(Role::user(Id::custom('other'))),
+                Permission::update(Role::user(Id::custom('other'))),
             ],
         ]);
 
@@ -6715,7 +7872,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::custom('other'),
+            'userId' => Id::custom('other'),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -6769,7 +7926,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'EnforceCollectionPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -6782,7 +7939,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'enforceCollectionPermissions',
             'permissions' => [
                 Permission::read(Role::user($user)),
@@ -6828,7 +7985,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
@@ -6845,7 +8002,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
@@ -6862,13 +8019,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom('other2'))),
-                Permission::update(Role::user(ID::custom('other2'))),
+                Permission::read(Role::user(Id::custom('other2'))),
+                Permission::update(Role::user(Id::custom('other2'))),
             ],
         ]);
 
@@ -6899,7 +8056,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::custom('other2'),
+            'userId' => Id::custom('other2'),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -6970,7 +8127,7 @@ trait DatabasesBase
 
         // Create a dedicated collection for unique index testing
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'uniqueIndexTest',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -6996,24 +8153,24 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Unique Title A'],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Unique Title B'],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -7022,7 +8179,7 @@ trait DatabasesBase
             'key' => 'unique_title',
             'type' => 'unique',
             $this->getIndexAttributesParam() => ['title'],
-            'orders' => [Database::ORDER_DESC],
+            'orders' => ['DESC'],
         ]);
 
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
@@ -7034,14 +8191,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Unique Title A',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -7054,14 +8211,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Unique Title C',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -7072,14 +8229,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Unique Title A',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -7109,7 +8266,7 @@ trait DatabasesBase
         ];
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['moviesId']), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Creation Date Test',
                 'releaseYear' => 2000
@@ -7165,7 +8322,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Empty Permissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -7178,13 +8335,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Movies',
             'permissions' => [
-                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::create(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ],
             $this->getSecurityParam() => true,
         ]);
@@ -7212,7 +8369,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Captain America',
             ],
@@ -7237,7 +8394,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(Id::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -7250,8 +8407,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(Id::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(Id::custom($this->getUser()['$id']))),
             ],
         ]);
 
@@ -7287,7 +8444,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Boolean'
         ]);
 
@@ -7335,7 +8492,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'person',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -7353,7 +8510,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'library',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -7383,11 +8540,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $library['body']['$id'],
-            'type' => Database::RELATION_ONE_TO_ONE,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'library',
             'twoWay' => true,
             'twoWayKey' => 'person',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
@@ -7423,7 +8580,7 @@ trait DatabasesBase
         $this->assertEquals('oneToOne', $attributes[1]['relationType']);
         $this->assertEquals(true, $attributes[1]['twoWay']);
         $this->assertEquals('person', $attributes[1]['twoWayKey']);
-        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attributes[1]['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attributes[1]['onDelete']);
 
         $attribute = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $person['body']['$id'], '', 'library'), array_merge([
             'content-type' => 'application/json',
@@ -7440,13 +8597,13 @@ trait DatabasesBase
         $this->assertEquals('oneToOne', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals('person', $attribute['body']['twoWayKey']);
-        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attribute['body']['onDelete']);
 
         $person1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $person['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'library' => [
                     '$id' => 'library1',
@@ -7470,7 +8627,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'library' => [
                     'libraryName' => 'Library 2',
@@ -7596,7 +8753,7 @@ trait DatabasesBase
         ];
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'parent',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -7605,7 +8762,7 @@ trait DatabasesBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'child',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -7622,7 +8779,7 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $keyHeaders, [
             $this->getRelatedIdParam() => $childId,
-            'type' => Database::RELATION_ONE_TO_ONE,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'child',
         ]);
         $this->assertEquals(202, $relationship['headers']['status-code']);
@@ -7638,8 +8795,8 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          */
-        $documentId = ID::unique();
-        $relatedId = ID::unique();
+        $documentId = Id::unique();
+        $relatedId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $headers, [
             $this->getRecordIdParam() => $documentId,
             'data' => [
@@ -7671,10 +8828,10 @@ trait DatabasesBase
          * Test for FAILURE
          */
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'child' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => $foreignPermissions,
                     'name' => 'Foreign child',
                 ],
@@ -7686,7 +8843,7 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $parentId, $documentId), $headers, [
             'data' => [
                 'child' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => $foreignPermissions,
                     'name' => 'Foreign child',
                 ],
@@ -7695,10 +8852,10 @@ trait DatabasesBase
 
         $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $parentId, ID::unique()), $headers, [
+        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $parentId, Id::unique()), $headers, [
             'data' => [
                 'child' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => $foreignPermissions,
                     'name' => 'Foreign child',
                 ],
@@ -7734,7 +8891,7 @@ trait DatabasesBase
         $containers = [];
         foreach (['parent', 'child', 'grandchild'] as $name) {
             $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => $name,
                 'permissions' => $containerPermissions,
                 $this->getSecurityParam() => true,
@@ -7754,7 +8911,7 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containers['parent'], 'relationship'), $keyHeaders, [
             $this->getRelatedIdParam() => $containers['child'],
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'key' => 'children',
         ]);
         $this->assertEquals(202, $relationship['headers']['status-code']);
@@ -7762,7 +8919,7 @@ trait DatabasesBase
 
         $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containers['child'], 'relationship'), $keyHeaders, [
             $this->getRelatedIdParam() => $containers['grandchild'],
-            'type' => Database::RELATION_ONE_TO_ONE,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'grandchild',
         ]);
         $this->assertEquals(202, $relationship['headers']['status-code']);
@@ -7774,13 +8931,13 @@ trait DatabasesBase
             Permission::write(Role::user('relatedListUser')),
         ];
         $child = fn (array $permissions, array $grandchild = []) => array_filter([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'name' => 'Child',
             'grandchild' => $grandchild,
         ]);
         $grandchild = fn (array $permissions) => [
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'name' => 'Grandchild',
         ];
@@ -7789,7 +8946,7 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          */
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
             $this->getRecordIdParam() => $documentId,
             'data' => [
@@ -7804,7 +8961,7 @@ trait DatabasesBase
         $this->assertCount(2, $document['body']['children']);
 
         // Permissions a related document already has can be sent back unchanged.
-        $existingId = ID::unique();
+        $existingId = Id::unique();
         $existingPermissions = [
             Permission::read(Role::team('relatedListTeam')),
             Permission::update(Role::user('relatedListUser')),
@@ -7834,7 +8991,7 @@ trait DatabasesBase
          * Test for FAILURE
          */
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'children' => [
                     $child($ownPermissions),
@@ -7846,7 +9003,7 @@ trait DatabasesBase
         $this->assertEquals($expected, $document['headers']['status-code']);
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'children' => [
                     $child($ownPermissions, $grandchild($foreignPermissions)),
@@ -7870,7 +9027,7 @@ trait DatabasesBase
 
         $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containers['parent'], ID::unique()), $headers, [
+        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containers['parent'], Id::unique()), $headers, [
             'data' => [
                 'children' => [
                     $child($ownPermissions, $grandchild($foreignPermissions)),
@@ -7927,9 +9084,9 @@ trait DatabasesBase
         $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals('person_one_to_many', $attribute['body']['twoWayKey']);
 
-        $personDocId = ID::unique();
-        $libraryDoc10Id = ID::unique();
-        $libraryDoc11Id = ID::unique();
+        $personDocId = Id::unique();
+        $libraryDoc10Id = Id::unique();
+        $libraryDoc11Id = Id::unique();
 
         $person2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), array_merge([
             'content-type' => 'application/json',
@@ -8002,7 +9159,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -8021,7 +9178,7 @@ trait DatabasesBase
         $this->assertEquals(false, $attribute['body']['array']);
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
-        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
+        $this->assertEquals(RelationshipDeleteAction::Cascade->value, $attribute['body']['onDelete']);
     }
 
     public function testManyToOneRelationship(): void
@@ -8040,7 +9197,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Albums',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8066,7 +9223,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Artists',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8093,7 +9250,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $artists['body']['$id'],
-            'type' => Database::RELATION_MANY_TO_ONE,
+            'type' => RelationshipType::ManyToOne->value,
             'twoWay' => true,
             'key' => 'artist',
             'twoWayKey' => 'albums',
@@ -8126,7 +9283,7 @@ trait DatabasesBase
             'data' => [
                 'name' => 'Album 1',
                 'artist' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'name' => 'Artist 1',
                 ],
             ],
@@ -8189,7 +9346,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Sports',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8215,7 +9372,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Players',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8242,11 +9399,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $players['body']['$id'],
-            'type' => Database::RELATION_MANY_TO_MANY,
+            'type' => RelationshipType::ManyToMany->value,
             'twoWay' => true,
             'key' => 'players',
             'twoWayKey' => 'sports',
-            'onDelete' => Database::RELATION_MUTATE_SET_NULL,
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
         ]);
 
         $this->assertEquals(202, $response['headers']['status-code']);
@@ -8444,7 +9601,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Or queries'
         ]);
 
@@ -8460,7 +9617,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'USA Presidents',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8495,7 +9652,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'first_name' => 'Donald',
                 'last_name' => 'Trump',
@@ -8510,7 +9667,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'first_name' => 'George',
                 'last_name' => 'Bush',
@@ -8525,7 +9682,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'first_name' => 'Joe',
                 'last_name' => 'Biden',
@@ -8580,7 +9737,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Collection1',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8594,7 +9751,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Collection2',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8635,18 +9792,19 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $collection2,
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'collection2'
         ]);
 
         $this->waitForAttribute($databaseId, $collection1, 'collection2');
+        $this->waitForAttribute($databaseId, $collection2, $collection1);
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collection1), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Document 1',
                 'collection2' => [
@@ -8656,6 +9814,7 @@ trait DatabasesBase
                 ],
             ],
         ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
 
         $update = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collection1, $document['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -8667,6 +9826,621 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertSame('Document 1 Updated', $update['body']['name']);
+
+        $updated = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collection1, $document['body']['$id']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'queries' => [Query::select(['*', 'collection2.*'])->toString()],
+        ]);
+        $this->assertCount(1, $updated['body']['collection2'], 'Updating the document must keep its existing related document');
+    }
+
+    public function testMalformedRelationshipValuesAreRejected(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'Album'],
+        ]);
+        $this->assertSame(201, $album['headers']['status-code']);
+
+        $malformed = [
+            'a scalar' => 12345,
+            'a malformed nested ID' => ['$id' => 'bad id!!', 'name' => 'Artist'],
+            'a malformed related document ID' => 'bad id!!',
+        ];
+
+        foreach ($malformed as $shape => $artist) {
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['name' => 'Album', 'artist' => $artist],
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], "create with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $created['body']['type'], "create with {$shape}");
+
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $album['body']['$id']), $headers, [
+                'data' => ['artist' => $artist],
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], "update with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $updated['body']['type'], "update with {$shape}");
+
+            $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, Id::unique()), $headers, [
+                'data' => ['name' => 'Album', 'artist' => $artist],
+            ]);
+            $this->assertSame(400, $upserted['headers']['status-code'], "upsert with {$shape}");
+            $this->assertSame(Exception::RELATIONSHIP_VALUE_INVALID, $upserted['body']['type'], "upsert with {$shape}");
+        }
+
+        $artists = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $fixture['artistsId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $artists['headers']['status-code']);
+        $this->assertSame(0, $artists['body']['total'], 'a rejected payload must not create a related document');
+    }
+
+    public function testNestedUniqueIdsCreateDistinctRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $albumIds = [];
+        foreach (['Artist 1', 'Artist 2'] as $artistName) {
+            $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => [
+                    'name' => 'Album by ' . $artistName,
+                    'artist' => ['$id' => 'unique()', 'name' => $artistName],
+                ],
+            ]);
+            $this->assertSame(201, $album['headers']['status-code']);
+            $albumIds[$artistName] = $album['body']['$id'];
+        }
+
+        $this->assertSame(['Artist 1', 'Artist 2'], $this->nestedArtistNames($fixture), 'each create must get its own related document');
+        $first = $this->nestedAlbumArtist($fixture, $albumIds['Artist 1']);
+        $second = $this->nestedAlbumArtist($fixture, $albumIds['Artist 2']);
+        $this->assertSame('Artist 1', $first['name'], 'a later create must not overwrite an earlier related document');
+        $this->assertSame('Artist 2', $second['name']);
+        $this->assertNotSame($first['$id'], $second['$id']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $albumIds['Artist 1']), $headers, [
+            'data' => [
+                'artist' => ['$id' => 'unique()', 'name' => 'Artist 3'],
+            ],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $third = $this->nestedAlbumArtist($fixture, $albumIds['Artist 1']);
+        $this->assertSame('Artist 3', $third['name']);
+        $this->assertNotContains($third['$id'], [$first['$id'], $second['$id']], 'an update must add a new related document');
+        $this->assertSame(['Artist 1', 'Artist 2', 'Artist 3'], $this->nestedArtistNames($fixture));
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, Id::unique()), $headers, [
+            'data' => [
+                'name' => 'Album by Artist 4',
+                'artist' => ['$id' => 'unique()', 'name' => 'Artist 4'],
+            ],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+
+        $fourth = $this->nestedAlbumArtist($fixture, $upserted['body']['$id']);
+        $this->assertSame('Artist 4', $fourth['name']);
+        $this->assertNotContains($fourth['$id'], [$first['$id'], $second['$id'], $third['$id']], 'an upsert must add a new related document');
+        $this->assertSame(['Artist 1', 'Artist 2', 'Artist 3', 'Artist 4'], $this->nestedArtistNames($fixture));
+        $this->assertSame('Artist 2', $this->nestedAlbumArtist($fixture, $albumIds['Artist 2'])['name']);
+    }
+
+    public function testStagedWritesGiveNestedDocumentsGeneratedIds(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $databaseId = $fixture['databaseId'];
+        $albumsId = $fixture['albumsId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $existingId = Id::unique();
+        $existing = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => ['name' => 'Album 0'],
+        ]);
+        $this->assertSame(201, $existing['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $createdId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $albumsId), $headers, [
+            $this->getRecordIdParam() => $createdId,
+            'data' => [
+                'name' => 'Album 1',
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 1'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $albumsId, $existingId), $headers, [
+            'data' => [
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 2'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $upsertedId = Id::unique();
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $albumsId, $upsertedId), $headers, [
+            'data' => [
+                'name' => 'Album 2',
+                'artist' => ['$id' => 'unique()', 'name' => 'Staged 3'],
+            ],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $upserted['headers']['status-code']);
+
+        $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $headers, [
+            'commit' => true,
+        ]);
+        $this->assertSame(200, $committed['headers']['status-code']);
+        $this->assertSame('committed', $committed['body']['status']);
+
+        $this->assertSame(['Staged 1', 'Staged 2', 'Staged 3'], $this->nestedArtistNames($fixture), 'each staged write must commit its own related document');
+        $first = $this->nestedAlbumArtist($fixture, $createdId);
+        $second = $this->nestedAlbumArtist($fixture, $existingId);
+        $third = $this->nestedAlbumArtist($fixture, $upsertedId);
+        $this->assertSame('Staged 1', $first['name'], 'a staged create must link the related document it staged');
+        $this->assertSame('Staged 2', $second['name'], 'a staged update must link the related document it staged');
+        $this->assertSame('Staged 3', $third['name'], 'a staged upsert must link the related document it staged');
+        $this->assertCount(3, \array_unique([$first['$id'], $second['$id'], $third['$id']]), 'staged writes must not share a related document');
+        $this->assertSame($first['$id'], $created['body']['artist']['$id'] ?? null, 'a staged create logs the related document under the ID it commits');
+        $this->assertSame($third['$id'], $upserted['body']['artist']['$id'] ?? null, 'a staged upsert logs the related document under the ID it commits');
+    }
+
+    public function testNestedDocumentWithoutIdCannotSetItsSequence(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAlbumArtistRelationship();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $album = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($fixture['databaseId'], $fixture['albumsId']), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => [
+                'name' => 'Album',
+                'artist' => ['name' => 'Artist', '$sequence' => '987654321'],
+            ],
+        ]);
+        $this->assertSame(201, $album['headers']['status-code']);
+
+        $artistId = $this->nestedAlbumArtist($fixture, $album['body']['$id'])['$id'];
+        $artist = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['artistsId'], $artistId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $artist['headers']['status-code']);
+        $this->assertSame('Artist', $artist['body']['name']);
+        $this->assertNotSame('987654321', $artist['body']['$sequence'], 'a client must not choose the internal sequence of a related document');
+    }
+
+    public function testNestedCreateAndUpsertWriteEveryLevel(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $createdId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+            $this->getRecordIdParam() => $createdId,
+            'data' => [
+                'name' => 'Author 1',
+                'books' => [
+                    ['$id' => 'book1', 'name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1'], ['name' => 'Chapter 2']]],
+                    ['$id' => 'book2', 'name' => 'Book 2', 'chapters' => [['name' => 'Chapter 3']]],
+                ],
+            ],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code'], 'a create with related documents two levels deep must succeed');
+        $this->assertSame(['Book 1', 'Book 2'], $this->relatedNames($databaseId, $fixture['authorsId'], $createdId, 'books'));
+        $this->assertSame(['Chapter 1', 'Chapter 2'], $this->relatedNames($databaseId, $fixture['booksId'], 'book1', 'chapters'));
+        $this->assertSame(['Chapter 3'], $this->relatedNames($databaseId, $fixture['booksId'], 'book2', 'chapters'));
+
+        $upsertedId = Id::unique();
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $upsertedId), $headers, [
+            'data' => [
+                'name' => 'Author 2',
+                'books' => [
+                    ['$id' => 'book3', 'name' => 'Book 3', 'chapters' => [['name' => 'Chapter 4']]],
+                ],
+            ],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code'], 'an upsert with related documents two levels deep must succeed');
+        $this->assertSame(['Book 3'], $this->relatedNames($databaseId, $fixture['authorsId'], $upsertedId, 'books'));
+        $this->assertSame(['Chapter 4'], $this->relatedNames($databaseId, $fixture['booksId'], 'book3', 'chapters'));
+
+        $this->assertSame(3, $this->countRecords($databaseId, $fixture['booksId']));
+        $this->assertSame(4, $this->countRecords($databaseId, $fixture['chaptersId']));
+    }
+
+    public function testFailedNestedCreateLeavesNoRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $invalidName = \str_repeat('a', 129);
+
+        $failures = [
+            'an invalid second related document' => [
+                ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+                ['name' => $invalidName],
+            ],
+            'an invalid related document two levels deep' => [
+                ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+                ['name' => 'Book 2', 'chapters' => [['name' => 'Chapter 2'], ['name' => $invalidName]]],
+            ],
+        ];
+
+        foreach ($failures as $failure => $books) {
+            $authorId = Id::unique();
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+                $this->getRecordIdParam() => $authorId,
+                'data' => ['name' => 'Author', 'books' => $books],
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], "create with {$failure}");
+            $this->assertSame($this->getStructureExceptionType(), $created['body']['type'], "create with {$failure}");
+            $this->assertRecordMissing($databaseId, $fixture['authorsId'], $authorId, "create with {$failure}");
+            $this->assertSame(0, $this->countRecords($databaseId, $fixture['booksId']), "create with {$failure} must not leave related documents written before the failure");
+            $this->assertSame(0, $this->countRecords($databaseId, $fixture['chaptersId']), "create with {$failure} must not leave nested related documents written before the failure");
+        }
+    }
+
+    public function testFailedNestedUpsertLeavesNoRelatedDocuments(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $fixture = $this->setupAuthorBookChapterRelationship();
+        $databaseId = $fixture['databaseId'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $books = [
+            ['name' => 'Book 1', 'chapters' => [['name' => 'Chapter 1']]],
+            ['name' => 'Book 2', 'chapters' => [['name' => \str_repeat('a', 129)]]],
+        ];
+
+        $newId = Id::unique();
+        $inserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $newId), $headers, [
+            'data' => ['name' => 'Author', 'books' => $books],
+        ]);
+        $this->assertSame(400, $inserted['headers']['status-code'], 'an upsert that inserts');
+        $this->assertSame($this->getStructureExceptionType(), $inserted['body']['type']);
+        $this->assertRecordMissing($databaseId, $fixture['authorsId'], $newId, 'an upsert that inserts');
+
+        $existingId = Id::unique();
+        $existing = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $fixture['authorsId']), $headers, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => ['name' => 'Author'],
+        ]);
+        $this->assertSame(201, $existing['headers']['status-code']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $fixture['authorsId'], $existingId), $headers, [
+            'data' => ['name' => 'Author renamed', 'books' => $books],
+        ]);
+        $this->assertSame(400, $updated['headers']['status-code'], 'an upsert that updates');
+        $this->assertSame($this->getStructureExceptionType(), $updated['body']['type']);
+
+        $author = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $fixture['authorsId'], $existingId), $this->getServerHeaders());
+        $this->assertSame(200, $author['headers']['status-code']);
+        $this->assertSame('Author', $author['body']['name'], 'a failed upsert must not change the stored document');
+        $this->assertSame([], $this->relatedNames($databaseId, $fixture['authorsId'], $existingId, 'books'));
+
+        $this->assertSame(0, $this->countRecords($databaseId, $fixture['booksId']), 'a failed upsert must not leave related documents written before the failure');
+        $this->assertSame(0, $this->countRecords($databaseId, $fixture['chaptersId']), 'a failed upsert must not leave nested related documents written before the failure');
+    }
+
+    public function testWritesWithoutRelationshipsAreUnchanged(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'notes',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, 'name');
+        }
+
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => 'note1',
+            'data' => ['name' => 'Note 1'],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertSame('Note 1', $created['body']['name']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, 'note2'), $headers, [
+            'data' => ['name' => 'Note 2'],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code']);
+        $this->assertSame('Note 2', $upserted['body']['name']);
+
+        $bulk = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            $this->getRecordResource() => [
+                ['$id' => 'note3', 'name' => 'Note 3'],
+                ['$id' => 'note4', 'name' => 'Note 4'],
+            ],
+        ]);
+        $this->assertSame(201, $bulk['headers']['status-code']);
+        $this->assertSame(2, $bulk['body']['total']);
+        $this->assertSame(['note3', 'note4'], \array_column($bulk['body'][$this->getRecordResource()], '$id'));
+
+        $bulkUpserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            $this->getRecordResource() => [
+                ['$id' => 'note4', 'name' => 'Note 4 renamed'],
+                ['$id' => 'note5', 'name' => 'Note 5'],
+            ],
+        ]);
+        $this->assertSame(200, $bulkUpserted['headers']['status-code']);
+        $this->assertSame(2, $bulkUpserted['body']['total']);
+
+        $this->assertSame(5, $this->countRecords($databaseId, $collectionId));
+    }
+
+    /**
+     * @return array{databaseId: string, authorsId: string, booksId: string, chaptersId: string}
+     */
+    private function setupAuthorBookChapterRelationship(): array
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        $ids = [];
+        foreach (['authors', 'books', 'chapters'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+                $this->getContainerIdParam() => Id::unique(),
+                'name' => $name,
+                $this->getSecurityParam() => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                ],
+            ]);
+            $this->assertSame(201, $collection['headers']['status-code']);
+            $ids[$name] = $collection['body']['$id'];
+
+            $attribute = $this->createAttribute($databaseId, $ids[$name], 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$name], 'name');
+        }
+
+        foreach ([['authors', 'books'], ['books', 'chapters']] as [$parent, $child]) {
+            $relationship = $this->createAttribute($databaseId, $ids[$parent], 'relationship', [
+                $this->getRelatedIdParam() => $ids[$child],
+                'type' => RelationshipType::OneToMany->value,
+                'key' => $child,
+                'twoWay' => false,
+                'onDelete' => RelationshipDeleteAction::SetNull->value,
+            ]);
+            $this->assertSame(202, $relationship['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$parent], $child);
+        }
+
+        return ['databaseId' => $databaseId, 'authorsId' => $ids['authors'], 'booksId' => $ids['books'], 'chaptersId' => $ids['chapters']];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getServerHeaders(): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+    }
+
+    private function getStructureExceptionType(): string
+    {
+        return $this->getRecordResource() === 'rows'
+            ? Exception::ROW_INVALID_STRUCTURE
+            : Exception::DOCUMENT_INVALID_STRUCTURE;
+    }
+
+    private function countRecords(string $databaseId, string $collectionId): int
+    {
+        $records = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), $this->getServerHeaders(), [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertSame(200, $records['headers']['status-code']);
+
+        return $records['body']['total'];
+    }
+
+    private function assertRecordMissing(string $databaseId, string $collectionId, string $recordId, string $message): void
+    {
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $this->getServerHeaders());
+        $this->assertSame(404, $record['headers']['status-code'], "{$message} must not write the document");
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function relatedNames(string $databaseId, string $collectionId, string $recordId, string $key): array
+    {
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $this->getServerHeaders(), [
+            'queries' => [Query::select(['name', $key . '.*'])->toString()],
+        ]);
+        $this->assertSame(200, $record['headers']['status-code']);
+
+        $names = \array_column($record['body'][$key] ?? [], 'name');
+        \sort($names);
+
+        return $names;
+    }
+
+    /**
+     * @return array{databaseId: string, albumsId: string, artistsId: string}
+     */
+    private function setupAlbumArtistRelationship(): array
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $ids = [];
+        foreach (['albums', 'artists'] as $name) {
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => Id::unique(),
+                'name' => $name,
+                $this->getSecurityParam() => true,
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                ],
+            ]);
+            $this->assertSame(201, $collection['headers']['status-code']);
+            $ids[$name] = $collection['body']['$id'];
+
+            $attribute = $this->createAttribute($databaseId, $ids[$name], 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $ids[$name], 'name');
+        }
+
+        $relationship = $this->createAttribute($databaseId, $ids['albums'], 'relationship', [
+            $this->getRelatedIdParam() => $ids['artists'],
+            'type' => RelationshipType::ManyToOne->value,
+            'key' => 'artist',
+            'twoWay' => false,
+            'onDelete' => RelationshipDeleteAction::SetNull->value,
+        ]);
+        $this->assertSame(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $ids['albums'], 'artist');
+
+        return ['databaseId' => $databaseId, 'albumsId' => $ids['albums'], 'artistsId' => $ids['artists']];
+    }
+
+    /**
+     * @param array{databaseId: string, albumsId: string, artistsId: string} $fixture
+     * @return list<string>
+     */
+    private function nestedArtistNames(array $fixture): array
+    {
+        $artists = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['artistsId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertSame(200, $artists['headers']['status-code']);
+
+        $names = [];
+        foreach ($artists['body'][$this->getRecordResource()] as $artist) {
+            $this->assertNotSame('unique()', $artist['$id'], 'the unique() placeholder must never be stored as an ID');
+            $names[] = $artist['name'];
+        }
+        \sort($names);
+
+        return $names;
+    }
+
+    /**
+     * @param array{databaseId: string, albumsId: string, artistsId: string} $fixture
+     * @return array<string, mixed>
+     */
+    private function nestedAlbumArtist(array $fixture, string $albumId): array
+    {
+        $album = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($fixture['databaseId'], $fixture['albumsId'], $albumId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [Query::select(['name', 'artist.*'])->toString()],
+        ]);
+        $this->assertSame(200, $album['headers']['status-code']);
+        $this->assertIsArray($album['body']['artist'] ?? null);
+        $this->assertNotSame('unique()', $album['body']['artist']['$id']);
+
+        return $album['body']['artist'];
     }
 
     public function testTimeout(): void
@@ -8679,7 +10453,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Slow Queries',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8720,7 +10494,7 @@ trait DatabasesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'longtext' => $longtext,
                 ],
@@ -8762,7 +10536,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'CounterDatabase'
         ]);
         $databaseId = $database['body']['$id'];
@@ -8772,7 +10546,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'CounterCollection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8802,7 +10576,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'count' => 5
             ],
@@ -8875,6 +10649,193 @@ trait DatabasesBase
         $this->assertEquals(400, $inc3['headers']['status-code']);
     }
 
+    public function testIncrementAndDecrementBoundAFractionalLimitOnAnIntegerAtItsWholePart(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'FractionalBoundDatabase',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'FractionalBoundCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+                'key' => 'count',
+                'required' => true,
+            ]);
+            $this->waitForAttribute($databaseId, $collectionId, 'count');
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['count' => 8],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 2,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], 'a fractional max on an integer admits the integers up to its whole part');
+        $this->assertSame(10, $increased['body']['count']);
+
+        $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1,
+            'max' => 10.5,
+        ]);
+        $this->assertSame(400, $pastMax['headers']['status-code'], 'an increment past the whole part of the max is refused');
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 7,
+            'min' => 2.5,
+        ]);
+        $this->assertSame(200, $decreased['headers']['status-code'], 'a fractional min on an integer admits the integers down to its whole part above it');
+        $this->assertSame(3, $decreased['body']['count']);
+
+        $pastMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 1,
+            'min' => 2.5,
+        ]);
+        $this->assertSame(400, $pastMin['headers']['status-code'], 'a decrement past the whole part of the min is refused');
+
+        $stored = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertSame(3, $stored['body']['count']);
+    }
+
+    public function testFractionalIncrementAndDecrementOnAnIntegerRoundHalfAwayFromZero(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Rounding applies to declared integer attributes only.');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'FractionalChangeDatabase',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'FractionalChangeCollection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+            'key' => 'count',
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $headers, [
+            'key' => 'label',
+            'size' => 16,
+            'required' => false,
+        ]);
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['count' => 5, 'label' => 'meter'],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
+
+        $count = fn (): int => $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'];
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
+        $this->assertSame(7, $increased['body']['count'], 'an increment of 1.5 adds 2');
+        $this->assertSame(7, $count());
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 2.5,
+        ]);
+        $this->assertSame(200, $decreased['headers']['status-code'], $decreased['body']['message'] ?? '');
+        $this->assertSame(4, $decreased['body']['count'], 'a decrement of 2.5 subtracts 3');
+        $this->assertSame(4, $count());
+
+        foreach (['increment' => 'max', 'decrement' => 'min'] as $method => $bound) {
+            $unchanged = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
+                'value' => 0.4,
+            ]);
+            $this->assertSame(200, $unchanged['headers']['status-code'], $unchanged['body']['message'] ?? '');
+            $this->assertSame(4, $unchanged['body']['count'], "a {$method} of 0.4 changes nothing");
+
+            $unbounded = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
+                'value' => 0.4,
+                $bound => $method === 'increment' ? 1 : 10,
+            ]);
+            $this->assertSame(200, $unbounded['headers']['status-code'], "a {$method} that changes nothing does not check its {$bound}");
+            $this->assertSame(4, $unbounded['body']['count']);
+        }
+        $this->assertSame(4, $count());
+
+        $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 1.5,
+            'max' => 5.9,
+        ]);
+        $this->assertSame(400, $pastMax['headers']['status-code'], 'the rounded change is compared with the floored max');
+        $this->assertSame(4, $count());
+
+        $pastMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 1.5,
+            'min' => 2.1,
+        ]);
+        $this->assertSame(400, $pastMin['headers']['status-code'], 'the rounded change is compared with the ceiled min');
+        $this->assertSame(4, $count());
+
+        $ontoMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 0.5,
+            'min' => 2.1,
+        ]);
+        $this->assertSame(200, $ontoMin['headers']['status-code'], $ontoMin['body']['message'] ?? '');
+        $this->assertSame(3, $ontoMin['body']['count'], 'a decrement of 0.5 subtracts 1 down to the ceiled min');
+        $this->assertSame(3, $count());
+
+        $zero = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
+            'value' => 0,
+        ]);
+        $this->assertSame(400, $zero['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $zero['body']['type']);
+        $this->assertSame('Value must be numeric and greater than 0', $zero['body']['message']);
+
+        $text = $this->client->call(Client::METHOD_PATCH, $url . '/label/increment', $headers, [
+            'value' => 1,
+        ]);
+        $this->assertSame(400, $text['headers']['status-code']);
+        $this->assertSame('attribute_type_invalid', $text['body']['type']);
+        $this->assertStringEndsWith('"label" is not a number', $text['body']['message']);
+    }
+
     public function testDecrementAttribute(): void
     {
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
@@ -8882,7 +10843,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'CounterDatabase'
         ]);
 
@@ -8893,7 +10854,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'CounterCollection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -8924,7 +10885,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['count' => 10],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -9023,7 +10984,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Point Test Database'
         ]);
 
@@ -9035,7 +10996,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Spatial Point Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -9078,7 +11039,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Test Location',
                 'location' => [40.7128, -74.0060] // New York coordinates
@@ -9112,11 +11073,11 @@ trait DatabasesBase
         $this->assertEquals([40.7589, -73.9851], $response['body']['location']);
 
         // Test 4: Upsert document with point attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Upserted Location',
                 'location' => [34.0522, -80] // Los Angeles coordinates
@@ -9131,7 +11092,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Unauthorized Location',
                 'location' => [0, 0]
@@ -9167,7 +11128,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Line Test Database'
         ]);
 
@@ -9179,7 +11140,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Spatial Line Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -9219,7 +11180,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'distance' => 100,
                 'route' => [[40.7128, -74.0060], [40.7589, -73.9851]] // Line from Downtown to Times Square
@@ -9253,11 +11214,11 @@ trait DatabasesBase
         $this->assertEquals([[40.7128, -74.0060], [40.7589, -73.9851], [40.7505, -73.9934]], $response['body']['route']);
 
         // Test 4: Upsert document with line attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'distance' => 200,
                 'route' => [[34.0522, -80], [34.0736, -90]] // LA route
@@ -9310,7 +11271,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Polygon Test Database'
         ]);
 
@@ -9322,7 +11283,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Spatial Polygon Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -9366,7 +11327,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'active' => true,
                 'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]] // Manhattan area
@@ -9400,11 +11361,11 @@ trait DatabasesBase
         $this->assertEquals([[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7505, -73.9934], [40.7128, -74.0060]]], $response['body']['area']);
 
         // Test 4: Upsert document with polygon attribute
-        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . ID::unique(), array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . Id::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'active' => false,
                 'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -90], [34.0522, -90], [34.0522, -80]]] // LA area
@@ -9419,7 +11380,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'active' => true
                 // Missing required 'area' attribute
@@ -9455,7 +11416,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mixed Spatial Test Database'
         ]);
 
@@ -9467,7 +11428,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Mixed Spatial Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -9529,7 +11490,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Central Park',
                 'center' => [40.7829, -73.9654],
@@ -9566,7 +11527,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Minimal Location',
                 'center' => [0, 0],
@@ -9582,7 +11543,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Unauthorized Location',
                 'center' => [0, 0],
@@ -9619,7 +11580,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Update Spatial Attributes Test Database'
         ]);
 
@@ -9631,7 +11592,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Update Spatial Attributes Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -9746,7 +11707,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Test Location',
                 'coverage' => [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
@@ -9772,7 +11733,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Test Location',
                 'location' => null
@@ -9809,7 +11770,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Query Test Database'
         ]);
 
@@ -9822,7 +11783,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Spatial Query Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10225,7 +12186,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial OneToOne Test DB'
         ]);
 
@@ -10236,7 +12197,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Place',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10253,7 +12214,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Location',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10294,11 +12255,11 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $locationId,
-            'type' => Database::RELATION_ONE_TO_ONE,
+            'type' => RelationshipType::OneToOne->value,
             'key' => 'location',
             'twoWay' => true,
             'twoWayKey' => 'place',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $relation['headers']['status-code']);
 
@@ -10309,11 +12270,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Museum',
                 'location' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'coordinates' => [40.7794, -73.9632],
                 ],
             ],
@@ -10368,7 +12329,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial OneToMany Test DB'
         ]);
         $databaseId = $database['body']['$id'];
@@ -10378,7 +12339,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Person',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10395,7 +12356,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Visit',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10435,7 +12396,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $visitId,
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'key' => 'visits',
             'twoWay' => true,
             'twoWayKey' => 'person',
@@ -10508,7 +12469,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial ManyToOne Test DB'
         ]);
         $databaseId = $database['body']['$id'];
@@ -10518,7 +12479,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'City',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10533,7 +12494,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Store',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10571,7 +12532,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $citiesId,
-            'type' => Database::RELATION_MANY_TO_ONE,
+            'type' => RelationshipType::ManyToOne->value,
             'key' => 'city',
             'twoWay' => true,
             'twoWayKey' => 'stores',
@@ -10588,7 +12549,7 @@ trait DatabasesBase
             'data' => [
                 'name' => 'Main Store',
                 'city' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'area' => [[[40.7128, -74.0060], [40.7589, -74.0060], [40.7589, -73.9851], [40.7128, -73.9851], [40.7128, -74.0060]]]
                 ],
             ]
@@ -10638,7 +12599,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial ManyToMany Test DB'
         ]);
         $databaseId = $database['body']['$id'];
@@ -10648,7 +12609,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Drivers',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10663,7 +12624,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Zones',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10700,7 +12661,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             $this->getRelatedIdParam() => $zonesId,
-            'type' => Database::RELATION_MANY_TO_MANY,
+            'type' => RelationshipType::ManyToMany->value,
             'key' => 'zones',
             'twoWay' => true,
             'twoWayKey' => 'drivers',
@@ -10769,7 +12730,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Index Test DB'
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -10780,7 +12741,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'SpatialIdx',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10824,7 +12785,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'idx_required_point',
-            'type' => Database::INDEX_SPATIAL,
+            'type' => IndexType::Spatial->value,
             $this->getIndexAttributesParam() => ['pRequired'],
         ]);
         $this->assertEquals(202, $okIndex['headers']['status-code']);
@@ -10836,7 +12797,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'idx_optional_point',
-            'type' => Database::INDEX_SPATIAL,
+            'type' => IndexType::Spatial->value,
             $this->getIndexAttributesParam() => ['pOptional'],
         ]);
 
@@ -10866,7 +12827,7 @@ trait DatabasesBase
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 'key' => 'idx_optional_point',
-                'type' => Database::INDEX_SPATIAL,
+                'type' => IndexType::Spatial->value,
                 $this->getIndexAttributesParam() => ['pOptional'],
             ]);
             $this->assertEquals(202, $retriedIndex['headers']['status-code']);
@@ -10893,7 +12854,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Distance Meters Database'
         ]);
 
@@ -10905,7 +12866,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Spatial Distance Meters Collection',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -10938,7 +12899,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'idx_loc',
-            'type' => Database::INDEX_SPATIAL,
+            'type' => IndexType::Spatial->value,
             $this->getIndexAttributesParam() => ['loc'],
         ]);
 
@@ -11054,13 +13015,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial Distance Meters Database'
         ]);
 
         $databaseId = $database['body']['$id'];
 
-        $colId = ID::unique();
+        $colId = Id::unique();
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -11095,7 +13056,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'description' => 'description'
             ],
@@ -11201,13 +13162,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Spatial With Defaults Database'
         ]);
 
         $databaseId = $database['body']['$id'];
 
-        $colId = ID::unique();
+        $colId = Id::unique();
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -11242,7 +13203,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'description' => 'description'
             ],
@@ -11301,7 +13262,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'description' => 'test default values'
             ],
@@ -11337,7 +13298,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NotContains test'
         ]);
 
@@ -11353,7 +13314,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Movies',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -11388,7 +13349,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'genre' => 'Action',
@@ -11403,7 +13364,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'The Avengers',
                 'genre' => 'Action',
@@ -11418,7 +13379,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Romantic Comedy',
                 'genre' => 'Romance',
@@ -11498,7 +13459,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NotBetween test'
         ]);
 
@@ -11514,7 +13475,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Products',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -11548,7 +13509,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Cheap Product',
                 'price' => 5.99,
@@ -11563,7 +13524,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Mid Product',
                 'price' => 25.00,
@@ -11578,7 +13539,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Expensive Product',
                 'price' => 150.00,
@@ -11623,7 +13584,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NotStartsWith test'
         ]);
 
@@ -11639,7 +13600,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Employees',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -11674,7 +13635,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'John Smith',
                 'department' => 'Engineering',
@@ -11689,7 +13650,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Jane Doe',
                 'department' => 'Marketing',
@@ -11704,7 +13665,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Bob Johnson',
                 'department' => 'Sales',
@@ -11749,7 +13710,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'NotEndsWith test'
         ]);
 
@@ -11765,7 +13726,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Files',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -11800,7 +13761,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'filename' => 'row.pdf',
                 'type' => 'PDF',
@@ -11815,7 +13776,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'filename' => 'image.jpg',
                 'type' => 'Image',
@@ -11830,7 +13791,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'filename' => 'presentation.pptx',
                 'type' => 'Presentation',
@@ -11875,7 +13836,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'CreatedBefore test'
         ]);
 
@@ -11891,7 +13852,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Posts',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -11926,7 +13887,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Old Post',
                 'content' => 'This is an old post content',
@@ -11944,7 +13905,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Recent Post',
                 'content' => 'This is a recent post content',
@@ -11964,7 +13925,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Newest Post',
                 'content' => 'This is the newest post content',
@@ -12008,7 +13969,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'CreatedAfter test'
         ]);
 
@@ -12024,7 +13985,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Events',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -12059,7 +14020,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Early Event',
                 'description' => 'This is an early event',
@@ -12077,7 +14038,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Middle Event',
                 'description' => 'This is a middle event',
@@ -12097,7 +14058,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Latest Event',
                 'description' => 'This is the latest event',
@@ -12141,7 +14102,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'CreatedBetween test'
         ]);
 
@@ -12157,7 +14118,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Articles',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -12193,7 +14154,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'First Article',
                 'content' => 'This is the first article content',
@@ -12213,7 +14174,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Second Article',
                 'content' => 'This is the second article content',
@@ -12232,7 +14193,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Third Article',
                 'content' => 'This is the third article content',
@@ -12251,7 +14212,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Fourth Article',
                 'content' => 'This is the fourth article content',
@@ -12319,7 +14280,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'UpdatedBefore test'
         ]);
 
@@ -12335,7 +14296,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Tasks',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -12371,7 +14332,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Task One',
                 'status' => 'pending',
@@ -12388,7 +14349,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Task Two',
                 'status' => 'pending',
@@ -12405,7 +14366,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'title' => 'Task Three',
                 'status' => 'pending',
@@ -12485,7 +14446,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'UpdatedAfter test'
         ]);
 
@@ -12501,7 +14462,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Orders',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -12537,7 +14498,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'orderNumber' => 'ORD-001',
                 'status' => 'pending',
@@ -12554,7 +14515,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'orderNumber' => 'ORD-002',
                 'status' => 'pending',
@@ -12571,7 +14532,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'orderNumber' => 'ORD-003',
                 'status' => 'pending',
@@ -12651,7 +14612,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'UpdatedBetween test'
         ]);
 
@@ -12667,7 +14628,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Products',
             $this->getSecurityParam() => true,
             'permissions' => [
@@ -12702,7 +14663,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Product A',
                 'price' => 99.99,
@@ -12722,7 +14683,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Product B',
                 'price' => 149.99,
@@ -12741,7 +14702,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Product C',
                 'price' => 199.99,
@@ -12760,7 +14721,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'name' => 'Product D',
                 'price' => 249.99,
@@ -12873,6 +14834,599 @@ trait DatabasesBase
         $this->assertEquals('Product B', $rows['body'][$this->getRecordResource()][0]['name']);
         $this->assertEquals(139.99, $rows['body'][$this->getRecordResource()][0]['price']);
     }
+
+    public function testAggregateCount(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::count('*', 'total')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['total']);
+        $this->assertGreaterThanOrEqual(3, $result['body'][$this->getRecordResource()][0]['total']);
+    }
+
+    public function testAggregateSum(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::sum('releaseYear', 'totalYears')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertArrayHasKey('totalYears', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['totalYears'], 'A sum over an integer attribute is an integer');
+        $this->assertGreaterThan(0, $result['body'][$this->getRecordResource()][0]['totalYears']);
+    }
+
+    public function testAggregateAvg(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::avg('releaseYear', 'avgYear')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertArrayHasKey('avgYear', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsFloat($result['body'][$this->getRecordResource()][0]['avgYear']);
+        $this->assertGreaterThan(1900, $result['body'][$this->getRecordResource()][0]['avgYear']);
+    }
+
+    public function testAggregateMinMax(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', $data['documentIds'])->toString(),
+                Query::min('releaseYear', 'earliest')->toString(),
+                Query::max('releaseYear', 'latest')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $row = $result['body'][$this->getRecordResource()][0];
+        $this->assertSame(1944, $row['earliest']);
+        $this->assertSame(2019, $row['latest']);
+    }
+
+    public function testGroupBy(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::count('*', 'total')->toString(),
+                Query::groupBy(['title'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertGreaterThanOrEqual(3, count($rows));
+
+        foreach ($rows as $row) {
+            $this->assertArrayHasKey('title', $row);
+            $this->assertArrayHasKey('total', $row);
+            $this->assertIsInt($row['total']);
+            $this->assertGreaterThanOrEqual(1, $row['total']);
+        }
+    }
+
+    public function testGroupByWithHaving(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::count('*', 'total')->toString(),
+                Query::groupBy(['releaseYear'])->toString(),
+                Query::having([Query::greaterThanEqual('total', 1)])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertGreaterThanOrEqual(1, count($rows));
+
+        foreach ($rows as $row) {
+            $this->assertArrayHasKey('total', $row);
+            $this->assertIsInt($row['total']);
+            $this->assertGreaterThanOrEqual(1, $row['total']);
+        }
+    }
+
+    public function testDistinct(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['releaseYear'])->toString(),
+                Query::distinct()->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $years = array_column($rows, 'releaseYear');
+        $this->assertSame(count($years), count(array_unique($years)));
+    }
+
+    public function testJoin(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupOneToOneRelationship();
+        $databaseId = $data['databaseId'];
+        $personId = $data['personCollection'];
+        $libraryId = $data['libraryCollection'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => [
+                Query::select(['fullName'])->toString(),
+                Query::join($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertGreaterThanOrEqual(1, count($rows));
+    }
+
+    public function testLeftJoin(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupOneToOneRelationship();
+        $databaseId = $data['databaseId'];
+        $personId = $data['personCollection'];
+        $libraryId = $data['libraryCollection'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => [
+                Query::select(['fullName'])->toString(),
+                Query::leftJoin($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertGreaterThanOrEqual(1, count($rows));
+    }
+
+    public function testJoinWithAggregation(): void
+    {
+        if (!$this->getSupportForJoins() || !$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support join or aggregation queries');
+        }
+
+        $data = $this->setupOneToManyRelationship();
+        $databaseId = $data['databaseId'];
+        $personId = $data['personCollection'];
+        $libraryId = $data['libraryCollection'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => [
+                Query::count('*', 'total')->toString(),
+                Query::join($libraryId, 'lib', [Query::on('libraries', '$id')])->toString(),
+                Query::groupBy(['fullName'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertGreaterThanOrEqual(1, count($rows));
+
+        foreach ($rows as $row) {
+            $this->assertArrayHasKey('total', $row);
+            $this->assertArrayHasKey('fullName', $row);
+        }
+    }
+
+    public function testCountDistinct(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::countDistinct('releaseYear', 'uniqueYears')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $row = $result['body'][$this->getRecordResource()][0];
+        $this->assertArrayHasKey('uniqueYears', $row);
+        $this->assertIsInt($row['uniqueYears']);
+        $this->assertGreaterThanOrEqual(2, $row['uniqueYears']);
+    }
+
+    public function testAggregateWithFilter(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::greaterThan('releaseYear', 2000)->toString(),
+                Query::count('*', 'total')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $row = $result['body'][$this->getRecordResource()][0];
+        $this->assertArrayHasKey('total', $row);
+        $this->assertIsInt($row['total']);
+        $this->assertGreaterThanOrEqual(2, $row['total']);
+    }
+
+    /**
+     * Verify that a session user cannot join to a collection they have no read permission on.
+     * The joined collection is created with API key (no user permissions).
+     */
+    public function testJoinDeniedWithoutCollectionPermission(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        // Create source collection with user read permission
+        $source = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'JoinSource',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $source['headers']['status-code']);
+        $sourceId = $source['body']['$id'];
+
+        // Create target collection WITHOUT user read permission
+        $target = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'JoinTargetNoAccess',
+            $this->getSecurityParam() => true,
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $targetId = $target['body']['$id'];
+
+        // Create string attributes on both
+        $this->createAttribute($databaseId, $sourceId, 'string', ['key' => 'name', 'size' => 128, 'required' => false]);
+        $this->createAttribute($databaseId, $sourceId, 'string', ['key' => 'targetRef', 'size' => 36, 'required' => false]);
+        $this->createAttribute($databaseId, $targetId, 'string', ['key' => 'secret', 'size' => 128, 'required' => false]);
+
+        $this->waitForAttribute($databaseId, $sourceId, 'name');
+        $this->waitForAttribute($databaseId, $sourceId, 'targetRef');
+        $this->waitForAttribute($databaseId, $targetId, 'secret');
+
+        // Create documents with API key
+        $targetDoc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $targetId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['secret' => 'classified-data'],
+        ]);
+        $this->assertEquals(201, $targetDoc['headers']['status-code']);
+
+        $sourceDoc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $sourceId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['name' => 'Test', 'targetRef' => $targetDoc['body']['$id']],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $sourceDoc['headers']['status-code']);
+
+        // Session user tries to join to the target collection they can't read
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $sourceId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($targetId, 'target', [Query::on('targetRef', '$id')])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        if ($this->getSide() === 'client') {
+            // The target has document security, so it is joined like it is listed: only the rows
+            // the caller holds read on pair, and the classified document is not one of them.
+            $this->assertCount(0, $result['body'][$this->getRecordResource()]);
+            $this->assertStringNotContainsString('classified-data', json_encode($result['body'] ?? []));
+        } else {
+            $this->assertCount(1, $result['body'][$this->getRecordResource()]);
+        }
+    }
+
+    /**
+     * Verify that document-level permissions are enforced on joined tables.
+     * User should only see joined rows where they have document-level read.
+     */
+    public function testJoinRespectsDocumentPermissions(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        // Two collections with document security. The user holds collection-level read on orders only,
+        // so payments are joined the way the user lists them: by their document permissions.
+        $orders = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Orders',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $orders['headers']['status-code']);
+        $ordersId = $orders['body']['$id'];
+
+        $payments = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Payments',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::users()),
+            ],
+        ]);
+        $this->assertEquals(201, $payments['headers']['status-code']);
+        $paymentsId = $payments['body']['$id'];
+
+        // Create attributes
+        $this->createAttribute($databaseId, $ordersId, 'string', ['key' => 'item', 'size' => 128, 'required' => false]);
+        $this->createAttribute($databaseId, $paymentsId, 'string', ['key' => 'orderId', 'size' => 36, 'required' => false]);
+        $this->createAttribute($databaseId, $paymentsId, 'integer', ['key' => 'amount', 'required' => false]);
+
+        $this->waitForAttribute($databaseId, $ordersId, 'item');
+        $this->waitForAttribute($databaseId, $paymentsId, 'orderId');
+        $this->waitForAttribute($databaseId, $paymentsId, 'amount');
+
+        // Create order document (user can read)
+        $order = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $ordersId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['item' => 'Widget'],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $order['headers']['status-code']);
+
+        // Create payment that user CAN read
+        $visiblePayment = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['orderId' => $order['body']['$id'], 'amount' => 100],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $visiblePayment['headers']['status-code']);
+
+        // Create payment that user CANNOT read (only admin)
+        $hiddenPayment = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $paymentsId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['orderId' => $order['body']['$id'], 'amount' => 9999],
+            'permissions' => [
+                Permission::read(Role::user('admin-only')),
+            ],
+        ]);
+        $this->assertEquals(201, $hiddenPayment['headers']['status-code']);
+
+        // Join orders with payments - user should only see the visible payment
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $ordersId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($paymentsId, 'pay', [Query::on('$id', 'orderId')])->toString(),
+                Query::sum('amount', 'totalPaid')->toString(),
+                Query::groupBy(['item'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertCount(1, $rows);
+        if ($this->getSide() === 'client') {
+            $this->assertSame(100, $rows[0]['totalPaid']);
+        } else {
+            $this->assertSame(10099, $rows[0]['totalPaid']);
+        }
+    }
+
+    /**
+     * Verify that API key users can join across collections freely.
+     */
+    public function testJoinWithApiKeyBypassesDocumentPermissions(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupOneToOneRelationship();
+        $databaseId = $data['databaseId'];
+        $personId = $data['personCollection'];
+        $libraryId = $data['libraryCollection'];
+
+        // API key has full access
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $personId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::join($libraryId, 'lib', [Query::on('library', '$id')])->toString(),
+                Query::count('*', 'total')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertNotEmpty($result['body'][$this->getRecordResource()]);
+    }
+
+    /**
+     * Verify join to nonexistent collection fails gracefully.
+     */
+    public function testJoinToNonexistentCollection(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $result = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join('nonexistent_collection', 'missing', [Query::on('title', '$id')])->toString(),
+            ],
+        ]);
+
+        $this->assertGreaterThanOrEqual(400, $result['headers']['status-code']);
+    }
+
     public function testDocumentWithEmptyPayload(): void
     {
         $data = $this->setupCollection();
@@ -12881,7 +15435,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -12985,14 +15539,14 @@ trait DatabasesBase
         ];
 
         $invalidCreate = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), $apiKeyHeaders, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => \array_merge($documentPayload, ['$updatedAt' => $invalidDatetime]),
             'permissions' => $permissions,
         ]);
         $this->assertEquals(400, $invalidCreate['headers']['status-code']);
 
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), $apiKeyHeaders, [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => $documentPayload,
             'permissions' => $permissions,
         ]);
