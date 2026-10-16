@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T21:11:00Z",
+  "updated": "2026-10-16T06:47:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -68,7 +68,7 @@
         {
           "value": "6",
           "label": "engines",
-          "note": "Postgres, MySQL, MariaDB, SQLite, MongoDB on the official Rust driver, and Redis, plus Memory and Pool adapters."
+          "note": "Postgres, MySQL, MariaDB, SQLite, MongoDB on the official Rust driver, and Redis, plus Memory, Pool and Mirror (replicating every write to a second database)."
         },
         {
           "value": "Byte-identical",
@@ -146,6 +146,7 @@
     "Share state, not code: both runtimes use one database, one Redis and one cache, so routes can move between them one at a time and back.",
     "Sync often: in one day main moved four of the PHP packages the port follows; drift shows up first as compat differences in CI, which is the earliest place to catch it.",
     "A moving target: the PHP side keeps changing on main, so the compat recordings are regenerated from PHP whenever a dependency moves, and Rust follows.",
-    "Watch the tooling, too: wait loops that poll for a log line outlive the work they wait on; background commands that report when they exit do not."
+    "Watch the tooling, too: wait loops that poll for a log line outlive the work they wait on; background commands that report when they exit do not.",
+    "Run the comparison on the stack CI runs: a parity diff that was clean on a hand-patched local stack showed 44 differences on CI's, from one environment variable given to only one runtime."
   ]
 }

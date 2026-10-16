@@ -12,7 +12,7 @@ use utopia_database::database::Hook;
 use utopia_database::event::{Domain, Event};
 use utopia_database::hook::{Lifecycle, Selective};
 use utopia_database::{Authorization, Database, Query};
-use utopia_http::{Request, Response};
+use utopia_http::{Request, Response, coerce};
 use utopia_validators::{Validator, php};
 
 use super::{Route, State};
@@ -240,7 +240,7 @@ impl Context {
             return Err(Error::missing_param(key));
         };
         validator.check(value).map_err(|d| Error::invalid_param(key, &d))?;
-        Ok(value.clone())
+        Ok(coerce(value, validator))
     }
 
     /// An optional parameter with Utopia semantics: missing → default (not
@@ -256,7 +256,7 @@ impl Context {
             return Ok(Value::Null);
         }
         validator.check(value).map_err(|d| Error::invalid_param(key, &d))?;
-        Ok(value.clone())
+        Ok(coerce(value, validator))
     }
 
     /// Required string parameter (PHP string cast).
