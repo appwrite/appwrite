@@ -88,6 +88,24 @@ class Action extends AppwriteAction
         return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
     }
 
+    /**
+     * @return Query[]
+     */
+    protected function getTransactionTypeQueryFilters(): array
+    {
+        return [Query::equal('type', $this->getAllowedDatabaseTypes())];
+    }
+
+    /**
+     * Transactions created before `type` was stored belong to the legacy family.
+     */
+    protected function isTransactionTypeMismatch(Document $transaction): bool
+    {
+        $type = $transaction->getAttribute('type') ?: DATABASE_TYPE_LEGACY;
+
+        return !\in_array($type, $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {

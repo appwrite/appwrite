@@ -225,6 +225,37 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'transactions':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_type\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $transactions = \iterator_to_array($this->documentsIterator($id, [Query::isNull('type')]));
+                            foreach ($transactions as $transaction) {
+                                try {
+                                    $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
+                                        'type' => DATABASE_TYPE_LEGACY,
+                                    ]));
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
+                                }
+                            }
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to backfill \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {

@@ -66,6 +66,8 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $queries = \array_merge($queries, $this->getTransactionTypeQueryFilters());
+
         $response->dynamic(new Document([
             'transactions' => $dbForProject->find('transactions', $queries),
             'total' => $includeTotal ? $dbForProject->count('transactions', $queries) : 0,
