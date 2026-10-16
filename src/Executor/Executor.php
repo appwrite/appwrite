@@ -221,8 +221,18 @@ class Executor
             $request = $request->withBody((new StreamFactory())->createStream($query));
         }
 
-        // No Accept-Encoding, so the executor never spends CPU compressing a response
-        $client = (new Client(new CurlAdapter(options: [CURLOPT_ENCODING => null])))
+        // No Accept-Encoding, so the executor never spends CPU compressing a response.
+        // The share outlives each call's easy handle and keeps idle connections to the
+        // executor. Reuse must stay on, or the adapter closes the socket into TIME_WAIT.
+        // Each call still has its own handle, so a busy connection is never shared.
+        static $share = null;
+        $share ??= \curl_share_init_persistent([\CURL_LOCK_DATA_DNS, \CURL_LOCK_DATA_CONNECT]);
+
+        $client = (new Client(new CurlAdapter(options: [
+            CURLOPT_ENCODING => null,
+            CURLOPT_SHARE => $share,
+        ])))
+            ->withConnectionReuse()
             ->withFollowRedirects()
             ->withConnectTimeout(0)
             ->withTimeout($timeout);
