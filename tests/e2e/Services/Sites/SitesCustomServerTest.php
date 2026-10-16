@@ -2780,6 +2780,72 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSiteLargeFilesInParallel(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Large files site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $directory = sys_get_temp_dir() . '/appwrite-large-files-site-' . $siteId;
+        mkdir($directory);
+
+        try {
+            $file = str_repeat(random_bytes(1024), 16 * 1024);
+            file_put_contents($directory . '/index.html', '<html><body>Large files</body></html>');
+            file_put_contents($directory . '/large.bin', $file);
+
+            $source = $directory . '/code.tar.gz';
+            $tar = (new Command('tar'))
+                ->option('--exclude', 'code.tar.gz')
+                ->flag('-czf')
+                ->argument($source)
+                ->option('-C', $directory)
+                ->argument('.');
+            Console::execute($tar, '', $this->stdout, $this->stderr);
+
+            $this->setupDeployment($siteId, [
+                'code' => new \CURLFile($source, 'application/x-gzip', 'code.tar.gz'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->setupSiteDomain($siteId));
+
+            $this->assertEventually(function () use ($proxyClient) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/');
+                $this->assertEquals(200, $response['headers']['status-code']);
+            }, 30000, 500);
+
+            $responses = $proxyClient->callConcurrently(
+                array_fill(0, 8, [Client::METHOD_GET, '/large.bin', [], []]),
+                false
+            );
+
+            $this->assertCount(8, $responses);
+
+            foreach ($responses as $response) {
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(strlen($file), strlen($response['body']));
+                $this->assertSame(md5($file), md5($response['body']));
+            }
+        } finally {
+            $this->cleanupSite($siteId);
+
+            foreach (glob($directory . '/*') ?: [] as $path) {
+                unlink($path);
+            }
+            rmdir($directory);
+        }
+    }
+
     #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {

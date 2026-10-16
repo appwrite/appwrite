@@ -1357,6 +1357,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of the Open Runtimes executor. The executor holds every function and site response in memory while it passes it on, about 2.5 times the response size, so raise this on nodes that serve many large responses at once. Defaults to `1024M`.',
+                'introduction' => '2.5.1',
+                'default' => '1024M',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_BUILDS_VOLUME',
                 'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Jobs-service build workers attach only the current project\'s subdirectory (`app-<projectId>`) so they write output directly onto it without seeing other projects. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',

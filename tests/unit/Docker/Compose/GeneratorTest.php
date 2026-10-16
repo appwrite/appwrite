@@ -166,6 +166,18 @@ final class GeneratorTest extends TestCase
         ], $postgresql['services']['redis']['command']);
     }
 
+    public function testKeepsExecutorMemoryLimit(): void
+    {
+        $compose = $this->render();
+
+        $this->assertSame([
+            'php',
+            '-d',
+            'memory_limit=${_APP_EXECUTOR_MEMORY_LIMIT:-1024M}',
+            'app/http.php',
+        ], $compose['services']['openruntimes-executor']['command']);
+    }
+
     /**
      * @param array<string, mixed> $params
      * @return array<string, mixed>
