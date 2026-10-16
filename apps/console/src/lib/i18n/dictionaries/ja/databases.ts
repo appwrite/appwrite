@@ -2164,4 +2164,33 @@ export const jaDatabasesDictionary: Record<string, string> = {
   'Keep this database safe': 'このデータベースを安全に保つ',
   'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
     'スケジュールに沿ってバックアップし、必要な期間だけコピーを保持して、問題が起きたときにはいつでも復元できます。',
+  'Add read replicas for high availability':
+    '高可用性のために読み取りレプリカを追加',
+  'This dedicated database has no read replicas. Add at least one replica to improve failover resilience and scale read traffic.':
+    'この専用データベースには読み取りレプリカがありません。フェイルオーバー耐性を高め、読み取りトラフィックをスケールするには、少なくとも 1 台のレプリカを追加してください。',
+  'Add replicas': 'レプリカを追加',
+  'Enable point-in-time recovery': 'ポイントインタイムリカバリを有効化',
+  'Point-in-time recovery is off for this database. Turn it on to restore to any moment within the retention window.':
+    'このデータベースではポイントインタイムリカバリがオフです。保持期間内の任意の時点へ復元できるように有効にしてください。',
+  'Add a scheduled backup policy': 'スケジュールされたバックアップポリシーを追加',
+  'This database has no backup policies. Add a daily backup schedule to protect against data loss.':
+    'このデータベースにはバックアップポリシーがありません。データ損失から保護するために、毎日のバックアップスケジュールを追加してください。',
+  'PITR retention (days)': 'PITR 保持期間（日）',
+  'Backup retention (days)': 'バックアップ保持期間（日）',
+  'Add daily backup': '毎日のバックアップを追加',
+  'Daily backup': '毎日のバックアップ',
+  'Strengthen dedicated database resilience': '専用データベースの耐障害性を強化',
+  'dedicated database has no read replicas':
+    '専用データベースに読み取りレプリカがありません',
+  'dedicated databases have no read replicas':
+    '専用データベースに読み取りレプリカがありません',
+  'dedicated database does not have point-in-time recovery enabled':
+    '専用データベースでポイントインタイムリカバリが有効になっていません',
+  'dedicated databases do not have point-in-time recovery enabled':
+    '専用データベースでポイントインタイムリカバリが有効になっていません',
+  'Review settings': '設定を確認',
+  'to add replicas, enable PITR, or create backup policies from the banner on each database.':
+    '各データベースのバナーからレプリカの追加、PITR の有効化、またはバックアップポリシーの作成ができます。',
+  'Decrease': '減らす',
+  'Increase': '増やす',
 }

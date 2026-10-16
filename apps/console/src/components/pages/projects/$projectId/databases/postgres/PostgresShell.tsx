@@ -14,6 +14,7 @@ import {
   type PostgresDatabaseHeaderSlotProps,
 } from './_components/PostgresDatabaseHeaderSlotContext'
 import { DedicatedDatabaseStatusHeaderAlert } from '../_components/DedicatedDatabaseStatusHeaderAlert'
+import { DedicatedDatabaseResilienceUpgradeStrips } from '../_components/DedicatedDatabaseResilienceUpgradeStrips'
 import { DatabaseOperationsLockProvider } from '../_components/DatabaseOperationsLockContext'
 import { NativeSidebarDatabaseBar } from '../_components/NativeSidebarDatabaseBar'
 import { SchemaTablesSidebar } from './SchemaTablesSidebar'
@@ -173,6 +174,12 @@ function PostgresShellLayout({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <DedicatedDatabaseStatusHeaderAlert status={database.status} />
+      <DedicatedDatabaseResilienceUpgradeStrips
+        projectId={projectId}
+        databaseId={databaseId}
+        database={database}
+        engine="postgresql"
+      />
       {showDesktopSidebar ? (
         <TableViewResizableLayout
           className="min-h-0 flex-1"
