@@ -1,63 +1,98 @@
 # Examples
 
-Init your Appwrite client:
+Initialize the client:
 
 ```dart
-Client client = Client();
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
 
-client
-    .setEndpoint('https://localhost:9521/v1') // Your Appwrite Endpoint
-    .setProject('5e8cf4f46b5e8') // Your project ID
-    .setSelfSigned() // Remove in production
-;
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
 ```
 
-Create a new user and session:
+Create a user and sign in:
 
 ```dart
 Account account = Account(client);
 
-final user = await account.create(userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien");
- 
-final session = await account.createEmailPasswordSession(email: 'me@appwrite.io', password: 'password');
+models.User user = await account.create(
+  userId: ID.unique(),
+  email: 'email@example.com',
+  password: 'password',
+  name: "Walter O'Brien",
+);
 
+models.Session session = await account.createEmailPasswordSession(
+  email: 'email@example.com',
+  password: 'password',
+);
 ```
 
-Fetch user profile:
+Fetch the signed-in user:
 
 ```dart
-Account account = Account(client);
-
-final profile = await account.get();
+models.User profile = await account.get();
 ```
 
-Upload File:
+List rows:
 
 ```dart
+TablesDB tablesDB = TablesDB(client);
+
+models.RowList rows = await tablesDB.listRows(
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  queries: [
+    Query.equal('published', true),
+    Query.limit(10),
+  ],
+);
+```
+
+Upload a file. On the web there is no file system path, so upload the picked file's bytes instead:
+
+```dart
+import 'package:flutter/foundation.dart';
+
 Storage storage = Storage(client);
 
-late InputFile file;
+InputFile input = kIsWeb
+    ? InputFile.fromBytes(bytes: pickedFile.bytes!, filename: 'image.jpg')
+    : InputFile.fromPath(path: './path-to-file/image.jpg');
 
-if(kIsWeb) {
-    file = InputFile.fromBytes(bytes: pickedFile.bytes!, filename: 'image.jpg');
-} else {
-    file = InputFile.fromPath(path: './path-to-file/image.jpg', filename: 'image.jpg');
-}
-
-storage.createFile(
-    bucketId: '[BUCKET_ID]',
-    fileId: ID.unique(),
-    file: file,
-    permissions: [
-      Permission.read(Role.any()),
-    ],
-)
-.then((response) {
-    print(response); // File uploaded!
-})
-.catchError((error) {
-    print(error.response);
-});
+models.File file = await storage.createFile(
+  bucketId: '<BUCKET_ID>',
+  fileId: ID.unique(),
+  file: input,
+  permissions: [
+    Permission.read(Role.any()),
+  ],
+);
 ```
 
-All examples and API features are available at the [official Appwrite docs](https://appwrite.io/docs)
+Subscribe to realtime events:
+
+```dart
+Realtime realtime = Realtime(client);
+
+RealtimeSubscription subscription = realtime.subscribe(['account']);
+
+subscription.stream.listen((event) {
+  print(event.payload);
+});
+
+await subscription.close();
+```
+
+Handle errors:
+
+```dart
+try {
+  models.User user = await account.get();
+} on AppwriteException catch (e) {
+  print('${e.code} ${e.type}: ${e.message}');
+}
+```
+
+All examples and API features are available in the [official Appwrite docs](https://appwrite.io/docs).
