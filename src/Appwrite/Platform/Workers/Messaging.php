@@ -252,6 +252,9 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
+        // Topics already published over Appwrite push, so a topic is sent once per message, not once per page.
+        $appwriteTopics = [];
+
         $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
             && $this->checkAppwritePushEnabled($dbForProject, $default);
 
@@ -273,7 +276,9 @@ class Messaging extends Action
             }
         }
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as [$page, $perUser]) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as [$page, $topicId]) {
+            $perUser = $topicId === null;
+
             /**
              * @var array<callable> $tasks
              */
@@ -310,6 +315,11 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
+                } elseif (!$perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+                    // Appwrite push delivers a topic campaign on the topic's own id; the targets only
+                    // mark that it has MQTT subscribers, so their identifiers are not wire topics.
+                    $recipients = isset($appwriteTopics[$topicId]) ? [] : [$topicId];
+                    $appwriteTopics[$topicId] = true;
                 } elseif ($isWakeProvider && \count($mqttReached) > 0) {
                     $recipients = [];
                     $wakeRecipients = [];
@@ -464,7 +474,7 @@ class Messaging extends Action
      * @param array<string> $userIds
      * @param array<string> $targetIds
      * @param array<string> $emails Raw email addresses not backed by an Appwrite user, target, or topic.
-     * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
+     * @return \Generator<array{0: array<string, array<string, string>>, 1: ?string}> each page with its topic id, or null when user-addressed
      * @throws \Exception
      */
     private function streamRecipients(
@@ -479,7 +489,7 @@ class Messaging extends Action
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->skipFilters(
                 fn () => $dbForProject->find('topics', [
-                    Query::select(['$sequence']),
+                    Query::select(['$id', '$sequence']),
                     Query::equal('$id', $topicIds),
                     Query::limit(\count($topicIds)),
                 ]),
@@ -536,7 +546,7 @@ class Messaging extends Action
                     unset($targetInternalIds, $targets);
 
                     // Topic campaign: deliver on the topic's own channel, not a per-user topic.
-                    yield [$page, false];
+                    yield [$page, $topic->getId()];
                 } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
             }
         }
@@ -594,7 +604,7 @@ class Messaging extends Action
                 unset($targets);
 
                 // User-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$page, true];
+                yield [$page, null];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
 
             // Appwrite push needs no device target: reach existing users with no registered target on
@@ -611,7 +621,7 @@ class Messaging extends Action
                         $identifiers[$userId] = $userId;
                     }
 
-                    yield [[$default->getId() => $identifiers], true];
+                    yield [[$default->getId() => $identifiers], null];
                 }
             }
         }
@@ -645,13 +655,13 @@ class Messaging extends Action
                 unset($targets);
 
                 // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
-                yield [$page, true];
+                yield [$page, null];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
         }
 
         // Raw emails have no backing target or user, so they route straight to the default provider.
         foreach (\array_chunk(\array_values(\array_unique($emails)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
-            yield [[$default->getId() => \array_fill_keys($chunk, '')], true];
+            yield [[$default->getId() => \array_fill_keys($chunk, '')], null];
         }
     }
 
