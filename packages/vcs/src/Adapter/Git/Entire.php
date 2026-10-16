@@ -1812,6 +1812,14 @@ class Entire extends Git
         );
 
         $statusCode = $this->status($response);
+
+        // A discussion is written by a user principal; a plugin's permissions
+        // (contents, checks) do not reach it, so the refusal is reported as
+        // no comment rather than a failure - check runs still carry the build.
+        if ($statusCode === 403) {
+            return '';
+        }
+
         if ($statusCode >= 400) {
             throw $this->requestFailed('Failed to create comment', $response);
         }
