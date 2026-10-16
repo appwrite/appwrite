@@ -472,10 +472,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         $eventTailRegistry->flush($server);
     });
 
-    // One presence timer (~2s): reap users whose last holder left (delete row + emit offline),
-    // and every ~5m re-stamp still-connected holders so they do not age out of the keep-alive.
+    // One presence timer. It fires every 2s but does two jobs at different cadences:
+    //  - Reap (every tick): cheap -- an empty queue is one HKEYS and returns, and it only
+    //    touches the database when a connection has actually closed. Kept fast because a clean
+    //    close's offline delete event rides the reaper and clients expect it within seconds.
+    //  - Refresh (every 10m): the only part that writes to the database, re-stamping live
+    //    holders and their row expiry. Must run well inside the 15m keep-alive, so ~2/3 of it.
     $presenceTick = 0;
-    Timer::tick(2000, function () use ($realtime, $presenceState, $container, $workerId, &$presenceTick) {
+    $presenceRefreshEvery = 300; // 300 * 2s = 10m
+    Timer::tick(2000, function () use ($realtime, $presenceState, $container, $workerId, $presenceRefreshEvery, &$presenceTick) {
         $store = new PresenceStore(getCache());
 
         // Reap on one worker only: the queue and rows are shared, so letting every worker
@@ -546,9 +551,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
         }
 
-        // Re-stamp still-connected holders every ~5 minutes (every 150th ~2s tick), well inside
-        // the keep-alive, so an idle-but-connected client is not aged out.
-        if (++$presenceTick % 150 !== 0) {
+        // Re-stamp still-connected holders on the slow cadence, well inside the keep-alive, so
+        // an idle-but-connected client is not aged out.
+        if (++$presenceTick % $presenceRefreshEvery !== 0) {
             return;
         }
 
