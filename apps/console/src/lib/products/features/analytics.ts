@@ -47,7 +47,7 @@ export const analyticsProductFeatures: ProductFeatureContent[] = [
     id: 'server-side',
     title: 'Track from the browser, the app, or the server',
     description:
-      'Track sites, mobile and desktop apps, and backends with Appwrite’s client and server SDKs, or send events over REST from anywhere, including an Appwrite Function. Server-side events can carry a user ID with an API key, while client code only ever sees a public snippet ID.',
+      'Track sites, mobile and desktop apps, and backends with Appwrite’s client and server SDKs, or send events over REST from anywhere, including an Appwrite Function. Server-side events can carry a user ID with an API key, while client code only ever sees a public property ID.',
     docsHref: '/docs/products/analytics/server-side',
     docsLabel: 'Server-side docs',
   },

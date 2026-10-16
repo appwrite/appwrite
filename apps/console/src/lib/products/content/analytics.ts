@@ -55,7 +55,7 @@ export const analyticsProductContent: ProductPageContent = {
     {
       question: 'Which platforms can I track?',
       answer:
-        'Websites and web apps, mobile and desktop apps, and backends, using Appwrite’s client and server SDKs or the REST API, including server-side tracking from an Appwrite Function. Each property gets a public snippet ID, so client code never needs an API key.',
+        'Websites and web apps, mobile and desktop apps, and backends, using Appwrite’s client and server SDKs or the REST API, including server-side tracking from an Appwrite Function. Each property has a public ID, so client code never needs an API key.',
       links: [
         { label: 'Quick start', href: '/docs/products/analytics/quick-start' },
         { label: 'Server-side tracking', href: '/docs/products/analytics/server-side' },
