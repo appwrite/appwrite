@@ -396,6 +396,7 @@ abstract class Adapter
             ) {
                 $message->terminal();
             }
+            $message->setError($error);
 
             // The work did not happen, so hand the message back to be retried
             // (or, for a terminal verdict, to be dead-lettered now).

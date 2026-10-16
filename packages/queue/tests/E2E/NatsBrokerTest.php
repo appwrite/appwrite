@@ -12,16 +12,19 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\NoRespondersException;
+use Utopia\NATS\Headers;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DiscardPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\Transport\TcpTransport;
 use Utopia\NATS\Transport\Transport;
+use Utopia\Queue\Adapter;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Provisioning;
 use Utopia\Queue\Codec\Igbinary;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Queue\Queue;
 
 /**
@@ -986,6 +989,7 @@ final class NatsBrokerTest extends TestCase
         $js = Connection::connect($url)->jetStream();
         $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages, 'work stream holds nothing');
         $this->assertSame(1, $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DEAD')->state->messages, 'the message is on the dead stream');
+        $this->assertSame('spare', $this->deadLetter($queue)?->get('Utopia-Queue-Dead-Reason'), 'parked on the spare delivery');
 
         $fresh->close();
     }
@@ -2548,13 +2552,151 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertSame([], $fresh->receive($queue, 3), 'an exhausted message must not reach a handler');
         $this->assertFalse($state->armed, 'the re-read failed');
-        $this->assertSame([$failure], $reported, 'and was reported');
+        $this->assertSame($failure, $reported[0] ?? null, 'and was reported');
 
         $js = Connection::connect($url)->jetStream();
         $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages, 'work stream holds nothing');
         $this->assertSame(1, $js->getStreamInfo('Q_' . strtoupper($queue->name) . '_DEAD')->state->messages, 'the message is on the dead stream');
 
         $fresh->close();
+    }
+
+    /**
+     * A dead letter that says only its payload cannot be attributed: 26 production
+     * dead letters had no error, attempt count, origin or worker to go on.
+     */
+    public function testALastAttemptsFailureIsRecordedOnTheDeadLetter(): void
+    {
+        $reported = [];
+        $broker = new Nats(Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'), ackWait: 2.0, maxDeliver: 3, onError: static function (\Throwable $error) use (&$reported): void {
+            $reported[] = $error->getMessage();
+        });
+        $broker->publish($this->queue, ['task' => 'doomed']);
+
+        $sequence = null;
+        for ($i = 0; $i < 3; $i++) {
+            $sequence = $this->failThrough($broker, new \RuntimeException("SMTP 451 attempt {$i}"));
+        }
+        $broker->receive($this->queue, 1); // hands over what onError is owed
+
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('rejected', $headers->get('Utopia-Queue-Dead-Reason'));
+        $this->assertSame('RuntimeException: SMTP 451 attempt 2', $headers->get('Utopia-Queue-Dead-Error'), 'the last attempt\'s failure');
+        $this->assertSame('3', $headers->get('Utopia-Queue-Dead-Deliveries'));
+        $this->assertSame('Q_' . strtoupper($this->queue->name), $headers->get('Utopia-Queue-Dead-Stream'));
+        $this->assertSame((string) $sequence, $headers->get('Utopia-Queue-Dead-Sequence'));
+        $this->assertSame((string) gethostname(), $headers->get('Utopia-Queue-Dead-Host'));
+        $this->assertEqualsWithDelta(time(), (int) $headers->get('Utopia-Queue-Dead-At'), 10);
+        $this->assertSame('application/json', $headers->get('Content-Type'), 'still readable by its codec');
+
+        $this->assertCount(1, $reported, 'one line per dead letter');
+        $this->assertStringContainsString('"reason":"rejected"', $reported[0]);
+        $this->assertStringContainsString('"error":"RuntimeException: SMTP 451 attempt 2"', $reported[0]);
+
+        $broker->close();
+    }
+
+    public function testAnUnreadableMessageIsDeadLetteredAsUnreadable(): void
+    {
+        $this->broker->provision($this->queue);
+        $js = Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225')->jetStream();
+        $ack = $js->publish('q.' . strtolower($this->queue->name) . '.normal', '{not json');
+
+        $this->assertSame([], $this->broker->receive($this->queue, 2), 'no handler sees it');
+
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('unreadable', $headers->get('Utopia-Queue-Dead-Reason'));
+        $this->assertSame('JsonException: Syntax error', $headers->get('Utopia-Queue-Dead-Error'));
+        $this->assertSame('1', $headers->get('Utopia-Queue-Dead-Deliveries'));
+        $this->assertSame((string) $ack->sequence, $headers->get('Utopia-Queue-Dead-Sequence'));
+    }
+
+    /** The dead stream outlives the job, and an SMTP refusal quotes the recipient. */
+    public function testAnEmailAddressInTheErrorIsMasked(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'mail']);
+        $this->failThrough($this->broker, new PermanentFailure('550 5.1.1 <jane.doe+news@mail.example.com>: Recipient address rejected, cc bob@corp.io. ' . str_repeat('x', 400)));
+
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('terminal', $headers->get('Utopia-Queue-Dead-Reason'));
+        $error = (string) $headers->get('Utopia-Queue-Dead-Error');
+        $this->assertStringStartsWith('Utopia\\Queue\\PermanentFailure: 550 5.1.1 <[email]>: Recipient address rejected, cc [email]. xxx', $error);
+        $this->assertStringNotContainsString('@', $error);
+        $this->assertSame(256, \strlen($error), 'truncated');
+    }
+
+    /** A re-driven job is a fresh attempt, not one that already died. */
+    public function testARedriveDropsTheDeadLetterHeaders(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'again']);
+        $this->failThrough($this->broker, new PermanentFailure('upstream refused'));
+        $this->assertSame('terminal', $this->deadLetter($this->queue)?->get('Utopia-Queue-Dead-Reason'));
+
+        $this->broker->retry($this->queue, 10);
+
+        $js = Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225')->jetStream();
+        $headers = $js->getLastMessage('Q_' . strtoupper($this->queue->name), 'q.' . strtolower($this->queue->name) . '.normal')->headers;
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('application/json', $headers->get('Content-Type'));
+        foreach (array_keys($headers->all()) as $name) {
+            $this->assertStringStartsNotWith('Utopia-Queue-Dead-', $name);
+        }
+    }
+
+    /** Fail one delivery the way a worker does, through the adapter, and return its stream sequence. */
+    private function failThrough(Nats $broker, \Throwable $error): ?int
+    {
+        $message = $broker->receive($this->queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $message);
+
+        $adapter = new class ($broker) extends Adapter {
+            public function __construct(Nats $broker)
+            {
+                parent::__construct($broker, 1);
+            }
+
+            public function runOne(Message $message, Queue $queue, \Throwable $error): void
+            {
+                $this->processFrom($message, static function () use ($error): never {
+                    throw $error;
+                }, static function (): void {
+                }, static function (): void {
+                }, $queue, $this->consumer);
+            }
+
+            public function start(): self
+            {
+                return $this;
+            }
+
+            public function stop(): self
+            {
+                return $this;
+            }
+
+            public function workerStart(callable $callback): self
+            {
+                return $this;
+            }
+
+            public function workerStop(callable $callback): self
+            {
+                return $this;
+            }
+        };
+        $adapter->runOne($message, $this->queue, $error);
+
+        return $message->getSequence();
+    }
+
+    private function deadLetter(Queue $queue): ?Headers
+    {
+        $js = Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225')->jetStream();
+
+        return $js->getLastMessage('Q_' . strtoupper($queue->name) . '_DEAD', 'q.' . strtolower($queue->name) . '.dead')->headers;
     }
 
     // JetStream updates a consumer's num_pending asynchronously after the publish ack.
