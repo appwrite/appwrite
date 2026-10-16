@@ -1,0 +1,226 @@
+---
+layout: article
+title: Serve tracking from your domain
+description: Send Appwrite Analytics events through a domain you own, with a custom API domain or a small proxy on your site, so tracking requests stay first-party.
+---
+
+The tracking helpers send events to your project's Appwrite endpoint, such as `<REGION>.cloud.appwrite.io`. Ad blockers and privacy extensions decide what to block from filter lists, which name tracking hosts and URL patterns. When your events go to a domain you own, list entries written for third-party hosts don't apply to them.
+
+The **Ad blockers** card in a property's **Settings** tab offers two ways to do this.
+
+| | Custom domain | Proxy |
+| --- | --- | --- |
+| Events go to | A subdomain you point at Appwrite, such as `appwrite.example.com` | A path on your own site, such as `example.com/relay` |
+| What you set up | A DNS record | A server route and an API key |
+| Visitor location | Appwrite sees each visitor's IP address directly | Your proxy passes each visitor's IP address on |
+
+# Use a custom domain {% #custom-domain %}
+
+A custom domain serves the Appwrite API from a subdomain of your site.
+
+1. Add a custom domain to your project, such as `appwrite.example.com`. Follow the steps in [Custom domains](/docs/products/network/custom-domains#domain).
+2. Use it as the endpoint in your tracking code.
+
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://appwrite.example.com/v1')
+    .setProject('<PROJECT_ID>');
+
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+
+Nothing else changes. Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
+
+# Use a proxy {% #proxy %}
+
+A proxy is one route on your own site that receives events from the browser and forwards them to Appwrite. The browser only talks to your domain.
+
+## Point the browser at your site {% #browser %}
+
+Set the endpoint to a path on your own origin. This guide uses `/relay`, but any path works as long as your proxy listens on the same one.
+
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint(`${window.location.origin}/relay`)
+    .setProject('<PROJECT_ID>');
+
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+
+tracking.start();
+```
+
+`Tracking` now sends each event to `/relay/analytics/properties/<PROPERTY_ID>/events` on your site.
+
+## Create an API key {% #api-key %}
+
+The proxy calls Appwrite with an API key, so it can pass on each visitor's IP address and user agent.
+
+1. In your project, open **API Keys** and click **Create API key**.
+2. Enter a name and select only the `analytics.write` scope.
+3. Store the secret in your server's environment as `APPWRITE_ANALYTICS_KEY`. Never send it to the browser.
+
+## Add the proxy route {% #route %}
+
+Add one of these routes to your site. Each accepts events at the path from the browser code, copies only the event fields, adds the visitor's IP address and user agent, and forwards the event to Appwrite.
+
+{% tabs %}
+{% tabsitem #nextjs title="Next.js" %}
+Create `app/relay/analytics/properties/[propertyId]/events/route.ts`, or the same path under `src/app` if your project uses a `src` directory.
+
+```ts
+const ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
+const PROJECT_ID = '<PROJECT_ID>';
+const PROPERTY_ID = '<PROPERTY_ID>';
+
+export async function POST(
+    request: Request,
+    { params }: { params: Promise<{ propertyId: string }> },
+) {
+    const { propertyId } = await params;
+    if (propertyId !== PROPERTY_ID) {
+        return new Response(null, { status: 404 });
+    }
+
+    const event = await request.json();
+
+    const response = await fetch(`${ENDPOINT}/analytics/properties/${PROPERTY_ID}/events`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Appwrite-Project': PROJECT_ID,
+            'X-Appwrite-Key': process.env.APPWRITE_ANALYTICS_KEY!,
+        },
+        body: JSON.stringify({
+            name: event.name,
+            url: event.url,
+            referrer: event.referrer,
+            screenWidth: event.screenWidth,
+            scrollDepth: event.scrollDepth,
+            engagementTime: event.engagementTime,
+            props: event.props,
+            // The visitor's address and browser, not this server's
+            ip: request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim(),
+            userAgent: request.headers.get('user-agent') ?? undefined,
+        }),
+    });
+
+    return new Response(null, { status: response.status });
+}
+```
+
+The route reads the last address in `X-Forwarded-For`. That's the visitor's address only when a proxy you trust sits in front of your app and adds the address it received the request from, or replaces the header. Vercel replaces it with the visitor's address. Without such a proxy, a client can set the header to any value, so read the visitor's address from your platform instead. Behind more than one proxy, read the address added by the proxy that faces the internet.
+{% /tabsitem %}
+
+{% tabsitem #cloudflare title="Cloudflare Workers" %}
+Deploy a Worker on the route `example.com/relay/*`, and store the key with `wrangler secret put APPWRITE_ANALYTICS_KEY`.
+
+```js
+const ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
+const PROJECT_ID = '<PROJECT_ID>';
+const PROPERTY_ID = '<PROPERTY_ID>';
+
+export default {
+    async fetch(request, env) {
+        const { pathname } = new URL(request.url);
+        if (request.method !== 'POST' || pathname !== `/relay/analytics/properties/${PROPERTY_ID}/events`) {
+            return new Response(null, { status: 404 });
+        }
+
+        const event = await request.json();
+
+        const response = await fetch(`${ENDPOINT}/analytics/properties/${PROPERTY_ID}/events`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': PROJECT_ID,
+                'X-Appwrite-Key': env.APPWRITE_ANALYTICS_KEY,
+            },
+            body: JSON.stringify({
+                name: event.name,
+                url: event.url,
+                referrer: event.referrer,
+                screenWidth: event.screenWidth,
+                scrollDepth: event.scrollDepth,
+                engagementTime: event.engagementTime,
+                props: event.props,
+                // The visitor's address and browser, not this Worker's
+                ip: request.headers.get('cf-connecting-ip') ?? undefined,
+                userAgent: request.headers.get('user-agent') ?? undefined,
+            }),
+        });
+
+        return new Response(null, { status: response.status });
+    },
+};
+```
+
+Cloudflare sets `CF-Connecting-IP` to the visitor's address.
+{% /tabsitem %}
+
+{% tabsitem #express title="Express" %}
+Add the route to the Express server that serves your site. It uses the `fetch` built into Node.js 18 and later.
+
+```js
+import express from 'express';
+
+const ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
+const PROJECT_ID = '<PROJECT_ID>';
+const PROPERTY_ID = '<PROPERTY_ID>';
+
+const app = express();
+
+// Behind one load balancer or reverse proxy, so req.ip is the visitor
+app.set('trust proxy', 1);
+
+app.post(`/relay/analytics/properties/${PROPERTY_ID}/events`, express.json(), async (req, res) => {
+    const event = req.body;
+
+    try {
+        const response = await fetch(`${ENDPOINT}/analytics/properties/${PROPERTY_ID}/events`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': PROJECT_ID,
+                'X-Appwrite-Key': process.env.APPWRITE_ANALYTICS_KEY,
+            },
+            body: JSON.stringify({
+                name: event.name,
+                url: event.url,
+                referrer: event.referrer,
+                screenWidth: event.screenWidth,
+                scrollDepth: event.scrollDepth,
+                engagementTime: event.engagementTime,
+                props: event.props,
+                // The visitor's address and browser, not this server's
+                ip: req.ip,
+                userAgent: req.get('user-agent'),
+            }),
+        });
+
+        res.sendStatus(response.status);
+    } catch {
+        // Appwrite couldn't be reached
+        res.sendStatus(502);
+    }
+});
+
+app.listen(3000);
+```
+
+Set `trust proxy` to the number of proxies in front of your server, so `req.ip` is the visitor's address. Without a proxy in front, remove the line.
+{% /tabsitem %}
+{% /tabs %}
+
+## How the proxy keeps data accurate {% #accuracy %}
+
+Appwrite counts visitors by IP address, user agent, and hostname. Without the `ip` and `userAgent` fields, it would see your proxy's address on every event: every visit would be located where the proxy runs, and visitors with the same browser would merge into one.
+
+The proxy copies only the event fields it knows, so a visitor can't set `userId`, `ip`, or anything else your API key would allow. It forwards only to your property, at one path.
+
+Because the proxy uses an API key, the property's allowed origins don't apply to proxied events, and your site doesn't need a Web app for tracking.

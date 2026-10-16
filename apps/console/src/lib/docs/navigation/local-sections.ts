@@ -610,6 +610,110 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
     ],
   },
   {
+    prefix: 'products/analytics',
+    parent: {
+      href: '/docs',
+      label: 'Analytics',
+    },
+    navigation: [
+      {
+        label: 'Getting started',
+        items: [
+          {
+            label: 'Overview',
+            href: '/docs/products/analytics',
+          },
+          {
+            label: 'Quick start',
+            href: '/docs/products/analytics/quick-start',
+          },
+        ],
+      },
+      {
+        label: 'Concepts',
+        items: [
+          {
+            label: 'Properties',
+            href: '/docs/products/analytics/properties',
+          },
+          {
+            label: 'Events',
+            href: '/docs/products/analytics/events',
+          },
+          {
+            label: 'Dashboard',
+            href: '/docs/products/analytics/dashboard',
+          },
+          {
+            label: 'Metrics',
+            href: '/docs/products/analytics/metrics',
+          },
+          {
+            label: 'Visitors and sessions',
+            href: '/docs/products/analytics/visitors',
+          },
+          {
+            label: 'Traffic sources',
+            href: '/docs/products/analytics/sources',
+          },
+          {
+            label: 'Bots and AI traffic',
+            href: '/docs/products/analytics/bots',
+          },
+          {
+            label: 'Privacy',
+            href: '/docs/products/analytics/privacy',
+          },
+          {
+            label: 'Limits and retention',
+            href: '/docs/products/analytics/limits',
+          },
+        ],
+      },
+      {
+        label: 'Guides',
+        items: [
+          {
+            label: 'Track a website',
+            href: '/docs/products/analytics/web',
+          },
+          {
+            label: 'Track a Flutter app',
+            href: '/docs/products/analytics/flutter',
+          },
+          {
+            label: 'Send events over REST',
+            href: '/docs/products/analytics/rest',
+          },
+          {
+            label: 'Track events from your server',
+            href: '/docs/products/analytics/server-side',
+          },
+          {
+            label: 'Track custom events',
+            href: '/docs/products/analytics/custom-events',
+          },
+          {
+            label: 'Serve tracking from your domain',
+            href: '/docs/products/analytics/own-domain',
+          },
+          {
+            label: 'Filter and compare traffic',
+            href: '/docs/products/analytics/filters',
+          },
+          {
+            label: 'Export a report',
+            href: '/docs/products/analytics/export',
+          },
+          {
+            label: 'Block traffic with Firewall',
+            href: '/docs/products/analytics/firewall',
+          },
+        ],
+      },
+    ],
+  },
+  {
     prefix: 'products/agent',
     parent: {
       href: '/docs',

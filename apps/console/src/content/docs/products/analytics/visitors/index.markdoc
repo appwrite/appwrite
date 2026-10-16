@@ -1,0 +1,54 @@
+---
+layout: article
+title: Visitors and sessions
+description: How Appwrite Analytics identifies visitors without cookies, groups their events into visits, and works out bounces, entry and exit pages, visit duration, and live visitors.
+---
+
+Appwrite Analytics counts people and their visits without cookies or anything else stored on their device. It works out who sent each event from the request itself, then groups each visitor's events into visits.
+
+# Visitors {% #visitors %}
+
+Appwrite gives every event a visitor ID: a one-way hash of three values from the request.
+
+- The IP address the event came from.
+- The `User-Agent` header of the browser or app.
+- The hostname of the event's URL.
+
+Events with the same three values get the same visitor ID, on any day. **Unique visitors** on the dashboard counts the distinct IDs in the selected range.
+
+Because the ID comes from the request, a few cases count differently from a person-by-person count:
+
+- One person on two devices or browsers counts as two visitors.
+- A visitor whose IP address changes, such as a phone moving from Wi-Fi to mobile data, counts as a new visitor.
+- People who share an IP address and the same browser version, such as in an office, can count as one visitor.
+- Each hostname counts on its own, so a person who reads `example.com` and `docs.example.com` is a visitor of each.
+
+Appwrite doesn't store the IP address, and visitor IDs don't appear on the dashboard, in exports, or in API responses. For what Appwrite stores, see [Privacy](/docs/products/analytics/privacy).
+
+# Visits {% #visits %}
+
+A visit, also called a session, groups a visitor's events. It starts with the visitor's first event and continues as long as more events arrive. After 30 minutes without an event from that visitor, the visit ends, and their next event starts a new one.
+
+**Visits** on the dashboard counts the visits that started in the selected range. A visit that started before the range doesn't count, even if it continued into it.
+
+Clients that report their own `sessionHash` keep visits apart when they share a visitor ID. See [Send events over REST](/docs/products/analytics/rest#parameters).
+
+# What a visit records {% #visit-metrics %}
+
+Appwrite keeps a running summary of each visit as its events arrive.
+
+- **Entry page**: the page of the visit's first pageview.
+- **Exit page**: the page of the visit's last pageview.
+- **Bounce**: a visit with fewer than two pageviews.
+- **Duration**: the time from the visit's first event to its last.
+- **Pageviews** and **events**: how many of each the visit had.
+
+Only `pageview` events set entry and exit pages and count toward bounces. A visit that starts with a custom event takes its entry page from its first pageview. For how the dashboard averages these, see [Metrics](/docs/products/analytics/metrics).
+
+# Events from your server {% #server-events %}
+
+An event sent from your server with the visitor's IP address and user agent, and a URL on the same hostname, gets the same visitor ID as their browser events. If their visit is still active, the server event joins it. See [Track events from your server](/docs/products/analytics/server-side#visitor).
+
+# Live visitors {% #live %}
+
+A visitor counts as online while they have any event in the last five minutes. The **online** count in a property's header shows how many visitors are online and which pages they're on. See [Live visitors](/docs/products/analytics/dashboard#live).
