@@ -581,12 +581,14 @@ class Nats implements Synchronous, Consumer, Bounded
      * worker that recycles rebuilds its whole pool, so in production that was most
      * of the meta leader's API load for queues that had existed for weeks.
      *
-     * A stream that is missing is what a 503 No Responders means on a broker that
-     * has not provisioned this queue: nothing listens on the work subject. So that
-     * answer, and only that one, provisions and publishes again. The same 503 while
-     * a stream elects a leader provisions too -- the identical write is answered
-     * cheaply once the leader is back -- and, as on a broker that has provisioned,
-     * it is otherwise left to republishing() to wait out.
+     * A 503 No Responders says nothing listens on the work subject, which is either
+     * a missing stream or an existing one electing a leader. Only the first may be
+     * provisioned: provisioning during an election writes this publisher's settings
+     * over the stream and its consumer, which is what skipping provisioning set out
+     * to stop, and adds writes to RAFT groups that are mid-election. So the 503 is
+     * followed by one read of the stream (streamIsAbsent()), and only a 404 provisions
+     * and publishes again. Anything else is an election, or cannot tell, and the 503
+     * is left to republishing() to wait out.
      *
      * A publisher no longer writes its settings over a stream that exists; the
      * consumer's own provisioning still does. The stream-name collision guard still
@@ -603,7 +605,7 @@ class Nats implements Synchronous, Consumer, Bounded
         try {
             return $publish();
         } catch (NoRespondersException $error) {
-            if (isset($this->provisioned[$this->identity($queue)])) {
+            if (isset($this->provisioned[$this->identity($queue)]) || !$this->streamIsAbsent($queue)) {
                 throw $error;
             }
         }
@@ -611,6 +613,26 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->ensure($queue);
 
         return $publish();
+    }
+
+    /**
+     * Whether the work stream is known not to exist, as opposed to existing without a
+     * leader. Only JetStream's 404 says absent. A stream electing a leader still has
+     * its assignment, so it is not a 404. A read that times out, as it does while the
+     * meta leader is being elected, is not a 404 either, and it is not rethrown:
+     * republishing() would take its timeout for a lost connection and reconnect.
+     */
+    private function streamIsAbsent(Queue $queue): bool
+    {
+        try {
+            $this->js()->getStreamInfo($this->workStream($queue));
+
+            return false;
+        } catch (JetStreamException $e) {
+            return $e->apiError?->code === 404;
+        } catch (TimeoutException) {
+            return false;
+        }
     }
 
     /**

@@ -1254,109 +1254,10 @@ final class NatsBrokerTest extends TestCase
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $state = new PublishFaults($times);
-        $fire = (static fn (TcpTransport $transport): Transport => new readonly class ($transport, $state, $fault) implements Transport {
-            public function __construct(private TcpTransport $inner, private PublishFaults $state, private string $fault)
-            {
-            }
-
-            public function connect(string $host, int $port, float $timeout): void
-            {
-                $this->inner->connect($host, $port, $timeout);
-            }
-
-            public function write(string $data): int
-            {
-                preg_match_all('/^SUB (\S+) (\d+)\r$/m', $data, $subs, PREG_SET_ORDER);
-                foreach ($subs as [, $subject, $sid]) {
-                    $this->state->inboxes[$subject] = $sid;
-                }
-
-                if ($this->fault === 'setup') {
-                    $provisioning = str_contains($data, 'PUB $JS.API.STREAM.CREATE.')
-                        || str_contains($data, 'PUB $JS.API.STREAM.UPDATE.')
-                        || str_contains($data, 'PUB $JS.API.CONSUMER.CREATE.');
-                    if ($this->state->faults > 0 && $provisioning) {
-                        --$this->state->faults;
-                        $this->inner->close();
-                        throw new ConnectionException('Connection closed by server');
-                    }
-
-                    return $this->inner->write($data);
-                }
-
-                if ($this->state->faults > 0 && preg_match('/^H?PUB q\.\S+ (\S+) /m', $data, $publish) === 1) {
-                    --$this->state->faults;
-                    if ($this->fault === 'no-responders') {
-                        // Nothing stored: the server answers the first publish's reply
-                        // inbox with a bare 503, as JetStream does with no stream leader.
-                        $reply = $publish[1];
-                        $sid = $this->state->inboxes[$reply]
-                            ?? $this->state->inboxes[substr($reply, 0, (int) strrpos($reply, '.')) . '.*']
-                            ?? throw new \LogicException("no inbox subscription for {$reply}");
-                        $this->state->injected .= "HMSG {$reply} {$sid} 16 16\r\nNATS/1.0 503\r\n\r\n\r\n";
-
-                        return \strlen($data);
-                    }
-                    if ($this->fault === 'before') {
-                        $this->inner->close();
-                        throw new ConnectionException('Connection closed by server');
-                    }
-                    $written = $this->inner->write($data);
-                    if ($this->fault === 'after') {
-                        $this->inner->close();
-                        throw new ConnectionException('Connection closed by server');
-                    }
-                    $this->state->stale = true;
-
-                    return $written;
-                }
-
-                return $this->inner->write($data);
-            }
-
-            public function read(int $maxBytes, ?float $timeout = null): string
-            {
-                if ($this->state->injected !== '') {
-                    $injected = $this->state->injected;
-                    $this->state->injected = '';
-
-                    return $injected;
-                }
-                if ($this->state->stale) {
-                    $this->state->stale = false;
-                    $this->inner->close();
-
-                    return "-ERR 'Stale Connection'\r\n";
-                }
-
-                return $this->inner->read($maxBytes, $timeout);
-            }
-
-            public function readLine(?float $timeout = null): string
-            {
-                return $this->inner->readLine($timeout);
-            }
-
-            /** @param array<string, mixed> $options */
-            public function upgradeTls(array $options): void
-            {
-                $this->inner->upgradeTls($options);
-            }
-
-            public function isConnected(): bool
-            {
-                return $this->inner->isConnected();
-            }
-
-            public function close(): void
-            {
-                $this->inner->close();
-            }
-        });
         $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
             servers: $url,
             reconnectWait: 0.01,
-            transportFactory: static fn (): Transport => $fire(new TcpTransport()),
+            transportFactory: self::faulting($fault, $state),
         )));
         $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
 
@@ -1372,6 +1273,59 @@ final class NatsBrokerTest extends TestCase
             $this->assertSame(\count($payloads), $stored, 'every payload stored exactly once');
         } finally {
             $broker->close();
+        }
+    }
+
+    /** @return iterable<string, array{bool}> */
+    public static function publishCall(): iterable
+    {
+        yield 'publish' => [false];
+        yield 'publishMany' => [true];
+    }
+
+    /**
+     * A 503 on a queue this broker has not provisioned is not proof the stream is
+     * missing: JetStream answers the same while an existing stream elects a leader.
+     * The publisher reads the stream before provisioning, finds it, and waits the
+     * election out, so the owner's stream and consumer settings stand and the
+     * republish stores the message once.
+     */
+    #[DataProvider('publishCall')]
+    public function testANoRespondersOnAnExistingStreamLeavesItsConfigurationAlone(bool $batch): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        // Every setting below differs from the publisher's defaults.
+        $owner = new Nats(Connection::connect($url), ackWait: 7.0, maxDeliver: 2, deadMaxAge: 86_400.0, maxMsgs: 1_000, maxAckPending: 3);
+        $owner->provision($queue);
+
+        $js = Connection::connect($url)->jetStream();
+        $snapshot = static fn (): array => [
+            'work' => $js->getStreamInfo($stream)->config->toArray(),
+            'dead' => $js->getStreamInfo($stream . '_DEAD')->config->toArray(),
+            'consumer' => $js->getConsumer($stream, 'worker')->info(true)->config->toArray(),
+        ];
+        $before = $snapshot();
+
+        $state = new PublishFaults(1);
+        $publisher = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting('no-responders', $state),
+        )));
+
+        try {
+            $payloads = $batch ? [['task' => 'a'], ['task' => 'b']] : [['task' => 'a']];
+            $this->assertTrue($batch ? $publisher->publishMany($queue, $payloads) : $publisher->publish($queue, $payloads[0]));
+
+            $this->assertSame(0, $state->faults, 'the 503 fired on the first publish');
+            $this->assertSame($before, $snapshot(), "the owner's stream and consumer configuration stand");
+            $this->assertSame(\count($payloads), $js->getStreamInfo($stream)->state->messages, 'every payload stored exactly once');
+        } finally {
+            $publisher->close();
+            $owner->close();
         }
     }
 
@@ -1660,6 +1614,126 @@ final class NatsBrokerTest extends TestCase
         // destroy the resource and build a fresh one; claiming success would
         // return a broker whose every call fails on a closed connection.
         $this->assertFalse($this->broker->reconnect());
+    }
+
+    /**
+     * A transport factory that injects $fault into the first $state->faults publishes
+     * to a work subject (or, for 'setup', into the provisioning requests): the socket
+     * closed before or after the write, a stale -ERR, or a bare 503 No Responders.
+     *
+     * @return \Closure(): Transport
+     */
+    private static function faulting(string $fault, PublishFaults $state): \Closure
+    {
+        return static fn (): Transport => new readonly class (new TcpTransport(), $state, $fault) implements Transport {
+            public function __construct(private TcpTransport $inner, private PublishFaults $state, private string $fault)
+            {
+            }
+
+            public function connect(string $host, int $port, float $timeout): void
+            {
+                $this->inner->connect($host, $port, $timeout);
+            }
+
+            public function write(string $data): int
+            {
+                // Each protocol line, split into words: the inbox subscriptions are
+                // recorded, and the first publish to a work subject is the one to fault.
+                $publish = null;
+                foreach (explode("\r\n", $data) as $line) {
+                    $words = explode(' ', $line);
+                    if ($words[0] === 'SUB' && \count($words) === 3) {
+                        $this->state->inboxes[$words[1]] = $words[2];
+                    }
+                    // PUB <subject> <reply> <size>, or HPUB with a header size before it.
+                    $replied = \count($words) >= ($words[0] === 'HPUB' ? 5 : 4);
+                    if ($publish === null && \in_array($words[0], ['PUB', 'HPUB'], true) && str_starts_with($words[1] ?? '', 'q.') && $replied) {
+                        $publish = $words[2];
+                    }
+                }
+
+                if ($this->fault === 'setup') {
+                    $provisioning = str_contains($data, 'PUB $JS.API.STREAM.CREATE.')
+                        || str_contains($data, 'PUB $JS.API.STREAM.UPDATE.')
+                        || str_contains($data, 'PUB $JS.API.CONSUMER.CREATE.');
+                    if ($this->state->faults > 0 && $provisioning) {
+                        --$this->state->faults;
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+
+                    return $this->inner->write($data);
+                }
+
+                if ($this->state->faults > 0 && $publish !== null) {
+                    --$this->state->faults;
+                    if ($this->fault === 'no-responders') {
+                        // Nothing stored: the server answers the first publish's reply
+                        // inbox with a bare 503, as JetStream does with no stream leader.
+                        $reply = $publish;
+                        $sid = $this->state->inboxes[$reply]
+                            ?? $this->state->inboxes[substr($reply, 0, (int) strrpos($reply, '.')) . '.*']
+                            ?? throw new \LogicException("no inbox subscription for {$reply}");
+                        $this->state->injected .= "HMSG {$reply} {$sid} 16 16\r\nNATS/1.0 503\r\n\r\n\r\n";
+
+                        return \strlen($data);
+                    }
+                    if ($this->fault === 'before') {
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+                    $written = $this->inner->write($data);
+                    if ($this->fault === 'after') {
+                        $this->inner->close();
+                        throw new ConnectionException('Connection closed by server');
+                    }
+                    $this->state->stale = true;
+
+                    return $written;
+                }
+
+                return $this->inner->write($data);
+            }
+
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                if ($this->state->injected !== '') {
+                    $injected = $this->state->injected;
+                    $this->state->injected = '';
+
+                    return $injected;
+                }
+                if ($this->state->stale) {
+                    $this->state->stale = false;
+                    $this->inner->close();
+
+                    return "-ERR 'Stale Connection'\r\n";
+                }
+
+                return $this->inner->read($maxBytes, $timeout);
+            }
+
+            public function readLine(?float $timeout = null): string
+            {
+                return $this->inner->readLine($timeout);
+            }
+
+            /** @param array<string, mixed> $options */
+            public function upgradeTls(array $options): void
+            {
+                $this->inner->upgradeTls($options);
+            }
+
+            public function isConnected(): bool
+            {
+                return $this->inner->isConnected();
+            }
+
+            public function close(): void
+            {
+                $this->inner->close();
+            }
+        };
     }
 
     private function brokerWithStableIds(): Nats
