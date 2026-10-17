@@ -1,200 +1,170 @@
 ## Getting Started
 
-### Add your Apple Platform
-To initialize your SDK and start interacting with Appwrite services, you need to add a new Apple platform to your project. To add a new platform, go to your Appwrite console, select your project (create one if you haven't already), and click the 'Add Platform' button on the project Dashboard.
+### Add your Apple platform
 
-From the options, choose to add a new **iOS**, **macOS**, **watchOS** or **tvOS** platform and add your app credentials.
-
-Add your app <u>name</u> and <u>bundle identifier</u>. Your bundle identifier can be found in your Xcode project file or your `Info.plist` file. By registering a new platform, you are allowing your app to communicate with the Appwrite API.
-
-### Registering URL schemes
-
-In order to capture the Appwrite OAuth callback url, the following URL scheme needs to be added to project. You can add this from Xcode by selecting your project file, then the target you wish to use OAuth with. From the `Info` tab, expand the `URL types` section and add your Appwrite instance domain for the `Identifier`, and `appwrite-callback-[PROJECT-ID]` for the `URL scheme`. Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console. Alternatively, you can add the following block directly to your targets `Info.plist` file:
-
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-<dict>
-    <key>CFBundleTypeRole</key>
-    <string>Editor</string>
-    <key>CFBundleURLName</key>
-    <string>io.appwrite</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-        <string>appwrite-callback-[PROJECT-ID]</string>
-    </array>
-</dict>
-</array>
-```
-
-Next we need to add a hook to save cookies when our app is opened by its callback URL.
-
-### Registering an OAuth handler view
-
-> If you're using UIKit, you can skip this section.
-
-In SwiftUI this is as simple as ensuring `.registerOAuthHandler()` is called on the `View` you want to invoke an OAuth request from.
-
-### Updating the SceneDelegate for UIKit
-
-> If you're using SwiftUI, you can skip this section.
-
-For UIKit, you need to add the following function to your `SceneDelegate.swift`. If you have already defined this function, you can just add the contents from below.
-
-```swift
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url,
-            url.absoluteString.contains("appwrite-callback") else {
-            return
-        }
-        WebAuthComponent.handleIncomingCookie(from: url)
-    }
-```
+Before your app can talk to Appwrite, register it as a platform in your project. In the Appwrite Console, open your project (create one if you haven't already), click **Add platform** on the project overview and choose **Apple**. Select **iOS**, **macOS**, **watchOS** or **tvOS**, then enter your app's name and bundle identifier. You can find the bundle identifier in the **General** tab of your app target in Xcode.
 
 ### Init your SDK
 
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page.
+Initialize the SDK with your Appwrite API endpoint and project ID, which you can find on your project's **Settings** page in the Appwrite Console.
 
 ```swift
 import Appwrite
 
-func main() {
-    let client = Client()
-        .setEndpoint("http://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-        .setProject("5df5acd0d48c2") // Your project ID
-        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-}
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
 ```
 
-### Make Your First Request
+If you are self-hosting Appwrite, set the endpoint to `https://<HOSTNAME_OR_IP>/v1`. Call `.setSelfSigned()` only during development, when your server uses a self-signed SSL certificate.
 
-Once your SDK object is initialized, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+### Make your first request
+
+Once your client is initialized, create a service object and call any of its methods. Every method is `async` and `throws`. Full documentation for each method is in the [API references](https://appwrite.io/docs/references).
 
 ```swift
 let account = Account(client)
 
-do {
-    let user = try await account.create(
-        userId: ID.unique(),
-        email: "email@example.com",
-        password: "password",
-        name: "Walter O'Brien"
-    )
-    print(String(describing: user.toMap()))
-} catch {
-    print(error.localizedDescription)
-}
+let user = try await account.create(
+    userId: ID.unique(),
+    email: "email@example.com",
+    password: "password",
+    name: "Walter O'Brien"
+)
+
+let session = try await account.createEmailPasswordSession(
+    email: "email@example.com",
+    password: "password"
+)
+
+print(user.name, session.userId)
 ```
 
-### Full Example
+### OAuth
+
+To sign users in with an OAuth provider, register the `appwrite-callback-<PROJECT_ID>` URL scheme so the OAuth flow can return to your app. In Xcode, select your app target, open the **Info** tab, expand **URL Types** and add a new type with `io.appwrite` as the **Identifier** and `appwrite-callback-<PROJECT_ID>` as the **URL Schemes**, replacing `<PROJECT_ID>` with your project ID. Alternatively, add the following to your target's `Info.plist`:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLName</key>
+        <string>io.appwrite</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>appwrite-callback-<PROJECT_ID></string>
+        </array>
+    </dict>
+</array>
+```
+
+Next, add a handler that saves the session cookie when your app is opened from the callback URL.
+
+In SwiftUI, call `registerOAuthHandler()` on the view that starts the OAuth flow:
 
 ```swift
 import Appwrite
+import SwiftUI
 
-func main() {
-    let client = Client()
-        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-        .setProject("5df5acd0d48c2") // Your project ID
-        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-
-    let account = Account(client)
-    
-    do {
-        let user = try await account.create(
-            userId: ID.unique(),
-            email: "email@example.com",
-            password: "password",
-            name: "Walter O'Brien"
-        )
-        print(String(describing: user.toMap()))
-    } catch {
-        print(error.localizedDescription)
+struct ContentView: View {
+    var body: some View {
+        LoginView()
+            .registerOAuthHandler()
     }
 }
 ```
 
-### Type Safety with Models
+In UIKit, handle the callback URL in your `SceneDelegate.swift`. If you already implement this method, add its contents to your implementation:
 
-The Appwrite Apple SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+```swift
+func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url,
+        url.absoluteString.contains("appwrite-callback")
+    else {
+        return
+    }
+    WebAuthComponent.handleIncomingCookie(from: url)
+}
+```
+
+Then start the OAuth flow:
+
+```swift
+try await account.createOAuth2Session(provider: .github)
+```
+
+Learn more about [OAuth 2 login](https://appwrite.io/docs/products/auth/oauth2).
+
+### Type safety with models
+
+Methods that return rows, such as `listRows` and `getRow`, accept a `nestedType` parameter so you can decode each row's data into your own `Codable` type.
 
 ```swift
 struct Book: Codable {
     let name: String
     let author: String
-    let releaseYear: String?
-    let category: String?
+    let releaseYear: Int?
     let genre: [String]?
     let isCheckedOut: Bool
 }
 
 let tablesDB = TablesDB(client)
 
-do {
-    let result = try await tablesDB.listRows(
-        databaseId: "your-database-id",
-        tableId: "your-table-id",
-        nestedType: Book.self // Pass in your custom model type
-    )
-    
-    for row in result.rows {
-        let book = row.data
-        print("Book: \(book.name) by \(book.author)") // Now you have full type safety
-    }
-} catch {
-    print(error.localizedDescription)
+let result = try await tablesDB.listRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    nestedType: Book.self
+)
+
+for row in result.rows {
+    let book = row.data
+    print("\(book.name) by \(book.author)")
 }
 ```
 
-**Tip**: You can use the `appwrite types` command to automatically generate model definitions based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
+You can use the `appwrite types` command of the [Appwrite CLI](https://appwrite.io/docs/tooling/command-line/installation) to generate these models from your database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
 
-### Working with Model Methods
+### Working with model methods
 
-All Appwrite models come with built-in methods for data conversion and manipulation:
+All models provide helpers for converting data:
 
-**`toMap()`** - Converts a model instance to a dictionary format, useful for debugging or manual data manipulation:
+- `toMap()` converts a model to a dictionary, which is useful for debugging or manual data manipulation.
+- `from(map:)` creates a model from a dictionary.
+- Models conform to `Codable`, so you can encode them with `JSONEncoder`.
+
 ```swift
 let user = try await account.get()
-let userMap = user.toMap()
-print(userMap) // Prints all user properties as a dictionary
+
+print(user.toMap())
+
+let copy = User<[String: AnyCodable]>.from(map: user.toMap())
+
+let json = try JSONEncoder().encode(user)
+print(String(decoding: json, as: UTF8.self))
 ```
 
-**`from(map:)`** - Creates a model instance from a dictionary, useful when working with raw data:
-```swift
-let userData: [String: Any] = ["$id": "123", "name": "John", "email": "john@example.com"]
-let user = User.from(map: userData)
-```
+### Error handling
 
-**`encode(to:)`** - Encodes the model to JSON format (part of Swift's Codable protocol), useful for serialization:
-```swift
-let user = try await account.get()
-let jsonData = try JSONEncoder().encode(user)
-let jsonString = String(data: jsonData, encoding: .utf8)
-```
-
-### Error Handling
-
-When an error occurs, the Appwrite Apple SDK throws an `AppwriteError` object with `message` and `code` properties. You can handle any errors in a catch block and present the `message` or `localizedDescription` to the user or handle it yourself based on the provided error information. Below is an example.
+When a request fails, the SDK throws an `AppwriteError` with `message`, `code`, `type` and `response` properties.
 
 ```swift
-import Appwrite
-
-func main() {
-    let account = Account(client)
-    
-    do {
-        let user = try await account.get()
-        print(String(describing: user.toMap()))
-    } catch {
-        print(error.localizedDescription)
-    }
+do {
+    let user = try await account.get()
+    print(user.email)
+} catch let error as AppwriteError {
+    print(error.message)
+    print(error.code ?? 0)
+    print(error.type ?? "")
 }
 ```
 
 ### Learn more
 
-You can use the following resources to learn more and get help
-
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Swift Playground](https://github.com/appwrite/playground-for-swift-server)
+- [Apple quick start](https://appwrite.io/docs/quick-starts/apple)
+- [Apple API references](https://appwrite.io/docs/references/cloud/client-apple/account)
+- [Appwrite documentation](https://appwrite.io/docs)
+- [SwiftUI playground](https://github.com/appwrite/playground-for-apple-swiftui)
+- [UIKit playground](https://github.com/appwrite/playground-for-apple-uikit)
+- [Discord community](https://appwrite.io/discord)
