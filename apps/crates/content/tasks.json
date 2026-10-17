@@ -1,13 +1,13 @@
 {
-  "updated": "2026-10-17T13:28:00Z",
+  "updated": "2026-10-17T14:14:00Z",
   "tasks": [
     {
       "id": "users-purge-flake",
-      "title": "Users parity: an occasional purge-count difference",
+      "title": "Users parity: two differences on dedicated tables",
       "area": "Services",
-      "status": "todo",
-      "updated": "2026-10-17T13:28:00Z",
-      "note": "About one CI run in two shows 1 of 2,135 scenarios with a different cache purge count on users.list (2 vs 1, 3 vs 1), on a different variant each time. Likely cache entries expiring at different moments around the diff window; to investigate if it keeps recurring."
+      "status": "progress",
+      "updated": "2026-10-17T14:14:00Z",
+      "note": "users.list narrowkey purges 3 vs 1 (reproducible, not a flake) and teams.memberships.delete jwt headers 16 vs 13. Time-boxed to 90 minutes: decide whether each is a Rust bug, main's newer PHP, or a diff-tool artifact."
     },
     {
       "id": "db-known-gaps",
