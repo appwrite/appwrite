@@ -829,6 +829,9 @@ impl Mongo {
         let reply =
             self.driver.aggregate(&name, pipeline, self.aggregate_options()).await.map_err(|e| self.mongo(e))?;
         Ok(match Self::total(&reply) {
+            Some(Value::Float(_)) if sums_integers(collection, attribute) => {
+                return Err(Error::limit("Value out of range"));
+            }
             Some(v @ (Value::Int(_) | Value::Float(_))) => v,
             Some(v) if casting::is_numeric(&v) => Value::Int(casting::int(&v)),
             _ => Value::Int(0),
@@ -899,4 +902,21 @@ impl Mongo {
         }
         Ok(documents)
     }
+}
+
+/// `sumsIntegers()`: whether the attribute is declared an integer or a big
+/// integer. MongoDB sums integers into a long, and into a double only when
+/// the sum does not fit one, which is refused (8.3.4).
+fn sums_integers(collection: &Collection, attribute: &str) -> bool {
+    let Some(Value::Array(definitions)) = collection.document().get("attributes") else { return false };
+    for definition in definitions.values() {
+        let Some(definition) = crate::value::as_document(definition) else { continue };
+        if definition.id() == attribute {
+            let kind = definition.get("type").and_then(crate::value::as_str);
+            return [utopia_query::schema::ColumnType::Integer, utopia_query::schema::ColumnType::BigInteger]
+                .iter()
+                .any(|t| kind == Some(crate::attribute::Attribute::stored_type(*t)));
+        }
+    }
+    false
 }

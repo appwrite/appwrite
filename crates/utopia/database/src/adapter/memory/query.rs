@@ -12,7 +12,7 @@ use php_std::pcre;
 use utopia_query::{CursorDirection, Method, OrderDirection};
 
 use super::documents::{decode_json_like, map_attribute, selections};
-use super::operators::{self, ge, gt, is_numeric, le, lt, numeric};
+use super::operators::{ge, gt, is_numeric, le, lt, numeric};
 use super::store::{self, k, key_of};
 use super::{Ctx, Store, filter};
 use crate::adapter::{CursorBoundary, Find};
@@ -103,12 +103,13 @@ fn matches_fulltext(haystack: &[u8], needle: &[u8]) -> bool {
     false
 }
 
-/// `matchesRegex($value, $pattern)`: `@preg_match('#pattern#u', ...) === 1`.
-fn matches_regex(value: &[u8], pattern: &[u8]) -> bool {
+/// `matchesRegex($value, $pattern)`: `@preg_match('#pattern#u', ...) === 1`,
+/// refusing a pattern that does not compile (8.3.4).
+fn matches_regex(value: &[u8], pattern: &[u8]) -> Result<bool> {
     let mut delimited = b"#".to_vec();
     delimited.extend_from_slice(&php_std::string::str_replace(b"#", b"\\#", pattern).0);
     delimited.extend_from_slice(b"#u");
-    matches!(pcre::preg_match_bare(&delimited, value), Ok(r) if matches!(r.value, pcre::Value::Int(1)))
+    crate::adapter::regex_matched(pcre::preg_match_bare(&delimited, value))
 }
 
 /// `jsonContains($haystack, $candidate)`: PostgreSQL's `@>`.
@@ -293,7 +294,7 @@ fn matches(row: &Array, query: &utopia_query::Query) -> Result<bool> {
         Method::Regex => {
             let Value::Str(v) = &value else { return Ok(false) };
             match at(&values, 0) {
-                Value::Str(p) => matches_regex(v.as_bytes(), p.as_bytes()),
+                Value::Str(p) => matches_regex(v.as_bytes(), p.as_bytes())?,
                 _ => false,
             }
         }
@@ -460,7 +461,7 @@ impl Store {
     }
 
     /// `sum($collection, $attribute, $queries, $max)`: an integer, or a
-    /// float when a summed value is one.
+    /// float when a summed value is one ([`crate::adapter::sum_values`]).
     pub(crate) fn sum(
         &self,
         ctx: &Ctx,
@@ -477,17 +478,8 @@ impl Store {
         if let Some(max) = max {
             rows = slice(rows, 0, Some(max));
         }
-        let mut sum = Value::Int(0);
-        let mut is_float = false;
         let column = k(&filter(attribute));
-        for row in &rows {
-            let Some(v) = row.get(&column).filter(|v| is_numeric(v)) else { continue };
-            if matches!(v, Value::Float(_)) {
-                is_float = true;
-            }
-            sum = operators::add(&sum, v)?;
-        }
-        Ok(if is_float { Value::Float(sum.to_double()) } else { Value::Int(operators::to_long(&sum)) })
+        crate::adapter::sum_values(rows.iter().filter_map(|row| row.get(&column)))
     }
 }
 

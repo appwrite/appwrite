@@ -22,6 +22,7 @@ use crate::event::Event;
 use crate::permission::PermissionType;
 use crate::query::{DEFAULT_ALIAS, Query};
 use crate::storage;
+use crate::validator::big_int::BigInt;
 use crate::value::{Array, Value};
 
 /// The groups that only combine row conditions (`SQL::ROW_CONDITION_GROUPS`).
@@ -36,9 +37,23 @@ fn count_of(row: &Array) -> i64 {
 /// `sumOf()`: a sum row's `sum` as the number it is (`$sum + 0`: an
 /// integer, or a float for one with a point or an exponent), with SQLite's
 /// `INF`, `-INF` and `NAN` read as the doubles they name for
-/// `Database::sum()` to refuse.
-fn sum_of(row: &Array) -> Value {
+/// `Database::sum()` to refuse. MariaDB, MySQL and PostgreSQL sum integers
+/// exactly past the range of a 64-bit integer, which is refused (`Limit`)
+/// rather than read as an inexact double (8.3.4).
+fn sum_of(row: &Array) -> Result<Value> {
     let sum = row.get_str("sum").cloned().unwrap_or(Value::Int(0));
+    if let Value::Str(text) = &sum
+        && let Some(whole) = BigInt::whole(text.as_bytes())
+        && !BigInt::fits_php_int(whole, true)
+    {
+        return Err(Error::limit("Value out of range"));
+    }
+    Ok(sum_value(sum))
+}
+
+/// The value of a sum that fits: `$sum + 0` of a numeric one, or the double
+/// SQLite's `INF`, `-INF` and `NAN` name.
+fn sum_value(sum: Value) -> Value {
     if is_numeric(&sum) {
         return match &sum {
             Value::Str(s) => match php_std::value::numeric_bytes_ex(s.as_bytes()) {
@@ -148,7 +163,7 @@ impl Sql {
             super::find::from_sub(&mut outer, rows, "table_count");
             let sum = self.range_checked(&format!("SUM({})", self.quote(&column)));
             outer.select_raw(&format!("{sum} AS {}", self.quote("sum")), Vec::new());
-            return Ok(sum_of(&self.fetch_aggregate_row(&mut outer, Event::DocumentSum, &name).await?));
+            return sum_of(&self.fetch_aggregate_row(&mut outer, Event::DocumentSum, &name).await?);
         }
 
         let queries: Vec<Query> = queries.into_iter().filter(|q| !q.method().is_vector()).collect();
@@ -166,7 +181,7 @@ impl Sql {
             let row = self
                 .fetch_aggregate(collection, &name, &roles, aggregate(), &column, max, Event::DocumentSum, None)
                 .await?;
-            return Ok(sum_of(&row));
+            return sum_of(&row);
         }
 
         let queries = self.main_row_queries(queries, collection)?;
@@ -185,7 +200,7 @@ impl Sql {
                     Some(filters),
                 )
                 .await?;
-            return Ok(sum_of(&row));
+            return sum_of(&row);
         }
 
         self.apply_filters(&mut builder, &queries, &name, alias).await?;
@@ -197,7 +212,7 @@ impl Sql {
 
         if max.is_none() && self.only_narrows_rows(&queries) {
             crate::each_builder!(&mut builder, b => { b.sum(attribute.as_str(), "sum"); });
-            return Ok(sum_of(&self.fetch_aggregate_row(&mut builder, Event::DocumentSum, &name).await?));
+            return sum_of(&self.fetch_aggregate_row(&mut builder, Event::DocumentSum, &name).await?);
         }
 
         builder.select(vec![attribute.clone()]);
@@ -459,7 +474,7 @@ impl Sql {
         let mut outer = self.dialect_builder();
         super::find::from_sub(&mut outer, inner, "table_count");
         crate::each_builder!(&mut outer, b => { b.sum(attribute, "sum"); });
-        Ok(sum_of(&self.fetch_aggregate_row(&mut outer, Event::DocumentSum, collection).await?))
+        sum_of(&self.fetch_aggregate_row(&mut outer, Event::DocumentSum, collection).await?)
     }
 
     /// `mainRowQueries()`: copies of the queries naming each dotted
@@ -510,7 +525,19 @@ mod tests {
     fn sent(sum: Option<&str>) -> Value {
         let mut row = Array::new();
         row.set(crate::value::ArrayKey::from("sum"), sum.map_or(Value::Null, |s| Value::Str(Str::from(s))));
-        sum_of(&row)
+        sum_of(&row).unwrap()
+    }
+
+    // PHP 8.3.6: SumResultTest::testAnIntegerSumPastTheRangeOfAnIntegerIsRefused, SQL.php:2392-2395.
+    #[test]
+    fn an_integer_sum_past_the_range_of_an_integer_is_refused() {
+        for sum in ["18446744073709551614", "18446744073709551614.0000", "9223372036854775808", "-9223372036854775809"]
+        {
+            let mut row = Array::new();
+            row.set(crate::value::ArrayKey::from("sum"), Value::Str(Str::from(sum)));
+            let error = sum_of(&row).unwrap_err();
+            assert_eq!((error.kind(), error.message()), (crate::error::Kind::Limit, "Value out of range"), "{sum}");
+        }
     }
 
     // PHP: tests/unit/Adapter/SumResultTest.php, sums(): `yield 'double with an exponent' => ['1e308', 1e308]`
@@ -521,7 +548,8 @@ mod tests {
         assert_eq!(sent(Some("10.50")), Value::Float(10.5));
         assert_eq!(sent(Some("1e308")), Value::Float(1e308));
         assert_eq!(sent(Some("-1.5e300")), Value::Float(-1.5e300));
-        assert_eq!(sent(Some("18446744073709551614")), Value::Float(18446744073709551614.0));
+        assert_eq!(sent(Some("9223372036854775807")), Value::Int(i64::MAX));
+        assert_eq!(sent(Some("-9223372036854775808")), Value::Int(i64::MIN));
         assert_eq!(sent(None), Value::Int(0));
         assert_eq!(sent(Some("INF")), Value::Float(f64::INFINITY));
         assert_eq!(sent(Some("-INF")), Value::Float(f64::NEG_INFINITY));

@@ -20,6 +20,8 @@
 //!
 //! PHP: `\PDO` / `\PDOStatement` with the sqlite driver (`ext/pdo_sqlite`).
 
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use rusqlite::fallible_iterator::FallibleIterator;
@@ -70,6 +72,9 @@ pub(crate) struct Conn {
     conn: Connection,
     /// `ATTR_STRINGIFY_FETCHES`.
     stringify: bool,
+    /// Set by the `REGEXP` function when a pattern does not compile: PHP's
+    /// closure throws `Exception\Query`, which leaves the statement as it is.
+    invalid_regex: Arc<AtomicBool>,
 }
 
 impl Conn {
@@ -96,7 +101,16 @@ impl Conn {
             PdoError::connect(sqlstate(code), i64::from(code), &message).into_error()
         })?;
         conn.busy_timeout(timeout).map_err(from_rusqlite)?;
-        Ok(Conn { conn, stringify })
+        Ok(Conn { conn, stringify, invalid_regex: Arc::new(AtomicBool::new(false)) })
+    }
+
+    /// A failure of a statement: the `REGEXP` function's refusal of a
+    /// pattern, or the driver error PDO raises.
+    fn failure(&self, e: rusqlite::Error) -> Error {
+        if self.invalid_regex.swap(false, Ordering::Relaxed) {
+            return Error::query("Invalid regular expression");
+        }
+        from_rusqlite(e)
     }
 
     /// `inTransaction()`: whether SQLite is outside autocommit mode.
@@ -110,7 +124,7 @@ impl Conn {
         let mut batch = Batch::new(&self.conn, sql);
         while let Some(mut stmt) = batch.next().map_err(from_rusqlite)? {
             let mut rows = stmt.raw_query();
-            while rows.next().map_err(from_rusqlite)?.is_some() {}
+            while rows.next().map_err(|e| self.failure(e))?.is_some() {}
         }
         Ok(self.conn.changes() as i64)
     }
@@ -149,7 +163,7 @@ impl Conn {
         let mut out = Vec::new();
         {
             let mut rows = stmt.raw_query();
-            while let Some(row) = rows.next().map_err(from_rusqlite)? {
+            while let Some(row) = rows.next().map_err(|e| self.failure(e))? {
                 let mut values = Vec::with_capacity(columns.len());
                 for i in 0..columns.len() {
                     values.push(fetch(row.get_ref(i).map_err(from_rusqlite)?, self.stringify));
@@ -173,9 +187,12 @@ impl Conn {
 
     /// `registerUserFunctions()`: the `REGEXP` function, matching with PHP's
     /// `preg_match` (a `null` operand, a pattern longer than 512 bytes, or
-    /// one that fails, never matches). Returns whether it was registered.
+    /// one that fails to run, never matches). A pattern that does not
+    /// compile fails the statement as an invalid query (8.3.4). Returns
+    /// whether it was registered.
     pub(crate) fn register_regexp(&self) -> bool {
-        let regexp = |ctx: &rusqlite::functions::Context<'_>| -> rusqlite::Result<i64> {
+        let invalid = self.invalid_regex.clone();
+        let regexp = move |ctx: &rusqlite::functions::Context<'_>| -> rusqlite::Result<i64> {
             let (Some(pattern), Some(value)) = (udf_string(ctx.get_raw(0)), udf_string(ctx.get_raw(1))) else {
                 return Ok(0);
             };
@@ -186,10 +203,13 @@ impl Conn {
             delimited.push(0x01);
             delimited.extend_from_slice(&pattern);
             delimited.extend_from_slice(b"\x01u");
-            Ok(match php_std::pcre::preg_match_bare(&delimited, &value) {
-                Ok(r) if matches!(r.value, php_std::pcre::Value::Int(1)) => 1,
-                _ => 0,
-            })
+            match crate::adapter::regex_matched(php_std::pcre::preg_match_bare(&delimited, &value)) {
+                Ok(matched) => Ok(i64::from(matched)),
+                Err(error) => {
+                    invalid.store(true, Ordering::Relaxed);
+                    Err(rusqlite::Error::UserFunctionError(error.message().into()))
+                }
+            }
         };
         self.conn.create_scalar_function("REGEXP", 2, FunctionFlags::SQLITE_UTF8, regexp).is_ok()
     }

@@ -203,6 +203,7 @@ pub fn process_exception(e: Error) -> Error {
         251 => mapped(Kind::Transaction, "No active transaction"),
         112 => mapped(Kind::Transaction, "Transaction aborted"),
         14 => mapped(Kind::Type, "Invalid operation"),
+        51091 => mapped(Kind::Query, "Invalid regular expression"),
         28764 => mapped(Kind::Limit, "Value out of range"),
         _ => e,
     }

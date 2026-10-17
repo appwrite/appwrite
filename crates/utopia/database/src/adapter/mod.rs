@@ -1522,3 +1522,86 @@ pub trait Upserts: Send + Sync {
         increase: Option<&str>,
     ) -> Result<Vec<Document>>;
 }
+
+/// `$matched === 1` of a `preg_match()`, refusing a pattern that does not
+/// compile (`$matched === false && preg_last_error() ===
+/// PREG_INTERNAL_ERROR`) as an invalid query.
+pub(crate) fn regex_matched(
+    matched: std::result::Result<php_std::pcre::Preg<php_std::pcre::Value>, php_std::pcre::ArgumentError>,
+) -> Result<bool> {
+    match matched {
+        Ok(r)
+            if matches!(r.value, php_std::pcre::Value::Bool(false))
+                && r.error == php_std::pcre::PregError::Internal =>
+        {
+            Err(crate::error::Error::query("Invalid regular expression"))
+        }
+        Ok(r) => Ok(matches!(r.value, php_std::pcre::Value::Int(1))),
+        Err(_) => Ok(false),
+    }
+}
+
+/// The sum of the numeric values of a Memory or Redis read (`sum()`): the
+/// integers summed exactly (`BigInt::add()`), the other numbers as doubles;
+/// a double when any summed value is not an integer, and an integer sum past
+/// a 64-bit integer refused (`Limit`, 8.3.4).
+pub(crate) fn sum_values<'a>(values: impl Iterator<Item = &'a crate::value::Value>) -> Result<crate::value::Value> {
+    use crate::validator::big_int::{BigInt, Integer, Operand};
+    use crate::value::Value;
+    let mut integers = Integer::Int(0);
+    let mut floats = 0.0;
+    let mut is_float = false;
+    for value in values {
+        let integral = match value {
+            Value::Int(_) => true,
+            Value::Float(_) => false,
+            Value::Str(s) if php_std::value::numeric_bytes_ex(s.as_bytes()).is_some() => {
+                BigInt::is_integer_string(s.as_bytes(), true)
+            }
+            _ => continue,
+        };
+        if integral {
+            let operand = Operand::from_value(value).ok_or_else(|| crate::error::Error::limit("Value out of range"))?;
+            integers = BigInt::add(integers.as_operand(), operand)?;
+        } else {
+            is_float = true;
+            floats += value.to_double();
+        }
+    }
+    if is_float {
+        let integers = match &integers {
+            Integer::Int(i) => *i as f64,
+            Integer::Str(digits) => Value::Str(crate::value::Str::from(digits.as_str())).to_double(),
+        };
+        return Ok(Value::Float(floats + integers));
+    }
+    match integers {
+        Integer::Int(i) => Ok(Value::Int(i)),
+        Integer::Str(_) => Err(crate::error::Error::limit("Value out of range")),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sum_values;
+    use crate::error::Kind;
+    use crate::value::{Str, Value};
+
+    /// PHP 8.3.6 Adapter/Memory.php:1870-1896 (and Redis.php's twin): integers
+    /// are summed exactly, a total past int64 refused, and any other number
+    /// makes the sum a double.
+    #[test]
+    fn sums_integers_exactly_and_refuses_a_total_past_int64() {
+        let max = Value::Int(i64::MAX);
+        let digits = Value::Str(Str::from("5"));
+        assert_eq!(sum_values([Value::Int(2), digits.clone(), Value::Null].iter()).unwrap(), Value::Int(7));
+        let error = sum_values([max.clone(), max.clone()].iter()).unwrap_err();
+        assert_eq!((error.kind(), error.message()), (Kind::Limit, "Value out of range"));
+        assert_eq!(
+            sum_values([max.clone(), max, Value::Float(0.5)].iter()).unwrap(),
+            Value::Float(18446744073709551614.5)
+        );
+        assert_eq!(sum_values([Value::Int(1), Value::Float(0.25)].iter()).unwrap(), Value::Float(1.25));
+        assert_eq!(sum_values(std::iter::empty()).unwrap(), Value::Int(0));
+    }
+}

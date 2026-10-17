@@ -14,7 +14,7 @@
 //! | `Builder\SQLite` (`SQLite::COLLATION`) | [`sqlite()`] ([`SQLITE_COLLATION`]) |
 //! | `Builder\Scope` | [`Scope`] |
 //! | `Builder\Scoping`, `Builder\ScopesCollections`, `Builder\Filtering`, `Builder\CompilesFilters`, `Builder\RefusesJoinedWrites` | the builder's own `scope()`, `is_scoped()`, `from_table()`, `compile_filters()` and its refusals |
-//! | `Builder\PreparesSearchTerms`, `Builder\MatchesContainsAllPatterns`, `Builder\RaisesFloatOverflow` | [`Flavor`] |
+//! | `Builder\PreparesSearchTerms`, `Builder\MatchesContainsAllPatterns`, `Builder\CompilesAggregates` | [`Flavor`] |
 //!
 //! ```
 //! use utopia_database::builder;
@@ -65,9 +65,10 @@ fn sql_flavor() -> Flavor {
 }
 
 /// The flavor of the MySQL and MariaDB builders, which also raise a
-/// floating aggregate that overflowed (`RaisesFloatOverflow`).
+/// floating aggregate that overflowed and sign a bitwise one
+/// (`CompilesAggregates`).
 fn mysql_flavor() -> Flavor {
-    Flavor { float_overflow: true, ..sql_flavor() }
+    Flavor { compiles_aggregates: true, ..sql_flavor() }
 }
 
 /// A MySQL builder (`new Utopia\Database\Builder\MySQL()`).

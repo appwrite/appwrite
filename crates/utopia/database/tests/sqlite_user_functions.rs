@@ -24,3 +24,15 @@ async fn a_handle_with_user_functions_registers_regexp() {
     assert!(pdo.register_regexp());
     assert!(pdo.query(QUERY).await.is_ok());
 }
+
+/// PHP 8.3.6 Adapter/SQLite.php:278-280: a pattern that does not compile
+/// fails the statement as an invalid query; one that compiles matches as
+/// before.
+#[utopia_async::test]
+async fn a_pattern_that_does_not_compile_is_an_invalid_query() {
+    let mut pdo = Pdo::connect_with("sqlite::memory:", None, None, Options::default()).await.unwrap();
+    assert!(pdo.register_regexp());
+    let Err(error) = pdo.query("SELECT 'abc' REGEXP '(('").await else { panic!("the pattern compiled") };
+    assert_eq!((error.kind(), error.message()), (utopia_database::Kind::Query, "Invalid regular expression"));
+    assert!(pdo.query(QUERY).await.is_ok());
+}

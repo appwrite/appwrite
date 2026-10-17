@@ -232,6 +232,18 @@ impl BigInt {
         !digits.is_empty() && digits.iter().all(u8::is_ascii_digit)
     }
 
+    /// `BigInt::whole($value)`: the integer a whole number written in
+    /// decimal names, as `"7"` or as MariaDB writes a `DECIMAL` sum,
+    /// `"7.0000"`; `None` for any other value (8.3.4).
+    pub fn whole(value: &[u8]) -> Option<&[u8]> {
+        let value = match value.iter().position(|&c| c == b'.') {
+            Some(dot) if value[dot + 1..].iter().all(|&c| c == b'0') => &value[..dot],
+            Some(_) => return None,
+            None => value,
+        };
+        Self::is_integer_string(value, true).then_some(value)
+    }
+
     /// `BigInt::fitsPhpInt($value, $signed)`: an integer string within PHP's
     /// integer range.
     pub fn fits_php_int(value: &[u8], signed: bool) -> bool {

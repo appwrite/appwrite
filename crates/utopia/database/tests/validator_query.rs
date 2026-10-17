@@ -131,6 +131,25 @@ mod cursor_document {
         assert!(v.description().contains("Invalid cursor"));
         assert!(!v.check(&q(Method::CursorBefore, "", json!([{"$id": "movie1"}]))));
     }
+
+    // PHP 8.3.6 Validator/Query/Aggregate.php:125-129: min() and max() of $permissions, stored as a JSON list, are
+    // refused as of an array attribute; count() still counts it.
+    #[test]
+    fn min_and_max_of_permissions_are_refused() {
+        let v = Aggregate::new(
+            &attrs(json!([{"$id": "price", "key": "price", "type": "double", "array": false}])),
+            true,
+            false,
+        );
+        assert!(!v.check(&Query::min("$permissions", "")));
+        assert_eq!(
+            v.description(),
+            "Aggregate min requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: $permissions"
+        );
+        assert!(!v.check(&Query::max("$permissions", "")));
+        assert!(v.check(&Query::count("$permissions", "")), "{}", v.description());
+        assert!(v.check(&Query::max("$createdAt", "")), "{}", v.description());
+    }
 }
 
 /// PHP: `tests/unit/Validator/Query/FilterObjectPathTest.php`.

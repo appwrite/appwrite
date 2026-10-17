@@ -391,28 +391,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
             if let Some(max) = max {
                 documents = slice(documents, 0, Some(max));
             }
-            let mut sum = php_std::value::Number::Int(0);
-            let mut float = false;
-            for document in &documents {
-                let value = self.resolve(document, attribute);
-                if matches!(value, Value::Null) {
-                    continue;
-                }
-                if matches!(value, Value::Float(_)) {
-                    float = true;
-                }
-                if let Some(n) = numeric(&value) {
-                    sum = php_std::format::add(sum, n);
-                }
-            }
-            Ok(if float {
-                Value::Float(sum.as_f64())
-            } else {
-                match sum {
-                    php_std::value::Number::Float(f) => Value::Int(php_std::format::dval_to_lval(f)),
-                    php_std::value::Number::Int(i) => Value::Int(i),
-                }
-            })
+            let values: Vec<Value> = documents.iter().map(|document| self.resolve(document, attribute)).collect();
+            crate::adapter::sum_values(values.iter())
         })
         .await
     }
@@ -556,10 +536,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                 let mut delimited = b"#".to_vec();
                 delimited.extend(php_std::string::str_replace(b"#", b"\\#", &pattern).0.iter());
                 delimited.extend_from_slice(b"#u");
-                matches!(
-                    php_std::pcre::preg_match_bare(&delimited, subject.as_bytes()).map(|r| r.value),
-                    Ok(php_std::pcre::Value::Int(1))
-                )
+                crate::adapter::regex_matched(php_std::pcre::preg_match_bare(&delimited, subject.as_bytes()))?
             }
             other => {
                 return Err(Error::query(format!("Query method not supported by Redis adapter: {}", other.as_str())));

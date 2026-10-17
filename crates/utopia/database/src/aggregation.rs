@@ -11,10 +11,11 @@ use crate::attribute::Attribute;
 use crate::collection::Collection;
 use crate::database::Database;
 use crate::document::{self, Document};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::filter::Filter;
 use crate::query::Query;
 use crate::storage;
+use crate::validator::big_int::BigInt;
 use crate::validator::query::aggregate::MAX_ALIAS_LENGTH;
 use crate::value::{Array, ArrayKey, Ext, Str, Value};
 
@@ -174,7 +175,7 @@ impl Aggregation {
         for (column, value) in row {
             let column = key_text(&column.as_ref());
             if let Some(method) = lookup(&self.aggregates, &column) {
-                let value = aggregate(*method, lookup(&self.operands, &column), value);
+                let value = aggregate(*method, lookup(&self.operands, &column), value)?;
                 shaped.set(ArrayKey::Str(Str::from(column.as_str())), value);
                 continue;
             }
@@ -185,7 +186,7 @@ impl Aggregation {
                 continue;
             };
 
-            let value = cast(attribute, value);
+            let value = cast(attribute, value)?;
             shaped.set(ArrayKey::Str(Str::from(name.as_str())), value.clone());
             if !matches!(value, Value::Null) && !attribute.filters.is_empty() {
                 let source = lookup(&self.sources, &name).cloned().unwrap_or_default();
@@ -293,24 +294,24 @@ impl Aggregation {
 
 /// An aggregate's value typed by its method and the attribute it reads
 /// (`aggregate()`).
-fn aggregate(method: Method, operand: Option<&Attribute>, value: Value) -> Value {
+fn aggregate(method: Method, operand: Option<&Attribute>, value: Value) -> Result<Value> {
     if matches!(value, Value::Null) {
-        return Value::Null;
+        return Ok(Value::Null);
     }
     if COUNTS.contains(&method) {
         return integer(&value);
     }
     if STATISTICS.contains(&method) {
-        return Value::Float(float(&value));
+        return Ok(Value::Float(float(&value)));
     }
     if method == Method::Sum {
         return match operand {
             Some(operand) if INTEGERS.contains(&operand.kind) => integer(&value),
-            _ => Value::Float(float(&value)),
+            _ => Ok(Value::Float(float(&value))),
         };
     }
     match operand {
-        None => value,
+        None => Ok(value),
         Some(operand) => cast(operand, value),
     }
 }
@@ -331,9 +332,9 @@ fn name(schema: &[(String, Attribute)], attribute: &str) -> String {
 }
 
 /// A group's value as a read of its attribute returns it (`cast()`).
-fn cast(attribute: &Attribute, value: Value) -> Value {
+fn cast(attribute: &Attribute, value: Value) -> Result<Value> {
     if matches!(value, Value::Null) {
-        return Value::Null;
+        return Ok(Value::Null);
     }
 
     let encoded = attribute.array
@@ -350,61 +351,92 @@ fn cast(attribute: &Attribute, value: Value) -> Value {
 
     match value {
         Value::Array(items) if attribute.array => {
-            Value::Array(items.into_iter().map(|(k, v)| (k, scalar(attribute.kind, v))).collect())
+            let mut scalars = Array::with_capacity(items.len());
+            for (k, v) in items {
+                scalars.set(k, scalar(attribute.kind, v)?);
+            }
+            Ok(Value::Array(scalars))
         }
         other => scalar(attribute.kind, other),
     }
 }
 
 /// One value as its type reads it (`scalar()`).
-fn scalar(kind: ColumnType, value: Value) -> Value {
+fn scalar(kind: ColumnType, value: Value) -> Result<Value> {
     if matches!(value, Value::Null | Value::Array(_)) {
-        return value;
+        return Ok(value);
     }
     if kind == ColumnType::Boolean {
-        return match value {
+        return Ok(match value {
             Value::Bool(_) => value,
             other => Value::Bool(matches!(
                 filter_var(&other, php_std::filter::FILTER_VALIDATE_BOOL),
                 Some(php_std::filter::Value::Bool(true))
             )),
-        };
+        });
     }
     if kind == ColumnType::Id {
-        return match value {
+        return Ok(match value {
             Value::Bool(_) | Value::Int(_) | Value::Float(_) | Value::Str(_) => {
                 value.to_php_string().map(Value::Str).unwrap_or(value)
             }
             other => other,
-        };
+        });
+    }
+    // An unsigned big integer past PHP's integers keeps its digits, as a
+    // read returns it (8.3.4).
+    if kind == ColumnType::BigInteger
+        && let Value::Str(text) = &value
+        && BigInt::is_integer_string(text.as_bytes(), true)
+        && !BigInt::fits_php_int(text.as_bytes(), true)
+    {
+        return Ok(value);
     }
     if INTEGERS.contains(&kind) {
         return integer(&value);
     }
     if FLOATS.contains(&kind) {
-        return Value::Float(float(&value));
+        return Ok(Value::Float(float(&value)));
     }
     if DATETIMES.contains(&kind)
         && let Value::Str(text) = &value
     {
         let text = String::from_utf8_lossy(text.as_bytes()).into_owned();
-        return crate::datetime::format_tz(Some(&text)).map(|t| Value::Str(Str::from(t.as_str()))).unwrap_or(value);
+        return Ok(crate::datetime::format_tz(Some(&text)).map(|t| Value::Str(Str::from(t.as_str()))).unwrap_or(value));
     }
-    value
+    Ok(value)
 }
 
-/// An integer, though MariaDB sums integers into `DECIMAL`, so a whole value
-/// can arrive as `"7.0000"`; one past the platform's integers stays a float
-/// rather than wrap (`integer()`).
-fn integer(value: &Value) -> Value {
+/// `-INTEGER_LIMIT ..= INTEGER_LIMIT` bounds the doubles that are 64-bit
+/// integers (`2^63`).
+const INTEGER_LIMIT: f64 = 9223372036854775808.0;
+
+/// An integer aggregate, or a group or bound of an integer attribute, as the
+/// integer it is (`integer()`). MariaDB sums integers into `DECIMAL`, so a
+/// whole value can arrive as `"7.0000"`; it and MySQL and PostgreSQL sum
+/// integers exactly past the range of a 64-bit integer, and a whole value
+/// that does not fit one is refused (`Limit`) rather than answered
+/// inexactly (8.3.4).
+fn integer(value: &Value) -> Result<Value> {
     if let Value::Int(_) = value {
-        return value.clone();
+        return Ok(value.clone());
     }
-    if let Some(php_std::filter::Value::Int(i)) = filter_var(value, php_std::filter::FILTER_VALIDATE_INT) {
-        return Value::Int(i);
+    if let Value::Str(text) = value
+        && let Some(whole) = BigInt::whole(text.as_bytes())
+    {
+        if !BigInt::fits_php_int(whole, true) {
+            return Err(Error::limit("Value out of range"));
+        }
+        return Ok(Value::Int(php_std::format::str_to_int(whole)));
     }
     let float = float(value);
-    if float.floor() == float && float.abs() < i64::MAX as f64 { Value::Int(float as i64) } else { Value::Float(float) }
+    if float.floor() != float {
+        return Ok(Value::Float(float));
+    }
+    if !(-INTEGER_LIMIT..INTEGER_LIMIT).contains(&float) {
+        return Err(Error::limit("Value out of range"));
+    }
+    Ok(Value::Int(float as i64))
 }
 
 /// `is_numeric($value) ? (float) $value : 0.0` (`float()`).
@@ -453,5 +485,54 @@ fn key_text(key: &php_std::types::KeyRef<'_>) -> String {
     match key {
         php_std::types::KeyRef::Int(i) => i.to_string(),
         php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::Kind;
+
+    fn text(s: &str) -> Value {
+        Value::Str(Str::from(s))
+    }
+
+    fn refused(result: Result<Value>) -> bool {
+        matches!(result, Err(e) if e.kind() == Kind::Limit && e.message() == "Value out of range")
+    }
+
+    /// PHP 8.3.6 Aggregation.php:378-404: an integer aggregate is read
+    /// exactly from the engine's digits, and one past a 64-bit integer is
+    /// refused rather than answered as an inexact float.
+    #[test]
+    fn an_integer_is_read_exactly_and_refused_past_int64() {
+        assert_eq!(integer(&text("7.0000")).unwrap(), Value::Int(7));
+        assert_eq!(integer(&text("-9223372036854775808")).unwrap(), Value::Int(i64::MIN));
+        assert_eq!(integer(&text("7.5")).unwrap(), Value::Float(7.5));
+        assert_eq!(integer(&Value::Float(1e3)).unwrap(), Value::Int(1000));
+        assert!(refused(integer(&text("18446744073709551614.0000"))));
+        assert!(refused(integer(&text("9223372036854775808"))));
+        assert!(refused(integer(&Value::Float(9223372036854775808.0))));
+        assert!(refused(integer(&Value::Float(f64::INFINITY))));
+    }
+
+    /// Aggregation.php:363: a bound of an unsigned big integer past PHP's
+    /// integers keeps its digits, as a read returns it.
+    #[test]
+    fn an_unsigned_big_integer_past_php_integers_keeps_its_digits() {
+        assert_eq!(scalar(ColumnType::BigInteger, text("18446744073709551615")).unwrap(), text("18446744073709551615"));
+        assert_eq!(scalar(ColumnType::BigInteger, text("42")).unwrap(), Value::Int(42));
+        assert!(refused(scalar(ColumnType::Integer, text("18446744073709551615"))));
+    }
+
+    /// Validator/BigInt.php:74-86 (`BigInt::whole()`).
+    #[test]
+    fn a_whole_number_is_its_integer_digits() {
+        assert_eq!(BigInt::whole(b"7.0000"), Some(&b"7"[..]));
+        assert_eq!(BigInt::whole(b"-12"), Some(&b"-12"[..]));
+        assert_eq!(BigInt::whole(b"7."), Some(&b"7"[..]));
+        assert_eq!(BigInt::whole(b"7.05"), None);
+        assert_eq!(BigInt::whole(b"1e3"), None);
+        assert_eq!(BigInt::whole(b"."), None);
     }
 }

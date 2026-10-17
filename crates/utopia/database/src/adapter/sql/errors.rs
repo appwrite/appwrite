@@ -11,6 +11,22 @@ use crate::adapter::Adapter;
 use crate::error::{Error, Kind, UNIQUE_MESSAGE};
 use crate::storage;
 
+/// `MariaDB::INVALID_REGEX_ERRORS`: ER_REGEXP_ERROR, for a pattern PCRE
+/// cannot compile or run (8.3.4).
+const MARIADB_INVALID_REGEX_ERRORS: &[i64] = &[1139];
+
+/// `MySQL::INVALID_REGEX_ERRORS`: ER_REGEXP_ERROR and the errors for a
+/// pattern ICU cannot compile or run (8.3.4).
+const MYSQL_INVALID_REGEX_ERRORS: &[i64] =
+    &[1139, 3685, 3688, 3689, 3690, 3691, 3692, 3693, 3694, 3695, 3696, 3697, 3698, 3700, 3887];
+
+/// `MariaDB::INVALID_GEOMETRY_ERRORS`: ER_GIS_INVALID_DATA (8.3.4).
+const MARIADB_INVALID_GEOMETRY_ERRORS: &[i64] = &[3037];
+
+/// `MySQL::INVALID_GEOMETRY_ERRORS`: ER_GIS_INVALID_DATA,
+/// ER_LONGITUDE_OUT_OF_RANGE and ER_LATITUDE_OUT_OF_RANGE (8.3.4).
+const MYSQL_INVALID_GEOMETRY_ERRORS: &[i64] = &[3037, 3616, 3617];
+
 /// `Postgres::QUOTED_IDENTIFIER`.
 const QUOTED_IDENTIFIER: &[u8] = "/[\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}][\\s\u{A0}\u{202F}]*([^\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}]+?)[\\s\u{A0}\u{202F}]*[\"\u{AB}\u{BB}\u{201C}\u{201D}\u{201E}\u{300C}\u{300D}]/u".as_bytes();
 
@@ -113,6 +129,8 @@ impl Sql {
                     mapped(Kind::Truncate, "Resize would result in data truncation")
                 } else if is("22003", 7) {
                     mapped(Kind::Limit, "Numeric value out of range")
+                } else if is("2201B", 7) {
+                    mapped(Kind::Query, "Invalid regular expression")
                 } else if is("2201F", 7) {
                     mapped(Kind::Limit, "Invalid argument for power function")
                 } else if is("22008", 7) {
@@ -164,7 +182,7 @@ impl Sql {
                 } else {
                     None
                 };
-                mysql.or_else(|| self.mariadb_exception(&state, code, &message))
+                mysql.or_else(|| self.mariadb_exception(&state, code, &message, self.engine == Engine::MySql))
             }
             Engine::Sqlite => {
                 let sqlite = |c: i64| state == "HY000" && code == Some(c);
@@ -176,6 +194,8 @@ impl Sql {
                     mapped(Kind::NotFound, "Attribute not found")
                 } else if sqlite(1) && contains_ci(&message, "duplicate column name") {
                     mapped(Kind::Duplicate, "Attribute already exists")
+                } else if sqlite(1) && contains_ci(&message, "integer overflow") {
+                    mapped(Kind::Limit, "Value out of range")
                 } else if ((sqlite(1) || sqlite(19)) || state == "23000")
                     && (code == Some(19)
                         || state == "23000"
@@ -202,8 +222,14 @@ impl Sql {
         }
     }
 
-    /// `MariaDB::processException()`'s mappings.
-    fn mariadb_exception(&self, state: &str, code: Option<i64>, message: &str) -> Option<(Kind, String)> {
+    /// `MariaDB::processException()`'s mappings, with MySQL's
+    /// `INVALID_REGEX_ERRORS` and `INVALID_GEOMETRY_ERRORS` when `mysql`.
+    fn mariadb_exception(&self, state: &str, code: Option<i64>, message: &str, mysql: bool) -> Option<(Kind, String)> {
+        let (regex, geometry) = if mysql {
+            (MYSQL_INVALID_REGEX_ERRORS, MYSQL_INVALID_GEOMETRY_ERRORS)
+        } else {
+            (MARIADB_INVALID_REGEX_ERRORS, MARIADB_INVALID_GEOMETRY_ERRORS)
+        };
         let is = |s: &str, c: i64| state == s && code == Some(c);
         let found = |kind: Kind, text: &str| Some((kind, text.to_owned()));
         if is("22007", 1366) {
@@ -231,6 +257,10 @@ impl Sql {
             found(Kind::Limit, "Value out of range")
         } else if is("HY000", 1690) {
             found(Kind::Limit, "Value is out of range")
+        } else if code.is_some_and(|c| regex.contains(&c)) {
+            found(Kind::Query, "Invalid regular expression")
+        } else if code.is_some_and(|c| geometry.contains(&c)) {
+            found(Kind::Query, "Invalid spatial value")
         } else if is("42000", 1049) {
             found(Kind::NotFound, "Database not found")
         } else if is("42S02", 1051) || is("42S02", 1146) {
@@ -294,5 +324,51 @@ impl Sql {
     pub(crate) fn is_transient(&self, error: &Error) -> bool {
         crate::connection::is_lost(error)
             || (error.kind() == Kind::Pdo && self.process_exception(error.clone()).kind() == Kind::Contention)
+    }
+}
+
+#[cfg(all(test, feature = "sqlite"))]
+mod tests {
+    use super::*;
+
+    async fn adapter(engine: Engine) -> Sql {
+        Sql::new(engine, super::super::pdo::Pdo::connect("sqlite::memory:", None, None).await.unwrap())
+    }
+
+    fn driver(state: &str, code: i64, message: &str) -> Error {
+        Error::new(Kind::Pdo, message).with_string_code(state.as_bytes()).with_driver_code(code)
+    }
+
+    fn mapped(sql: &Sql, error: Error) -> (Kind, String) {
+        let error = sql.process_exception(error);
+        (error.kind(), error.message().to_owned())
+    }
+
+    /// PHP 8.3.6 MariaDB.php:1622-1628, MySQL.php:120-131, Postgres.php:1949,
+    /// SQLite.php:1721, Mongo.php:3890: a pattern the engine cannot compile
+    /// is a query error, an invalid geometry too, and SQLite's integer
+    /// overflow a limit.
+    #[utopia_async::test]
+    async fn engine_errors_of_8_3_4_map_to_the_library_errors() {
+        let regex = (Kind::Query, "Invalid regular expression".to_owned());
+        let spatial = (Kind::Query, "Invalid spatial value".to_owned());
+        let mariadb = adapter(Engine::MariaDb).await;
+        let mysql = adapter(Engine::MySql).await;
+        assert_eq!(mapped(&mariadb, driver("42000", 1139, "Got error 'missing )' from regexp")), regex);
+        assert_eq!(mapped(&mariadb, driver("22023", 3037, "Invalid GIS data")), spatial);
+        assert_eq!(mapped(&mariadb, driver("HY000", 3692, "Mismatched parenthesis")).0, Kind::Pdo);
+        assert_eq!(mapped(&mysql, driver("HY000", 3692, "Mismatched parenthesis")), regex);
+        assert_eq!(mapped(&mysql, driver("HY000", 3887, "invalid capture group name")), regex);
+        assert_eq!(mapped(&mysql, driver("22S02", 3617, "Latitude 100 is out of range")), spatial);
+        let postgres = adapter(Engine::Postgres).await;
+        assert_eq!(
+            mapped(&postgres, driver("2201B", 7, "invalid regular expression: parentheses () not balanced")),
+            regex
+        );
+        let sqlite = adapter(Engine::Sqlite).await;
+        assert_eq!(
+            mapped(&sqlite, driver("HY000", 1, "SQLSTATE[HY000]: General error: 1 integer overflow")),
+            (Kind::Limit, "Value out of range".to_owned())
+        );
     }
 }

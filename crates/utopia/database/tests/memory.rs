@@ -205,6 +205,23 @@ async fn test_unvalidated_queries_follow_sql_null_and_method_rules() {
     assert_eq!(error.message(), "Query method not implemented in the Memory adapter: exists");
 }
 
+// MemoryRegexTest (8.3.6; Adapter/Memory.php:2794-2796): a pattern PCRE cannot compile is a query error, one that
+// compiles still matches.
+#[utopia_async::test]
+async fn test_a_pattern_that_does_not_compile_is_a_query_error() {
+    let adapter = schema_adapter().await;
+    create_pairs(&adapter).await;
+    adapter.create_document(&collection(PAIRS), pair("first", "abc", "y")).await.unwrap();
+    adapter.create_document(&collection(PAIRS), pair("second", "axc", "y")).await.unwrap();
+
+    for pattern in ["((", "[", "a{2,1}"] {
+        let error = find(&adapter, PAIRS, vec![q(Method::Regex, "a", json!([pattern]))]).await.unwrap_err();
+        assert_eq!((error.kind(), error.message()), (Kind::Query, "Invalid regular expression"), "{pattern}");
+    }
+    let found = find(&adapter, PAIRS, vec![q(Method::Regex, "a", json!(["^a[b]c$"]))]).await.unwrap();
+    assert_eq!(ids(&found), ["first"]);
+}
+
 #[utopia_async::test]
 async fn test_unordered_read_returns_rows_in_sequence_order() {
     let adapter = schema_adapter().await;

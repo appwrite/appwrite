@@ -571,8 +571,9 @@ mod scopes {
     }
 }
 
-// PHP: tests/unit/Builder/FloatOverflowTest.php (8.3.0): MySQL and MariaDB compile each floating aggregate through
-// the engine's range check (`RaisesFloatOverflow`), PostgreSQL leaves them as they are.
+// PHP: tests/unit/Builder/FloatOverflowTest.php (8.3.6): MySQL and MariaDB compile each floating aggregate through
+// the engine's range check and cast each bitwise one to SIGNED (`CompilesAggregates`), PostgreSQL leaves them as they
+// are.
 mod float_overflow {
     use utopia_database::Query;
     use utopia_database::builder::{self, SqlBuilder};
@@ -592,6 +593,13 @@ mod float_overflow {
                 "SQRT(VAR_POP(`reading`) + 0) AS `spread`"
             );
             assert_eq!(compiled(make(), Query::count("reading", "n")), "COUNT(`reading`) AS `n`");
+            // Builder/CompilesAggregates.php:44-46 (8.3.4).
+            assert_eq!(compiled(make(), Query::bit_and("flags", "bits")), "CAST(BIT_AND(`flags`) AS SIGNED) AS `bits`");
+            assert_eq!(compiled(make(), Query::bit_xor("flags", "bits")), "CAST(BIT_XOR(`flags`) AS SIGNED) AS `bits`");
+            assert_eq!(
+                compiled(make(), Query::bit_or("flags", "")),
+                "CAST(BIT_OR(`flags`) AS SIGNED) AS `BIT_OR(``flags``)`"
+            );
         }
     }
 
@@ -599,6 +607,7 @@ mod float_overflow {
     #[test]
     fn postgres_aggregates_are_left_as_they_are() {
         let postgres = || SqlBuilder::PostgreSql(builder::postgres());
+        assert_eq!(compiled(postgres(), Query::bit_or("flags", "bits")), r#"BIT_OR("flags") AS "bits""#);
         assert_eq!(compiled(postgres(), Query::sum("reading", "total")), r#"SUM("reading") AS "total""#);
         assert_eq!(compiled(postgres(), Query::stddev_pop("reading", "total")), r#"STDDEV_POP("reading") AS "total""#);
     }

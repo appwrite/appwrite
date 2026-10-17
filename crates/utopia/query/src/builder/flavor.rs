@@ -12,7 +12,7 @@
 //! |---|---|
 //! | `Builder\PreparesSearchTerms` | [`Flavor::search_terms`] |
 //! | `Builder\MatchesContainsAllPatterns` | [`Flavor::contains_all_patterns`] |
-//! | `Builder\RaisesFloatOverflow` | [`Flavor::float_overflow`] |
+//! | `Builder\CompilesAggregates` | [`Flavor::compiles_aggregates`] |
 //! | `Builder\Postgres::compileFilter()` (object paths) | [`Flavor::object_path`] |
 //! | `Builder\Postgres::compileSpatialFilter()` | [`Flavor::indexed_distance`] |
 //! | `Builder\SQLite` | [`Flavor::sqlite`] ([`SqliteFlavor`]) |
@@ -57,16 +57,21 @@ pub struct Flavor {
     ///
     /// PHP: `Utopia\Database\Builder\MatchesContainsAllPatterns`.
     pub contains_all_patterns: bool,
-    /// Each floating aggregate (`sum`, `avg`, the variances and, through
-    /// `SQRT()` of a variance, the deviations) compiles through the engine's
-    /// float range check, `+ 0`, which raises an error for a value that is
-    /// not finite: MySQL and MariaDB send a `DOUBLE` aggregate that
+    /// Compiles the aggregates MySQL and MariaDB answer differently from the
+    /// other engines. Each floating aggregate (`sum`, `avg`, the variances
+    /// and, through `SQRT()` of a variance, the deviations) compiles through
+    /// the engine's float range check, `+ 0`, which raises an error for a
+    /// value that is not finite: both send a `DOUBLE` aggregate that
     /// overflowed as `0` over the text protocol, and turn an infinite or
-    /// undefined variance into `DBL_MAX` or `NULL` under `STDDEV`. An
+    /// undefined variance into `DBL_MAX` or `NULL` under `STDDEV`. Each
+    /// bitwise aggregate is cast to `SIGNED`: both answer `BIT_AND`,
+    /// `BIT_OR` and `BIT_XOR` as `BIGINT UNSIGNED`, and the cast reads the
+    /// same 64 bits as the two's complement integer PostgreSQL answers. An
     /// unaliased aggregate keeps the name the engine gave it.
     ///
-    /// PHP: `Utopia\Database\Builder\RaisesFloatOverflow`.
-    pub float_overflow: bool,
+    /// PHP: `Utopia\Database\Builder\CompilesAggregates` (8.3.4; until
+    /// then `RaisesFloatOverflow`, without the bitwise cast).
+    pub compiles_aggregates: bool,
     /// Checks the path of a filter into an object attribute
     /// (`attribute.key.key`) before it compiles (PostgreSQL); its error is
     /// the filter's.
@@ -87,7 +92,7 @@ impl std::fmt::Debug for Flavor {
         f.debug_struct("Flavor")
             .field("search_terms", &self.search_terms)
             .field("contains_all_patterns", &self.contains_all_patterns)
-            .field("float_overflow", &self.float_overflow)
+            .field("compiles_aggregates", &self.compiles_aggregates)
             .field("object_path", &self.object_path.is_some())
             .field("indexed_distance", &self.indexed_distance)
             .field("sqlite", &self.sqlite)
@@ -357,12 +362,12 @@ impl<D: Dialect> Builder<D> {
         Some(value::list([Value::Str(prepare_search_term(&term).into())]))
     }
 
-    // ----- RaisesFloatOverflow -------------------------------------------
+    // ----- CompilesAggregates --------------------------------------------
 
-    /// An aggregate as [`Flavor::float_overflow`] compiles it, when it is set
-    /// and the aggregate is floating.
+    /// An aggregate as [`Flavor::compiles_aggregates`] compiles it, when it
+    /// is set and the aggregate is floating or bitwise.
     pub(crate) fn flavored_aggregate(&mut self, query: &Query) -> Option<Result<String>> {
-        if !self.core.flavor.float_overflow {
+        if !self.core.flavor.compiles_aggregates {
             return None;
         }
         let method = query.method();
@@ -372,23 +377,26 @@ impl<D: Dialect> Builder<D> {
             Method::StddevSamp => Some(Method::VarSamp),
             _ => None,
         };
+        let bitwise = matches!(method, Method::BitAnd | Method::BitOr | Method::BitXor);
         if variance.is_none()
+            && !bitwise
             && !matches!(method, Method::Sum | Method::Avg | Method::Variance | Method::VarPop | Method::VarSamp)
         {
             return None;
         }
-        Some(self.checked_aggregate(query, variance))
+        Some(self.checked_aggregate(query, variance, bitwise))
     }
 
-    fn checked_aggregate(&mut self, query: &Query, variance: Option<Method>) -> Result<String> {
+    fn checked_aggregate(&mut self, query: &Query, variance: Option<Method>, bitwise: bool) -> Result<String> {
         let expression =
             self.base_compile_aggregate(&Query::new(query.method(), query.attribute(), Array::new(), ""))?;
         let checked = match variance {
-            None => format!("{expression} + 0"),
             Some(variance) => format!(
                 "SQRT({} + 0)",
                 self.base_compile_aggregate(&Query::new(variance, query.attribute(), Array::new(), ""))?
             ),
+            None if bitwise => format!("CAST({expression} AS SIGNED)"),
+            None => format!("{expression} + 0"),
         };
         let alias = if query.alias().is_empty() {
             crate::quote_literal(&expression, D::WRAP)?

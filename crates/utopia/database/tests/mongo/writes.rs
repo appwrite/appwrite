@@ -693,6 +693,16 @@ fn mongo_type_mismatch_is_an_invalid_operation() {
     assert_eq!(mapped.previous(), Some(&error));
 }
 
+// PHP 8.3.6 Mongo.php:3890: a regex the driver cannot compile (51091) is a query error.
+#[test]
+fn mongo_maps_an_invalid_regular_expression_to_a_query_error() {
+    let error =
+        Error::new(Kind::Mongo, "E51091 Location51091: Regular expression is invalid: missing )").with_code(51091);
+    let mapped = process_exception(error.clone());
+    assert_eq!((mapped.kind(), mapped.message()), (Kind::Query, "Invalid regular expression"));
+    assert_eq!(mapped.previous(), Some(&error));
+}
+
 // ---- BigIntegerTest (MongoDB)
 
 #[utopia_async::test]

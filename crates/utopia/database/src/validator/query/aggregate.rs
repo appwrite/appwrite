@@ -108,6 +108,13 @@ impl Aggregate {
                 unordered.insert(attribute.key.clone());
             }
         }
+        // The internal attributes stored as a JSON list, `$permissions`, are
+        // unordered as arrays are (8.3.4).
+        for attribute in crate::database::internal_attributes(shared_tables) {
+            if attribute.filters.iter().any(|f| f == crate::filter::Filter::Json.as_str()) {
+                unordered.insert(attribute.key.clone());
+            }
+        }
         schema.extend(internal_columns(shared_tables).map(str::to_owned));
         Aggregate {
             schema,
@@ -252,10 +259,14 @@ impl Aggregate {
             !self.unordered.contains(attribute)
         } else {
             let column = split_dot(attribute).map_or(attribute, |(_, c)| c);
-            let Some(definition) = state.joins.join_of(attribute).and_then(|j| j.schema.get(column)) else {
-                return true;
-            };
-            is_ordered(Some(definition.kind), definition.array)
+            let join = state.joins.join_of(attribute);
+            match join.and_then(|j| j.schema.get(column)) {
+                Some(definition) => is_ordered(Some(definition.kind), definition.array),
+                None if join.is_some() && is_joined_internal_attribute(column, |a| self.accepts_main(a)) => {
+                    !self.unordered.contains(column)
+                }
+                None => return true,
+            }
         };
         if !ordered {
             return self.fail(format!(
