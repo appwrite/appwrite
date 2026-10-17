@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T19:50:00Z",
+  "updated": "2026-10-17T19:58:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -10,12 +10,28 @@
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
     },
     {
+      "id": "avatars-mariadb",
+      "title": "CI: Avatars on MariaDB shared tables",
+      "area": "CI",
+      "status": "todo",
+      "updated": "2026-10-17T19:58:00Z",
+      "note": "POST /account/sessions/id-token with the mock provider answers 401 in PHP on MariaDB shared tables only; the other five Avatars modes pass and main runs only PostgreSQL dedicated. Not from the Rust migration; re-run, then report to main if it repeats."
+    },
+    {
       "id": "account-route",
       "title": "Account: route it to Rust",
       "area": "Services",
       "status": "todo",
       "updated": "2026-10-17T19:50:00Z",
       "note": "36 of Account's 63 routes are implemented in Rust, but Traefik still sends all of them to PHP. The last committed parity diff (d90c55d2f0, Oct 15) had 28 of 2,006 scenarios differ, all in account.sessions (19) and account.mfa (9) and mostly purge counts; re-run it after the Users purge fix, then add the routers."
+    },
+    {
+      "id": "console-playwright",
+      "title": "Console E2E: Playwright on a large PR",
+      "area": "CI",
+      "status": "done",
+      "updated": "2026-10-17T19:58:00Z",
+      "note": "On CI Playwright read the PR's whole git diff into one string and crashed (RangeError) before any test; the config now keeps the commit and skips the diff."
     },
     {
       "id": "migration-dashboard",
