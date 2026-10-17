@@ -7653,7 +7653,7 @@
           },
           "expect": [
             {
-              "avg_price": 309.44444444444
+              "avg_price": 309.44444444444446
             }
           ]
         },
@@ -8335,7 +8335,7 @@
           },
           "expect": [
             {
-              "avg_price": 833.33333333333
+              "avg_price": 833.3333333333334
             }
           ]
         },
@@ -9008,7 +9008,7 @@
           },
           "expect": [
             {
-              "avg_rating": 4.0888888888889
+              "avg_rating": 4.088888888888889
             }
           ]
         },
@@ -13107,7 +13107,7 @@
             {
               "total_count": 9,
               "total_price": 2785,
-              "avg_price": 309.44444444444,
+              "avg_price": 309.44444444444446,
               "min_price": 10,
               "max_price": 1200
             }
@@ -13809,7 +13809,7 @@
             {
               "cnt": 3,
               "total": 200,
-              "avg_stock": 143.33333333333
+              "avg_stock": 143.33333333333334
             }
           ]
         },
@@ -15873,15 +15873,15 @@
           },
           "expect": [
             {
-              "avg_price": 28.333333333333,
+              "avg_price": 28.333333333333332,
               "category": "books"
             },
             {
-              "avg_price": 66.666666666667,
+              "avg_price": 66.66666666666667,
               "category": "clothing"
             },
             {
-              "avg_price": 833.33333333333,
+              "avg_price": 833.3333333333334,
               "category": "electronics"
             }
           ]
@@ -17300,7 +17300,7 @@
             {
               "cnt": 3,
               "total": 85,
-              "avg_rating": 4.0333333333333,
+              "avg_rating": 4.033333333333333,
               "min_stock": 40,
               "max_stock": 500,
               "category": "books"
@@ -17308,7 +17308,7 @@
             {
               "cnt": 3,
               "total": 200,
-              "avg_rating": 4.0666666666667,
+              "avg_rating": 4.066666666666666,
               "min_stock": 80,
               "max_stock": 200,
               "category": "clothing"
@@ -17316,7 +17316,7 @@
             {
               "cnt": 3,
               "total": 2500,
-              "avg_rating": 4.1666666666667,
+              "avg_rating": 4.166666666666667,
               "min_stock": 50,
               "max_stock": 100,
               "category": "electronics"
@@ -19501,7 +19501,7 @@
             {
               "order_count": 3,
               "total_spent": 2890,
-              "avg_order": 963.33333333333,
+              "avg_order": 963.3333333333334,
               "customer_uid": "alice"
             },
             {
@@ -19519,7 +19519,7 @@
             {
               "order_count": 3,
               "total_spent": 1100,
-              "avg_order": 366.66666666667,
+              "avg_order": 366.6666666666667,
               "customer_uid": "diana"
             }
           ]
@@ -27785,7 +27785,7 @@
             },
             {
               "review_count": 3,
-              "avg_score": 4.6666666666667,
+              "avg_score": 4.666666666666667,
               "name": "Novel"
             },
             {
@@ -77436,31 +77436,19 @@
             {
               "$document": {
                 "name": "beta",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "gamma",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "alpha",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             }
           ]
@@ -77501,33 +77489,21 @@
               "$document": {
                 "name": "beta",
                 "score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "gamma",
                 "score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "alpha",
                 "score": 3,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             }
           ]
@@ -85659,21 +85635,13 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -85721,21 +85689,13 @@
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -85783,21 +85743,13 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -88922,7 +88874,7 @@
               "labels": 2,
               "units": 7,
               "revenue": 7.5,
-              "mean": 2.3333333333333,
+              "mean": 2.3333333333333335,
               "fewest": 1,
               "dearest": 3.5,
               "firstShipped": "2023-06-01T00:00:00.000+00:00"

@@ -1,7 +1,7 @@
 //! A cursor value the order compares against must be a scalar: PHP builds
 //! the comparison with `Query::greaterThan()` / `lessThan()`, typed
 //! `string|int|float|bool`, so a missing (null) or list value is a
-//! `TypeError` from the call at `Adapter/SQL.php` line 5735 / 5737 (8.3.0).
+//! `TypeError` from the call at `Adapter/SQL.php` line 5777 / 5779 (8.3.6).
 
 #![cfg(feature = "sqlite")]
 
@@ -31,11 +31,11 @@ async fn a_null_or_list_cursor_value_is_a_type_error() {
     assert_eq!(error.kind(), Kind::TypeError);
     assert_eq!(
         error.message(),
-        "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5737"
+        "Utopia\\Query\\Query::greaterThan(): Argument #2 ($value) must be of type string|int|float|bool, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5779"
     );
     let error = find(Value::Array(Array::from_list(vec![Value::Int(1)])), OrderDirection::Desc).await;
     assert_eq!(
         error.message(),
-        "Utopia\\Query\\Query::lessThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5735"
+        "Utopia\\Query\\Query::lessThan(): Argument #2 ($value) must be of type string|int|float|bool, array given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 5777"
     );
 }

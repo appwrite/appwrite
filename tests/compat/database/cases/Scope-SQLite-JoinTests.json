@@ -71937,11 +71937,7 @@
             {
               "$document": {
                 "b.category": "q",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             }
           ]

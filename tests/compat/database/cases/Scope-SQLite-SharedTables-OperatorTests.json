@@ -97410,7 +97410,7 @@
           },
           "expect": {
             "$document": {
-              "value": 0.3,
+              "value": 0.30000000000000004,
               "$id": "precision_doc",
               "$sequence": "1",
               "$tenant": "999",
@@ -97472,7 +97472,7 @@
           },
           "expect": {
             "$document": {
-              "value": 3.3333333333333,
+              "value": 3.3333333333333335,
               "$id": "precision_doc",
               "$sequence": "1",
               "$tenant": "999",
@@ -100443,7 +100443,7 @@
           },
           "expect": {
             "$document": {
-              "value": 5.8598744820488,
+              "value": 5.859874482048838,
               "$id": "precise_doc",
               "$sequence": "1",
               "$tenant": "999",
@@ -100478,7 +100478,7 @@
           },
           "expect": {
             "$document": {
-              "value": 4.4456609196757,
+              "value": 4.445660919675743,
               "$id": "precise_doc",
               "$sequence": "1",
               "$tenant": "999",

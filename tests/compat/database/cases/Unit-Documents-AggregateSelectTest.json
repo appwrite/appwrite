@@ -94800,21 +94800,13 @@
             {
               "$document": {
                 "status": "a",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "customers",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "customers"
               }
             },
             {
               "$document": {
                 "status": "b",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "customers",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "customers"
               }
             }
           ]

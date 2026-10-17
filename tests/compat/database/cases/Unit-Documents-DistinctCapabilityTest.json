@@ -1570,11 +1570,7 @@
               {
                 "$document": {
                   "name": "red",
-                  "$id": null,
-                  "$sequence": null,
-                  "$collection": "colours",
-                  "$createdAt": null,
-                  "$updatedAt": null
+                  "$collection": "colours"
                 }
               }
             ],
@@ -1603,11 +1599,7 @@
                       {
                         "$document": {
                           "name": "red",
-                          "$id": null,
-                          "$sequence": null,
-                          "$collection": "colours",
-                          "$createdAt": null,
-                          "$updatedAt": null
+                          "$collection": "colours"
                         }
                       }
                     ]

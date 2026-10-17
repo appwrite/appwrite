@@ -167298,31 +167298,19 @@
             {
               "$document": {
                 "label": "x",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "notes"
               }
             },
             {
               "$document": {
                 "label": "y",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "notes"
               }
             },
             {
               "$document": {
                 "label": "z",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "notes"
               }
             }
           ]

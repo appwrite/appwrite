@@ -7000,41 +7000,25 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "toys",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -7353,31 +7337,19 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -17051,41 +17023,25 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "toys",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -17453,21 +17409,13 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -19693,51 +19641,31 @@
             {
               "$document": {
                 "r.score": 5,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 4,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 3,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -20105,21 +20033,13 @@
             {
               "$document": {
                 "r.score": 5,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 4,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -27547,61 +27467,37 @@
             {
               "$document": {
                 "r.score": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 3,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 4,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 5,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]
@@ -27969,51 +27865,31 @@
             {
               "$document": {
                 "r.score": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 4,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             },
             {
               "$document": {
                 "r.score": 5,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "products",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "products"
               }
             }
           ]

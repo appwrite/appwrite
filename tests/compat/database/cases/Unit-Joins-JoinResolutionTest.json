@@ -48409,21 +48409,13 @@
             {
               "$document": {
                 "th.score": 5,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "tickets",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "tickets"
               }
             },
             {
               "$document": {
                 "th.score": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "tickets",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "tickets"
               }
             }
           ]

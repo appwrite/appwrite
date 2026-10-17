@@ -1127,11 +1127,7 @@
             {
               "$document": {
                 "s.label": "side-one",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             }
           ]
@@ -2310,21 +2306,13 @@
             {
               "$document": {
                 "s.label": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             },
             {
               "$document": {
                 "s.label": "side-one",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             }
           ]
@@ -3551,31 +3539,19 @@
             {
               "$document": {
                 "s.label": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             },
             {
               "$document": {
                 "s.label": "side-one",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             },
             {
               "$document": {
                 "s.label": "side-two",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             }
           ]
@@ -4826,11 +4802,7 @@
             {
               "$document": {
                 "s.$id": "s1",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "main"
               }
             }
           ]

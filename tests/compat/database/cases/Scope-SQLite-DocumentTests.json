@@ -84764,7 +84764,12 @@
               }
             ]
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
+            }
+          }
         },
         {
           "op": "database.find",
@@ -252844,19 +252849,6 @@
           "expect": [
             {
               "$document": {
-                "score": 1e-21,
-                "$id": "tiny",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "bulk_delete_float_filter"
-              }
-            },
-            {
-              "$document": {
                 "score": 1.5,
                 "$id": "large",
                 "$sequence": "2",
@@ -252888,40 +252880,9 @@
             "onNext": true
           },
           "expect": {
-            "result": 2,
+            "result": 1,
             "calls": {
               "onNext": [
-                {
-                  "args": [
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    },
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    }
-                  ],
-                  "steps": []
-                },
                 {
                   "args": [
                     {
@@ -252963,6 +252924,19 @@
             "collection": "bulk_delete_float_filter"
           },
           "expect": [
+            {
+              "$document": {
+                "score": 1e-21,
+                "$id": "tiny",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "bulk_delete_float_filter"
+              }
+            },
             {
               "$document": {
                 "score": -1.0,
@@ -296003,11 +295977,7 @@
               {
                 "$document": {
                   "colour": "red",
-                  "$id": null,
-                  "$sequence": null,
-                  "$collection": "distinct_capability",
-                  "$createdAt": null,
-                  "$updatedAt": null
+                  "$collection": "distinct_capability"
                 }
               }
             ],
@@ -296020,11 +295990,7 @@
                       {
                         "$document": {
                           "colour": "red",
-                          "$id": null,
-                          "$sequence": null,
-                          "$collection": "distinct_capability",
-                          "$createdAt": null,
-                          "$updatedAt": null
+                          "$collection": "distinct_capability"
                         }
                       }
                     ]

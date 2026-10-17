@@ -309,7 +309,7 @@ impl Sql {
 /// no scalar: a list or object in the first string function that reads it
 /// (`str_ends_with()` in `applySelectionProjection()` for `find()`, given
 /// as `first`, else `strpos()` in `mapSelectionsToColumns()`), and `null`
-/// in `filter()` (`Adapter/SQL.php` line 4171).
+/// in `filter()` (`Adapter/SQL.php` line 4213 at 8.3.6).
 pub(crate) fn php_selections(
     values: &[utopia_query::Value],
     first: Option<&str>,
@@ -341,7 +341,7 @@ pub(crate) fn php_selections(
         if matches!(v, Q::Null) {
             return Err(Error::new(
                 Kind::TypeError,
-                "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4171",
+                "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4213",
             ));
         }
     }
