@@ -954,7 +954,7 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
     response.flush();
 
     if !is_error && api && !ctx.failed {
-        shutdown::schedule(ctx, response.status(), body, response.size());
+        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size());
     }
     response
 }

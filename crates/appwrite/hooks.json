@@ -111,17 +111,14 @@
       "title": "Response cache write",
       "description": "For routes labelled `cache`, stores a successful payload in the project's file cache and records it in the `cache` collection, refreshing the access time and content on later hits.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "cache.resourceType" },
-      "rust": { "status": "missing", "note": "No Users route is cached.", "where": [] }
-    },
-    {
-      "id": "usage",
-      "title": "Usage metrics",
-      "description": "Outside the console, dispatches RequestCompleted (network requests, inbound and outbound bytes) for non-privileged callers and enqueues the request's usage metrics, without the ones the API key disables.",
-      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForUsage->enqueue" },
       "rust": {
         "status": "done",
-        "note": "Network and resource metrics, without the metrics an API key disabled (suffix match), and still published when the key disabled them all. Proved by `appwrite diff` with an ephemeral key.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
+        "note": "Routes set `Labels::cache` (with `cache.resource`, `cache.resourceType`, `cache.params`); no Rust route does yet (storage previews and avatars are PHP's). The key is `cacheIdentifier()`'s MD5 of the URI, the PHP-serialized sorted params and the buster; the payload goes to `/storage/cache/app-<projectId>/<key>` through utopia-cache's `Filesystem` and the entry to the `cache` collection, with PHP's create, duplicate, daily refresh and re-save rules. Unit tests check keys against PHP's (`Request::cacheIdentifier()` on the oracle, and an entry PHP's API wrote for an avatar), the rendered resources and the writes. `appwrite-rust` mounts the `appwrite-cache` volume.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) fn identifier" },
+          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) async fn write" },
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn cache_write" }
+        ]
       }
     },
     {

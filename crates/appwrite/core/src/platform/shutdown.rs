@@ -59,6 +59,8 @@ struct Job {
     session_user: Option<String>,
     /// The abuse keys' parameters (the limits' reset).
     abuse_params: Vec<(String, String)>,
+    /// The response cache entry to write (`cache` routes).
+    cache: Option<super::cache::Entry>,
     /// A function changed: its events cache is purged.
     functions_changed: bool,
     deletes: Vec<Value>,
@@ -126,7 +128,7 @@ const ONBOARDING: &[&str] = &[
     "sites.updateSiteDeployment",
 ];
 
-pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_size: usize) {
+pub(super) fn schedule(ctx: Context, status: StatusCode, content_type: String, body: Bytes, response_size: usize) {
     let request = &ctx.request;
     let origin_host = request.header("origin").and_then(crate::network::url_host);
     let info = RequestInfo {
@@ -168,6 +170,23 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
     } else {
         None
     };
+    // The `cache` routes' entry: the request's key and the payload.
+    let cache = if ctx.route.labels.cache {
+        let key = super::cache::identifier(
+            ctx.request.uri(),
+            ctx.request.params(),
+            ctx.route.labels.cache_params,
+            ctx.request.header_or_empty("x-appwrite-project"),
+        );
+        // The route's params: its path params over the request's.
+        let mut params = ctx.request.params().clone();
+        for (name, value) in &ctx.path_params {
+            params.insert(name.clone(), value.clone());
+        }
+        super::cache::Entry::of(key, &ctx.route.labels, &params, status.as_u16(), &content_type, &body)
+    } else {
+        None
+    };
     let payload = ctx.events.payload.clone().unwrap_or(body);
     let listened = std::mem::take(&mut *ctx.listened.lock().unwrap_or_else(|e| e.into_inner()));
     // `create-trigger-events`: each created user, as the listener renders it.
@@ -196,6 +215,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         sensitive: ctx.events.sensitive,
         created_users,
         functions_changed: listened.functions,
+        cache,
         session_user,
         abuse_params: ctx.abuse_params,
         deletes: ctx.events.deletes,
@@ -221,6 +241,7 @@ impl Job {
         let trimmed = project_payload.clone();
 
         super::guards::abuse_reset(&self.state, self.route.labels, self.status.as_u16(), &self.abuse_params).await;
+        self.cache_write().await;
         // The session limit only deletes rows and purges their cache, which
         // the work below neither reads nor orders against: it runs alongside.
         utopia_async::join!(self.session_limit(), self.dispatch(&project_payload, &trimmed));
@@ -363,6 +384,14 @@ impl Job {
             }
         }
         let _ = db.purge_cached_document("users", user_id).await;
+    }
+
+    /// The `api` group's response cache write (`cache` routes), with
+    /// authorization skipped.
+    async fn cache_write(&self) {
+        let Some(entry) = &self.cache else { return };
+        let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return };
+        entry.write(&db, &self.state.config.storage_cache, &self.project.id).await;
     }
 
     /// The project's functions events cache key (none for the console).
