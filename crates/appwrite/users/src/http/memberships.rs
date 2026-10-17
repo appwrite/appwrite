@@ -6,8 +6,8 @@ use utopia_http::Response;
 use utopia_validators::Text;
 
 use appwrite_core::Result;
-use appwrite_core::database::collections;
 use appwrite_core::database::documents::{self, Attributes, Membership};
+use appwrite_core::database::{LIMIT_COUNT, collections};
 use appwrite_core::platform::Context;
 use appwrite_core::response::{MembershipListModel, MembershipModel};
 use appwrite_core::validators::uid;
@@ -26,7 +26,10 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     }
     queries.push(Query::equal("userInternalId", [user.sequence.to_string()]));
     let db = ctx.db()?;
+    base::resolve_cursor(&db, "memberships", &mut queries, "Membership").await?;
+    let filters = Query::group_by_type(&queries)?.filters;
     let memberships: Vec<Membership> = documents::all(&db.find("memberships", queries, PermissionType::Read).await?);
+    let total = if include_total { db.count("memberships", filters, Some(LIMIT_COUNT)).await? } else { 0 };
 
     // `getDocument('teams', $teamId)` for each membership.
     let mut team_names: Vec<String> = Vec::with_capacity(memberships.len());
@@ -42,6 +45,5 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
         .zip(team_names.iter())
         .map(|(m, team_name)| MembershipModel::new(m, &user_name, &user_email, team_name, render))
         .collect();
-    let total = if include_total { models.len() as i64 } else { 0 };
     Ok(ctx.ok(&MembershipListModel { total, memberships: models }))
 }
