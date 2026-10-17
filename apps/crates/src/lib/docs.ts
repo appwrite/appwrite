@@ -148,9 +148,33 @@ export interface LibrarySummary {
    * time / Rust CPU time per call; null or absent when the results predate CPU measurement).
    */
   bench: { speedup: number; benchmarks: number; cpu?: number | null } | null
+  /** The crate's compile time (`compat build`), null without a run that timed it; older data leaves it out. */
+  build?: BuildTime | null
   updated?: Updated
   /** Older data leaves it out. */
   size?: Size
+}
+
+/**
+ * A crate's compile time in seconds (`bin/compat build --write`, tests/compat/build.json), from scratch with its
+ * dependencies compiled: `lib` is its library's rustc run, `total` adds its build script and binaries. The latest
+ * run's times, and the `average` over the `runs` kept on that run's machine.
+ */
+export interface BuildTime {
+  lib: number | null
+  total: number
+  average: { lib: number | null; total: number | null }
+  runs: number
+  date: string
+  commit: string
+  profile: string
+}
+
+/** The latest `compat build` run: where it ran, and how long compiling every crate took (`wall`, seconds). */
+export interface BuildRun {
+  environment: { date: string; commit: string; machine: { os: string; arch: string; cpu: string }; rustc: string; profile: string; jobs: number | null }
+  wall: number
+  crates: number
 }
 
 export interface Category {
@@ -170,6 +194,8 @@ export interface Index {
   commit_date?: string | null
   /** Lines across the ecosystem: every crate, every PHP package, and both sides of the libraries with both (older data leaves it out). */
   size?: { rust: SizeTotal; php: SizeTotal; php_converted: SizeTotal; rust_converted?: SizeTotal }
+  /** The latest `compat build` run, null without one (older data leaves it out). */
+  build?: BuildRun | null
 }
 
 export interface Code {

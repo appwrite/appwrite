@@ -43,6 +43,7 @@ bin/compat crates [--out <dir>]  # data for apps/crates, the docs of every libra
 bin/compat examples [<crate dir>...]  # run every doc example: Rust doctests and their PHP twins
 bin/compat sync <lib>... [--force]  # after `run <lib>` passes, record the PHP commit the crate matches
 bin/compat bench <lib>... [--write]  # time each library's benchmarks on PHP and on a release build of Rust
+bin/compat build [<lib>...] [--write]  # time each crate's compile from scratch (every crate by default)
 ```
 
 `bin/compat report` runs every case and fuzz profile (200 inputs each by default) with both runtimes' results kept, compares every public PHP method's signature with its Rust counterpart's, maps each PHP symbol to the Rust items whose docs name it, and writes the JSON [`apps/compat`](../../apps/compat) renders. `bin/compat crates` writes the documentation of every Utopia library, converted or not, for [`apps/crates`](../../apps/crates), reading PHP signatures through the PHP driver. `bin/compat examples` runs every example in the crates' docs: the Rust doctests and the PHP twin written after each one (see [`apps/crates/README.md`](../../apps/crates/README.md#writing-examples)).
@@ -246,6 +247,12 @@ A benchmark of a PHP-compatibility codec that no Rust hot path uses (PHP's `seri
 ```json
 "bench": { "compat": { "igbinary_unserialize": "PHP's igbinary format, kept for entries shared with PHP; Rust's own caches use the native codec" } }
 ```
+
+## Build times
+
+`bin/compat build [<lib>...] [--write]` times how long each crate of `crates/utopia` and `crates/support` (or those named) takes to compile. It builds them in their own target directory (`target/compat-build`), so the everyday build is neither reused nor disturbed: once for their dependencies, then, after `cargo clean -p` of each crate, again with `cargo build --timings`, so every crate compiles from scratch with its third-party dependencies already built. Incremental compilation is off, as in CI, and the profile is `dev`. Each crate's time is read from the timings report: `lib` is its library's rustc run, `total` adds its build script and binaries. The crates compile in parallel, as in any workspace build, so a time includes the contention of the crates beside it.
+
+`--write` adds the run with its commit, machine, `rustc` and job count to `tests/compat/build.json`, which keeps the latest 10 runs, newest first. The docs site's Utopia tab shows each crate's latest time and its average over the runs on the latest run's machine: times from different machines are not averaged. Run it on a quiet machine, never alongside benchmarks or other builds.
 
 ## Snapshots
 

@@ -169,17 +169,6 @@ fn environment(engine: &mut Engine, root: &Path) -> Result<Value, String> {
             .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
             .unwrap_or_default()
     };
-    let cpu = if cfg!(target_os = "macos") {
-        run("sysctl", &["-n", "machdep.cpu.brand_string"])
-    } else {
-        std::fs::read_to_string("/proc/cpuinfo")
-            .unwrap_or_default()
-            .lines()
-            .find_map(|l| {
-                l.strip_prefix("model name").and_then(|r| r.split_once(':')).map(|(_, v)| v.trim().to_owned())
-            })
-            .unwrap_or_default()
-    };
     let php = engine.hello_info("php")?;
     let rust = engine.hello_info("rust")?;
     let php_image = if engine.cfg.php.first().is_some_and(|c| c.ends_with("bin/compat-php")) {
@@ -199,7 +188,7 @@ fn environment(engine: &mut Engine, root: &Path) -> Result<Value, String> {
     Ok(json!({
         "date": run("date", &["-u", "+%Y-%m-%dT%H:%M:%SZ"]),
         "commit": run("git", &["rev-parse", "--short=10", "HEAD"]),
-        "machine": { "os": std::env::consts::OS, "arch": std::env::consts::ARCH, "cpu": cpu },
+        "machine": machine(),
         "php": {
             "version": php["version"],
             "opcache": php["opcache"],
@@ -218,6 +207,28 @@ fn environment(engine: &mut Engine, root: &Path) -> Result<Value, String> {
             "kernel": rust["kernel"],
         },
     }))
+}
+
+/// The machine timings ran on: its OS, architecture and CPU model.
+pub fn machine() -> Value {
+    let cpu = if cfg!(target_os = "macos") {
+        Command::new("sysctl")
+            .args(["-n", "machdep.cpu.brand_string"])
+            .output()
+            .ok()
+            .filter(|o| o.status.success())
+            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+            .unwrap_or_default()
+    } else {
+        std::fs::read_to_string("/proc/cpuinfo")
+            .unwrap_or_default()
+            .lines()
+            .find_map(|l| {
+                l.strip_prefix("model name").and_then(|r| r.split_once(':')).map(|(_, v)| v.trim().to_owned())
+            })
+            .unwrap_or_default()
+    };
+    json!({ "os": std::env::consts::OS, "arch": std::env::consts::ARCH, "cpu": cpu })
 }
 
 fn time(ns: Option<f64>) -> String {

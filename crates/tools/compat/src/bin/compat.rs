@@ -46,6 +46,9 @@ const USAGE: &str = "usage: compat <command> [args]
                                                  build of Rust, both in Linux containers on the dev stack's
                                                  network (--host: Rust natively); --write stores
                                                  tests/compat/<lib>/bench.json
+  build [<lib>...] [--write]                     time each Utopia crate's compile (every crate by default)
+                                                 with cargo build --timings; --write adds the run to
+                                                 tests/compat/build.json (the latest 10 are kept)
   call <lib> <op> [<args json>] [--side php|rust]  run one operation and print both results
   new <lib>                                      scaffold tests/compat/<lib>
 
@@ -353,6 +356,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
             compat::runner::bench::use_release_driver(&mut engine, &root, cli.host)?;
             compat::runner::bench::run(&mut engine, &root, &libs, cli.write)
         }
+        "build" => compat::runner::build::run(&root, cli.positional.get(1..).unwrap_or_default(), cli.write),
         "crates" => {
             let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/crates/data"));
             let n = crates::write(Some(&mut engine), &root, &out)?;

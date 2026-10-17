@@ -25,6 +25,8 @@
 //!   comments and blank lines, tests apart (see [`super::size`]); php-std
 //!   also gets the inventory of the PHP functions it reimplements (see
 //!   [`super::phpstd`]);
+//! - its build time: the crate's compile time in the latest `compat build`
+//!   run and its average over the runs kept (see [`super::build`]);
 //! - its freshness: when its cases, crate, benchmarks and PHP package last
 //!   changed, from git (see [`super::history`]); the index says when the
 //!   data was generated.
@@ -463,6 +465,8 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "upstream": sync["upstream"]["commits"],
             },
             "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": benchmarks, "cpu": cpu })),
+            // `compat build --write` runs: the crate's latest compile time and its average.
+            "build": lib.rust.as_ref().and_then(|_| super::build::summary(root, &lib.slug)),
             "updated": updated,
             "size": size,
             "counts": {
@@ -573,6 +577,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "categories": cats,
             "libraries": summaries,
             "size": totals,
+            "build": super::build::latest(root),
             "commit": git(root, &["rev-parse", "--short", "HEAD"]),
             "commit_date": history.head(),
             "branch": git(root, &["rev-parse", "--abbrev-ref", "HEAD"]),

@@ -2,6 +2,7 @@
 
 pub mod appwrite;
 pub mod bench;
+pub mod build;
 pub mod cases;
 pub mod compare;
 pub mod config;

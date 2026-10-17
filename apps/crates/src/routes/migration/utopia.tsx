@@ -5,8 +5,8 @@ import { Measured, SpeedupBadge } from '@/components/Bench'
 import { Performance } from '@/components/BenchLibrary'
 import { Expand, TabProgress, TestState, chip } from '@/components/Dashboard'
 import { StatusBadge } from '@/components/Status'
-import { Generated } from '@/components/Time'
-import { STATUS, loadIndex, loadLibrary, type Bench, type LibrarySummary, type Status } from '@/lib/docs'
+import { Generated, Time } from '@/components/Time'
+import { STATUS, loadIndex, loadLibrary, type Bench, type BuildRun, type LibrarySummary, type Status } from '@/lib/docs'
 import * as progress from '@/lib/progress'
 
 export const Route = createFileRoute('/migration/utopia')({
@@ -17,6 +17,7 @@ export const Route = createFileRoute('/migration/utopia')({
       libraries: index.libraries,
       categories: index.categories.map((c) => ({ id: c.id, title: c.title })),
       generated: { at: index.generated_at, commit: index.commit, commitDate: index.commit_date },
+      build: index.build ?? null,
     }
   },
   head: () => ({ meta: [{ title: 'Utopia · Migration · Utopia for Rust' }] }),
@@ -33,7 +34,7 @@ const ORDER: Status[] = ['progress', 'started', 'planned', 'complete', 'retired'
 
 /** Every Utopia library, its conversion, its proof against PHP and its benchmarks. */
 function Utopia() {
-  const { libraries, categories, generated } = Route.useLoaderData()
+  const { libraries, categories, generated, build } = Route.useLoaderData()
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<Status | null>(null)
   const term = q.trim().toLowerCase()
@@ -48,7 +49,7 @@ function Utopia() {
     <div className="grid min-w-0 gap-6">
       <TabProgress title="Utopia libraries converted" progress={progress.utopia(libraries)}>
         {proven.length} libraries proven against PHP by bin/compat over {cases.toLocaleString('en-US')} cases; {benched.length} benchmarked against PHP
-        {retired ? `; ${retired} not converted by design` : ''}. <Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="Generated" />.
+        {retired ? `; ${retired} not converted by design` : ''}. <BuildSummary run={build} /><Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="Generated" />.
       </TabProgress>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -74,13 +75,16 @@ function Utopia() {
       </div>
 
       <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
-        <table className="w-full min-w-[760px] border-collapse text-[13px]">
+        <table className="w-full min-w-[860px] border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
               <th className="px-3 py-2 font-semibold">Library</th>
               <th className="px-3 py-2 font-semibold">Status</th>
               <th className="px-3 py-2 font-semibold">Tests against PHP</th>
               <th className="px-3 py-2 font-semibold">Rust vs PHP</th>
+              <th className="px-3 py-2 font-semibold" title="The crate's compile time from scratch, its dependencies compiled (bin/compat build)">
+                Build
+              </th>
               <th className="w-10 px-2 py-2" />
             </tr>
           </thead>
@@ -107,6 +111,36 @@ function Tests({ lib }: { lib: LibrarySummary }) {
         {c.cases.toLocaleString('en-US')} cases{c.complete ? ' identical' : ', gaps left'}
       </TestState>
       <span className="text-[11.5px] text-muted-foreground tabular-nums">{c.operations} operations</span>
+    </div>
+  )
+}
+
+const seconds = (s: number) => (s < 10 ? `${s.toFixed(1)}s` : `${Math.round(s)}s`)
+
+/** How long compiling every crate took in the latest `compat build` run. */
+function BuildSummary({ run }: { run: BuildRun | null }) {
+  if (!run) return null
+  const e = run.environment
+  return (
+    <>
+      The {run.crates} crates compile in {seconds(run.wall)} ({e.profile} profile, {e.jobs ?? '?'} jobs on {e.machine.cpu || e.machine.arch}, measured <Time date={e.date} />
+      ).{' '}
+    </>
+  )
+}
+
+/** The crate's latest compile time, and its average over the runs kept on the same machine. */
+function BuildCell({ lib }: { lib: LibrarySummary }) {
+  const b = lib.build
+  if (!b) return <span className="text-[12px] text-muted-foreground">–</span>
+  const latest = b.lib ?? b.total
+  const average = b.average.lib ?? b.average.total
+  return (
+    <div className="grid gap-0.5" title={`Latest: ${seconds(b.total)} with its build script and binaries, at commit ${b.commit}`}>
+      <span className="text-[12px] whitespace-nowrap tabular-nums">{seconds(latest)}</span>
+      <span className="text-[11.5px] whitespace-nowrap text-muted-foreground tabular-nums">
+        {b.runs > 1 && average !== null ? `avg ${seconds(average)} over ${b.runs} runs` : '1 run'}
+      </span>
     </div>
   )
 }
@@ -151,11 +185,14 @@ function LibraryRow({ lib, category }: { lib: LibrarySummary; category?: string 
             <span className="text-[12px] text-muted-foreground">–</span>
           )}
         </td>
+        <td className="px-3 py-2.5">
+          <BuildCell lib={lib} />
+        </td>
         <td className="px-2 py-2 text-right">{lib.bench ? <Expand open={open} onClick={() => setOpen((o) => !o)} label={`${lib.title} benchmarks`} /> : null}</td>
       </tr>
       {open ? (
         <tr className="border-b border-border bg-background/40">
-          <td colSpan={5} className="px-3 py-4">
+          <td colSpan={6} className="px-3 py-4">
             {bench === undefined ? (
               <p className="m-0 text-[12.5px] text-muted-foreground">Loading the results…</p>
             ) : bench ? (
