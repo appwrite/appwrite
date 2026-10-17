@@ -377,12 +377,20 @@ impl Engine {
             let idp = php.send(lib, &step.op, &ap)?;
             let idr = rust.send(lib, &step.op, &ar)?;
             let (rp, rr) = (php.recv(idp)?, rust.recv(idr)?);
+            let swallowed = php.swallowed.take();
             if let Ok(Outcome::Err { message, .. }) = &rp
                 && let Some(message) = message.as_str()
                 && self.flaked.is_none()
                 && spec.flakes.keys().any(|f| message.contains(f.as_str()))
             {
                 self.flaked = Some(message.to_owned());
+            }
+            // A failure the library caught (a Mirror's replication) counts too.
+            if let Some(message) = swallowed
+                && self.flaked.is_none()
+                && spec.flakes.keys().any(|f| message.contains(f.as_str()))
+            {
+                self.flaked = Some(message);
             }
             let (op, or) = match (rp, rr) {
                 (Ok(p), Ok(r)) => (p, r),

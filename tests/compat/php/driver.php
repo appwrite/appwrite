@@ -104,6 +104,10 @@ while (($line = fgets(STDIN)) !== false) {
     } catch (\Throwable $error) {
         $reply = ['id' => $id, 'err' => ['class' => $error::class, 'message' => Codec::encode($error->getMessage())]];
     }
+    if (Session::$swallowed !== null) {
+        $reply['swallowed'] = Session::$swallowed;
+        Session::$swallowed = null;
+    }
     $stray = ob_get_clean();
     if ($stray !== '' && $stray !== false) {
         fwrite(STDERR, "[stdout from {$op}] {$stray}\n");

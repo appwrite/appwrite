@@ -416,6 +416,11 @@ final class Core
         }
         $filters = array_map(fn ($name) => self::mirrorFilter((string) $name), Values::list($spec['filters'] ?? []));
         $mirror = new Mirror($source, $destination, $filters);
+        // Replication errors are logged, not thrown: the runner still sees
+        // the PHP library give way under load.
+        $mirror->onError(function (Failure $failure) {
+            Session::$swallowed ??= $failure->error->getMessage();
+        });
         $state->mirrors[$mirror] = ['source' => $source, 'destination' => $destination];
 
         return $mirror;

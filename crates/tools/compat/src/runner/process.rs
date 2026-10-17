@@ -20,6 +20,9 @@ pub struct Driver {
     stderr: Arc<Mutex<VecDeque<String>>>,
     next: u64,
     timeout: Duration,
+    /// The first error the library caught and did not rethrow (a reply's
+    /// `swallowed`) since it was last taken.
+    pub swallowed: Option<String>,
 }
 
 impl Driver {
@@ -64,7 +67,7 @@ impl Driver {
             .and_then(|v| v.parse().ok())
             .map(Duration::from_secs)
             .unwrap_or(Duration::from_secs(60));
-        Ok(Self { side, child, stdin, lines, stderr, next: 0, timeout })
+        Ok(Self { side, child, stdin, lines, stderr, next: 0, timeout, swallowed: None })
     }
 
     /// The driver's last stderr lines (PHP warnings, panics, ...).
@@ -109,6 +112,9 @@ impl Driver {
         };
         if reply.get("id").and_then(Value::as_u64) != Some(id) {
             return Err(format!("{} driver: expected reply {id}, got {line}", self.side));
+        }
+        if let Some(message) = reply.get("swallowed").and_then(Value::as_str) {
+            self.swallowed.get_or_insert_with(|| message.to_owned());
         }
         Ok(decode(&reply))
     }

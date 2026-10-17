@@ -8,6 +8,14 @@ namespace Tests\Compat;
  */
 final class Session
 {
+    /**
+     * An error a library caught and did not rethrow during the current
+     * operation (a Mirror's failed replication), sent with its reply as
+     * `swallowed`: the runner retries a case whose PHP library gave way
+     * under load (spec `flakes`) even where the failure is not returned.
+     */
+    public static ?string $swallowed = null;
+
     /** @var array<string, mixed> */
     private array $handles = [];
 
