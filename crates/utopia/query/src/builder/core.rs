@@ -1642,8 +1642,7 @@ impl<D: Dialect> Builder<D> {
         not: bool,
         column: Option<&str>,
     ) -> Result<String> {
-        let escaped = escape_like_value(&first(values));
-        self.add_binding(value::string(format!("{prefix}{escaped}{suffix}")), column);
+        self.add_binding(like_pattern(prefix, &first(values), suffix), column);
         let like = D::like_keyword(self);
         Ok(if not { format!("{attribute} NOT {like} ?") } else { format!("{attribute} {like} ?") })
     }
@@ -1656,12 +1655,12 @@ impl<D: Dialect> Builder<D> {
     ) -> Result<String> {
         let like = D::like_keyword(self);
         if values.len() == 1 {
-            self.add_binding(value::string(format!("%{}%", escape_like_value(&first(values)))), column);
+            self.add_binding(like_pattern("%", &first(values), "%"), column);
             return Ok(format!("{attribute} {like} ?"));
         }
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(value::string(format!("%{}%", escape_like_value(v))), column);
+            self.add_binding(like_pattern("%", v, "%"), column);
             parts.push(format!("{attribute} {like} ?"));
         }
         Ok(format!("({})", parts.join(" OR ")))
@@ -1676,7 +1675,7 @@ impl<D: Dialect> Builder<D> {
         let like = D::like_keyword(self);
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(value::string(format!("%{}%", escape_like_value(v))), column);
+            self.add_binding(like_pattern("%", v, "%"), column);
             parts.push(format!("{attribute} {like} ?"));
         }
         Ok(format!("({})", parts.join(" AND ")))
@@ -1690,12 +1689,12 @@ impl<D: Dialect> Builder<D> {
     ) -> Result<String> {
         let like = D::like_keyword(self);
         if values.len() == 1 {
-            self.add_binding(value::string(format!("%{}%", escape_like_value(&first(values)))), column);
+            self.add_binding(like_pattern("%", &first(values), "%"), column);
             return Ok(format!("{attribute} NOT {like} ?"));
         }
         let mut parts = Vec::with_capacity(values.len());
         for v in values.values() {
-            self.add_binding(value::string(format!("%{}%", escape_like_value(v))), column);
+            self.add_binding(like_pattern("%", v, "%"), column);
             parts.push(format!("{attribute} NOT {like} ?"));
         }
         Ok(format!("({})", parts.join(" AND ")))
@@ -1906,23 +1905,30 @@ pub(crate) fn resolve_cursor_value(cursor: Value) -> Result<Value> {
 
 /// PHP's `escapeLikeValue()`: the value as a string (arrays as JSON), with
 /// `\`, `%` and `_` escaped.
-pub(crate) fn escape_like_value(value: &Value) -> String {
-    let text = match value {
-        Value::Array(_) => value::json_encode(value, Flags::NONE).unwrap_or_default(),
-        Value::Int(_) | Value::Float(_) | Value::Bool(_) => value::to_php_string(value),
-        Value::Str(s) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
-        _ => String::new(),
+///
+/// PHP's `str_replace` works on bytes: a string that is not valid UTF-8
+/// keeps its bytes (PDO pgsql then cannot quote it, and the statement fails
+/// silently), so it is escaped byte by byte, never converted lossily.
+pub(crate) fn escape_like_value(value: &Value) -> Vec<u8> {
+    let text: Vec<u8> = match value {
+        Value::Array(_) => value::json_encode(value, Flags::NONE).unwrap_or_default().into_bytes(),
+        Value::Int(_) | Value::Float(_) | Value::Bool(_) => value::to_php_string(value).into_bytes(),
+        Value::Str(s) => s.as_bytes().to_vec(),
+        _ => Vec::new(),
     };
-    let mut out = String::with_capacity(text.len() + 4);
-    for c in text.chars() {
-        match c {
-            '\\' => out.push_str("\\\\"),
-            '%' => out.push_str("\\%"),
-            '_' => out.push_str("\\_"),
-            c => out.push(c),
+    let mut out = Vec::with_capacity(text.len() + 4);
+    for &b in &text {
+        match b {
+            b'\\' | b'%' | b'_' => out.extend_from_slice(&[b'\\', b]),
+            b => out.push(b),
         }
     }
     out
+}
+
+/// `$prefix . $this->escapeLikeValue($value) . $suffix`, as a string value.
+pub(crate) fn like_pattern(prefix: &str, value: &Value, suffix: &str) -> Value {
+    value::string([prefix.as_bytes(), &escape_like_value(value), suffix.as_bytes()].concat())
 }
 
 fn key_value(key: ArrayKey) -> Value {
@@ -1947,4 +1953,18 @@ fn key_ref_string(key: php_std::types::KeyRef<'_>) -> String {
 /// `$row[$column] ?? null`.
 pub(crate) fn row_value(row: &Array, column: &ArrayKey) -> Value {
     row.get(column).cloned().unwrap_or(Value::Null)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // packages/query/src/Builder.php:1743 escapeLikeValue(): str_replace on
+    // the string's bytes, so a byte that is not UTF-8 stays as it is.
+    #[test]
+    fn escape_like_value_keeps_bytes() {
+        assert_eq!(escape_like_value(&value::string(b"a%_\\\xff")), b"a\\%\\_\\\\\xff".to_vec());
+        assert_eq!(like_pattern("%", &value::string(b"\xff"), "%"), value::string(b"%\xff%"));
+        assert_eq!(escape_like_value(&Value::Int(5)), b"5".to_vec());
+    }
 }

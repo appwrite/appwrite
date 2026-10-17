@@ -26,7 +26,7 @@ use std::ops::Deref;
 use php_std::ArrayKey;
 use php_std::json::Flags;
 
-use crate::builder::core::{Builder, Dialect, escape_like_value, first, key_string};
+use crate::builder::core::{Builder, Dialect, first, key_string, like_pattern};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, Cube, FullOuterJoins, Hints, RawSql, Rollup,
     StringAggregates, TableSampling, Totals, is_plain_identifier,
@@ -462,8 +462,7 @@ impl Dialect for ClickHouseDialect {
             let not = if not { "NOT " } else { "" };
             return Ok(format!("{not}{function}({attribute}, ?)"));
         }
-        let escaped = escape_like_value(&raw);
-        b.add_binding(value::string(format!("{prefix}{escaped}{suffix}")), column);
+        b.add_binding(like_pattern(prefix, &raw, suffix), column);
         Ok(format!("{attribute} {} ?", if not { "NOT LIKE" } else { "LIKE" }))
     }
 
