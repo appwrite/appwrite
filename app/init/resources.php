@@ -418,11 +418,14 @@ function getDevice(string $root, string $connection = ''): Device
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
                 // The root carries the bucket. When the endpoint addresses the service rather than the
-                // bucket (no bucket subdomain, no bucket path), bucket-level requests need /{bucket}/.
+                // bucket (no bucket subdomain, no bucket path, host not the bucket itself as with a CNAME
+                // to the bucket), bucket-level requests need /{bucket}/.
                 // The URL is normalised as the S3 device does, which assumes https:// without a scheme.
                 $url = \str_starts_with($endpoint, 'http://') || \str_starts_with($endpoint, 'https://') ? $endpoint : 'https://' . $endpoint;
                 $bare = $bucket !== '' && \trim((string) \parse_url($url, PHP_URL_PATH), '/') === '';
-                $virtualHosted = $bare && \str_starts_with(\strtolower((string) \parse_url($url, PHP_URL_HOST)), \strtolower($bucket) . '.');
+                $host = \strtolower((string) \parse_url($url, PHP_URL_HOST));
+                $name = \strtolower($bucket);
+                $virtualHosted = $bare && ($host === $name || \str_starts_with($host, $name . '.'));
                 $pathStyle = $bare && ! $virtualHosted;
 
                 return new S3(
