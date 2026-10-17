@@ -23,8 +23,11 @@ use Utopia\Abuse\Tests\TokenBucket\Fixed;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory as MemoryDatabase;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Index;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool;
 use Utopia\Psr7\Response;
@@ -108,6 +111,12 @@ final class FakeTables extends Client
 
     private int $next = 0;
 
+    /** the status `create` (the database) answers with, 0 to accept */
+    public int $rejectCreate = 0;
+
+    /** the status `createTable` answers with, 0 to accept */
+    public int $rejectTable = 0;
+
     public function __construct(string $state)
     {
         parent::__construct();
@@ -119,6 +128,12 @@ final class FakeTables extends Client
             $this->tables['db/Abuse'] = ['columns' => ['key', 'time', 'count'], 'indexes' => ['unique1', 'index2']];
             $this->tables['db/lock'] = ['columns' => [], 'indexes' => []];
         }
+    }
+
+    /** The rejection of the PHP tests' fixture endpoint (tests/resources/appwrite.php). */
+    private static function rejected(int $status): AppwriteException
+    {
+        return new AppwriteException('setup rejected', $status, $status === 409 ? 'database_already_exists' : 'fixture_rejected');
     }
 
     /** @return list<string> the column and index keys of a table */
@@ -154,6 +169,9 @@ final class FakeTables extends Client
         switch ($route) {
             case 'POST tablesdb':
                 $this->calls[] = 'create';
+                if ($this->rejectCreate !== 0) {
+                    throw self::rejected($this->rejectCreate);
+                }
                 $id = $params['databaseId'];
                 if (isset($this->databases[$id])) {
                     throw new AppwriteException('Database already exists', 409, 'database_already_exists');
@@ -170,6 +188,9 @@ final class FakeTables extends Client
                 return $this->table($db, $table, $meta);
             case 'POST tablesdb/*/tables':
                 $this->calls[] = 'createTable';
+                if ($this->rejectTable !== 0) {
+                    throw self::rejected($this->rejectTable);
+                }
                 $id = $params['tableId'];
                 if (isset($this->tables["{$db}/{$id}"])) {
                     throw new AppwriteException('Table already exists', 409, 'table_already_exists');
@@ -368,7 +389,43 @@ final class Adapter implements Base, Benchmarks
                 return;
             },
 
+            'database.attributes' => fn (array $a, Session $s) => array_map(fn (Attribute $attribute) => $attribute->toDocument()->getArrayCopy(), TimeLimit\Database::attributes()),
+            'database.indexes' => fn (array $a, Session $s) => array_map(fn (Index $index) => $index->toDocument()->getArrayCopy(), TimeLimit\Database::indexes()),
+            'database.store' => function (array $a, Session $s) {
+                $db = self::database($a, $s);
+                $time = DateTime::format(new \DateTime()->setTimestamp($a['time']));
+                $db->getAuthorization()->skip(fn (): Document => $db->createDocument(
+                    TimeLimit\Database::COLLECTION,
+                    new Document(['$permissions' => [], 'key' => $a['key'], 'time' => $time, 'count' => $a['count']]),
+                ));
+
+                return;
+            },
+            'database.windows' => function (array $a, Session $s) {
+                $limit = self::limit($a, $s);
+                if (!$limit instanceof TimeLimit\Database) {
+                    throw new Fault('not a database limit');
+                }
+                $windows = [];
+                foreach ($limit->getLogs() as $log) {
+                    $time = $log->getAttribute('time');
+                    if ($log->getAttribute('key') === $a['key'] && \is_string($time)) {
+                        $windows[] = new \DateTime($time)->getTimestamp();
+                    }
+                }
+                sort($windows);
+
+                return $windows;
+            },
+
             'tables.new' => fn (array $a, Session $s) => $s->handle(new FakeTables($a['state'] ?? 'none')),
+            'tables.reject' => function (array $a, Session $s) {
+                $tables = self::tables($a, $s);
+                $tables->rejectCreate = $a['create'] ?? 0;
+                $tables->rejectTable = $a['createTable'] ?? 0;
+
+                return;
+            },
             'tables.setup' => function (array $a, Session $s) {
                 $limit = self::limit($a, $s);
                 if (!$limit instanceof TimeLimit\Appwrite\TablesDB) {

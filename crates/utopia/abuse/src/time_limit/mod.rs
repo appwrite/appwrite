@@ -4,7 +4,7 @@
 #[cfg(feature = "redis")]
 mod redis;
 
-mod database;
+pub mod database;
 mod tables;
 
 pub use database::{COLLECTION, Database, Documents, Entry, Memory};
