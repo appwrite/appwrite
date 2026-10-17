@@ -1,11 +1,10 @@
-import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { useState } from 'react'
 import {
   Bar,
   HookRow,
   MethodBadge,
-  MigrationGate,
   RouteStatusLabel,
   RunCard,
   ServiceBadge,
@@ -14,14 +13,14 @@ import {
 } from '@/components/Appwrite'
 import { DuelLegend, Measured } from '@/components/Bench'
 import { BenchEnvironment, BenchProblems, BenchSteps, BenchSummary, EndpointBench, useBenchStep } from '@/components/BenchAppwrite'
-import { MigrationCard, MigrationOnly } from '@/components/Migration'
-import { PageHeader, Section } from '@/components/Page'
-import { ROUTE_STATUS, SERVICE_STATUS, loadMigration, type RouteStatus } from '@/lib/appwrite'
+import { MigrationCard } from '@/components/Migration'
+import { Section } from '@/components/Page'
+import { ROUTE_STATUS, SERVICE_STATUS, loadMigration, runsFor, type RouteStatus } from '@/lib/appwrite'
 import { sourceUrl } from '@/lib/docs'
 import { Time } from '@/components/Time'
 import { badge } from '@/components/Status'
 
-export const Route = createFileRoute('/appwrite/$service')({
+export const Route = createFileRoute('/migration/services/$service')({
   loader: async ({ params }) => {
     const m = await loadMigration()
     const service = m?.services.find((s) => s.id === params.service)
@@ -33,10 +32,10 @@ export const Route = createFileRoute('/appwrite/$service')({
       ...detail,
       ref: m.branch ?? m.commit,
       // The hooks this service's routes run: by group, plus the ones every request runs.
-      hooks: m.hooks.filter((h) => (h.kind === 'init' || h.kind === 'shutdown' ? h.groups.some((g) => groups.has(g)) : true)),
+      hooks: m.hooks.filter((h) => runsFor(h, groups)),
     }
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.service.title ?? 'Service'} · Appwrite migration · Utopia for Rust` }] }),
+  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.service.title ?? 'Service'} · Services · Migration · Utopia for Rust` }] }),
   component: ServicePage,
   notFoundComponent: () => <div className="text-muted-foreground">No service by that name.</div>,
 })
@@ -60,23 +59,15 @@ function ServicePage() {
   const bench = useBenchStep(d.benchmarks[0])
   const runs = [...d.results].sort((a, b) => (a.runtime === b.runtime ? b.date.localeCompare(a.date) : a.runtime === 'rust' ? -1 : 1))
   return (
-    <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-10">
-      <PageHeader
-        eyebrow={
-          <Link to="/appwrite" className="hover:text-foreground">
-            Appwrite migration
-          </Link>
-        }
-        title={s.title}
-        aside={
-          <MigrationOnly>
-            <ServiceBadge status={s.status} />
-          </MigrationOnly>
-        }
-      >
-        {s.description || SERVICE_STATUS[s.status].note}
-      </PageHeader>
-      <MigrationGate>
+    <div className="grid min-w-0 gap-10">
+      <div className="grid gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-[32px]">{s.title}</h2>
+          <ServiceBadge status={s.status} />
+        </div>
+        <p className="m-0 max-w-[68ch] text-[15px] leading-relaxed text-ink-soft">{s.description || SERVICE_STATUS[s.status].note}</p>
+      </div>
+      <>
         <MigrationCard title="Status">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-5 rounded-lg border border-border bg-card p-4">
             <Stat label="Endpoints served by Rust" value={s.counts.served} of={s.counts.endpoints}>
@@ -312,7 +303,7 @@ function ServicePage() {
             ))}
           </ul>
         </Section>
-      </MigrationGate>
+      </>
     </div>
   )
 }

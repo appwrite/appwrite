@@ -14,19 +14,23 @@ import { Route as LibRouteImport } from './routes/$lib'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as LibrariesRouteImport } from './routes/libraries'
 import { Route as MapRouteImport } from './routes/map'
+import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as LibIndexRouteImport } from './routes/$lib/index'
 import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as LibBenchmarksRouteImport } from './routes/$lib/benchmarks'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
 import { Route as LibFunctionsRouteImport } from './routes/$lib/functions'
 import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
-import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
-import { Route as AppwriteBehaviourRouteImport } from './routes/appwrite/behaviour'
-import { Route as AppwriteBenchmarksRouteImport } from './routes/appwrite/benchmarks'
-import { Route as AppwriteFactsRouteImport } from './routes/appwrite/facts'
-import { Route as AppwriteTasksRouteImport } from './routes/appwrite/tasks'
+import { Route as AppwriteSplatRouteImport } from './routes/appwrite/$'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
+import { Route as MigrationIndexRouteImport } from './routes/migration/index'
+import { Route as MigrationFactsRouteImport } from './routes/migration/facts'
+import { Route as MigrationHooksRouteImport } from './routes/migration/hooks'
+import { Route as MigrationTasksRouteImport } from './routes/migration/tasks'
+import { Route as MigrationUtopiaRouteImport } from './routes/migration/utopia'
 import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
+import { Route as MigrationServicesIndexRouteImport } from './routes/migration/services/index'
+import { Route as MigrationServicesServiceRouteImport } from './routes/migration/services/$service'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +55,11 @@ const LibrariesRoute = LibrariesRouteImport.update({
 const MapRoute = MapRouteImport.update({
   id: '/map',
   path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibIndexRoute = LibIndexRouteImport.update({
@@ -83,29 +92,9 @@ const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
   path: '/appwrite/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppwriteServiceRoute = AppwriteServiceRouteImport.update({
-  id: '/appwrite/$service',
-  path: '/appwrite/$service',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppwriteBehaviourRoute = AppwriteBehaviourRouteImport.update({
-  id: '/appwrite/behaviour',
-  path: '/appwrite/behaviour',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppwriteBenchmarksRoute = AppwriteBenchmarksRouteImport.update({
-  id: '/appwrite/benchmarks',
-  path: '/appwrite/benchmarks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppwriteFactsRoute = AppwriteFactsRouteImport.update({
-  id: '/appwrite/facts',
-  path: '/appwrite/facts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppwriteTasksRoute = AppwriteTasksRouteImport.update({
-  id: '/appwrite/tasks',
-  path: '/appwrite/tasks',
+const AppwriteSplatRoute = AppwriteSplatRouteImport.update({
+  id: '/appwrite/$',
+  path: '/appwrite/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
@@ -113,11 +102,47 @@ const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   path: '/categories/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MigrationIndexRoute = MigrationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MigrationRoute,
+} as any)
+const MigrationFactsRoute = MigrationFactsRouteImport.update({
+  id: '/facts',
+  path: '/facts',
+  getParentRoute: () => MigrationRoute,
+} as any)
+const MigrationHooksRoute = MigrationHooksRouteImport.update({
+  id: '/hooks',
+  path: '/hooks',
+  getParentRoute: () => MigrationRoute,
+} as any)
+const MigrationTasksRoute = MigrationTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => MigrationRoute,
+} as any)
+const MigrationUtopiaRoute = MigrationUtopiaRouteImport.update({
+  id: '/utopia',
+  path: '/utopia',
+  getParentRoute: () => MigrationRoute,
+} as any)
 const LibPhpApiSplatRoute = LibPhpApiSplatRouteImport.update({
   id: '/php-api/$',
   path: '/php-api/$',
   getParentRoute: () => LibRoute,
 } as any)
+const MigrationServicesIndexRoute = MigrationServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => MigrationRoute,
+} as any)
+const MigrationServicesServiceRoute =
+  MigrationServicesServiceRouteImport.update({
+    id: '/services/$service',
+    path: '/services/$service',
+    getParentRoute: () => MigrationRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,19 +150,23 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
+  '/migration': typeof MigrationRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
-  '/appwrite/$service': typeof AppwriteServiceRoute
-  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
-  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
-  '/appwrite/facts': typeof AppwriteFactsRoute
-  '/appwrite/tasks': typeof AppwriteTasksRoute
+  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
+  '/migration/facts': typeof MigrationFactsRoute
+  '/migration/hooks': typeof MigrationHooksRoute
+  '/migration/tasks': typeof MigrationTasksRoute
+  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
+  '/migration/': typeof MigrationIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
+  '/migration/services/$service': typeof MigrationServicesServiceRoute
+  '/migration/services/': typeof MigrationServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,15 +177,18 @@ export interface FileRoutesByTo {
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
-  '/appwrite/$service': typeof AppwriteServiceRoute
-  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
-  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
-  '/appwrite/facts': typeof AppwriteFactsRoute
-  '/appwrite/tasks': typeof AppwriteTasksRoute
+  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
+  '/migration/facts': typeof MigrationFactsRoute
+  '/migration/hooks': typeof MigrationHooksRoute
+  '/migration/tasks': typeof MigrationTasksRoute
+  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib': typeof LibIndexRoute
   '/appwrite': typeof AppwriteIndexRoute
+  '/migration': typeof MigrationIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
+  '/migration/services/$service': typeof MigrationServicesServiceRoute
+  '/migration/services': typeof MigrationServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,19 +197,23 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/libraries': typeof LibrariesRoute
   '/map': typeof MapRoute
+  '/migration': typeof MigrationRouteWithChildren
   '/$lib/$': typeof LibSplatRoute
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
-  '/appwrite/$service': typeof AppwriteServiceRoute
-  '/appwrite/behaviour': typeof AppwriteBehaviourRoute
-  '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
-  '/appwrite/facts': typeof AppwriteFactsRoute
-  '/appwrite/tasks': typeof AppwriteTasksRoute
+  '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
+  '/migration/facts': typeof MigrationFactsRoute
+  '/migration/hooks': typeof MigrationHooksRoute
+  '/migration/tasks': typeof MigrationTasksRoute
+  '/migration/utopia': typeof MigrationUtopiaRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
+  '/migration/': typeof MigrationIndexRoute
   '/$lib/php-api/$': typeof LibPhpApiSplatRoute
+  '/migration/services/$service': typeof MigrationServicesServiceRoute
+  '/migration/services/': typeof MigrationServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,19 +223,23 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/libraries'
     | '/map'
+    | '/migration'
     | '/$lib/$'
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
-    | '/appwrite/$service'
-    | '/appwrite/behaviour'
-    | '/appwrite/benchmarks'
-    | '/appwrite/facts'
-    | '/appwrite/tasks'
+    | '/appwrite/$'
     | '/categories/$category'
+    | '/migration/facts'
+    | '/migration/hooks'
+    | '/migration/tasks'
+    | '/migration/utopia'
     | '/$lib/'
     | '/appwrite/'
+    | '/migration/'
     | '/$lib/php-api/$'
+    | '/migration/services/$service'
+    | '/migration/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,15 +250,18 @@ export interface FileRouteTypes {
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
-    | '/appwrite/$service'
-    | '/appwrite/behaviour'
-    | '/appwrite/benchmarks'
-    | '/appwrite/facts'
-    | '/appwrite/tasks'
+    | '/appwrite/$'
     | '/categories/$category'
+    | '/migration/facts'
+    | '/migration/hooks'
+    | '/migration/tasks'
+    | '/migration/utopia'
     | '/$lib'
     | '/appwrite'
+    | '/migration'
     | '/$lib/php-api/$'
+    | '/migration/services/$service'
+    | '/migration/services'
   id:
     | '__root__'
     | '/'
@@ -226,19 +269,23 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/libraries'
     | '/map'
+    | '/migration'
     | '/$lib/$'
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
-    | '/appwrite/$service'
-    | '/appwrite/behaviour'
-    | '/appwrite/benchmarks'
-    | '/appwrite/facts'
-    | '/appwrite/tasks'
+    | '/appwrite/$'
     | '/categories/$category'
+    | '/migration/facts'
+    | '/migration/hooks'
+    | '/migration/tasks'
+    | '/migration/utopia'
     | '/$lib/'
     | '/appwrite/'
+    | '/migration/'
     | '/$lib/php-api/$'
+    | '/migration/services/$service'
+    | '/migration/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,11 +294,8 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   LibrariesRoute: typeof LibrariesRoute
   MapRoute: typeof MapRoute
-  AppwriteServiceRoute: typeof AppwriteServiceRoute
-  AppwriteBehaviourRoute: typeof AppwriteBehaviourRoute
-  AppwriteBenchmarksRoute: typeof AppwriteBenchmarksRoute
-  AppwriteFactsRoute: typeof AppwriteFactsRoute
-  AppwriteTasksRoute: typeof AppwriteTasksRoute
+  MigrationRoute: typeof MigrationRouteWithChildren
+  AppwriteSplatRoute: typeof AppwriteSplatRoute
   CategoriesCategoryRoute: typeof CategoriesCategoryRoute
   AppwriteIndexRoute: typeof AppwriteIndexRoute
 }
@@ -291,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/map'
       fullPath: '/map'
       preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lib/': {
@@ -335,39 +386,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppwriteIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/appwrite/$service': {
-      id: '/appwrite/$service'
-      path: '/appwrite/$service'
-      fullPath: '/appwrite/$service'
-      preLoaderRoute: typeof AppwriteServiceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appwrite/behaviour': {
-      id: '/appwrite/behaviour'
-      path: '/appwrite/behaviour'
-      fullPath: '/appwrite/behaviour'
-      preLoaderRoute: typeof AppwriteBehaviourRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appwrite/benchmarks': {
-      id: '/appwrite/benchmarks'
-      path: '/appwrite/benchmarks'
-      fullPath: '/appwrite/benchmarks'
-      preLoaderRoute: typeof AppwriteBenchmarksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appwrite/facts': {
-      id: '/appwrite/facts'
-      path: '/appwrite/facts'
-      fullPath: '/appwrite/facts'
-      preLoaderRoute: typeof AppwriteFactsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appwrite/tasks': {
-      id: '/appwrite/tasks'
-      path: '/appwrite/tasks'
-      fullPath: '/appwrite/tasks'
-      preLoaderRoute: typeof AppwriteTasksRouteImport
+    '/appwrite/$': {
+      id: '/appwrite/$'
+      path: '/appwrite/$'
+      fullPath: '/appwrite/$'
+      preLoaderRoute: typeof AppwriteSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories/$category': {
@@ -377,12 +400,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/migration/': {
+      id: '/migration/'
+      path: '/'
+      fullPath: '/migration/'
+      preLoaderRoute: typeof MigrationIndexRouteImport
+      parentRoute: typeof MigrationRoute
+    }
+    '/migration/facts': {
+      id: '/migration/facts'
+      path: '/facts'
+      fullPath: '/migration/facts'
+      preLoaderRoute: typeof MigrationFactsRouteImport
+      parentRoute: typeof MigrationRoute
+    }
+    '/migration/hooks': {
+      id: '/migration/hooks'
+      path: '/hooks'
+      fullPath: '/migration/hooks'
+      preLoaderRoute: typeof MigrationHooksRouteImport
+      parentRoute: typeof MigrationRoute
+    }
+    '/migration/tasks': {
+      id: '/migration/tasks'
+      path: '/tasks'
+      fullPath: '/migration/tasks'
+      preLoaderRoute: typeof MigrationTasksRouteImport
+      parentRoute: typeof MigrationRoute
+    }
+    '/migration/utopia': {
+      id: '/migration/utopia'
+      path: '/utopia'
+      fullPath: '/migration/utopia'
+      preLoaderRoute: typeof MigrationUtopiaRouteImport
+      parentRoute: typeof MigrationRoute
+    }
     '/$lib/php-api/$': {
       id: '/$lib/php-api/$'
       path: '/php-api/$'
       fullPath: '/$lib/php-api/$'
       preLoaderRoute: typeof LibPhpApiSplatRouteImport
       parentRoute: typeof LibRoute
+    }
+    '/migration/services/': {
+      id: '/migration/services/'
+      path: '/services'
+      fullPath: '/migration/services/'
+      preLoaderRoute: typeof MigrationServicesIndexRouteImport
+      parentRoute: typeof MigrationRoute
+    }
+    '/migration/services/$service': {
+      id: '/migration/services/$service'
+      path: '/services/$service'
+      fullPath: '/migration/services/$service'
+      preLoaderRoute: typeof MigrationServicesServiceRouteImport
+      parentRoute: typeof MigrationRoute
     }
   }
 }
@@ -407,17 +479,38 @@ const LibRouteChildren: LibRouteChildren = {
 
 const LibRouteWithChildren = LibRoute._addFileChildren(LibRouteChildren)
 
+interface MigrationRouteChildren {
+  MigrationFactsRoute: typeof MigrationFactsRoute
+  MigrationHooksRoute: typeof MigrationHooksRoute
+  MigrationTasksRoute: typeof MigrationTasksRoute
+  MigrationUtopiaRoute: typeof MigrationUtopiaRoute
+  MigrationIndexRoute: typeof MigrationIndexRoute
+  MigrationServicesServiceRoute: typeof MigrationServicesServiceRoute
+  MigrationServicesIndexRoute: typeof MigrationServicesIndexRoute
+}
+
+const MigrationRouteChildren: MigrationRouteChildren = {
+  MigrationFactsRoute: MigrationFactsRoute,
+  MigrationHooksRoute: MigrationHooksRoute,
+  MigrationTasksRoute: MigrationTasksRoute,
+  MigrationUtopiaRoute: MigrationUtopiaRoute,
+  MigrationIndexRoute: MigrationIndexRoute,
+  MigrationServicesServiceRoute: MigrationServicesServiceRoute,
+  MigrationServicesIndexRoute: MigrationServicesIndexRoute,
+}
+
+const MigrationRouteWithChildren = MigrationRoute._addFileChildren(
+  MigrationRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibRoute: LibRouteWithChildren,
   ChangelogRoute: ChangelogRoute,
   LibrariesRoute: LibrariesRoute,
   MapRoute: MapRoute,
-  AppwriteServiceRoute: AppwriteServiceRoute,
-  AppwriteBehaviourRoute: AppwriteBehaviourRoute,
-  AppwriteBenchmarksRoute: AppwriteBenchmarksRoute,
-  AppwriteFactsRoute: AppwriteFactsRoute,
-  AppwriteTasksRoute: AppwriteTasksRoute,
+  MigrationRoute: MigrationRouteWithChildren,
+  AppwriteSplatRoute: AppwriteSplatRoute,
   CategoriesCategoryRoute: CategoriesCategoryRoute,
   AppwriteIndexRoute: AppwriteIndexRoute,
 }

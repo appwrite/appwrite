@@ -284,3 +284,29 @@ export function pairs(b: Benchmark) {
 
 /** `rate 200` → `200 req/s`, `vus 50` → `50 users`. */
 export const load = (mode: 'rate' | 'vus', level: number) => (mode === 'rate' ? `${level} req/s` : `${level} users, closed loop`)
+
+/**
+ * Whether a hook runs for a service whose routes carry `groups`: init and shutdown hooks by group, every other
+ * kind (error, options, wildcard hooks and request resources) on every request.
+ */
+export const runsFor = (hook: Pick<Hook, 'kind' | 'groups'>, groups: Set<string>) =>
+  hook.kind === 'init' || hook.kind === 'shutdown' ? hook.groups.some((g) => groups.has(g)) : true
+
+/** A service's E2E against Rust: the latest recorded Rust run, and whether CI runs its suites against Rust. */
+export interface RustE2e {
+  service: string
+  title: string
+  ci: boolean
+  run: RunSummary | null
+}
+
+/** The services whose routes run each hook and whose E2E suites run against Rust: the tests that go through it. */
+export function hookTests(m: Pick<Migration, 'hooks' | 'services' | 'details'>): Record<string, RustE2e[]> {
+  const tested = m.services
+    .filter((s) => s.tests.rust || s.tests.latest.some((r) => r.runtime === 'rust'))
+    .map((s) => ({
+      groups: new Set(m.details[s.id]?.endpoints.flatMap((e) => e.groups) ?? []),
+      e2e: { service: s.id, title: s.title, ci: s.tests.rust, run: s.tests.latest.find((r) => r.runtime === 'rust') ?? null },
+    }))
+  return Object.fromEntries(m.hooks.map((h) => [h.id, tested.filter((t) => runsFor(h, t.groups)).map((t) => t.e2e)]))
+}

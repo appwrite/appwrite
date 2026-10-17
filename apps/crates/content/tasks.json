@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-17T19:12:00Z",
+  "updated": "2026-10-17T19:35:00Z",
   "tasks": [
+    {
+      "id": "migration-dashboard",
+      "title": "Migration dashboard at /migration",
+      "area": "Docs",
+      "status": "done",
+      "updated": "2026-10-17T19:35:00Z",
+      "note": "The /appwrite pages became one dashboard in tabs (Utopia, Services, Hooks, Facts, Tasks), each opening on a progress bar of its section. Lists show tests (compat cases, E2E runs, the Rust E2E runs through each hook) and a benchmark's bottom line that expands to the full results; hooks filter by group. Old /appwrite URLs redirect."
+    },
     {
       "id": "audit-fuzz",
       "title": "audit: one ClickHouse batch fuzz input differs",
@@ -255,7 +263,7 @@
       "area": "Docs",
       "status": "done",
       "updated": "2026-10-15T19:14:00Z",
-      "note": "/appwrite/facts: the project in numbers for the write-up, kept current with the board."
+      "note": "/migration/facts: the project in numbers for the write-up, kept current with the board."
     },
     {
       "id": "db8-identity",

@@ -531,7 +531,7 @@ function LibraryBoard({
       </div>
       {node.kind === 'app' ? (
         <MigrationOnly>
-          <Link to="/appwrite" className="mt-3 inline-block text-[13px] hover:underline">
+          <Link to="/migration/services" className="mt-3 inline-block text-[13px] hover:underline">
             Appwrite migration
           </Link>
         </MigrationOnly>

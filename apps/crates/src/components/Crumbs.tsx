@@ -13,10 +13,12 @@ export function Crumbs() {
   const path = useRouterState({ select: (s) => decodeURIComponent(s.location.pathname) })
   const parts = path.split('/').filter(Boolean)
   const crumbs: { label: string; to?: string; params?: Record<string, string> }[] = []
-  const service = useMatch({ from: '/appwrite/$service', shouldThrow: false })?.loaderData?.service
-  if (parts[0] === 'appwrite') {
-    crumbs.push({ label: 'Appwrite migration', to: '/appwrite' })
-    if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
+  const service = useMatch({ from: '/migration/services/$service', shouldThrow: false })?.loaderData?.service
+  if (parts[0] === 'migration') {
+    // The dashboard's tabs say where its own pages sit; a service's page sits under Services.
+    if (parts[1] === 'services' && parts[2]) {
+      crumbs.push({ label: 'Migration', to: '/migration' }, { label: 'Services', to: '/migration/services' }, { label: service?.title ?? parts[2] })
+    }
   } else if (index && parts.length > 1 && !['map', 'changelog', 'libraries', 'categories'].includes(parts[0])) {
     const lib = index.libraries.find((l) => l.slug === parts[0])
     const category = index.categories.find((c) => c.id === lib?.category)

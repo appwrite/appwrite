@@ -216,9 +216,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
         {index ? (
           <MigrationOnly>
-            <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
+            <Link to="/migration" className={item(true)} title={MIGRATION_TITLE}>
               <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-              Appwrite migration
+              Migration
             </Link>
           </MigrationOnly>
         ) : null}

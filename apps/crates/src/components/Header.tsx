@@ -75,9 +75,9 @@ function Menu() {
         Changelog
       </Link>
       <MigrationOnly>
-        <Link to="/appwrite" className={`${link} nav-migration`} activeProps={{ className: active }} title={MIGRATION_TITLE}>
+        <Link to="/migration" className={`${link} nav-migration`} activeProps={{ className: active }} title={MIGRATION_TITLE}>
           <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-          Appwrite migration
+          Migration
         </Link>
       </MigrationOnly>
     </nav>

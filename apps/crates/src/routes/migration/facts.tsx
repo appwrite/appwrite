@@ -1,12 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { MigrationGate } from '@/components/Appwrite'
-import { PageHeader, Section } from '@/components/Page'
+import { createFileRoute, getRouteApi } from '@tanstack/react-router'
+import { TabProgress } from '@/components/Dashboard'
+import { Section } from '@/components/Page'
 import { Generated, Time } from '@/components/Time'
-import { loadMigration } from '@/lib/appwrite'
+import { loadMigration, percent } from '@/lib/appwrite'
 import { loadIndex } from '@/lib/docs'
 import { FACTS, type Fact } from '@/lib/facts'
 
-export const Route = createFileRoute('/appwrite/facts')({
+export const Route = createFileRoute('/migration/facts')({
   loader: async () => {
     const [index, migration] = await Promise.all([loadIndex(), loadMigration()])
     return {
@@ -17,9 +17,11 @@ export const Route = createFileRoute('/appwrite/facts')({
       generated: migration ? { at: migration.generated_at, commit: migration.commit, commitDate: migration.commit_date } : null,
     }
   },
-  head: () => ({ meta: [{ title: 'Facts and figures · Appwrite migration · Utopia for Rust' }] }),
+  head: () => ({ meta: [{ title: 'Facts · Migration · Utopia for Rust' }] }),
   component: Facts,
 })
+
+const dashboard = getRouteApi('/migration')
 
 const n = (v: number) => v.toLocaleString('en-US')
 
@@ -40,6 +42,12 @@ function Tiles({ facts }: { facts: Fact[] }) {
 /** The project in numbers: what was converted, how it was proven, how it performs and how it was built. */
 function Facts() {
   const { libraries, complete, size, api, generated } = Route.useLoaderData()
+  const { progress } = dashboard.useLoaderData()
+  const sections = [
+    progress.utopia ? `Utopia ${percent(progress.utopia.done, progress.utopia.total)}%` : null,
+    progress.services ? `services ${percent(progress.services.done, progress.services.total)}%` : null,
+    progress.hooks ? `hooks ${percent(progress.hooks.done, progress.hooks.total)}%` : null,
+  ].filter(Boolean)
   // Read from the generated site data, so they follow every regeneration.
   const live: Fact[] = []
   if (libraries !== null && complete !== null) {
@@ -53,50 +61,46 @@ function Facts() {
     live.push({ value: `${api.hooks.done} / ${api.hooks.total}`, label: 'cross-cutting hooks done', note: `${api.hooks.partial} partly done, ${api.hooks.missing} not started; ${api.hooks.done_needed} of the ${api.hooks.needed} needed today.` })
   }
   return (
-    <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-10">
-      <PageHeader eyebrow="Appwrite migration" title="Facts and figures">
-        {FACTS.summary}
-        <div className="mt-2 text-[12px]">
-          Figures last changed <Time date={FACTS.updated} />
-          {generated ? (
-            <>
-              {' · '}
-              <Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="site data generated" />
-            </>
-          ) : null}
-        </div>
-      </PageHeader>
-      <MigrationGate>
-        {live.length ? (
-          <Section title="Where it stands">
-            <Tiles facts={live} />
-          </Section>
+    <div className="grid min-w-0 gap-10">
+      <TabProgress title="The migration overall" progress={progress.facts} count={false}>
+        The mean of its parts, each weighed the same: {sections.join(', ')}. {FACTS.summary} Figures last changed <Time date={FACTS.updated} />
+        {generated ? (
+          <>
+            {'; '}
+            <Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="site data generated" />
+          </>
         ) : null}
-        {FACTS.sections.map((s) => (
-          <Section key={s.title} title={s.title}>
-            <Tiles facts={s.facts} />
-          </Section>
-        ))}
-        <Section title="Timeline">
-          <ol className="m-0 grid list-none gap-0 border-l border-border p-0">
-            {FACTS.timeline.map((t) => (
-              <li key={t.date + t.title} className="relative grid gap-0.5 pb-5 pl-5 last:pb-0">
-                <span className="absolute top-1.5 -left-[4.5px] size-2 rounded-full bg-foreground" aria-hidden />
-                <span className="font-mono text-[11.5px] text-muted-foreground">{t.date}</span>
-                <span className="text-[14px] font-medium">{t.title}</span>
-                <span className="max-w-[80ch] text-[13px] leading-relaxed text-muted-foreground">{t.note}</span>
-              </li>
-            ))}
-          </ol>
+        .
+      </TabProgress>
+      {live.length ? (
+        <Section title="Where it stands">
+          <Tiles facts={live} />
         </Section>
-        <Section title="Lessons">
-          <ul className="m-0 grid max-w-[80ch] list-disc gap-2 pl-5 text-[13.5px] leading-relaxed">
-            {FACTS.lessons.map((l) => (
-              <li key={l}>{l}</li>
-            ))}
-          </ul>
+      ) : null}
+      {FACTS.sections.map((s) => (
+        <Section key={s.title} title={s.title}>
+          <Tiles facts={s.facts} />
         </Section>
-      </MigrationGate>
+      ))}
+      <Section title="Timeline">
+        <ol className="m-0 grid list-none gap-0 border-l border-border p-0">
+          {FACTS.timeline.map((t) => (
+            <li key={t.date + t.title} className="relative grid gap-0.5 pb-5 pl-5 last:pb-0">
+              <span className="absolute top-1.5 -left-[4.5px] size-2 rounded-full bg-foreground" aria-hidden />
+              <span className="font-mono text-[11.5px] text-muted-foreground">{t.date}</span>
+              <span className="text-[14px] font-medium">{t.title}</span>
+              <span className="max-w-[80ch] text-[13px] leading-relaxed text-muted-foreground">{t.note}</span>
+            </li>
+          ))}
+        </ol>
+      </Section>
+      <Section title="Lessons">
+        <ul className="m-0 grid max-w-[80ch] list-disc gap-2 pl-5 text-[13.5px] leading-relaxed">
+          {FACTS.lessons.map((l) => (
+            <li key={l}>{l}</li>
+          ))}
+        </ul>
+      </Section>
     </div>
   )
 }

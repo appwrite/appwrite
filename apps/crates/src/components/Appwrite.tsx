@@ -98,7 +98,7 @@ export function MigrationGate({ children }: { children: ReactNode }) {
   if (on) return <>{children}</>
   return (
     <div className="grid max-w-[72ch] justify-items-start gap-3 rounded-lg border border-border bg-card p-4 text-[13.5px] text-muted-foreground">
-      <span>The Appwrite migration is part of the migration view: the move of the Appwrite API itself from PHP to Rust, service by service.</span>
+      <span>The migration dashboard is part of the migration view: the move of Appwrite and the Utopia libraries it stands on from PHP to Rust.</span>
       <button
         type="button"
         onClick={() => setMigration(true)}
@@ -174,8 +174,8 @@ export function RunCard({ run }: { run: Run }) {
 }
 
 
-/** One cross-cutting behaviour and where Rust stands on it. */
-export function HookRow({ hook, gitRef, kind = true }: { hook: Hook; gitRef: string | null | undefined; kind?: boolean }) {
+/** One cross-cutting behaviour and where Rust stands on it; `tests`: the tests that run through it. */
+export function HookRow({ hook, gitRef, kind = true, tests }: { hook: Hook; gitRef: string | null | undefined; kind?: boolean; tests?: ReactNode }) {
   const [open, setOpen] = useState(false)
   const facts = [
     hook.groups.length ? { label: 'Groups', items: hook.groups } : null,
@@ -201,6 +201,7 @@ export function HookRow({ hook, gitRef, kind = true }: { hook: Hook; gitRef: str
               {hook.rust.note}
             </p>
           ) : null}
+          {tests ? <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px]">{tests}</div> : null}
         </div>
         <HookStatusLabel status={hook.rust.status} />
       </div>

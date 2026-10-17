@@ -6,16 +6,21 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 
 /**
- * The Appwrite migration pages. They show only in migration mode, so no
- * prerendered page links to them for the crawler to find.
+ * The migration dashboard's pages. They show only in migration mode, so no
+ * prerendered page links to them for the crawler to find. The old /appwrite
+ * pages redirect to them, and are prerendered too so their links keep working.
  */
 function migrationPages(): { path: string }[] {
+  const tabs = ['utopia', 'services', 'hooks', 'facts', 'tasks'].map((t) => `/migration/${t}`)
+  const old = ['/appwrite', '/appwrite/facts', '/appwrite/tasks', '/appwrite/behaviour', '/appwrite/benchmarks']
+  let services: string[] = []
   try {
     const data = JSON.parse(readFileSync(new URL('./data/appwrite.json', import.meta.url), 'utf8')) as { services: { id: string }[] }
-    return [{ path: '/appwrite' }, ...data.services.map((s) => ({ path: `/appwrite/${s.id}` }))]
+    services = data.services.map((s) => `/migration/services/${s.id}`)
   } catch {
-    return []
+    // No migration data: the services tab shows how to generate it.
   }
+  return ['/migration', ...tabs, ...services, ...old].map((path) => ({ path }))
 }
 
 export default defineConfig({
