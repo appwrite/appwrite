@@ -169,13 +169,12 @@ final class S3CustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => Id::unique(),
             'name' => 'S3 Bucket',
-            'maximumFileSize' => 128 * 1024 * 1024,
             'fileSecurity' => false,
             // The S3 gateway serves only buckets that store objects as is.
             'encryption' => false,
             'compression' => 'none',
         ]);
-        $this->assertSame(201, $bucket['headers']['status-code']);
+        $this->assertSame(201, $bucket['headers']['status-code'], \json_encode($bucket['body']));
 
         return $bucket['body']['$id'];
     }
