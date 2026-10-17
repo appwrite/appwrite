@@ -83583,7 +83583,12 @@
               }
             ]
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
+            }
+          }
         },
         {
           "op": "database.find",

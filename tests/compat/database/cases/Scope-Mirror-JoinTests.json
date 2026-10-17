@@ -75276,31 +75276,19 @@
             {
               "$document": {
                 "b.category": "p",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             },
             {
               "$document": {
                 "b.category": "q",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             },
             {
               "$document": {
                 "b.category": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             }
           ],
@@ -75391,11 +75379,7 @@
             {
               "$document": {
                 "b.category": "q",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             }
           ]

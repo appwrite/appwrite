@@ -9036,7 +9036,7 @@
           },
           "expect": [
             {
-              "avg_rating": 4.0888888888889
+              "avg_rating": 4.0888888888888895
             }
           ]
         },
@@ -17352,7 +17352,7 @@
             {
               "cnt": 3,
               "total": 200,
-              "avg_rating": 4.0666666666667,
+              "avg_rating": 4.066666666666666,
               "min_stock": 80,
               "max_stock": 200,
               "category": "clothing"
@@ -17360,7 +17360,7 @@
             {
               "cnt": 3,
               "total": 2500,
-              "avg_rating": 4.1666666666667,
+              "avg_rating": 4.166666666666667,
               "min_stock": 50,
               "max_stock": 100,
               "category": "electronics"
@@ -17368,7 +17368,7 @@
             {
               "cnt": 3,
               "total": 85,
-              "avg_rating": 4.0333333333333,
+              "avg_rating": 4.033333333333333,
               "min_stock": 40,
               "max_stock": 500,
               "category": "books"
@@ -84274,33 +84274,21 @@
               "$document": {
                 "name": "beta",
                 "score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "gamma",
                 "score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "alpha",
                 "score": 3,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             }
           ]
@@ -93573,21 +93561,13 @@
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ],
@@ -93642,21 +93622,13 @@
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -93704,21 +93676,13 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -94133,32 +94097,20 @@
           "expect": [
             {
               "$document": {
+                "category": "books",
+                "$collection": "distinct_vector_distance"
+              }
+            },
+            {
+              "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ],
@@ -94217,31 +94169,19 @@
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ]
@@ -94293,31 +94233,19 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "books",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ]
@@ -94378,21 +94306,13 @@
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ]
@@ -94555,11 +94475,7 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ]
@@ -94645,11 +94561,7 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_vector_distance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_vector_distance"
               }
             }
           ]

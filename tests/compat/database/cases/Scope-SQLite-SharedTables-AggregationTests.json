@@ -87249,13 +87249,13 @@
           "expect": [
             {
               "$document": {
-                "category": "electronics",
+                "category": "clothing",
                 "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
-                "category": "clothing",
+                "category": "electronics",
                 "$collection": "distinct_search_relevance"
               }
             }

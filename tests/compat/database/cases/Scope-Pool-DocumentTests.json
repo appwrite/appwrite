@@ -88157,8 +88157,8 @@
           },
           "expect": {
             "$error": {
-              "class": "PDOException",
-              "message": "SQLSTATE[2201B]: Invalid regular expression: 7 ERROR:  invalid regular expression: parentheses () not balanced"
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
             }
           }
         },
@@ -256521,19 +256521,6 @@
           "expect": [
             {
               "$document": {
-                "score": 1e-21,
-                "$id": "tiny",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "bulk_delete_float_filter"
-              }
-            },
-            {
-              "$document": {
                 "score": 1.5,
                 "$id": "large",
                 "$sequence": "2",
@@ -256565,40 +256552,9 @@
             "onNext": true
           },
           "expect": {
-            "result": 2,
+            "result": 1,
             "calls": {
               "onNext": [
-                {
-                  "args": [
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    },
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    }
-                  ],
-                  "steps": []
-                },
                 {
                   "args": [
                     {
@@ -256640,6 +256596,19 @@
             "collection": "bulk_delete_float_filter"
           },
           "expect": [
+            {
+              "$document": {
+                "score": 1e-21,
+                "$id": "tiny",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "bulk_delete_float_filter"
+              }
+            },
             {
               "$document": {
                 "score": -1.0,
@@ -291681,7 +291650,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"position\" has invalid type. Value must be a valid point: "
+              "message": "Invalid document structure: Attribute \"position\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
             }
           }
         },
@@ -300359,12 +300328,6 @@
           "expect": [
             {
               "$document": {
-                "k": null,
-                "$collection": "distinct_rows_59be91"
-              }
-            },
-            {
-              "$document": {
                 "k": "a",
                 "$collection": "distinct_rows_59be91"
               }
@@ -300372,6 +300335,12 @@
             {
               "$document": {
                 "k": "b",
+                "$collection": "distinct_rows_59be91"
+              }
+            },
+            {
+              "$document": {
+                "k": null,
                 "$collection": "distinct_rows_59be91"
               }
             }
@@ -300474,21 +300443,14 @@
             {
               "$document": {
                 "k": "a",
-                "$createdAt": "2026-01-01T00:00:01.000+00:00",
-                "$collection": "distinct_rows_59be91"
-              }
-            },
-            {
-              "$document": {
-                "k": null,
-                "$createdAt": "2026-01-01T00:00:03.000+00:00",
+                "$createdAt": "2026-01-01T00:00:00.000+00:00",
                 "$collection": "distinct_rows_59be91"
               }
             },
             {
               "$document": {
                 "k": "a",
-                "$createdAt": "2026-01-01T00:00:00.000+00:00",
+                "$createdAt": "2026-01-01T00:00:01.000+00:00",
                 "$collection": "distinct_rows_59be91"
               }
             },
@@ -300496,6 +300458,13 @@
               "$document": {
                 "k": "b",
                 "$createdAt": "2026-01-01T00:00:02.000+00:00",
+                "$collection": "distinct_rows_59be91"
+              }
+            },
+            {
+              "$document": {
+                "k": null,
+                "$createdAt": "2026-01-01T00:00:03.000+00:00",
                 "$collection": "distinct_rows_59be91"
               }
             }
@@ -301018,11 +300987,7 @@
               {
                 "$document": {
                   "colour": "red",
-                  "$id": null,
-                  "$sequence": null,
-                  "$collection": "distinct_capability",
-                  "$createdAt": null,
-                  "$updatedAt": null
+                  "$collection": "distinct_capability"
                 }
               }
             ],
@@ -301035,11 +301000,7 @@
                       {
                         "$document": {
                           "colour": "red",
-                          "$id": null,
-                          "$sequence": null,
-                          "$collection": "distinct_capability",
-                          "$createdAt": null,
-                          "$updatedAt": null
+                          "$collection": "distinct_capability"
                         }
                       }
                     ]

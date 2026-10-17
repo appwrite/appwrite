@@ -30459,10 +30459,7 @@
                 "c.secret": "c-open-token",
                 "c.score": 1,
                 "$id": "ha1",
-                "$sequence": null,
-                "$collection": "jh_a",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jh_a"
               }
             }
           ],
