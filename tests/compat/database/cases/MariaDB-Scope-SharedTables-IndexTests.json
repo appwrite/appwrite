@@ -5312,7 +5312,7 @@
               }
             }
           },
-          "bind": "s9463",
+          "bind": "s9850",
           "expect": {
             "$document": {
               "$permissions": [
@@ -5540,7 +5540,7 @@
               }
             }
           },
-          "bind": "s9474",
+          "bind": "s9861",
           "expect": {
             "$document": {
               "id": null,
@@ -5591,7 +5591,7 @@
               }
             }
           },
-          "bind": "s9478",
+          "bind": "s9865",
           "expect": {
             "$document": {
               "id": "0",
@@ -5623,7 +5623,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -5647,7 +5647,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": "999",
@@ -5724,7 +5724,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -5748,7 +5748,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": 999,
@@ -5833,7 +5833,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -5857,7 +5857,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": "999",
@@ -5934,7 +5934,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -5960,7 +5960,7 @@
                 "$id": "new-id",
                 "$tenant": "999",
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -6053,12 +6053,12 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": 999,
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -6130,7 +6130,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             }
           },
@@ -6173,16 +6173,16 @@
                 "with-dash": "Works",
                 "id": "1000000",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$collection": "documents_u000000000052",
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$tenant": "999",
@@ -6259,7 +6259,7 @@
               }
             }
           },
-          "bind": "s10323",
+          "bind": "s11054",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6382,7 +6382,7 @@
               }
             }
           },
-          "bind": "s10343",
+          "bind": "s11074",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6421,13 +6421,13 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s10343",
+              "$ref": "s11074",
               "path": "/$document/$id"
             },
             "document": {
               "$document": {
                 "$id": {
-                  "$ref": "s10343",
+                  "$ref": "s11074",
                   "path": "/$document/$id"
                 },
                 "$permissions": [
@@ -6806,6 +6806,27 @@
               "message": "Document already exists"
             }
           }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
         },
         {
           "op": "db.adapter",
@@ -7627,7 +7648,7 @@
               }
             }
           },
-          "bind": "s9463",
+          "bind": "s9850",
           "expect": {
             "$document": {
               "$permissions": [
@@ -7855,7 +7876,7 @@
               }
             }
           },
-          "bind": "s9474",
+          "bind": "s9861",
           "expect": {
             "$document": {
               "id": null,
@@ -7906,7 +7927,7 @@
               }
             }
           },
-          "bind": "s9478",
+          "bind": "s9865",
           "expect": {
             "$document": {
               "id": "0",
@@ -7938,7 +7959,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -7962,7 +7983,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": "999",
@@ -8039,7 +8060,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -8063,7 +8084,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": 999,
@@ -8148,7 +8169,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -8172,7 +8193,7 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": "999",
@@ -8249,7 +8270,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             },
             "document": {
@@ -8275,7 +8296,7 @@
                 "$id": "new-id",
                 "$tenant": "999",
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -8368,12 +8389,12 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$tenant": 999,
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
@@ -8445,7 +8466,7 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s9463",
+              "$ref": "s9850",
               "path": "/$document/$id"
             }
           },
@@ -8488,16 +8509,16 @@
                 "with-dash": "Works",
                 "id": "1000000",
                 "$id": {
-                  "$ref": "s9463",
+                  "$ref": "s9850",
                   "path": "/$document/$id"
                 },
                 "$collection": "documents_u000000000052",
                 "$createdAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$updatedAt": {
-                  "$now": 0,
+                  "$now": -1,
                   "format": "Y-m-d\\TH:i:s.vP"
                 },
                 "$tenant": "999",
@@ -8574,7 +8595,7 @@
               }
             }
           },
-          "bind": "s10323",
+          "bind": "s11054",
           "expect": {
             "$document": {
               "$permissions": [
@@ -8697,7 +8718,7 @@
               }
             }
           },
-          "bind": "s10343",
+          "bind": "s11074",
           "expect": {
             "$document": {
               "$permissions": [
@@ -8736,13 +8757,13 @@
           "args": {
             "collection": "documents_u000000000052",
             "id": {
-              "$ref": "s10343",
+              "$ref": "s11074",
               "path": "/$document/$id"
             },
             "document": {
               "$document": {
                 "$id": {
-                  "$ref": "s10343",
+                  "$ref": "s11074",
                   "path": "/$document/$id"
                 },
                 "$permissions": [
@@ -9121,6 +9142,27 @@
               "message": "Document already exists"
             }
           }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
         },
         {
           "op": "database.create_index",

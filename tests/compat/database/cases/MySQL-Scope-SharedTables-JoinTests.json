@@ -164920,6 +164920,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -165518,11 +165539,7 @@
             {
               "$document": {
                 "label": "x",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_notes"
               }
             }
           ]
@@ -165572,11 +165589,7 @@
                     {
                       "$document": {
                         "label": "x",
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_notes",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_notes"
                       }
                     }
                   ]
@@ -165584,12 +165597,14 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
+          "expect": [
+            {
+              "$document": {
+                "label": "y",
+                "$collection": "jcur_notes"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -165636,11 +165651,7 @@
                     {
                       "$document": {
                         "label": "y",
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_notes",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_notes"
                       }
                     }
                   ]
@@ -165648,12 +165659,14 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
+          "expect": [
+            {
+              "$document": {
+                "label": "z",
+                "$collection": "jcur_notes"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -165700,11 +165713,7 @@
                     {
                       "$document": {
                         "label": "z",
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_notes",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_notes"
                       }
                     }
                   ]
@@ -165712,12 +165721,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
-            }
-          }
+          "expect": []
         },
         {
           "op": "database.find",
@@ -165782,11 +165786,7 @@
             {
               "$document": {
                 "n.label": "y",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_authors",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_authors"
               }
             }
           ]
@@ -165856,11 +165856,7 @@
                     {
                       "$document": {
                         "n.label": "y",
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_authors",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_authors"
                       }
                     }
                   ]
@@ -165868,12 +165864,14 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
+          "expect": [
+            {
+              "$document": {
+                "n.label": "x",
+                "$collection": "jcur_authors"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -165940,11 +165938,7 @@
                     {
                       "$document": {
                         "n.label": "x",
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_authors",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_authors"
                       }
                     }
                   ]
@@ -165952,12 +165946,7 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
-            }
-          }
+          "expect": []
         },
         {
           "op": "database.cursor",
@@ -165994,31 +165983,19 @@
             {
               "$document": {
                 "label": "x",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_notes"
               }
             },
             {
               "$document": {
                 "label": "y",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_notes"
               }
             },
             {
               "$document": {
                 "label": "z",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_notes"
               }
             }
           ]
@@ -166068,11 +166045,7 @@
               "$document": {
                 "label": "x",
                 "score": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "jcur_notes",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jcur_notes"
               }
             }
           ]
@@ -166115,11 +166088,7 @@
                       "$document": {
                         "label": "x",
                         "score": null,
-                        "$id": null,
-                        "$sequence": null,
-                        "$collection": "jcur_notes",
-                        "$createdAt": null,
-                        "$updatedAt": null
+                        "$collection": "jcur_notes"
                       }
                     }
                   ]
@@ -166129,8 +166098,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "$id must be of type string"
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "A cursor on a distinct() read pages along its orders, so the read must order by every selected attribute, and 'score' is not ordered"
             }
           }
         },
@@ -322479,6 +322448,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -394421,11 +394411,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -394526,11 +394516,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -394612,11 +394602,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -394735,11 +394725,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -394821,11 +394811,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -394926,11 +394916,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395031,11 +395021,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395154,11 +395144,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395259,11 +395249,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395364,11 +395354,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395469,11 +395459,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395592,11 +395582,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395715,11 +395705,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395820,11 +395810,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -395925,11 +395915,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396048,11 +396038,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396171,11 +396161,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396276,11 +396266,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396381,11 +396371,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396504,11 +396494,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396627,11 +396617,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396732,11 +396722,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396837,11 +396827,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -396942,11 +396932,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -397065,11 +397055,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -397151,11 +397141,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -397256,11 +397246,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -397342,11 +397332,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400036,11 +400026,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400141,11 +400131,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400227,11 +400217,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400350,11 +400340,11 @@
                         "$sequence": "9",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400436,11 +400426,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400541,11 +400531,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400646,11 +400636,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400769,11 +400759,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400874,11 +400864,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -400979,11 +400969,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401084,11 +401074,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401207,11 +401197,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401330,11 +401320,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401435,11 +401425,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401540,11 +401530,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401663,11 +401653,11 @@
                         "$sequence": "1",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401786,11 +401776,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401891,11 +401881,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -401996,11 +401986,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402119,11 +402109,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402242,11 +402232,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402347,11 +402337,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402452,11 +402442,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402557,11 +402547,11 @@
                         "$sequence": "6",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402680,11 +402670,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402766,11 +402756,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402871,11 +402861,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [
@@ -402957,11 +402947,11 @@
                         "$sequence": "3",
                         "$tenant": "999",
                         "$createdAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$updatedAt": {
-                          "$now": 0,
+                          "$now": -1,
                           "format": "Y-m-d\\TH:i:s.vP"
                         },
                         "$permissions": [

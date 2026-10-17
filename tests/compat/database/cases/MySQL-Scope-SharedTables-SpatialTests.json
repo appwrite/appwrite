@@ -52,6 +52,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -70,6 +91,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -564,6 +648,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -582,6 +687,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -3240,6 +3408,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -3258,6 +3447,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -3990,6 +4242,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -4008,6 +4281,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -4083,6 +4419,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -4101,6 +4458,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -4682,6 +5102,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -4700,6 +5141,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -5772,6 +6276,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -5790,6 +6315,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -6768,6 +7356,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -6786,6 +7395,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -7759,6 +8431,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -7777,6 +8470,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -83455,6 +84211,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -83473,6 +84250,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -83780,8 +84620,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "spatial_idx_order_index_u000000000313",
-                "name": "spatial_idx_order_index_u000000000313",
+                "$id": "spatial_idx_order_index_u000000000315",
+                "name": "spatial_idx_order_index_u000000000315",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true
@@ -83791,8 +84631,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "spatial_idx_order_index_u000000000313",
-              "name": "spatial_idx_order_index_u000000000313",
+              "$id": "spatial_idx_order_index_u000000000315",
+              "name": "spatial_idx_order_index_u000000000315",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -83811,7 +84651,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "spatial_idx_order_index_u000000000313",
+            "collection": "spatial_idx_order_index_u000000000315",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -83857,7 +84697,7 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "spatial_idx_order_index_u000000000313",
+            "collection": "spatial_idx_order_index_u000000000315",
             "index": {
               "$value": "Index",
               "fields": {
@@ -83888,7 +84728,7 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "collection": "spatial_idx_order_index_u000000000313"
+            "collection": "spatial_idx_order_index_u000000000315"
           },
           "expect": null
         },
@@ -83909,8 +84749,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "spatial_idx_null_create_u000000000314",
-                "name": "spatial_idx_null_create_u000000000314",
+                "$id": "spatial_idx_null_create_u000000000316",
+                "name": "spatial_idx_null_create_u000000000316",
                 "attributes": [
                   {
                     "$id": "loc",
@@ -83957,8 +84797,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "spatial_idx_null_index_u000000000315",
-                "name": "spatial_idx_null_index_u000000000315",
+                "$id": "spatial_idx_null_index_u000000000317",
+                "name": "spatial_idx_null_index_u000000000317",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true
@@ -83968,8 +84808,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "spatial_idx_null_index_u000000000315",
-              "name": "spatial_idx_null_index_u000000000315",
+              "$id": "spatial_idx_null_index_u000000000317",
+              "name": "spatial_idx_null_index_u000000000317",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -83988,7 +84828,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "spatial_idx_null_index_u000000000315",
+            "collection": "spatial_idx_null_index_u000000000317",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -84034,7 +84874,7 @@
         {
           "op": "database.create_index",
           "args": {
-            "collection": "spatial_idx_null_index_u000000000315",
+            "collection": "spatial_idx_null_index_u000000000317",
             "index": {
               "$value": "Index",
               "fields": {
@@ -84061,7 +84901,7 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "collection": "spatial_idx_null_index_u000000000315"
+            "collection": "spatial_idx_null_index_u000000000317"
           },
           "expect": null
         },
@@ -84503,6 +85343,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -84521,6 +85382,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -89350,6 +90274,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -89368,6 +90313,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -90805,6 +91813,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -90823,6 +91852,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -91149,6 +92241,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -91167,6 +92280,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -91525,7 +92701,7 @@
             "batchSize": 3,
             "onNext": true
           },
-          "bind": "s34808",
+          "bind": "s37953",
           "expect": {
             "result": 5,
             "calls": {
@@ -92027,7 +93203,7 @@
           "args": {
             "collection": "test_spatial_bulk_ops",
             "id": {
-              "$ref": "s34808",
+              "$ref": "s37953",
               "path": "/calls/onNext/0/args/0/$document/$id"
             }
           },
@@ -92082,7 +93258,7 @@
           "args": {
             "collection": "test_spatial_bulk_ops",
             "id": {
-              "$ref": "s34808",
+              "$ref": "s37953",
               "path": "/calls/onNext/1/args/0/$document/$id"
             }
           },
@@ -92137,7 +93313,7 @@
           "args": {
             "collection": "test_spatial_bulk_ops",
             "id": {
-              "$ref": "s34808",
+              "$ref": "s37953",
               "path": "/calls/onNext/2/args/0/$document/$id"
             }
           },
@@ -92192,7 +93368,7 @@
           "args": {
             "collection": "test_spatial_bulk_ops",
             "id": {
-              "$ref": "s34808",
+              "$ref": "s37953",
               "path": "/calls/onNext/3/args/0/$document/$id"
             }
           },
@@ -92247,7 +93423,7 @@
           "args": {
             "collection": "test_spatial_bulk_ops",
             "id": {
-              "$ref": "s34808",
+              "$ref": "s37953",
               "path": "/calls/onNext/4/args/0/$document/$id"
             }
           },
@@ -94846,6 +96022,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -94864,6 +96061,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -95698,6 +96958,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -95716,6 +96997,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -96296,6 +97640,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -96314,6 +97679,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -97598,6 +99026,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -97616,6 +99065,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -98062,6 +99574,2798 @@
       ]
     },
     {
+      "name": "SpatialTests::testSpatialFilterOutOfRangeOrMalformedIsAnInvalidQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "spatial_ranges_a65fd5",
+                "name": "spatial_ranges_a65fd5",
+                "attributes": [
+                  {
+                    "$id": "pt",
+                    "key": "pt",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  },
+                  {
+                    "$id": "ln",
+                    "key": "ln",
+                    "type": "linestring",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "linestring"
+                    ]
+                  },
+                  {
+                    "$id": "poly",
+                    "key": "poly",
+                    "type": "polygon",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "spatial_ranges_a65fd5",
+              "name": "spatial_ranges_a65fd5",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "pt",
+                    "key": "pt",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ln",
+                    "key": "ln",
+                    "type": "linestring",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "linestring"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "poly",
+                    "key": "poly",
+                    "type": "polygon",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "document": {
+              "$document": {
+                "$id": "origin",
+                "pt": [
+                  0.0,
+                  0.0
+                ],
+                "ln": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ],
+                "poly": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "origin",
+              "pt": [
+                0.0,
+                0.0
+              ],
+              "ln": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ],
+              "poly": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "spatial_ranges_a65fd5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      200,
+                      100
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      200,
+                      100
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      180.0001,
+                      0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      180.0001,
+                      0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      -180.0001,
+                      0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got -180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      -180.0001,
+                      0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got -180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0,
+                      90.0001
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Latitude (y) must be between -90 and 90, got 90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0,
+                      90.0001
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Latitude (y) must be between -90 and 90, got 90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0,
+                      -90.0001
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Latitude (y) must be between -90 and 90, got -90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0,
+                      -90.0001
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Latitude (y) must be between -90 and 90, got -90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      1e+308,
+                      1e+308
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 1.0E+308"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      1e+308,
+                      1e+308
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 1.0E+308"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      {
+                        "$float": "INF"
+                      },
+                      0.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      {
+                        "$float": "INF"
+                      },
+                      0.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0.0,
+                      {
+                        "$float": "NAN"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      0.0,
+                      {
+                        "$float": "NAN"
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "poly",
+                  "values": [
+                    [
+                      [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          91
+                        ],
+                        [
+                          1,
+                          91
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"poly\": Value must be a valid polygon: Invalid coordinates at point #1 in ring #0: Latitude (y) must be between -90 and 90, got 91"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "poly",
+                  "values": [
+                    [
+                      [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          0,
+                          91
+                        ],
+                        [
+                          1,
+                          91
+                        ],
+                        [
+                          0,
+                          0
+                        ]
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"poly\": Value must be a valid polygon: Invalid coordinates at point #1 in ring #0: Latitude (y) must be between -90 and 90, got 91"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crosses",
+                  "attribute": "ln",
+                  "values": [
+                    [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        181,
+                        0
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"ln\": Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "crosses",
+                  "attribute": "ln",
+                  "values": [
+                    [
+                      [
+                        0,
+                        0
+                      ],
+                      [
+                        181,
+                        0
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"ln\": Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      200,
+                      100
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      200,
+                      100
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Invalid spatial data for attribute \"pt\": Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      [
+                        200,
+                        100
+                      ],
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      [
+                        200,
+                        100
+                      ],
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(200 100)",
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(200 100)",
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(1 2",
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(1 2",
+                      10,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Distance query requires a geometry as coordinates or WKT: Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      180.0,
+                      90.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      180.0,
+                      90.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      -180.0,
+                      -90.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      -180.0,
+                      -90.0
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      [
+                        180.0,
+                        0.0
+                      ],
+                      1,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      [
+                        180.0,
+                        0.0
+                      ],
+                      1,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(0.5 0.5)",
+                      1,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "pt": [
+                  0.0,
+                  0.0
+                ],
+                "ln": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ],
+                "poly": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                "$id": "origin",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "spatial_ranges_a65fd5"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(0.5 0.5)",
+                      1,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "poly",
+                  "values": [
+                    [
+                      [
+                        [
+                          0.0,
+                          0.0
+                        ],
+                        [
+                          0.0,
+                          90.0
+                        ],
+                        [
+                          180.0,
+                          90.0
+                        ],
+                        [
+                          0.0,
+                          0.0
+                        ]
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "pt": [
+                  0.0,
+                  0.0
+                ],
+                "ln": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ],
+                "poly": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                "$id": "origin",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "spatial_ranges_a65fd5"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "intersects",
+                  "attribute": "poly",
+                  "values": [
+                    [
+                      [
+                        [
+                          0.0,
+                          0.0
+                        ],
+                        [
+                          0.0,
+                          90.0
+                        ],
+                        [
+                          180.0,
+                          90.0
+                        ],
+                        [
+                          0.0,
+                          0.0
+                        ]
+                      ]
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "spatial_ranges_a65fd5",
+            "queries": [
+              {
+                "$query": {
+                  "method": "distanceLessThan",
+                  "attribute": "pt",
+                  "values": [
+                    [
+                      "POINT(0.5 0.5)",
+                      1,
+                      false
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "pt": [
+                  0.0,
+                  0.0
+                ],
+                "ln": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ],
+                "poly": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                "$id": "origin",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "spatial_ranges_a65fd5"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "spatial_ranges_a65fd5"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "SpatialTests::testSpatialWriteOfMalformedOrOutOfRangeValueIsAnInvalidStructure",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "spatial_ranges_a6da40",
+                "name": "spatial_ranges_a6da40",
+                "attributes": [
+                  {
+                    "$id": "pt",
+                    "key": "pt",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  },
+                  {
+                    "$id": "ln",
+                    "key": "ln",
+                    "type": "linestring",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "linestring"
+                    ]
+                  },
+                  {
+                    "$id": "poly",
+                    "key": "poly",
+                    "type": "polygon",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "spatial_ranges_a6da40",
+              "name": "spatial_ranges_a6da40",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "pt",
+                    "key": "pt",
+                    "type": "point",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ln",
+                    "key": "ln",
+                    "type": "linestring",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "linestring"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "poly",
+                    "key": "poly",
+                    "type": "polygon",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "polygon"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "$id": "origin",
+                "pt": [
+                  0.0,
+                  0.0
+                ],
+                "ln": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ],
+                "poly": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      1.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ],
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "origin",
+              "pt": [
+                0.0,
+                0.0
+              ],
+              "ln": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ],
+              "poly": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "spatial_ranges_a6da40",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(200 0)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "POINT(200 0)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(0 NAN)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "POINT(0 NAN)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2 3)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2 3)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "LINESTRING(0 0, 1 1)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a POINT, got a LINESTRING"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "LINESTRING(0 0, 1 1)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a POINT, got a LINESTRING"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2) junk",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": "POINT(1 2) junk"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": [
+                  200.0,
+                  100.0
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": [
+                  200.0,
+                  100.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": [
+                  180.0001,
+                  0.0
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": [
+                  180.0001,
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Longitude (x) must be between -180 and 180, got 180.0001"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": [
+                  0.0,
+                  -90.0001
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Latitude (y) must be between -90 and 90, got -90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": [
+                  0.0,
+                  -90.0001
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Latitude (y) must be between -90 and 90, got -90.0001"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": [
+                  {
+                    "$float": "INF"
+                  },
+                  0.0
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": [
+                  {
+                    "$float": "INF"
+                  },
+                  0.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": [
+                  0.0,
+                  {
+                    "$float": "NAN"
+                  }
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "pt": [
+                  0.0,
+                  {
+                    "$float": "NAN"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"pt\" has invalid type. Value must be a valid point: Coordinates must be finite numbers"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "ln": "LINESTRING(0 0, 181 0)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"ln\" has invalid type. Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "ln": "LINESTRING(0 0, 181 0)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"ln\" has invalid type. Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 91, 1 91, 0 0))",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: Invalid coordinates at point #1 in ring #0: Latitude (y) must be between -90 and 90, got 91"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 91, 1 91, 0 0))"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: Invalid coordinates at point #1 in ring #0: Latitude (y) must be between -90 and 90, got 91"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 1, 1 1, 0 0)",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 1, 1 1, 0 0)"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: WKT must be a well-formed POINT, LINESTRING or POLYGON"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 1, 1 1, 1 0))",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: Ring #0 must be closed (first point must equal last point)"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": "origin",
+            "document": {
+              "$document": {
+                "poly": "POLYGON((0 0, 0 1, 1 1, 1 0))"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"poly\" has invalid type. Value must be a valid polygon: Ring #0 must be closed (first point must equal last point)"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "document": {
+              "$document": {
+                "pt": "POINT(-180 -90)",
+                "ln": "LINESTRING(-180 -90, 180 90)",
+                "poly": "POLYGON((0 0, 0 10, 10 10, 0 0), (1 1, 1 2, 2 2, 1 1))",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s38162",
+          "expect": {
+            "$document": {
+              "pt": [
+                -180.0,
+                -90.0
+              ],
+              "ln": [
+                [
+                  -180.0,
+                  -90.0
+                ],
+                [
+                  180.0,
+                  90.0
+                ]
+              ],
+              "poly": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    10.0
+                  ],
+                  [
+                    10.0,
+                    10.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ]
+              ],
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "spatial_ranges_a6da40",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "spatial_ranges_a6da40",
+            "id": {
+              "$ref": "s38162",
+              "path": "/$document/$id"
+            }
+          },
+          "expect": {
+            "$document": {
+              "pt": [
+                -180.0,
+                -90.0
+              ],
+              "ln": [
+                [
+                  -180.0,
+                  -90.0
+                ],
+                [
+                  180.0,
+                  90.0
+                ]
+              ],
+              "poly": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    10.0
+                  ],
+                  [
+                    10.0,
+                    10.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ],
+                [
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    1.0,
+                    2.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ]
+              ],
+              "$sequence": "2",
+              "$id": "<uniqid>",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "spatial_ranges_a6da40"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "spatial_ranges_a6da40"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "SpatialTests::testSpatialDistanceInMeter",
       "state": [
         "mysql@database-mysql"
@@ -98109,6 +102413,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -98127,6 +102452,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -98624,6 +103012,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -98642,6 +103051,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -99767,6 +104239,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -99785,6 +104278,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -100618,6 +105174,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -100636,6 +105213,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -101079,6 +105719,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -101097,6 +105758,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -101442,6 +106166,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -101460,6 +106205,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -101870,6 +106678,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -101888,6 +106717,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -102111,6 +107003,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -102129,6 +107042,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -102348,6 +107324,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -102366,6 +107363,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -103215,6 +108275,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -103233,6 +108314,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -103296,6 +108440,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -103314,6 +108479,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -103963,6 +109191,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -103981,6 +109230,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
@@ -104056,6 +109368,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "joinedSeal"
@@ -104074,6 +109407,69 @@
           "args": {
             "name": "encrypt",
             "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "nsSliceAuthorSpy"
           },
           "expect": null
         },
