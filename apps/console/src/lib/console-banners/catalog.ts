@@ -39,12 +39,12 @@ export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
 
-/** Appwrite Start India promo: 14 days from launch (inclusive, UTC). */
+/** Appwrite Start regional promo (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
 export const START_PROMO_BANNER_END_MS = Date.UTC(
   2026,
-  9,
-  4,
+  10,
+  29,
   23,
   59,
   59,
@@ -175,7 +175,7 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   },
   {
     id: START_PROMO_BANNER_ID,
-    title: 'Appwrite Start for India',
+    title: 'Appwrite Start regional promo',
     scope: 'console',
     placement: 'header',
     startMs: START_PROMO_BANNER_START_MS,
