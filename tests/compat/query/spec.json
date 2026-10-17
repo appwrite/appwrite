@@ -117,6 +117,7 @@
         "Utopia\\Query\\Query::groupByType",
         "Utopia\\Query\\Query::having",
         "Utopia\\Query\\Query::intersects",
+        "Utopia\\Query\\Query::isAliasDefaulted",
         "Utopia\\Query\\Query::isMethod",
         "Utopia\\Query\\Query::isNested",
         "Utopia\\Query\\Query::isNestedJoin",

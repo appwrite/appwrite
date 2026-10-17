@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-16T12:07:00Z",
+  "updated": "2026-10-17T01:39:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -152,6 +152,7 @@
     "Sync often: in one day main moved four of the PHP packages the port follows; drift shows up first as compat differences in CI, which is the earliest place to catch it.",
     "A moving target: the PHP side keeps changing on main, so the compat recordings are regenerated from PHP whenever a dependency moves, and Rust follows.",
     "Watch the tooling, too: wait loops that poll for a log line outlive the work they wait on; background commands that report when they exit do not.",
-    "Run the comparison on the stack CI runs: a parity diff that was clean on a hand-patched local stack showed 44 differences on CI's, from one environment variable given to only one runtime."
+    "Run the comparison on the stack CI runs: a parity diff that was clean on a hand-patched local stack showed 44 differences on CI's, from one environment variable given to only one runtime.",
+    "Pin the toolchain CI uses and test it cold: Rust 1.88 type-checked the new database crate fine (clippy passed) but its code generation never finished, which showed up only as silent CI timeouts."
   ]
 }

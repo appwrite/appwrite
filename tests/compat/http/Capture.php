@@ -58,6 +58,21 @@ final class Capture extends Response
         $this->wire['ended'] = true;
     }
 
+    /**
+     * `Adapter\Swoole\Response::abort()`, with the connection's close()
+     * recorded on the wire as `aborted`.
+     */
+    public function abort(): void
+    {
+        if ($this->sent) {
+            return;
+        }
+
+        $this->sent = true;
+        $this->disablePayload();
+        $this->wire['aborted'] = true;
+    }
+
     protected function sendStatus(int $statusCode): void
     {
         $this->wire['status'] = $statusCode;

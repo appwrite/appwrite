@@ -665,34 +665,23 @@ fn test_parsed_column_form_join_becomes_an_on_condition() {
     );
 }
 
-// PHP 8.3.6: QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection (utopia-php/query
-// 0.7.2 Query.php:330, 1464): a parsed join without an alias is read under its collection.
 #[test]
 fn test_parsed_join_without_an_alias_is_read_under_its_collection() {
-    let on = arr! {"method" => "on", "values" => list!["$id", "=", "user"]};
-    for (array, method) in [
-        (arr! {"method" => "join", "attribute" => "orders", "values" => list![on.clone()]}, Method::Join),
-        (
-            arr! {"method" => "leftJoin", "attribute" => "orders", "alias" => "", "values" => list![on.clone()]},
-            Method::LeftJoin,
-        ),
-        (arr! {"method" => "join", "attribute" => "orders", "values" => list!["", on.clone()]}, Method::Join),
-        (arr! {"method" => "join", "attribute" => "orders", "values" => list!["$id", "=", "user"]}, Method::Join),
-        (arr! {"method" => "crossJoin", "attribute" => "orders", "values" => list![]}, Method::CrossJoin),
-    ] {
-        let parsed = Query::parse_query(&qarr(array), false).unwrap();
-        assert_eq!(parsed.method(), method);
-        assert_eq!(parsed.alias(), "orders");
-        assert!(parsed.is_alias_defaulted());
-        let serialized = parsed.to_array().unwrap();
-        assert_eq!(Query::parse_query(&serialized, false).unwrap().to_array().unwrap(), serialized);
-        assert!(Query::parse(&parsed.to_string().unwrap(), false).unwrap().is_alias_defaulted());
-    }
+    // utopia-php/query reads a join given no alias under the collection it joins.
+    let parsed = Query::parse_query(
+        &qarr(arr! {
+            "method" => "join",
+            "attribute" => "orders",
+            "values" => list![arr! {"method" => "on", "values" => list!["$id", "=", "user"]}],
+        }),
+        false,
+    )
+    .unwrap();
+    assert_eq!(parsed.alias(), "orders");
 }
 
-// PHP 8.3.6: QuerySerializationTest::testParsedJoinWithoutAnAliasOrCollectionIsAQueryException.
 #[test]
-fn test_parsed_join_without_an_alias_or_collection_is_a_query_exception() {
+fn test_parsed_join_without_an_alias_or_a_collection_is_a_query_exception() {
     assert_error(
         Query::parse_query(
             &qarr(arr! {

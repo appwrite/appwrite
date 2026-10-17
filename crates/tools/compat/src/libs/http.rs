@@ -396,6 +396,9 @@ fn wire_json(wire: &Wire) -> Value {
         "writes": wire.writes,
         "ended": wire.ended,
     });
+    if wire.aborted {
+        out["aborted"] = Value::Bool(true);
+    }
     if let Some(d) = decoded {
         out["decoded"] = bytes_value(&d);
     }
@@ -827,10 +830,11 @@ async fn statements(list: &[Value], env: &mut Env<'_, '_>, out: &Out) -> Result<
                 env.response().redirect(&php_string(&at(0)), status)?;
             }
             "no_content" => env.response().no_content(),
+            "abort" => env.response().abort(),
             "chunk" => {
                 let v = php_string(&env.eval(&at(0))?);
                 let end = at(1).as_bool().unwrap_or(false);
-                env.response().chunk(v.as_bytes(), end);
+                env.response().chunk(v.as_bytes(), end)?;
             }
             "status" => {
                 env.response().set_status_code(a.as_i64().unwrap_or(0))?;

@@ -462,7 +462,7 @@ fn query_static(method: &str, a: &Args) -> R<Option<Obj>> {
             if !a.queries("queries")?.is_empty() {
                 return Err(Fail::Error(Error::new(
                     Kind::TypeError,
-                    "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 336",
+                    "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 348",
                 )));
             }
             Vec::<Query>::new().into_obj()
