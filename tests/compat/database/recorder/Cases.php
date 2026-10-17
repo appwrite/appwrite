@@ -529,6 +529,36 @@ final class Cases
 
     private const UNORDERED_DISTINCT = 'a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set';
 
+    private const JOINED_TIME = 'rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in';
+
+    /**
+     * Whether encoded arguments order or group by a joined `$createdAt` or
+     * `$updatedAt` (`<alias>.$createdAt`), nested queries included.
+     */
+    private static function byJoinedTime(mixed $value): bool
+    {
+        if (!\is_array($value)) {
+            return false;
+        }
+        $query = $value['$query'] ?? null;
+        if (\is_array($query) && \in_array($query['method'] ?? '', ['orderAsc', 'orderDesc', 'groupBy'], true)) {
+            $names = [(string) ($query['attribute'] ?? ''), ...array_filter((array) ($query['values'] ?? []), 'is_string')];
+            foreach ($names as $name) {
+                $dot = strrpos($name, '.');
+                if ($dot !== false && \in_array(substr($name, $dot + 1), ['$createdAt', '$updatedAt'], true)) {
+                    return true;
+                }
+            }
+        }
+        foreach ($value as $item) {
+            if (self::byJoinedTime($item)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static function mask(Step $step): ?array
     {
         $args = (string) json_encode($step->args);
@@ -546,6 +576,9 @@ final class Cases
         }
         if ($step->op === 'database.find' && str_contains($args, '"method":"distinct"') && !str_contains($args, '"method":"order')) {
             return ['paths' => [''], 'rows' => true, 'reason' => self::UNORDERED_DISTINCT];
+        }
+        if (\in_array($step->op, ['database.find', 'database.cursor', 'database.aggregate', 'database.count', 'database.sum'], true) && self::byJoinedTime($step->args)) {
+            return ['paths' => [''], 'reason' => self::JOINED_TIME];
         }
         if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
             return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];

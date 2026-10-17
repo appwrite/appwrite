@@ -256845,139 +256845,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257022,46 +256896,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257142,7 +256983,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257223,7 +257070,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257296,7 +257149,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257377,44 +257236,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257495,44 +257323,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257613,44 +257410,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257728,7 +257494,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -257765,139 +257537,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -257951,139 +257597,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258137,46 +257657,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258266,7 +257753,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258356,7 +257849,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258438,7 +257937,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258528,44 +258033,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258655,44 +258129,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258782,44 +258225,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -258906,7 +258318,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -258952,139 +258370,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259138,158 +258430,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259343,50 +258490,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259482,7 +258592,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259578,7 +258694,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259666,7 +258788,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259762,50 +258890,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -259901,50 +258992,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260040,50 +259094,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260171,7 +259188,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -260217,158 +259240,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260423,165 +259301,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260636,52 +259362,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260779,7 +259466,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260877,7 +259570,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -260967,7 +259666,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261065,52 +259770,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261208,52 +259874,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261351,52 +259978,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261486,7 +260074,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -261533,165 +260127,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a3",
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261736,139 +260178,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -261913,44 +260229,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262023,44 +260308,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262141,44 +260395,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262259,44 +260482,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262374,46 +260566,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262494,7 +260653,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262575,7 +260740,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262656,7 +260827,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -262693,139 +260870,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -262879,139 +260930,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263065,44 +260990,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263184,44 +261078,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263311,44 +261174,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263438,44 +261270,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263562,46 +261363,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263691,7 +261459,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263781,7 +261555,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -263871,7 +261651,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -263917,139 +261703,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "score": 3,
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$createdAt": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264103,158 +261763,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264308,50 +261823,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264439,50 +261917,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264578,50 +262019,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264717,50 +262121,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264848,52 +262215,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -264989,7 +262317,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265085,7 +262419,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265181,7 +262521,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -265227,158 +262573,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265433,165 +262634,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265646,52 +262695,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265781,52 +262791,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -265924,52 +262895,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -266067,52 +262999,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -266202,54 +263095,13 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -266347,7 +263199,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -266445,7 +263303,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
@@ -266543,7 +263407,13 @@
               }
             ]
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.cursor",
@@ -266590,165 +263460,13 @@
             ],
             "batchSize": 2
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": null,
-                "n.label": "x",
-                "n.$id": "n6",
-                "n.$sequence": "6",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n2",
-                "n.$sequence": "2",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 1,
-                "n.label": "x",
-                "n.$id": "n1",
-                "n.$sequence": "1",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a3",
-                "n.author": null,
-                "n.score": null,
-                "n.label": null,
-                "n.$id": null,
-                "n.$sequence": null,
-                "n.$createdAt": null,
-                "n.$updatedAt": null,
-                "n.$permissions": null,
-                "$id": "a3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in"
+          }
         },
         {
           "op": "database.find",
