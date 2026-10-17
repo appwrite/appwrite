@@ -1,6 +1,22 @@
 {
-  "updated": "2026-10-16T14:03:00Z",
+  "updated": "2026-10-17T01:39:00Z",
   "tasks": [
+    {
+      "id": "db836",
+      "title": "Database: follow PHP from 8.3.0 to 8.3.6",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "main bumped utopia-php/database again. Port 8.3.0→8.3.6, re-record what changed, and clear CI's remaining sqlite and postgres differences."
+    },
+    {
+      "id": "lib-sync-2",
+      "title": "Sync usage, queue, query and storage with main again",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "usage skip-index realignment, the NATS queue fixes, joins without an alias, and S3 streaming where a Rust crate covers it."
+    },
     {
       "id": "db-last",
       "title": "Database: the last replay case and the postgres byte case",
@@ -10,20 +26,28 @@
       "note": "Scope-Memory-PermissionTests#testNoChangeUpdateDocumentWithoutPermission fails without services; postgres Adapter-Find \"contains\" with a \\xff byte returns [] in PHP and a 42883 error in Rust."
     },
     {
-      "id": "query-join-alias",
-      "title": "Query: joins without an alias, from main",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-16T14:03:00Z",
-      "note": "main changed packages/query to allow joins without an alias after the last merge from main; port it once main is merged again."
-    },
-    {
       "id": "async-compat",
       "title": "Async: compat cases for Promise, Timer and Parallel",
       "area": "Libraries",
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "rust-197",
+      "title": "CI on Rust 1.97",
+      "area": "CI",
+      "status": "done",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "Rust 1.88's code generation never finished on utopia-database 8.3.0 (over 3 hours on one crate; 1.97 takes under 2 minutes), so every compiling job timed out. CI, the Rust image and the MSRV moved to 1.97; Build / Rust and Checks / Rust pass again."
+    },
+    {
+      "id": "users-memberships",
+      "title": "Users: membership list cursor and total",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "Followed main's fix: a cursor resolves to its membership (general_cursor_not_found for an unknown one) and total counts every matching membership."
     },
     {
       "id": "query-sync",
