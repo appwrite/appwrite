@@ -26,7 +26,7 @@ use utopia_async::net::TcpListener;
 use utopia_async::sync::watch;
 
 use crate::http::Http;
-use crate::response::{Body, Stream, head_response};
+use crate::response::{Aborted, Body, Stream, head_response};
 use crate::trusted::TrustedHeaders;
 use crate::{Request, Response};
 
@@ -76,7 +76,7 @@ impl Handler for App {
         let http = self.0.clone();
         async move {
             let (head_tx, head_rx) = utopia_async::sync::oneshot::channel();
-            let (body_tx, mut body_rx) = utopia_async::sync::mpsc::unbounded_channel::<Bytes>();
+            let (body_tx, mut body_rx) = utopia_async::sync::mpsc::unbounded_channel::<Result<Bytes, Aborted>>();
             utopia_async::spawn(async move {
                 let context = http.context();
                 let mut response = Response::new();
@@ -92,12 +92,20 @@ impl Handler for App {
             });
             match head_rx.await {
                 Ok(head) if head.body.is_some() => {
-                    let body = http_body_util::BodyExt::boxed(http_body_util::Full::new(head.body.unwrap_or_default()));
+                    let body = http_body_util::Full::new(head.body.unwrap_or_default())
+                        .map_err(|never| match never {})
+                        .boxed();
                     head_response(head.status, &head.headers, &head.cookies, body)
                 }
                 Ok(head) => {
                     let frames = futures_util::stream::unfold(body_rx, |mut rx| async move {
-                        rx.recv().await.map(|chunk| (Ok::<_, Infallible>(hyper::body::Frame::data(chunk)), rx))
+                        let chunk = rx.recv().await?;
+                        if chunk.is_err() {
+                            // Pending once, so hyper flushes the chunks already written
+                            // before the error closes the connection.
+                            utopia_async::task::yield_now().await;
+                        }
+                        Some((chunk.map(hyper::body::Frame::data), rx))
                     });
                     let body = http_body_util::BodyExt::boxed(http_body_util::StreamBody::new(frames));
                     head_response(head.status, &head.headers, &head.cookies, body)
