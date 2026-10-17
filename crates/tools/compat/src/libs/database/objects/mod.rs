@@ -94,9 +94,10 @@ pub async fn construct(class: &str, a: &Args) -> R<Obj> {
         && !class.starts_with("Adapter\\SQL\\")
         && class != "Adapter\\Limits"
         && class != "Adapter\\Profile"
-        && let Some(obj) = super::adapter::construct(class, a).await? {
-            return Ok(obj);
-        }
+        && let Some(obj) = super::adapter::construct(class, a).await?
+    {
+        return Ok(obj);
+    }
     if let Some(obj) = document::construct(class, a).await? {
         return Ok(obj);
     }
