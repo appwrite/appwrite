@@ -264,4 +264,42 @@ final class S3Test extends S3Base
             $device->delete($path);
         }
     }
+
+    private function pathStyleDevice(string $root): S3
+    {
+        return new S3(
+            root: $root,
+            accessKey: $this->accessKey,
+            secretKey: $this->secretKey,
+            host: $this->env('S3_PATH_HOST', 'http://localhost:9805'),
+            region: $this->region,
+            bucket: $this->bucket,
+            pathStyle: true,
+        );
+    }
+
+    public function testPathStyleCopy(): void
+    {
+        $root = $this->bucket . '/ps-' . bin2hex(random_bytes(8));
+        $device = $this->pathStyleDevice($root);
+        $source = $device->getPath('source.txt');
+        $copy = $device->getPath('copy.txt');
+        $moved = $device->getPath('moved.txt');
+
+        try {
+            $device->write($source, new Stream('path-style copy'), 'text/plain');
+
+            $this->assertTrue($device->copy($source, $copy));
+            $this->assertSame('path-style copy', (string) $device->read($copy));
+
+            $this->assertTrue($device->move($copy, $moved));
+            $this->assertSame('path-style copy', (string) $device->read($moved));
+            $this->assertFalse($device->exists($copy));
+            $this->assertTrue($device->exists($source));
+        } finally {
+            foreach ([$source, $copy, $moved] as $path) {
+                $device->delete($path);
+            }
+        }
+    }
 }

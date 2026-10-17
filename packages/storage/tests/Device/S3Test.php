@@ -30,6 +30,7 @@ use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\TransportException;
 use Utopia\Storage\Exception\UploadException;
+use Utopia\Storage\FileInfo;
 
 /**
  * Testable S3 subclass that exposes protected helpers.
@@ -1085,5 +1086,92 @@ final class S3Test extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->device($client)->listUploads('/root/', 10, 'next-token');
+    }
+
+    private function pathStyleDevice(ScriptedClient $client, string $root = 'appwrite/storage/uploads/app-p'): S3
+    {
+        return new S3(
+            root: $root,
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'http://minio:9000',
+            region: 'us-east-1',
+            client: $client,
+            bucket: 'appwrite',
+            pathStyle: true,
+        );
+    }
+
+    public function testPathStyleListFilesReturnsDevicePaths(): void
+    {
+        $client = new ScriptedClient([$this->objectListing('storage/uploads/app-p/a.txt', 'storage/uploads/app-p/b/c.txt')]);
+
+        $list = $this->pathStyleDevice($client)->listFiles('appwrite/storage/uploads/app-p/');
+
+        $this->assertCount(1, $client->requests);
+        $request = $client->requests[0];
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('minio', $request->getUri()->getHost());
+        $this->assertSame('/appwrite', $request->getUri()->getPath());
+        $this->assertSame('storage/uploads/app-p/', $this->queryOf($request)['prefix'] ?? null);
+        $this->assertSame(
+            ['appwrite/storage/uploads/app-p/a.txt', 'appwrite/storage/uploads/app-p/b/c.txt'],
+            array_map(static fn (FileInfo $file): string => $file->path, $list->files),
+            'listed paths are device paths, which begin with the bucket',
+        );
+    }
+
+    public function testPathStyleRejectsPathsOutsideTheBucket(): void
+    {
+        $client = new ScriptedClient([]);
+        $device = $this->pathStyleDevice($client);
+
+        $attempts = [
+            'listFiles' => static fn (): mixed => $device->listFiles('other/storage/'),
+            'listFiles sharing the bucket name as a prefix' => static fn (): mixed => $device->listFiles('appwrite-old/storage/'),
+            'listFiles escaping the bucket' => static fn (): mixed => $device->listFiles('appwrite/../other/'),
+            'listUploads' => static fn (): mixed => $device->listUploads('other/storage/a.bin'),
+            'copy' => static fn (): mixed => $device->copy('other/storage/a.txt', 'appwrite/storage/b.txt'),
+        ];
+        foreach ($attempts as $name => $attempt) {
+            try {
+                $attempt();
+                self::fail($name . ' outside the bucket must be refused');
+            } catch (\InvalidArgumentException) {
+            }
+        }
+
+        $this->assertCount(0, $client->requests, 'nothing outside the bucket is ever addressed');
+    }
+
+    public function testPathStyleCopySourceIsNotDoubled(): void
+    {
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('content-length', '5'),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->assertTrue($this->pathStyleDevice($client, 'appwrite/storage')->copy('appwrite/storage/a.txt', 'appwrite/storage/b.txt'));
+
+        $this->assertCount(2, $client->requests);
+        $copy = $client->requests[1];
+        $this->assertSame('PUT', $copy->getMethod());
+        $this->assertSame('/appwrite/storage/b.txt', $copy->getUri()->getPath());
+        $this->assertSame('/appwrite/storage/a.txt', $copy->getHeaderLine('x-amz-copy-source'));
+    }
+
+    public function testPathStyleRequiresABucket(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new S3(
+            root: 'appwrite/storage',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'http://minio:9000',
+            region: 'us-east-1',
+            client: new ScriptedClient([]),
+            pathStyle: true,
+        );
     }
 }

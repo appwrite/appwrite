@@ -417,8 +417,21 @@ function getDevice(string $root, string $connection = ''): Device
             $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+                // The root carries the bucket. When the endpoint addresses the service rather than the
+                // bucket (no bucket subdomain, no bucket path), bucket-level requests need /{bucket}/.
+                $pathStyle = $bucket !== ''
+                    && \trim((string) \parse_url($endpoint, PHP_URL_PATH), '/') === ''
+                    && ! \str_starts_with((string) \parse_url($endpoint, PHP_URL_HOST), $bucket . '.');
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3(
+                    $bucketRoot,
+                    $accessKey,
+                    $accessSecret,
+                    $endpoint,
+                    $region,
+                    bucket: $bucket !== '' ? $bucket : null,
+                    pathStyle: $pathStyle,
+                );
             }
 
             return new AWS($root, $accessKey, $accessSecret, $bucket, $region);
